@@ -16,13 +16,10 @@ status.
 ## Snapshot
 
 - 2026-11-09: repository created with the AI-native SDLC kit (ai-sdlc-kit).
-  There is no product code yet. Stack: intended stack Python + Langfuse (self-hosted), confirmed by §1.
+  Stack: Python + uv + Langfuse (self-hosted), decided in
+  [`docs/decisions/0001-stack.md`](docs/decisions/0001-stack.md) (§1).
 
 ## Next
 
-- The first intent (id 1, the one `npm run queue -- --next-id` prints):
-  confirm the Python + Langfuse (self-hosted) stack and build the project skeleton. Extend `npm run verify`
-  with build, lint and test. Write `CLAUDE.md` → "Architecture". Narrow
-  `CORE_CODE`. Name the live-check and Reviewed-tier paths. Define
-  `npm run setup:worktree` if a fresh worktree needs dependencies. Start it
-  with `/intent --feature`.
+- The evaluation suite and real guardrail checks, as new intents
+  (`npm run queue -- --next-id`).

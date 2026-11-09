@@ -27,7 +27,7 @@ You may escalate by hand at any time without giving a reason.
 | --- | --- | --- | --- |
 | **Automated** | `npm run verify` and `npm run check:intent` are green, then merge | nothing beyond merging | `intents/**` artefacts only; `docs/**`; `README.md` wording |
 | **Attested** | `/review` runs every pass and writes `review.md` | read the report, not the diff; merge if you agree with its scope | `src/**` not listed below, tests-only changes, `scripts/**` not listed below, build config |
-| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/ship-lib.mjs`, `scripts/ship.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning until §1 names the paths:** model prompts and agent instructions the product ships, anything that sends text to a user or an external system without a human in between, credential handling, and storage or logging of users' personal data |
+| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/ship-lib.mjs`, `scripts/ship.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning:** model prompts and agent instructions the product ships (`src/advisor/prompts/**`), anything that sends text to a user or an external system without a human in between (`src/advisor/guardrails.py`, `src/advisor/cli.py`), credential handling (`src/advisor/config.py`, `.env.example` and `infra/langfuse/.env.example`), and storage or logging of users' personal data (`src/advisor/tracing.py`, which decides what is sent to Langfuse) |
 
 **Approving means:** "I read what the checker did, I accept its scope,
 including the Not-checked list, and I take responsibility for this change."
@@ -42,8 +42,9 @@ is not a defence.
 
 If `npm run verify` stops running the tests, or a module loses its tests,
 the Attested tier is suspended for those paths until the tests are back.
-**Until §1 adds the product's test suite, only the kit itself (`scripts/`)
-meets this**, so any `src/` change before then is reviewed as Reviewed.
+The product's test suite (`tests/`, run by `npm run verify` with ruff and
+mypy) now exists, so `src/advisor/` meets this like the kit does; the
+by-meaning paths in the Reviewed row stay Reviewed.
 
 ### Against rubber-stamping
 
@@ -74,9 +75,11 @@ a hook in a real session) and record that you did, before the merge.
 
 - **When one is owed.** `/review` sets `live-check: owed` when any of these
   holds:
-  1. the diff touches a runtime path listed here. §1 adds the product's
-     entry points, UI and integration adapters; until then this rule names
-     nothing;
+  1. the diff touches a runtime path listed here: `src/advisor/cli.py`
+     (the entry point), `src/advisor/models/` (the model adapters),
+     `src/advisor/tracing.py` (the Langfuse integration),
+     `src/advisor/prompts/` (the prompt the model runs on) or `infra/`
+     (the local Langfuse stack);
   2. the diff touches `.claude/settings.json` (its hooks run in every
      session);
   3. a "Not checked" item is runtime behaviour that only a live run can
