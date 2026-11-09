@@ -8,13 +8,13 @@ review_tier: reviewed    # edits REVIEW-POLICY.md and intent-check-lib.mjs; ship
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
 # an agent recorded it on your request. Leave empty until passed.
 intent_accepted: 2026-11-09 by-agent
-spec_accepted:           # feature only
+spec_accepted: 2026-11-09 by-agent    # owner: "yes" to the spec stop
 plan_approved:           # feature, fix, refactor
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
 auto_authorized: 2026-11-09 by-agent    # owner: "yes and /auto 1"
 auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   # none yet: §1 is the first intent
