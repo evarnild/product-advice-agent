@@ -1,0 +1,18 @@
+{
+  "name": "product-advice-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SDLC kit only for now; the stack is §1's decision. The kit's scripts need Node ≥ 22 and nothing else.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test:kit": "node --test \"scripts/*.test.mjs\"",
+    "check:intent": "node scripts/check-intent.mjs",
+    "sdlc:scan": "node scripts/sdlc-scan.mjs",
+    "queue": "node scripts/queue.mjs",
+    "spawn": "node scripts/spawn-intent.mjs",
+    "sessions": "node scripts/sessions.mjs",
+    "ship": "node scripts/ship.mjs",
+    "verify": "npm run test:kit"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+
+# Agent worktrees created by the harness. They sit inside the repo but share
+# its .git, so committing one adds a gitlink that resolves to nothing on clone
+# (it has happened).
+.claude/worktrees/
+.claude/settings.local.json
+
+# Per-worktree session brief.
+CLAUDE.local.md
