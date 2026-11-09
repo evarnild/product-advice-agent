@@ -215,3 +215,34 @@ Each ends with `npm run verify` green and a commit.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-09 — subtasks 1–9 (implementer)
+
+Commits: ecf3f3a (scaffold), 3d4f3ac (catalogue), 4361ced (models), 5efe313
+(agent, prompt, guardrails), 44b72e9 (tracing), a9323b2 (config, CLI),
+2a2dd92 (Langfuse compose), 6453c2e (docs, CORE_CODE, REVIEW-POLICY,
+CLAUDE.md). A stalled stream interrupted subtask 3; it resumed from the
+uncommitted files.
+
+Shipped: everything in subtasks 1–9. `npm run verify` = kit tests (255 pass)
++ ruff check + ruff format --check + mypy strict (11 source files) + pytest
+(89 pass). `check:intent` PASS.
+
+Divergences and notes:
+- `answer_question` (input guardrail, agent, output guardrail, one trace)
+  lives in `agent.py`, not `cli.py`, so the guardrail wiring is pure and
+  testable; the CLI calls it. Plan said "wiring ... in cli".
+- The `Tracer` protocol and `NoopTracer` are in `tracing.py` (created in
+  subtask 4, filled in subtask 6); `SafeTracer` wraps every Langfuse call.
+- `make_client(provider, model, api_key)` takes the key as an argument;
+  config looks it up via `PROVIDER_KEY_ENV`.
+- `docker compose -f infra/langfuse/docker-compose.yml config -q` exits 0
+  only once `infra/langfuse/.env` exists, because secrets are required
+  (`${VAR:?}`), not defaulted. With `--env-file infra/langfuse/.env.example`
+  it exits 0 (done; documented in README). Nothing was started.
+- Added `tests/helpers.py` (recording and raising tracers) and
+  `tests/test_config.py`; a real-SDK tracing test uses Langfuse with an
+  in-memory OpenTelemetry exporter (no network).
+- Kit fixtures moved to `src/advisor/...`, `tests/...` paths; one kit test
+  added for non-core vs core paths; no assertion weakened.
+- Python resolved to 3.12.9 in `.venv` (`requires-python >=3.12`).
