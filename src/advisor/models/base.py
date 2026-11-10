@@ -18,6 +18,14 @@ class ModelError(Exception):
     """A model call failed (provider error, network failure, bad response)."""
 
 
+class ModelUnreachableError(ModelError):
+    """The model server cannot be reached; `str(e)` is a ready user-facing message."""
+
+
+class ModelNotAvailableError(ModelError):
+    """The server is up but lacks the model; `str(e)` is a ready user-facing message."""
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     """A tool the model may call; `parameters` is a JSON Schema object."""
