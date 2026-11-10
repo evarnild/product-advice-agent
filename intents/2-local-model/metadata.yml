@@ -12,9 +12,9 @@ spec_accepted: 2026-11-10 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 2" (auto_authorized 2026-11-10)
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
-auto_authorized: 2026-11-10 by-agent    # owner: "/auto 2"
-auto_round: 2
-auto_stopped: escalate, owner reads the diff
+auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 2 and did a small change" then "go"
+auto_round: 3
+auto_stopped:
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/1-stack-and-skeleton    depends on: ModelClient seam, config, CLI key check
