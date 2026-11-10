@@ -2,7 +2,7 @@
 id: 2
 slug: local-model
 type: feature            # feature | fix | refactor | adjustment | experiment
-status: in-review          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: done
 title: Locally run model (Ollama) as the advisor's default
 review_tier: reviewed    # touches config.py and .env.example (credentials), cli.py (user-facing output), maybe prompts
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
@@ -11,7 +11,7 @@ intent_accepted: 2026-11-10 by-agent    # owner: "yes"
 spec_accepted: 2026-11-10 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 2" (auto_authorized 2026-11-10)
 live_checked: 2026-11-10 by-agent    # owner: "live checked for 2"; step 3's empty answer was search's hyphen matching, split out as §7; owner: "keep recorded live check for 2" (covers the rebased code, review round 5)
-merged:                  # merge commit hash
+merged: 60b5084    # 2026-11-10, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 2 and did a small change" then "go"
 auto_round: 3
 auto_stopped: ready for /ship
