@@ -10,7 +10,7 @@ review_tier: reviewed    # infra/langfuse/.env.example (credentials); maybe trac
 intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §4"
 spec_accepted: 2026-11-10 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 4" (auto_authorized 2026-11-10)
-live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+live_checked: 2026-11-10 by-agent    # owner: "passed" (extra anthropic.messages.create traces from the Anthropic SDK's own OTel: pre-existing, follow-up fix)
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 4 /auto 4"
 auto_round: 2
