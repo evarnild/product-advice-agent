@@ -14,7 +14,7 @@ live_checked:            # only when review.md says live-check: owed — the day
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 1"
 auto_round: 1
-auto_stopped: agent error
+auto_stopped: decision needed
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   # none yet: §1 is the first intent
