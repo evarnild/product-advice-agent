@@ -1,4 +1,7 @@
+import json
+import threading
 import time
+import uuid
 
 import pytest
 from langfuse import Langfuse
@@ -7,7 +10,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from advisor import tracing
 from advisor.agent import answer_question, search_tool
 from advisor.catalogue import Product
-from advisor.models.base import ModelTurn, ToolCall, Usage
+from advisor.models.base import ModelError, ModelTurn, ToolCall, Usage
 from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import LangfuseTracer, NoopTracer, SafeTracer, make_tracer
 from tests.helpers import RaisingTracer, RecordingTracer
@@ -16,7 +19,7 @@ CAT = [Product("P-001", "Alpha Phone", "Acme", "phone", 100.0, True, {}, "d")]
 FULL_ENV = {
     "LANGFUSE_PUBLIC_KEY": "pk-test",
     "LANGFUSE_SECRET_KEY": "sk-test",
-    "LANGFUSE_HOST": "http://localhost:3000",
+    "LANGFUSE_HOST": "http://langfuse.test:3000",
 }
 
 
@@ -71,7 +74,7 @@ def test_all_set_creates_one_client_with_the_values(monkeypatch):
     monkeypatch.setattr(tracing, "Langfuse", FakeClient)
     assert isinstance(make_tracer(FULL_ENV), SafeTracer)
     assert created == [
-        {"public_key": "pk-test", "secret_key": "sk-test", "host": "http://localhost:3000"}
+        {"public_key": "pk-test", "secret_key": "sk-test", "host": "http://langfuse.test:3000"}
     ]
 
 
@@ -88,25 +91,48 @@ def test_raising_tracer_does_not_change_answer():
     assert answer_question("q", _fake(), [search_tool(CAT)], safe) == "Buy P-001."
 
 
-def test_langfuse_tracer_with_real_sdk_and_in_memory_exporter():
+def _real_tracer():
     exporter = InMemorySpanExporter()
     client = Langfuse(
-        public_key="pk-test",
+        # The SDK shares one exporter per public key, so each test needs its own key.
+        public_key=f"pk-{uuid.uuid4().hex}",
         secret_key="sk-test",
-        host="http://localhost:3000",
+        host="http://langfuse.test:3000",
         span_exporter=exporter,
         flush_at=1,
     )
-    tracer = LangfuseTracer(client)
-    answer_question("which phone?", _fake(), [search_tool(CAT)], tracer)
+    return exporter, LangfuseTracer(client)
+
+
+def _attr(span, name):
+    return span.attributes[f"langfuse.observation.{name}"]
+
+
+def _json_attr(span, name):
+    return json.loads(_attr(span, name))
+
+
+def test_langfuse_tracer_with_real_sdk_and_in_memory_exporter():
+    exporter, tracer = _real_tracer()
+    script = [
+        ModelTurn(
+            tool_calls=(ToolCall("c", "search_products", {"category": "phone"}),),
+            usage=Usage(10, 4),
+            model="m-1",
+        ),
+        ModelTurn(tool_calls=(ToolCall("d", "no_such_tool", {}),), usage=Usage(1, 1), model="m-1"),
+        ModelTurn(text="Buy P-001.", usage=Usage(20, 6), model="m-1"),
+    ]
+    answer_question("which phone?", ScriptedModelClient(script), [search_tool(CAT)], tracer)
     spans = exporter.get_finished_spans()
-    names = [s.name for s in spans]
-    assert sorted(names) == sorted(
+    assert sorted(s.name for s in spans) == sorted(
         [
             "advisor-run",
             "input-check",
             "model-call",
             "search_products",
+            "model-call",
+            "no_such_tool",
             "model-call",
             "output-check",
         ]
@@ -114,16 +140,54 @@ def test_langfuse_tracer_with_real_sdk_and_in_memory_exporter():
     assert len({s.context.trace_id for s in spans}) == 1
     roots = [s for s in spans if s.parent is None]
     assert [s.name for s in roots] == ["advisor-run"]
-    attrs = {k: str(v) for k, v in roots[0].attributes.items()}
-    assert any("which phone?" in v for v in attrs.values())
-    assert any("Buy P-001." in v for v in attrs.values())
+    assert _attr(roots[0], "input") == "which phone?"
+    assert _attr(roots[0], "output") == "Buy P-001."
+    by_name = {s.name: s for s in spans}
+
+    for name in ("input-check", "output-check"):
+        assert _attr(by_name[name], "type") == "guardrail"
+        assert _json_attr(by_name[name], "output")["allowed"] is True
+
+    search = by_name["search_products"]
+    assert _attr(search, "type") == "tool"
+    assert _json_attr(search, "input") == {"category": "phone"}
+    assert _json_attr(search, "output") == {"result_count": 1}
+    assert _attr(search, "level") == "DEFAULT"
+    assert _attr(by_name["no_such_tool"], "level") == "ERROR"
+
     gens = [s for s in spans if s.name == "model-call"]
-    joined = " ".join(str(v) for g in gens for v in g.attributes.values())
-    assert "m-1" in joined and "10" in joined
+    assert all(_attr(g, "type") == "generation" for g in gens)
+    assert {_attr(g, "model.name") for g in gens} == {"m-1"}
+    usages = sorted((json.loads(_attr(g, "usage_details")) for g in gens), key=lambda u: u["input"])
+    assert usages == [
+        {"input": 1, "output": 1},
+        {"input": 10, "output": 4},
+        {"input": 20, "output": 6},
+    ]
+
+
+def test_failed_run_exports_root_with_level_error_and_propagates():
+    exporter, tracer = _real_tracer()
+    fake = ScriptedModelClient([ModelError("down")])
+    with pytest.raises(ModelError):
+        answer_question("which phone?", fake, [search_tool(CAT)], tracer)
+    spans = exporter.get_finished_spans()
+    roots = [s for s in spans if s.parent is None]
+    assert [s.name for s in roots] == ["advisor-run"]
+    assert _attr(roots[0], "level") == "ERROR"
+    assert _attr(roots[0], "input") == "which phone?"
+    assert _attr(roots[0], "output") == "ModelError: down"
+    assert [s.name for s in spans if s.parent is not None] == ["input-check"]
+
+
+def test_safe_tracer_swallows_fail_errors():
+    SafeTracer(RaisingTracer()).fail("x")
 
 
 def test_flush_is_bounded(monkeypatch):
+    assert tracing.FLUSH_TIMEOUT_SECONDS <= 5
     monkeypatch.setattr(tracing, "FLUSH_TIMEOUT_SECONDS", 0.2)
+    flushed = threading.Event()
 
     class Hanging:
         def start_observation(self, **kw):
@@ -136,6 +200,7 @@ def test_flush_is_bounded(monkeypatch):
             pass
 
         def flush(self):
+            flushed.set()
             time.sleep(3)
 
     tracer = LangfuseTracer(Hanging())
@@ -143,3 +208,28 @@ def test_flush_is_bounded(monkeypatch):
     start = time.monotonic()
     tracer.finish("a")
     assert time.monotonic() - start < 2
+    assert flushed.wait(1)
+
+
+def test_fail_also_flushes(monkeypatch):
+    flushed = threading.Event()
+
+    class Client:
+        def start_observation(self, **kw):
+            return self
+
+        def update(self, **kw):
+            self.updated = kw
+
+        def end(self):
+            pass
+
+        def flush(self):
+            flushed.set()
+
+    client = Client()
+    tracer = LangfuseTracer(client)
+    tracer.begin("q")
+    tracer.fail("boom")
+    assert flushed.wait(1)
+    assert client.updated == {"output": "boom", "level": "ERROR"}

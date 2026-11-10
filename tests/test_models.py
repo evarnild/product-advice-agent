@@ -133,3 +133,24 @@ def test_adapter_wraps_sdk_errors():
     err = anthropic.APIConnectionError(request=httpx.Request("POST", "https://example.invalid"))
     with pytest.raises(ModelError):
         AnthropicClient("k", "m", sdk_client=FakeSdk(error=err)).complete("s", [], [])
+
+
+def test_adapter_assistant_with_empty_text_sends_no_text_block():
+    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="ok")]))
+    history = [
+        Message("user", "q"),
+        Message("assistant", "", (ToolCall("tu_1", "search_products", {}),)),
+        Message("user", tool_results=(ToolResult("tu_1", "[]"),)),
+    ]
+    AnthropicClient("k", "m", sdk_client=sdk).complete("s", history, [])
+    assert sdk.calls[0]["messages"][1] == {
+        "role": "assistant",
+        "content": [{"type": "tool_use", "id": "tu_1", "name": "search_products", "input": {}}],
+    }
+
+
+def test_adapter_reports_the_model_the_response_names():
+    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="hi")], model="served-model-9"))
+    turn = AnthropicClient("k", "configured-model", sdk_client=sdk).complete("s", [], [])
+    assert sdk.calls[0]["model"] == "configured-model"
+    assert turn.model == "served-model-9"

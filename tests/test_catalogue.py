@@ -127,10 +127,11 @@ def test_load_does_not_alias_input(tmp_path):
     assert raw == snapshot
 
 
+# P-003 is listed before P-002 and they tie on price: only the id tie-break orders them.
 CAT = [
     _p("P-001", 100, name="Alpha Phone", category="phone"),
-    _p("P-002", 50, name="Beta Phone", category="phone", in_stock=False),
     _p("P-003", 50, name="Gamma Laptop", category="laptop", description="Has NOISE cancelling"),
+    _p("P-002", 50, name="Beta Phone", category="phone", in_stock=False),
     _p(
         "P-004",
         200,
@@ -182,3 +183,11 @@ def test_limit_default_and_clamp():
 def test_no_match_is_empty_list():
     assert search_products(CAT, category="monitor") == []
     assert search_products([]) == []
+
+
+@pytest.mark.parametrize("field", ["name", "brand", "description"])
+def test_blank_text_field_is_rejected(tmp_path, field):
+    with pytest.raises(CatalogueError) as e:
+        load_catalogue(_write(tmp_path, [_product(**{field: "   "})]))
+    assert f"'{field}'" in str(e.value)
+    assert "P-001" in str(e.value)
