@@ -2,6 +2,8 @@
 
 Status: accepted with intent §1 (2026-11-09). Spec: `intents/1-stack-and-skeleton/spec.md`.
 
+Superseded in part: the "Model provider" and "Default model" rows are replaced by [0002](0002-local-model.md).
+
 ## Decision
 
 | Choice | Decision | Reason |

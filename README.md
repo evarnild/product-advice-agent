@@ -22,10 +22,48 @@ uv sync            # or: npm run setup:worktree  (uv sync --frozen)
 cp .env.example .env     # then edit; .env is gitignored
 ```
 
-Set `ANTHROPIC_API_KEY`. Optionally `ADVISOR_MODEL_PROVIDER` (default
-`anthropic`) and `ADVISOR_MODEL` (default `claude-haiku-5-5`). Tracing is on
-only when `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`
-are all set.
+With nothing set, the advisor answers through a local model in
+[Ollama](https://ollama.com), with no key and no API cost:
+
+1. Install Ollama and make sure it is running (the Ollama app, or
+   `ollama serve`).
+2. `ollama pull qwen3:8b` (about 5 GB).
+3. `uv run advisor "..."` (see Run).
+
+The question stays on your machine apart from traces to your own Langfuse.
+`ADVISOR_OLLAMA_URL` (default `http://localhost:11434`, must be `http://` or
+`https://`) says where Ollama is; if you point it at another machine, your
+questions go there. `OLLAMA_HOST` is not read.
+
+To use Claude instead, set `ADVISOR_MODEL_PROVIDER=anthropic` and
+`ANTHROPIC_API_KEY` (model default `claude-haiku-5-5`, override with
+`ADVISOR_MODEL`). **A `.env` copied from the old `.env.example` pins
+`ADVISOR_MODEL_PROVIDER=anthropic` and so keeps using Claude: remove that
+line to get the local default.**
+
+Tracing is on only when `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and
+`LANGFUSE_SECRET_KEY` are all set. Every trace is tagged `provider:<name>`
+and `model:<name>`.
+
+If the run cannot reach Ollama it prints `Ollama is not reachable at <url>.
+Start Ollama (the Ollama app, or "ollama serve") and try again.` If the model
+is not pulled it prints `Model '<model>' is not available in Ollama. Run:
+ollama pull <model>`. Both exit 1.
+
+### Comparing providers
+
+Run these 5 questions once with the default (Ollama) and once with
+`ADVISOR_MODEL_PROVIDER=anthropic`, with Langfuse tracing on:
+
+1. I need noise-cancelling headphones under 200 euros.
+2. Which phone with at least 128 GB of storage is the cheapest one in stock?
+3. Compare the laptops you have for someone who edits video.
+4. Do you have a smartwatch with GPS under 150 euros?
+5. I want a gift for a gamer, budget 80 euros.
+
+In the Langfuse UI, filter traces by tag `provider:ollama` and then
+`provider:anthropic` and read the answers, model names, token usage and
+latency side by side. Nothing is committed.
 
 ## Run
 
@@ -34,7 +72,7 @@ uv run advisor "I need noise-cancelling headphones under 200 euros"
 ```
 
 Prints the answer and exits 0. A blank question exits 2 with a usage line;
-a model or network failure prints "The advisor is unavailable right now."
+another model or network failure prints "The advisor is unavailable right now."
 and exits 1 (`--debug` shows the traceback).
 
 ## Trace to a local Langfuse (optional)
