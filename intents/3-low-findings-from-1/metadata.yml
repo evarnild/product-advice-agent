@@ -9,12 +9,12 @@ review_tier: reviewed    # touches tracing.py and cli.py (Reviewed by meaning)
 # an agent recorded it on your request. Leave empty until passed.
 intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §3"
 spec_accepted:           # feature only
-plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 3" (auto_authorized 2026-11-10)
+plan_approved: 2026-11-10 by-agent    # owner: "reapprove" the plan amended in 48b2fd6 (subtask 3, Tests, Assumptions)
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3"
-auto_round: 2
-auto_stopped: escalate, owner reads the diff
+auto_round: 3
+auto_stopped:
 follows_up: 1            # the five findings come from §1's change (review rounds 1–4)
 links:
   - intents/1-stack-and-skeleton    source: review.md round 4, open LOW findings
