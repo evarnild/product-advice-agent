@@ -3,11 +3,245 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: 40314e0be83a808ade4a40aaa8ea6c5a1c0833da
-round: 2
+reviewed-commit: 462c9b1fd096ee9daff53175dd33f59d21b6b9c2
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Round 3 covers what changed after the owner read the round-2 diff:
+- 79cf6b9, the owner's rename `Settings.key_variable` → `api_key_variable`;
+- 5511a2d, the coordinator's line wrap for ruff E501;
+- 5bf64a4, 8f64463 and 462c9b1, intent artefacts only.
+
+The rename and the wrap change no behaviour; the user-facing missing-key
+message is byte-identical. All 9 mutants on the renamed lines are killed. No
+finding needs rework, and the tier is Reviewed, so the verdict is escalate.
+The owner has already read the diff ("read the diff for 2 and did a small
+change", then "go"), so the run goes on to the live check.
+
+Tier: Reviewed, set by the path table (`src/advisor/cli.py`, `config.py`
+by meaning). `review_tier: reviewed` agrees.
+
+Scope: `git diff 40314e0 HEAD -- . ':!intents'` is exactly 3 files:
+`src/advisor/cli.py` (+4/−2), `src/advisor/config.py` (+2/−2),
+`tests/test_config.py` (+3/−3). Inside `intents/`, only `metadata.yml` and
+`review.md` changed.
+
+## Round-2 findings: resolution
+| Round-2 finding | Resolution |
+| --- | --- |
+| LOW `plan.md:319-320`: "also guards M02" attribution | open, Worth a look |
+| LOW `tests/test_models.py:43-58`: wiring tests read private attributes | open, Worth a look |
+| Nit: build entry's "162 pytest tests" | open, nit (the suite is 168) |
+| From round 1: M42 (`"tool_calls": null`) | open, Worth a look (near-equivalent) |
+| From round 1: tags via private `_otel_span` | open, Worth a look: live check step 6, now on Langfuse v4 |
+| From round 1: default URL defined twice | open, Worth a look |
+| From round 1: every 404 → B11 | open, Worth a look (plan-settled) |
+| Pass 9 candidate (wiring every test bypasses with a fake) | open: an owner edit to `REVIEW-POLICY.md` |
+| M40 | equivalent; no action |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | findings (1, LOW, Worth a look): the rename is unplanned and not in Progress, but deliberate and the owner's |
+| 2 | Type check | pass (FAIL only on the owed live check: the owner's to clear) |
+| 3 | Behaviour against the spec | pass (B1–B21 unchanged; the missing-key message byte-identical; AC10 is the live check) |
+| 4 | Tests prove the behaviour, not only pass | pass (9 mutants, 9 killed) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (round-2 LOW carried) |
+| 7 | Documentation | pass (`README.md`, `CLAUDE.md` never named the property) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty; round-1 candidate waits for the owner) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 2, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/2-local-model/review.md → ## Live check, then set live_checked: <date> in intents/2-local-model/metadata.yml.
+  note:  26 file(s), 1029 line(s) changed outside intents/.
+```
+The only error is the owed live check. The note's rise from round 2's 21
+files and 977 lines is `main` moving (§4 merged), not this branch: against
+the merge base dfb0811, the branch still changes 21 files outside
+`intents/`.
+
+## Findings
+- **LOW** `src/advisor/config.py:39`, `src/advisor/cli.py:71,75`,
+  `tests/test_config.py:9,18,44` (79cf6b9) — the rename is unplanned scope:
+  it renames a name that has existed on `main` since §1, which pass 1 counts
+  as refactoring mixed into a feature. The owner made it deliberately after
+  the diff read (`metadata.yml` records it). `plan.md` `## Progress` has no
+  line for it. `intent.md:15`, `spec.md:31` and `plan.md:70,75` describe the
+  code as it was; `plan.md:164` is a design line and now uses the old name.
+  None of this misleads about behaviour. Worth a look: a Progress line
+  naming 79cf6b9 and 5511a2d.
+- **LOW** branch `fix/3-low-findings-from-1` (§3) — its `cli.py:74`,
+  `config.py:28,32` and `tests/test_config.py:8,19` still use
+  `key_variable`. Whichever of §2 and §3 merges second applies the rename;
+  both change `cli.py`, so a textual conflict is likely anyway. A missed
+  spot cannot ship green: mypy --strict and `test_config.py` would fail.
+  Worth a look.
+- Nit (carried): `plan.md:284`'s "162 pytest tests".
+
+Mutants this round (backup by copy, one CRLF-aware match, `git diff
+--quiet` non-zero asserted, full `pytest` without `-x`, restore by copy in
+`finally`):
+
+| id | target | change | result | killing tests |
+| --- | --- | --- | --- | --- |
+| K01 | `cli.py:71` | `if settings.api_key_variable is not None:` → `if True:` | KILLED (12 failed) | test_cli_ollama::test_default_provider_is_ollama_without_a_key, ::test_ollama_never_receives_an_anthropic_key, … |
+| K02 | `cli.py:71` | → `if False:` | KILLED (5) | test_cli::test_missing_key_exit_1_names_variable_no_client, ::test_happy_path_prints_answer_exit_0, test_cli_ollama::test_anthropic_gets_its_key_and_no_base_url, … |
+| K03 | `cli.py:75` | `Missing {settings.api_key_variable}` → `Missing {settings.provider}` | KILLED (3) | test_cli::test_missing_key_…, test_cli_ollama::test_anthropic_without_key_keeps_the_missing_key_message |
+| K04 | `cli.py:75` | "set it in the environment or in .env." → "set it in .env." | KILLED (1) | test_cli_ollama::test_anthropic_without_key_keeps_the_missing_key_message |
+| K05 | `config.py:40` | `return PROVIDER_KEY_ENV.get(self.provider)` → `return None` | KILLED (6) | test_config::test_anthropic_still_selectable, test_cli::test_happy_path_prints_answer_exit_0, … |
+| K06 | `config.py:40` | → `return "ANTHROPIC_API_KEY"` | KILLED (14) | test_cli_ollama::test_default_provider_is_ollama_without_a_key, test_config::test_defaults_are_local, … |
+| K07 | `config.py:50` | `var = self.api_key_variable` → `var = None` | KILLED (10) | test_cli::test_happy_path_prints_answer_exit_0, … |
+| K08 | `cli.py:73` | `if not api_key:` → `if False:` | KILLED (3) | test_cli::test_missing_key_…, test_cli_ollama::test_anthropic_without_key_keeps_the_missing_key_message |
+| K09 | `cli.py:72` | `api_key = settings.api_key()` → `api_key = None` | KILLED (9) | test_cli::test_happy_path_prints_answer_exit_0, … |
+
+Round 1's L01 and L02 were recorded by name only. K01, K02, K08 and K09
+re-derive them on the same block, which moved from lines 59-60 to 71-75.
+Other round-1 and round-2 mutants were not re-run: their targets did not
+change.
+
+## Not checked
+- **Carried** (`src/advisor/models/`, `tracing.py` and the Ollama path are
+  unchanged):
+  - real Ollama 0.40.9: `tool_name`, `think`, `num_ctx`, the usage counts,
+    and `qwen3:8b`'s tool calls (rule 3);
+  - whether the Langfuse server, **now v4 (4.78.0)**, reads
+    `langfuse.trace.tags` from a `start_observation` root (rule 3). Round 1
+    reasoned against v3, so this is new;
+  - Langfuse not pricing `qwen3:8b`;
+  - the "about 5 GB" figure;
+  - the `--debug` traceback with `user:pw@` in the URL;
+  - proxy settings on the `httpx.Client`.
+- **The merge with `main`:** `git merge-tree --write-tree main HEAD` was
+  clean, and `pytest` on that tree gave "173 passed" (168 plus §4's 5). The
+  full `npm run verify` was not run on the merged tree.
+
+## Live check
+- owed: rule 1 (`src/advisor/cli.py`, `src/advisor/models/`,
+  `src/advisor/tracing.py`), and rule 3 (the real Ollama `/api/chat` round
+  trip; the server reading `langfuse.trace.tags`, now on Langfuse v4).
+- **New since round 2:** `main` has a root `.env` and `infra/langfuse/.env`
+  for the running v4 stack; the worktree has neither. Both are gitignored.
+  The root `.env` sets both `ADVISOR_MODEL_PROVIDER` **and**
+  `ADVISOR_MODEL`, and both must be off for steps 1–5. If only the provider
+  is commented out, `ADVISOR_MODEL` sends the Anthropic model id to Ollama,
+  and step 3 fails with "Model '…' is not available".
+- steps (Windows PowerShell):
+  0. ```
+     cd C:\Users\eric\src\product-advice-agent-wt\2-local-model
+     Copy-Item ..\..\product-advice-agent\.env .env
+     Copy-Item ..\..\product-advice-agent\infra\langfuse\.env infra\langfuse\.env
+     ```
+     In the worktree's `.env`, put `#` before the `ADVISOR_MODEL_PROVIDER=`
+     and `ADVISOR_MODEL=` lines. Keep `ANTHROPIC_API_KEY` and `LANGFUSE_*`.
+  1. ```
+     Remove-Item Env:ADVISOR_MODEL_PROVIDER, Env:ADVISOR_MODEL, Env:ANTHROPIC_API_KEY, Env:ADVISOR_OLLAMA_URL -ErrorAction SilentlyContinue
+     ```
+  2. Start Ollama (the app, or `ollama serve`); run `ollama pull qwen3:8b`,
+     then `ollama list`.
+  3. `uv run advisor "I need noise-cancelling headphones under 200 euros"`,
+     then `$LASTEXITCODE`.
+  4. Quit Ollama; repeat step 3.
+  5. Start Ollama; `$env:ADVISOR_MODEL = "nonexistent:1b"`; repeat step 3;
+     `Remove-Item Env:ADVISOR_MODEL`.
+  6. Tags on Langfuse v4:
+     1. With the stack up (http://localhost:3000) and the `LANGFUSE_*`
+        values from the `.env`, run the README's 5 "Comparing providers"
+        questions with the default.
+     2. Set `$env:ADVISOR_MODEL_PROVIDER = "anthropic"` and run the 5 again.
+     3. `Remove-Item Env:ADVISOR_MODEL_PROVIDER`.
+     4. In Langfuse → Traces, filter by `provider:ollama`, then
+        `provider:anthropic`.
+  7. Optional (B16): during step 3, `Get-NetTCPConnection -State Established
+     | Where-Object OwningProcess -eq (Get-Process python).Id`.
+  8. Afterwards, keep or delete the worktree's copied `.env` files (both
+     gitignored).
+- you should see:
+  - **Step 2:** `qwen3:8b` listed.
+  - **Step 3:** an answer naming catalogue headphones by name and id
+    (P-0xx), exit `0`. The first run can take tens of seconds.
+  - **Step 4:** exactly `Ollama is not reachable at http://localhost:11434.
+    Start Ollama (the Ollama app, or "ollama serve") and try again.`, no
+    traceback, exit `1`.
+  - **Step 5:** exactly `Model 'nonexistent:1b' is not available in Ollama.
+    Run: ollama pull nonexistent:1b`, exit `1`.
+  - **Step 6:**
+    - 5 traces under each filter, tagged `provider:<p>` and
+      `model:qwen3:8b` / `model:claude-haiku-5-5`;
+    - each `model-call` with model and token counts;
+    - no cost on the Ollama ones.
+    - Until §5 ships, each Anthropic run also shows extra
+      `anthropic.messages.create` traces, which §5 removes. They are not a
+      §2 defect.
+  - **Step 7:** only `127.0.0.1:11434`, plus the Langfuse port when tracing
+    is on.
+  - **If something differs:**
+    - Tool calls failing in step 3 (no products named, or an Ollama 400
+      about `tool_name`) is a defect.
+    - Traces without tags in step 6 is a defect in the tag mechanism.
+
+    Either way, leave `live_checked:` empty.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/2-local-model` at 462c9b1, `git status --short` showing only `?? .idea/` before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "61 files already formatted";
+  mypy "Success: no issues found in 12 source files"; pytest "168 passed".
+  Matches the reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL, exit 1, with only
+  the owed-live-check error. Matches.
+- **Coordinator, re-run:** K01, K02, K04 and K05 with my harness (backup by
+  copy, one replacement, file-changed assertion, full `pytest -q -x`,
+  restore by copy), each KILLED:
+  - K01 by test_cli_ollama::test_default_provider_is_ollama_without_a_key;
+  - K02 by test_cli::test_happy_path_prints_answer_exit_0;
+  - K04 by test_cli_ollama::test_anthropic_without_key_keeps_the_missing_key_message;
+  - K05 by test_cli::test_happy_path_prints_answer_exit_0.
+
+  Each matches the reviewer's killed result. With `-x` I see the first
+  failing test, which is among those the reviewer lists.
+- **Coordinator:** before the review, `verify` failed on ruff E501 at
+  `cli.py:74` after 79cf6b9. Fixed in 5511a2d (line wrap only), and green
+  again.
+
+**Reviewer, verified:**
+- HEAD 462c9b1, merge base dfb0811; nothing pushed.
+- The scoped diff read in full.
+- No leftover `key_variable` in `src`/`tests` (except an accurate test
+  name).
+- The missing-key message is byte-identical (`cli.main` probe: rc 1,
+  `'Missing ANTHROPIC_API_KEY: set it in the environment or in .env.\n'`).
+- `verify` and `check:intent`.
+- `sdlc:scan --sample-due auto --exclude 2` → "nth attested auto change =
+  1, every 3, sampled: no".
+- 9 mutants (harness `…/scratchpad/mut2r3/mut.py`).
+- The merge-tree test-merge: 173 passed.
+- The `.env` files on `main`: variable names only.
+
+**Taken on trust:**
+- the Ollama API shape;
+- the Langfuse v4 server's handling of `langfuse.trace.tags`;
+- the 5 GB size;
+- the plan's `qwen3:8b` check;
+- the earlier rounds' kills on unchanged targets.
+
+# Round 2 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: 40314e0be83a808ade4a40aaa8ea6c5a1c0833da
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 The rework closes every round-1 rework finding with tests and Progress text
 only (`git diff a7ff0fe HEAD -- src` is empty). No finding needs rework,
@@ -22,7 +256,7 @@ Scope: a7ff0fe..40314e0 — c32fbc6 (the rework: `tests/test_models.py`,
 `tests/test_ollama_model.py`, plan Progress), 80a34c7 (the round-1 review),
 40314e0 (`auto_round: 2`).
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round-1 finding | Resolution |
 | --- | --- |
 | HIGH `models/__init__.py:31,:35`: `make_client` wiring unproven (M02, R03, R04) | resolved: M02 and R04 killed by `test_make_client_ollama_passes_model_and_base_url_through` (`tests/test_models.py:43`); R04 also by `…_defaults_the_base_url` (`:49`); R03 by `test_make_client_anthropic_passes_the_key_to_the_sdk` (`:55`) |
@@ -38,7 +272,7 @@ Scope: a7ff0fe..40314e0 — c32fbc6 (the rework: `tests/test_models.py`,
 | Pass 9 candidate (wiring every test bypasses with a fake) | open: an owner edit to `REVIEW-POLICY.md` |
 | M40 | equivalent; no action |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (tests and Progress only, as round 1 asked) |
@@ -51,7 +285,7 @@ Scope: a7ff0fe..40314e0 — c32fbc6 (the rework: `tests/test_models.py`,
 | 8 | Guardrails and hygiene | pass (no new dependency; placeholders only) |
 | 9 | Repository-specific footguns | pass (round-1 candidate stands for the owner) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -63,7 +297,7 @@ type-check: FAIL (intent 2, feature)
 The only error is the owed live check (`live_checked:` empty): the owner's
 to clear, not rework.
 
-## Findings
+### Findings
 - **LOW** `intents/2-local-model/plan.md:320-321` (Progress, rework entry) —
   it says `test_make_client_ollama_defaults_the_base_url` "also guards
   M02". Under M02 the full suite without `-x` gives "1 failed, 167 passed",
@@ -105,7 +339,7 @@ in `finally`):
 The round-1 table's 65 kills were not re-run: `src` is unchanged and tests
 were only added, so an added test cannot un-kill a mutant.
 
-## Not checked
+### Not checked
 Carried from round 1 (`src` unchanged):
 - **Real Ollama 0.40.9** (rule 3):
   - `tool_name` on tool messages, and `think` and `num_ctx` honoured;
@@ -121,7 +355,7 @@ Carried from round 1 (`src` unchanged):
 - **Ship preconditions after `main` moved:** `main` changed in `intents/`
   only, so there is no code conflict, but no test-merge was done.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/cli.py`, `src/advisor/models/`,
   `src/advisor/tracing.py`), and rule 3 (the real Ollama `/api/chat` round
   trip; the server reading `langfuse.trace.tags`). Unchanged since round 1.
@@ -174,7 +408,7 @@ Carried from round 1 (`src` unchanged):
 
     Either way, leave `live_checked:` empty.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/2-local-model` at 40314e0, `git status --short` empty before and after):
 - **Coordinator, re-run:** `git diff a7ff0fe HEAD -- src` → empty;
