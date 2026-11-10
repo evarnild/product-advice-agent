@@ -12,7 +12,7 @@ spec_accepted:           # feature only
 plan_approved:           # feature, fix, refactor
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
-auto_authorized: 2026-11-10 by-agent    # owner: "/auto 6"
+auto_authorized: 2026-11-10 by-agent    # owner: "/auto 6" (resume after too many sessions)
 auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
 auto_stopped: too many sessions
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
