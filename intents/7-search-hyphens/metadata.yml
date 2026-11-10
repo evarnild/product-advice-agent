@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 7
+slug: search-hyphens
+type: fix
+status: accepted
+title: Product search misses matches when a keyword and the catalogue differ only by a hyphen
+review_tier:
+intent_accepted: 2026-11-10 by-agent    # owner: "accept intent 7"
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up: 1
+links:
+  - intents/1-stack-and-skeleton
+  - intents/2-local-model
