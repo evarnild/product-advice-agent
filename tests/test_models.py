@@ -25,6 +25,26 @@ def test_make_client_anthropic_does_not_connect():
     assert isinstance(client, AnthropicClient)
 
 
+def test_anthropic_adapter_turns_off_sdk_tracing(monkeypatch):
+    seen: dict[str, object] = {}
+
+    def recorder(**kwargs: object) -> object:
+        seen.update(kwargs)
+        return SimpleNamespace()
+
+    monkeypatch.setattr(anthropic, "Anthropic", recorder)
+    AnthropicClient(api_key="placeholder-key", model="m")
+    assert seen["open_telemetry"] is False
+    assert seen["api_key"] == "placeholder-key"
+
+
+def test_sdk_tracing_stays_off_even_if_the_environment_enables_it(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_OPEN_TELEMETRY", "true")
+    client = make_client("anthropic", "m", "placeholder-key")
+    # `_open_telemetry` is private to anthropic 2.6.0; a rename fails loudly here.
+    assert client._sdk._open_telemetry["traces"]["enabled"] is False  # type: ignore[attr-defined]
+
+
 def test_fake_records_requests_and_plays_script():
     t1 = ModelTurn(text="a")
     t2 = ModelTurn(text="b")

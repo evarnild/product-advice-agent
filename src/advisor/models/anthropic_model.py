@@ -55,8 +55,13 @@ def _to_api_tool(t: ToolSpec) -> dict[str, Any]:
 class AnthropicClient:
     def __init__(self, api_key: str, model: str, sdk_client: Any | None = None) -> None:
         self._model = model
+        # The SDK's own spans would become separate Langfuse traces, because the
+        # advisor's observations are not the current OTel context (§5). The explicit
+        # option also overrides the ANTHROPIC_OPEN_TELEMETRY* variables.
         self._sdk: Any = (
-            sdk_client if sdk_client is not None else anthropic.Anthropic(api_key=api_key)
+            sdk_client
+            if sdk_client is not None
+            else anthropic.Anthropic(api_key=api_key, open_telemetry=False)
         )
 
     def complete(
