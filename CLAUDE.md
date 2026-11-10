@@ -161,12 +161,14 @@ Langfuse stack in `infra/langfuse/`.
   scripted fake for tests and evals (`fake.py`), and `make_client` with the
   provider registry. `models/anthropic_model.py` is the Anthropic adapter.
 
+**Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
+protocol and the no-op, SDK-free and without I/O, so the pure modules
+import it.
+
 **I/O and wiring** (not core; the live check covers them): `cli.py` (entry
-point, exit codes), `config.py` (environment and `.env`), `tracer.py`
-(the `Tracer` protocol and the no-op; SDK-free, so the pure modules import it),
-`tracing.py` (the Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports
-the two names from `tracer.py`),
-`prompts/system.md` (the shipped prompt).
+point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
+Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports `Tracer` and
+`NoopTracer` from `tracer.py`), `prompts/system.md` (the shipped prompt).
 
 **Conventions worth knowing before editing**
 
@@ -176,11 +178,13 @@ the two names from `tracer.py`),
   see the `ModelClient` and `Tracer` protocols only. The pure modules load
   neither `langfuse` nor `opentelemetry` (a subprocess test in
   `tests/test_boundaries.py` enforces it).
-- The CLI speaks to the user through `print` only. Library log lines (e.g.
-  OpenTelemetry's "Failed to export span batch") reach stderr only with
-  `--debug`; without it, `cli._configure_logging` gives the root logger a
-  `NullHandler` unless logging is already set up. `tests/test_cli_stderr.py`
-  proves the cases.
+- The CLI speaks to the user through `print` only. Library log lines that
+  propagate to the root logger (e.g. OpenTelemetry's "Failed to export span
+  batch") reach stderr only with `--debug`; without it,
+  `cli._configure_logging` gives the root logger a `NullHandler` unless
+  logging is already set up. `tests/test_cli_stderr.py` proves the cases.
+  One known exception: importing `langfuse` attaches its own stderr handler
+  to the `httpx` logger at WARNING, so an `httpx` warning can still show.
 - Tracing never changes a run: every Langfuse call is wrapped and swallowed,
   flush waits at most 5 s, and tracing is a no-op unless `LANGFUSE_HOST`,
   `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all set.

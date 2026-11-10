@@ -30,10 +30,12 @@ Nothing changes in answers, refusals, exit codes or trace content.
   `tests/test_cli.py:8` and `tests/test_tracing.py:15` import `NoopTracer`
   (and `SafeTracer` etc.) from `advisor.tracing`. `tracing.py` re-exports
   `Tracer` and `NoopTracer`, so those imports keep working unchanged.
-- **Silencing too much.** Only the `opentelemetry` logger tree is quietened,
-  and only without `--debug`. `advisor` logging and the CLI's own stderr
-  messages (usage, missing key, unavailable) must stay. Existing CLI tests
-  prove those.
+- **Silencing too much.** Without `--debug`, the root `NullHandler`
+  quietens every library logger (`opentelemetry`, `langfuse`, `urllib3`,
+  …), and only when logging is not already set up; a caller's own root
+  handler still gets the lines. The CLI's own stderr messages (usage,
+  missing key, unavailable) go through `print`, not logging, and must stay.
+  Existing CLI tests prove those.
 - **Overlap with §2** (in flight on `feat/2-local-model`). §2 changes
   `cli.py` (keyless path, factory signature, tags), `tracing.py`
   (`make_tracer(env, tags)`, tags at `begin`) and `tests/test_boundaries.py`
