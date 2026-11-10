@@ -7,7 +7,7 @@ title: Product search misses matches when a keyword and the catalogue differ onl
 review_tier:
 intent_accepted: 2026-11-10 by-agent    # owner: "accept intent 7"
 spec_accepted:
-plan_approved:
+plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 7" (auto_authorized 2026-11-10)
 live_checked:
 merged:
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 7, do not change the old intent"
