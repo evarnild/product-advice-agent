@@ -127,11 +127,12 @@ def test_load_does_not_alias_input(tmp_path):
     assert raw == snapshot
 
 
-# P-003 is listed before P-002 and they tie on price: only the id tie-break orders them.
+# P-003 is listed before P-002, they tie on price, and their names sort the other way
+# round, forwards and reversed (Gamma Laptop vs Zeta Handset): only the id tie-break orders them.
 CAT = [
     _p("P-001", 100, name="Alpha Phone", category="phone"),
     _p("P-003", 50, name="Gamma Laptop", category="laptop", description="Has NOISE cancelling"),
-    _p("P-002", 50, name="Beta Phone", category="phone", in_stock=False),
+    _p("P-002", 50, name="Zeta Handset", category="phone", in_stock=False),
     _p(
         "P-004",
         200,

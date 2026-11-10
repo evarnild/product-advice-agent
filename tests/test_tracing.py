@@ -142,6 +142,7 @@ def test_langfuse_tracer_with_real_sdk_and_in_memory_exporter():
     assert [s.name for s in roots] == ["advisor-run"]
     assert _attr(roots[0], "input") == "which phone?"
     assert _attr(roots[0], "output") == "Buy P-001."
+    assert "langfuse.observation.level" not in roots[0].attributes
     by_name = {s.name: s for s in spans}
 
     for name in ("input-check", "output-check"):
@@ -233,3 +234,28 @@ def test_fail_also_flushes(monkeypatch):
     tracer.fail("boom")
     assert flushed.wait(1)
     assert client.updated == {"output": "boom", "level": "ERROR"}
+
+
+def _events_of_a_run(tracer):
+    answer_question("which phone?", _fake(), [search_tool(CAT)], tracer)
+
+
+def test_safe_tracer_forwards_every_call_with_its_arguments():
+    direct = RecordingTracer()
+    _events_of_a_run(direct)
+    inner = RecordingTracer()
+    _events_of_a_run(SafeTracer(inner))
+    assert inner.kinds == ["begin", "check", "generation", "tool", "generation", "check", "finish"]
+    assert inner.events == direct.events
+    assert inner.events[0] == ("begin", "which phone?")
+    assert inner.events[3][1:] == ("search_products", {"category": "phone"}, 1, False)
+
+
+def test_safe_tracer_forwards_fail():
+    inner = RecordingTracer()
+    with pytest.raises(ModelError):
+        answer_question(
+            "q", ScriptedModelClient([ModelError("down")]), [search_tool(CAT)], SafeTracer(inner)
+        )
+    assert inner.kinds == ["begin", "check", "fail"]
+    assert inner.events[-1] == ("fail", "ModelError: down")
