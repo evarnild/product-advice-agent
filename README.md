@@ -64,6 +64,8 @@ https://langfuse.com/self-hosting/upgrade/upgrade-guides/upgrade-v3-to-v4.
 
 **Updating a pin.** Change the tag in `infra/langfuse/docker-compose.yml`,
 then run `npm run verify` (`tests/test_compose.py` checks the pins).
+`npm run check:pins` (needs Docker and network; not part of verify) shows
+whether each pin still resolves, and the newer MinIO digest.
 
 ## Check
 
