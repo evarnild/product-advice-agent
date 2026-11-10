@@ -3,11 +3,170 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: 91d97c10b55eba4dd58f036bde2f264939393003
-round: 3
+reviewed-commit: cb311ff1dcc3002e991c72745983b50431a11b11
+round: 4
 sampled: no
-run: auto
+run: manual
 live-check: owed
+
+A manual round (the owner's `/review 3`) after the `/auto` run used its
+three rounds. It covers what changed since round 3's reviewed commit
+(91d97c1), and that is docs only. `git diff --name-only 91d97c1 cb311ff`
+lists `CLAUDE.md`, plus `plan.md`, `metadata.yml` and `review.md` in the
+intent folder. Nothing under `src/` or `tests/` changed, so the code is
+what round 3 reviewed and the owner live-checked.
+
+215fe72 resolves round 3's findings 4–6. Every new claim was checked
+against the code and the installed SDKs, and holds. Findings 1–3 stay open
+(Worth a look), and one new LOW is the owner's to edit. No finding needs
+rework, and the tier is Reviewed, so the verdict is escalate. The owner has
+already read the diff (`/auto 3`) and recorded the live check.
+
+Tier: Reviewed by meaning: the branch touches `src/advisor/cli.py` and
+`src/advisor/tracing.py`. `review_tier: reviewed` agrees.
+
+## Round-3 findings: resolution
+| Round-3 finding | Resolution |
+| --- | --- |
+| 1. LOW `cli.py:42`: M6 survives (Worth a look) | open, not taken |
+| 2. LOW `cli.py:42`: M3b survives (Worth a look) | open, not taken |
+| 3. LOW `cli.py:38-45`: the first call's logging setup wins (Worth a look) | open, not taken |
+| 4. LOW `plan.md:33-36`: Risks said only `opentelemetry` is quietened | resolved in 215fe72 (the owner's amendment; plan re-approved in b260195). The bullet now names the root `NullHandler`, which applies only when logging isn't set up, with a caller's root handler still getting the lines. It matches amended subtask 3 and the Assumption. One remaining overclaim: new finding 4 |
+| 5. LOW `CLAUDE.md:179-183`: ignored the `httpx` handler | resolved: `CLAUDE.md:181-187` scopes the rule to lines "that propagate to the root logger" and names the `httpx` exception. Verified against `langfuse/logger.py:21-28` and by probe |
+| 6. LOW `CLAUDE.md:164-168`: `tracer.py` under "I/O and wiring" | resolved: `CLAUDE.md:164-166` adds a "Shared protocol (neither core nor I/O)" paragraph. Accurate: `tracer.py` imports only `typing.Protocol` and `advisor.models.base.Usage`, and is not in `CORE_CODE` |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (215fe72 does what findings 4–6 asked, nothing more; scope confirmed) |
+| 2 | Type check | pass (PASS; `live_checked` recorded) |
+| 3 | Behaviour against the spec | pass (code unchanged since round 3; 111 pass; sanity mutant killed) |
+| 4 | Tests prove the behaviour, not only pass | pass (no behavioural line changed; sanity mutant M1 killed; M6, M3b carried) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass ("WARNING" for `httpx` matches `langfuse/logger.py:22`) |
+| 7 | Documentation | findings (1), LOW, Worth a look (finding 4); the `CLAUDE.md` claims are accurate |
+| 8 | Guardrails and hygiene | pass (docs only) |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs fix/3-low-findings-from-1
+
+type-check: PASS (intent 3, fix)
+  note:  10 file(s), 288 line(s) changed outside intents/.
+```
+Run from the main checkout against the branch ref, because the worktree
+folder had been deleted during the review (see Not checked). `scripts/` and
+`package.json` are identical on `main` and the branch.
+
+## Documentation checks (pass 7)
+- **"Library log lines that propagate to the root logger":** accurate for
+  the span-export path. A probe on cb311ff called `_configure_logging(False)`.
+  - Both exporter loggers (`…otlp.proto.http.trace_exporter`,
+    `…otlp.common.http`) had `propagate=True` and no handlers; the root
+    had `[NullHandler]`.
+  - An ERROR and a WARNING on them printed nothing. `langfuse` and
+    `urllib3.connectionpool` were silent too.
+- **The `httpx` exception:** accurate. `langfuse/logger.py:22` sets WARNING,
+  and `:25-28` adds a stderr `StreamHandler`. The probe printed an `httpx`
+  WARNING without `--debug`.
+- **With `--debug`,** all lines show. An `httpx` warning prints twice (nit,
+  pre-existing).
+- **`LANGFUSE_DEBUG=true`** is not a second exception: `_configure_logging`
+  runs before `make_tracer`, so the SDK's `basicConfig` is a no-op. Read
+  from the code, not run.
+
+## Findings
+1. **LOW** `src/advisor/cli.py:42` — M6 survives (`level=logging.WARNING` →
+   `ERROR` with `--debug`). Carried. Worth a look.
+2. **LOW** `src/advisor/cli.py:42` — M3b survives (`force=True` with
+   `--debug`). Carried. Worth a look.
+3. **LOW** `src/advisor/cli.py:38-45` — in one process, the first `main()`
+   call's logging setup wins. Carried. Worth a look.
+4. **LOW** `intents/3-low-findings-from-1/plan.md:33-35` (Risks) and the
+   Assumption "Silencing means a root `NullHandler`" — they say every library
+   logger is quiet without `--debug`, while `CLAUDE.md:186-187` documents the
+   `httpx` exception (reproduced by probe). The text is above the Progress
+   marker: the owner's to edit. It blocks nothing. Worth a look: add
+   "(except `httpx`'s own handler from `langfuse`, see `CLAUDE.md`)", or leave
+   the plan as history.
+
+Nits: `CLAUDE.md:166` "so the pure modules import it" — only `agent.py`
+does. With `--debug`, an `httpx` warning prints twice (pre-existing).
+
+| id | change | result | killing test |
+| --- | --- | --- | --- |
+| M1 (sanity) | `cli.py`: `logging.basicConfig(handlers=[logging.NullHandler()])` → `pass` | KILLED ("1 failed, 110 passed") | test_cli_stderr::test_library_log_lines_are_silent_without_debug |
+
+M6 and M3b carried, not re-run (code unchanged since 91d97c1).
+
+## Not checked
+- **The merged result:** `main` moved through §4's merge (Compose file,
+  README, 0001, `tests/test_compose.py`). There is no file overlap with §3,
+  but `verify` was not run on a merge; `/ship` runs it on `main`.
+- **`LANGFUSE_DEBUG=true` at runtime:** reasoned from the code.
+- **The real exporter and `httpx` behaviour with Langfuse down:** the
+  owner's live check, taken on trust.
+- **The subprocess tests on Linux or macOS.**
+- **Round 3's other mutants:** targets unchanged.
+- **The worktree's disappearance:** the folder
+  `C:/Users/eric/src/product-advice-agent-wt/3-low-findings-from-1` was
+  deleted from disk during this review; git lists it as `prunable`. The
+  branch is intact at cb311ff. The reviewer worked from git objects in the
+  main checkout and a `git archive` copy in its scratchpad.
+
+## Live check
+- owed, and satisfied: `live_checked: 2026-11-10 by-agent` (owner: "live
+  checked", round 3's steps), recorded in b260195. 215fe72 changed no
+  runtime path, and `src/` is byte-identical between 91d97c1 and cb311ff, so
+  the recorded check covers the code under review. This round's docs-only
+  change owes no new check (rules 1–3). The header stays `owed`, because it
+  describes the branch, and `check:intent` reads `owed` plus a recorded date
+  as PASS.
+- steps: as round 3's `## Live check`; none new.
+
+## Verified myself vs. taken on trust
+
+**Coordinator:**
+- Confirmed the worktree folder is gone (`git worktree list` →
+  `3-low-findings-from-1 cb311ff [fix/3-low-findings-from-1] prunable`) and
+  the branch head is cb311ff.
+- No mutant re-run is owed: no mutant survived on changed code. M6 and M3b
+  were re-run by the coordinator in round 3 (both survived, matching).
+- The scope claim (docs only since 91d97c1) matches the commits listed in
+  the round-3 stop: 215fe72 (CLAUDE.md, plan.md) and b260195, 64c4834,
+  cb311ff (metadata).
+
+**Reviewer, verified:**
+- HEAD cb311ff; `main` at 5948c6f, untouched; nothing pushed.
+- `git diff 91d97c1 cb311ff` read in full for `CLAUDE.md`, `plan.md` and
+  `metadata.yml`.
+- `npm run verify` on a `git archive` export of cb311ff (after `uv sync
+  --frozen --offline`): exit 0; kit 255/255; ruff clean; 60 files
+  formatted; mypy clean (12 files); pytest "111 passed".
+- `check:intent` against the branch: PASS.
+- `sdlc:scan --sample-due manual --exclude 3` → "nth attested manual change
+  = 1, every 5, sampled: no".
+- SDK sources read: `langfuse/logger.py`, `client.py:360-375`, and the OTLP
+  exporter loggers.
+- The logging probe and sanity mutant M1.
+
+**Taken on trust:**
+- that the owner wrote 215fe72, re-approved the plan, and ran the live
+  check;
+- round 3's other mutant results;
+- §1's R20, L5, L6 and C13 definitions.
+
+# Round 3 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: 91d97c10b55eba4dd58f036bde2f264939393003
+- round: 3
+- sampled: no
+- run: auto
+- live-check: owed
 
 The owner's amendment (48b2fd6, plan re-approved in 91d97c1) does what the
 amended plan asks. Without `--debug`, `cli._configure_logging` runs
@@ -35,13 +194,13 @@ advisor`, the `NullHandler` is always installed. The fix also quietens the
 Tier: Reviewed, set by the path table (`src/advisor/cli.py` is Reviewed by
 meaning). `review_tier: reviewed` agrees. Status is `in-review`.
 
-## Round-2 findings: resolution
+### Round-2 findings: resolution
 | Round-2 finding | Resolution |
 | --- | --- |
 | LOW `cli.py:47-53`: repeated in-process `main()` stacks `NullHandler`s; `propagate = False` lingers (Worth a look) | resolved in 48b2fd6: no library logger is changed, and `basicConfig` is a no-op once the root has handlers. Probe: `_configure_logging(False)` twice → one root `NullHandler`; `opentelemetry` handlers `[]`, `propagate = True`. A side effect of that no-op is finding 3 |
 | LOW `CLAUDE.md:164-166`: `tracer.py` under "I/O and wiring" (Worth a look) | open, not taken (finding 6) |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (48b2fd6 matches amended subtask 3, the Tests table and the Assumption; one stale Risks line: finding 4) |
@@ -54,7 +213,7 @@ meaning). `review_tier: reviewed` agrees. Status is `in-review`.
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -66,7 +225,7 @@ type-check: FAIL (intent 3, fix)
 The only error is the owed live check, which round 1 set: the owner's to
 clear (review skill, step 1).
 
-## Behaviour (pass 3)
+### Behaviour (pass 3)
 - **Outcome item 2 / Reproduction 2:**
   `test_library_log_lines_are_silent_without_debug` asserts exit 0, the
   answer, and neither "Failed to export" nor "Langfuse host unreachable" on
@@ -84,7 +243,7 @@ clear (review skill, step 1).
 - **The advisor's own logging is unaffected:** `advisor.tracing` logs only
   at DEBUG.
 
-## Findings
+### Findings
 1. **LOW** `src/advisor/cli.py:42` — M6 survives (`level=logging.WARNING`
    → `logging.ERROR` in the `--debug` branch). The probe's `opentelemetry`
    line is ERROR, and `langfuse` sets its own level, so the root level
@@ -142,7 +301,7 @@ Mutants this round (full `pytest -q -p no:cacheprovider -rf` via
 | R20 | `tracing.py:102` forwards `True` for `allowed` (regression) | KILLED | test_tracing::test_safe_tracer_forwards_a_blocked_check |
 | C13 | `catalogue.py:103-104` not-a-list check removed (regression) | KILLED | test_catalogue::test_not_a_list_bad_json_missing_file_bad_entry |
 
-## Not checked
+### Not checked
 - **The real OpenTelemetry exporter against an unreachable Langfuse.** The
   real exporter logs on
   `opentelemetry.exporter.otlp.proto.http.trace_exporter`; the probe uses
@@ -160,7 +319,7 @@ Mutants this round (full `pytest -q -p no:cacheprovider -rf` via
   their targets are unchanged since round 1. Round 1's C1–C5 targeted code
   that no longer exists; M1–M7 replace them.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/cli.py`, `src/advisor/tracing.py`), and rule 3
   (the real exporter's stderr with Langfuse down; any `httpx` warning).
 - steps (Windows PowerShell; this worktree has no `.env`, so set the
@@ -203,7 +362,7 @@ Mutants this round (full `pytest -q -p no:cacheprovider -rf` via
   - It's a defect if step 3 shows any stderr text, or step 4 shows no export
     failure line: leave `live_checked:` empty.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/3-low-findings-from-1` at 91d97c1, `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
