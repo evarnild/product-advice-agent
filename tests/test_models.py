@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
-from advisor.models.anthropic import AnthropicClient
+from advisor.models.anthropic_model import AnthropicClient
 from advisor.models.base import Message, ModelError, ModelTurn, ToolCall, ToolResult, ToolSpec
 from advisor.models.fake import ScriptedModelClient
 

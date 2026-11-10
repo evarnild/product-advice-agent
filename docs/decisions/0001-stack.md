@@ -29,5 +29,5 @@ Status: accepted with intent §1 (2026-11-09). Spec: `intents/1-stack-and-skelet
 
 - The Langfuse SDK major (v5 at the time of writing) is pinned by `uv.lock`;
   all of its use is inside `src/advisor/tracing.py`, and the Anthropic SDK is
-  used only in `src/advisor/models/anthropic.py` (a test enforces both).
+  used only in `src/advisor/models/anthropic_model.py` (a test enforces both).
 - Node stays a kit-only requirement; the product needs Python and `uv`.

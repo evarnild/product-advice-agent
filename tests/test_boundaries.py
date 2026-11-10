@@ -22,7 +22,7 @@ def _importers(package: str) -> set[str]:
 
 
 def test_only_the_anthropic_adapter_imports_anthropic():
-    assert _importers("anthropic") == {"models/anthropic.py"}
+    assert _importers("anthropic") == {"models/anthropic_model.py"}
 
 
 def test_only_tracing_imports_langfuse():

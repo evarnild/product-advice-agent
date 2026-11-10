@@ -394,7 +394,7 @@ describe('language-neutral path rules', () => {
     for (const path of ['src/advisor/cli.py', 'src/advisor/config.py', 'src/advisor/tracing.py', 'src/advisor/prompts/system.md']) {
       expect(checkChange(feature(path)).routes, path).toEqual([]);
     }
-    for (const path of ['src/advisor/agent.py', 'src/advisor/catalogue.py', 'src/advisor/guardrails.py', 'src/advisor/models/anthropic.py']) {
+    for (const path of ['src/advisor/agent.py', 'src/advisor/catalogue.py', 'src/advisor/guardrails.py', 'src/advisor/models/anthropic_model.py']) {
       expect(checkChange(feature(path)).routes.join(), path).toMatch(/Core code .* no test change/);
     }
   });

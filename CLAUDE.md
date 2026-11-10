@@ -159,7 +159,7 @@ Langfuse stack in `infra/langfuse/`.
   the skeleton); a block gives the fixed refusal.
 - `models/`: the `ModelClient` protocol and message types (`base.py`), the
   scripted fake for tests and evals (`fake.py`), and `make_client` with the
-  provider registry. `models/anthropic.py` is the Anthropic adapter.
+  provider registry. `models/anthropic_model.py` is the Anthropic adapter.
 
 **I/O and wiring** (not core; the live check covers them): `cli.py` (entry
 point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
@@ -169,7 +169,7 @@ point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
 **Conventions worth knowing before editing**
 
 - Provider and tracing SDKs are imported in exactly one module each:
-  `anthropic` only in `models/anthropic.py`, `langfuse` only in
+  `anthropic` only in `models/anthropic_model.py`, `langfuse` only in
   `tracing.py` (`tests/test_boundaries.py` enforces it). The agent and CLI
   see the `ModelClient` and `Tracer` protocols only.
 - Tracing never changes a run: every Langfuse call is wrapped and swallowed,
