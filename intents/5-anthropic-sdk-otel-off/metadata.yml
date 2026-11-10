@@ -14,7 +14,7 @@ live_checked: 2026-11-10 by-agent    # owner: "5 live checked"
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 5"
 auto_round: 1
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up: 1            # the client construction line is §1's (4361ced)
 links:
   - intents/4-langfuse-v4    source: the owner's live-check note
