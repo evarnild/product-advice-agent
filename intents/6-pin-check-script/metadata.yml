@@ -14,7 +14,7 @@ live_checked: 2026-11-10 by-agent    # owner: "6 live checked"
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 6" (resume after too many sessions)
 auto_round: 1
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/4-langfuse-v4    the pins this script checks; review Not-checked items
