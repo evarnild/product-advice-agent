@@ -9,7 +9,7 @@ review_tier:             # empty = REVIEW-POLICY.md's path table decides; set on
 # an agent recorded it on your request. Leave empty until passed.
 intent_accepted: 2026-11-10 by-agent    # owner: "accept §5 and §6"
 spec_accepted:           # feature only
-plan_approved:           # feature, fix, refactor
+plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 5" (auto_authorized 2026-11-10)
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 5"
