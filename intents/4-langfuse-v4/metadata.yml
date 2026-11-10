@@ -2,12 +2,12 @@
 id: 4
 slug: langfuse-v4
 type: feature            # feature | fix | refactor | adjustment | experiment
-status: draft            # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: Move the local Langfuse stack to v4
 review_tier: reviewed    # infra/langfuse/.env.example (credentials); maybe tracing.py
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
 # an agent recorded it on your request. Leave empty until passed.
-intent_accepted:
+intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §4"
 spec_accepted:           # feature only
 plan_approved:           # feature, fix, refactor
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
