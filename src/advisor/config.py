@@ -36,7 +36,7 @@ class Settings:
     env: Mapping[str, str]
 
     @property
-    def key_variable(self) -> str | None:
+    def api_key_variable(self) -> str | None:
         return PROVIDER_KEY_ENV.get(self.provider)
 
     def ollama_url(self) -> str:
@@ -47,7 +47,7 @@ class Settings:
         return url
 
     def api_key(self) -> str | None:
-        var = self.key_variable
+        var = self.api_key_variable
         return (self.env.get(var) or None) if var else None
 
 

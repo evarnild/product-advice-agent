@@ -6,7 +6,7 @@ from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
 def test_defaults_are_local():
     s = load_settings({})
     assert (s.provider, s.model) == ("ollama", "qwen3:8b")
-    assert s.key_variable is None
+    assert s.api_key_variable is None
     assert s.api_key() is None
     assert load_settings({"ADVISOR_MODEL_PROVIDER": ""}).provider == "ollama"
 
@@ -15,7 +15,7 @@ def test_anthropic_still_selectable():
     s = load_settings({"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "k"})
     assert (s.provider, s.model) == ("anthropic", "claude-haiku-5-5")
     assert DEFAULT_MODELS["anthropic"] == "claude-haiku-5-5"
-    assert s.key_variable == "ANTHROPIC_API_KEY"
+    assert s.api_key_variable == "ANTHROPIC_API_KEY"
     assert s.api_key() == "k"
 
 
@@ -41,7 +41,7 @@ def test_bad_ollama_url_names_the_variable(url):
 
 def test_unknown_provider_has_no_key_variable():
     s = load_settings({"ADVISOR_MODEL_PROVIDER": "zzz"})
-    assert s.key_variable is None and s.api_key() is None
+    assert s.api_key_variable is None and s.api_key() is None
 
 
 def test_load_env_reads_dotenv_but_real_env_wins(tmp_path, monkeypatch):

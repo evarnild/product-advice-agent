@@ -82,10 +82,10 @@ def main(
     # Only providers with a key variable need a key; ollama is keyless and
     # never receives one, even when ANTHROPIC_API_KEY is set.
     api_key: str | None = None
-    if settings.key_variable is not None:
+    if settings.api_key_variable is not None:
         api_key = settings.api_key()
         if not api_key:
-            return _fail(f"Missing {settings.key_variable}: set it in the environment or in .env.")
+            return _fail(f"Missing {settings.api_key_variable}: set it in the environment or in .env.")
     base_url: str | None = None
     if settings.provider == "ollama":
         try:
