@@ -10,11 +10,11 @@ review_tier: reviewed    # touches config.py and .env.example (credentials), cli
 intent_accepted: 2026-11-10 by-agent    # owner: "yes"
 spec_accepted: 2026-11-10 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 2" (auto_authorized 2026-11-10)
-live_checked: 2026-11-10 by-agent    # owner: "live checked for 2"; step 3's empty answer was search's hyphen matching, split out as §7
+live_checked: 2026-11-10 by-agent    # owner: "2 live checked done" (round 3 steps, on the pre-rebase branch f6fd4af)
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 2 and did a small change" then "go"
 auto_round: 3
-auto_stopped: live check owed
+auto_stopped:
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/1-stack-and-skeleton    depends on: ModelClient seam, config, CLI key check
