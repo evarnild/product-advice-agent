@@ -1,13 +1,251 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §2 review — Locally run model (Ollama) as the advisor's default
 
-verdict: escalate
+verdict: rework
 tier: reviewed
-reviewed-commit: 462c9b1fd096ee9daff53175dd33f59d21b6b9c2
-round: 3
+reviewed-commit: ad535f21d4436858caced525abfb48baaaf0f04f
+round: 4
 sampled: no
-run: auto
+run: manual
 live-check: owed
+
+A manual round (the owner's "rebase 2") reviewing the coordinator's rebase
+of `feat/2-local-model` from `dfb0811` onto `96ff0cf` (`main` with §3 at
+9ea17ad and §4 at 8b9294a).
+
+**The rebase itself is faithful:**
+- all 19 commits carried over;
+- only 20c9316 → 653a984 changed in content, by the `tests/test_cli_stderr.py`
+  probe adaptation;
+- every file §3 or §4 changed gained exactly what `main` gained;
+- `npm run verify` passes with 180 tests;
+- 11 of 12 mutants killed; the survivor is a test-side parity line, as
+  expected.
+
+**Why the verdict is still rework:** `main` moved again after the rebase
+base. §5 merged at b6766f9 after the rebased tip ad535f2. `git merge-tree
+main HEAD` now conflicts in `tests/test_models.py`, and keeping both sides
+leaves 1 test failing. The fix is mechanical, but it means another rebase,
+and so a round 5.
+
+Tier: Reviewed, set by the path table (`cli.py`, `config.py`, `tracing.py`,
+`.env.example` by meaning). `review_tier: reviewed` agrees.
+
+## Round-3 findings: resolution
+| Round-3 finding | Resolution |
+| --- | --- |
+| LOW: the rename is unplanned and has no Progress line | open, Worth a look (now 7ac0fb7 / a98204d) |
+| LOW: §3's branch still used `key_variable` | resolved: §3 is merged; the rebased tree has no `key_variable` in `src` or `tests` except the accurate test name; mypy clean |
+| Nit: `plan.md:284` "162 pytest tests" | open, nit (the suite is 180) |
+| Round 2: LOW "also guards M02" attribution | open, Worth a look |
+| Round 2: LOW private attributes in wiring tests | open, Worth a look |
+| Round 1: M42 (`"tool_calls": null`) | open, Worth a look (near-equivalent) |
+| Round 1: tags via private `_otel_span` | resolved for the pre-rebase code by the owner's live check; `tracing.py:47` unchanged by the rebase |
+| Round 1: default URL defined twice | open, Worth a look |
+| Round 1: every 404 → B11 | open, Worth a look (plan-settled) |
+| Pass 9 candidate (wiring every test bypasses with a fake) | open: an owner edit to `REVIEW-POLICY.md` |
+| M40 | equivalent; no action |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | findings (1, LOW): no Progress line for the rebase and probe adaptation; the range-diff shows no other scope change |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass (§2's patches byte-identical apart from import context and the probe; 180 pass; AC10 is the live check) |
+| 4 | Tests prove the behaviour, not only pass | pass (12 mutants: 11 killed; N11 survived, a test-side parity line, expected) |
+| 5 | Conventions | pass (the boundaries test runs §3's subprocess test and §2's `httpx` test side by side) |
+| 6 | Numbers in prose | pass ("162" nit carried) |
+| 7 | Documentation | pass (`CLAUDE.md` holds §3's and §2's text; README and 0001 match the expected merge) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | findings (1): `main` moved after the rebase base; and a candidate rule (below) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 2, feature)
+  note:  27 file(s), 1036 line(s) changed outside intents/.
+```
+The note counts against the current local `main` (with §5), so it is
+inflated. Against the merge base 96ff0cf, the branch changes 22 files
+outside `intents/` (+928/−66).
+
+## Findings
+- **MEDIUM** `tests/test_models.py` (branch vs `main` b6766f9) — §5 merged
+  after the rebase base. `git merge-tree --write-tree main HEAD` gives
+  `CONFLICT (content): Merge conflict in tests/test_models.py`, because both
+  sides append tests after `test_make_client_anthropic_does_not_connect`.
+  - Keeping both sides gives `1 failed, 181 passed`:
+    `test_sdk_tracing_stays_off_even_if_the_environment_enables_it`, with
+    `TypeError: make_client() takes 2 positional arguments but 3 were
+    given`. §5's test calls `make_client("anthropic", "m",
+    "placeholder-key")`, and §2 made `api_key` keyword-only.
+  - With `api_key="placeholder-key"`: `182 passed`.
+  - `anthropic_model.py` and `CLAUDE.md` auto-merge.
+
+  Needs rework: rebase onto `main`; in `tests/test_models.py`, keep §5's
+  two tests, then §2's; change §5's call to `api_key="placeholder-key"`; run
+  `npm run verify`; then `/review` round 5.
+- **MEDIUM** `intents/2-local-model/metadata.yml` (`live_checked:
+  2026-11-10 by-agent`) — the recorded check ran on the pre-rebase code. It
+  does not cover §2 running alongside §3's runtime changes, or §5's after
+  the next rebase:
+  - `cli._configure_logging`'s root `NullHandler` beside §2's B10/B11 error
+    paths;
+  - the `tracer.py` split;
+  - `agent.py`'s import change;
+  - §5's `open_telemetry=False` on the Anthropic run.
+
+  `check:intent` passes only because a date is present; it cannot tell that
+  the date predates the rebase. Needs decision: does the recorded check
+  stand for the rebased code, or does the owner re-run the minimal steps
+  under `## Live check` after the rebase and re-record `live_checked:`? The
+  reviewer recommends the re-run: minutes of work, and the combined code has
+  never run live.
+- **LOW** `intents/2-local-model/plan.md` `## Progress` — the rebase is not
+  recorded:
+  - 653a984 keeps 20c9316's subject but also edits §3's
+    `tests/test_cli_stderr.py:28,33-35` (`make_tracer` takes `tags`, the
+    factory is keyword-only, the env pins `anthropic`);
+  - the conflict resolutions in `tracing.py:13-14`, `test_boundaries.py`
+    and `test_tracing.py`.
+
+  Worth a look: a Progress line naming the rebase, its bases and the probe
+  adaptation.
+- **LOW** (pass 9 candidate) — a rebase that brings another intent's
+  rule-1 runtime changes leaves `live_checked:` in place, and `check:intent`
+  still passes. Worth a look, as an owner edit to `REVIEW-POLICY.md` → "Live
+  checks": "a rebase across another intent's rule-1 paths re-opens the live
+  check", or record in `metadata.yml` the commit the check ran on.
+
+Mutants (backup by copy; one CRLF-aware match; `git diff --quiet`
+non-zero; full `pytest -q`, no `-x`; restore by copy in `finally`):
+
+| id | target | change | result | killing tests |
+| --- | --- | --- | --- | --- |
+| N01 | `cli.py:52` (§3) | `logging.basicConfig(handlers=[logging.NullHandler()])` → `pass` | KILLED (1) | test_cli_stderr::test_library_log_lines_are_silent_without_debug |
+| N02 | `cli.py:48` (§3) | `if debug:` → `if True:` | KILLED (1) | test_cli_stderr::test_library_log_lines_are_silent_without_debug |
+| N03 | `cli.py:48` (§3) | `if debug:` → `if False:` | KILLED (2) | test_cli::test_debug_sets_advisor_logger_to_debug; test_cli_stderr::test_library_log_lines_show_with_debug |
+| N04 | `cli.py:82` (§2) | `if settings.api_key_variable is not None:` → `if True:` | KILLED (12) | test_cli_ollama::test_default_provider_is_ollama_without_a_key, … |
+| N05 | `cli.py` | `make_tracer(full_env, tags)` → `make_tracer(full_env)` | KILLED (3) | test_cli_ollama::test_tracer_gets_provider_and_model_tags[…] |
+| N06 | `cli.py` | `tags` → provider tag only | KILLED (3) | test_cli_ollama::test_tracer_gets_provider_and_model_tags[…] |
+| N07 | `tracing.py:36` | `self._tags = list(tags)` → `[]` | KILLED (3) | test_tracing::test_root_span_carries_provider_and_model_tags[…]; ::test_make_tracer_passes_tags_to_the_langfuse_tracer |
+| N08 | `tracing.py:43` | `if self._tags:` → `if False:` | KILLED (2) | test_tracing::test_root_span_carries_provider_and_model_tags[…] |
+| N09 | `tracing.py:142` | `LangfuseTracer(client, tags)` → `LangfuseTracer(client)` | KILLED (1) | test_tracing::test_make_tracer_passes_tags_to_the_langfuse_tracer |
+| N10 | `tracing.py:47` | set only the last tag | KILLED (2) | test_tracing::test_root_span_carries_provider_and_model_tags[…] |
+| N12 | `tests/test_cli_stderr.py:28` | revert the probe to `lambda env: …` | KILLED (3) | all three test_cli_stderr tests: the adaptation was necessary |
+| N11 | `tests/test_cli_stderr.py:33` | drop `"ADVISOR_MODEL_PROVIDER": "anthropic"` | SURVIVED (180 passed) | expected: the logging behaviour doesn't depend on the provider; the line keeps parity with `main`'s case |
+
+For round 5: re-run N01, N04, N07, and §5's `open_telemetry=False` →
+`True` on `anthropic_model.py` (must be killed by
+`test_anthropic_adapter_turns_off_sdk_tracing`).
+
+## Not checked
+- **The merged tree under the full `verify`:** on a scratch resolution with
+  b6766f9, only pytest was run (182 passed after the keyword fix).
+- **Live behaviour of the rebased combination** (rule 3):
+  - a real Ollama run under §3's root `NullHandler`;
+  - whether `langfuse`'s own `httpx` stderr handler lets an `httpx` WARNING
+    from the Ollama adapter show without `--debug` when tracing is on.
+    Before §2, `httpx` was used only inside the SDKs;
+  - one trace per Anthropic run once §5 is on the branch.
+- **Carried from round 3:**
+  - Ollama 0.40.9 specifics;
+  - Langfuse not pricing `qwen3:8b`;
+  - the 5 GB figure;
+  - the `--debug` traceback with `user:pw@`;
+  - proxy settings.
+- **Round 1–3 mutants on §2's own lines:** not re-run; their patches are
+  byte-identical in the range-diff.
+- **Platforms:** Windows only.
+
+## Live check
+- owed: rule 1 (`src/advisor/cli.py`, `src/advisor/models/`,
+  `src/advisor/tracing.py`), and rule 3 (the rebased combination). The
+  recorded check covers §2's own lines on the pre-rebase code, not §3's
+  logging and `tracer.py` changes running beside them, and not §5's adapter
+  change after the next rebase. Run the steps below after the round-5
+  rebase, then re-record `live_checked:` (finding 2 is the owner's
+  decision).
+- prepare as round 3, step 0:
+  - the worktree's `.env` copied from `main`, with `ADVISOR_MODEL_PROVIDER=`
+    and `ADVISOR_MODEL=` commented out;
+  - `infra/langfuse/.env` copied;
+  - the v4 stack up, with the `LANGFUSE_*` values in `.env`;
+  - `Remove-Item Env:ADVISOR_MODEL_PROVIDER, Env:ADVISOR_MODEL,
+    Env:ANTHROPIC_API_KEY, Env:ADVISOR_OLLAMA_URL -ErrorAction
+    SilentlyContinue`.
+- steps:
+  1. Start Ollama, then:
+     ```
+     cd C:\Users\eric\src\product-advice-agent-wt\2-local-model
+     uv run advisor "I need noise-cancelling headphones under 200 euros" 2> err.txt; $LASTEXITCODE; Get-Content err.txt
+     ```
+  2. Quit Ollama; repeat step 1.
+  3. Start Ollama; `$env:ADVISOR_MODEL_PROVIDER = "anthropic"`; repeat
+     step 1; `Remove-Item Env:ADVISOR_MODEL_PROVIDER`.
+  4. Langfuse → Traces: look at the newest.
+  5. Delete `err.txt`.
+- you should see:
+  - **Step 1:** an answer naming catalogue products by name and id, exit
+    `0`, and `err.txt` **empty**. Until §7 ships, the hyphen in the question
+    may still yield "no headphones"; that is §7's defect, not §2's.
+  - **Step 2:** `err.txt` holds exactly `Ollama is not reachable at
+    http://localhost:11434. Start Ollama (the Ollama app, or "ollama
+    serve") and try again.`, nothing else. Exit `1`.
+  - **Step 3:** an answer, exit `0`, `err.txt` empty.
+  - **Step 4:**
+    - one `advisor-run` trace tagged `provider:ollama` and `model:qwen3:8b`
+      from step 1;
+    - exactly one trace tagged `provider:anthropic` and
+      `model:claude-haiku-5-5` from step 3, with **no** separate
+      `anthropic.messages.create` trace (§5);
+    - each with a `model-call` showing model and token counts.
+  - A stray stderr line, a missing tag or an extra Anthropic trace is a
+    defect: leave `live_checked:` empty.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run:**
+- **Coordinator, re-run:** before this review, on the rebased branch at
+  ad535f2: `npm run verify` → exit 0; kit `tests 255, pass 255, fail 0`;
+  ruff "All checks passed!"; "72 files already formatted"; mypy "Success: no
+  issues found in 13 source files"; pytest "180 passed". `npm run
+  check:intent` → PASS. Matches the reviewer.
+- **Coordinator, re-run:** `git merge-tree --write-tree main
+  feat/2-local-model` (main at a08430e) → conflict in `tests/test_models.py`
+  only. `tests/test_models.py:43` on `main` reads `make_client("anthropic",
+  "m", "placeholder-key")`, the positional call the reviewer names. Matches.
+- **Coordinator:** no mutant survived on code (N11 is a test-side line), so
+  none is owed a re-run this round.
+
+**Reviewer, verified:**
+- `verify` and `check:intent` at ad535f2.
+- `sdlc:scan --sample-due manual --exclude 2` → "nth attested manual change
+  = 1, every 5, sampled: no".
+- `git range-diff dfb0811..39aa2a0 96ff0cf..HEAD`: 19↔19, with 17 `=`,
+  653a984 `!` (the probe only) and f21c77b `!` (`CLAUDE.md` context).
+- Per-file comparison of §3's and §4's 14 files: identical except the
+  probe.
+- 12 mutants (harness `…/scratchpad/mut2r4/mut.py`).
+- The scratch test-merge: 1 failed, 181 passed; 182 after the keyword fix.
+- Nothing pushed or merged.
+
+**Taken on trust:**
+- the coordinator's account of the conflicts (agrees with the range-diff);
+- the owner's recorded live check;
+- the Ollama, Langfuse v4 and Anthropic API behaviour.
+
+# Round 3 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: 462c9b1fd096ee9daff53175dd33f59d21b6b9c2
+- round: 3
+- sampled: no
+- run: auto
+- live-check: owed
 
 Round 3 covers what changed after the owner read the round-2 diff:
 - 79cf6b9, the owner's rename `Settings.key_variable` → `api_key_variable`;
@@ -28,7 +266,7 @@ Scope: `git diff 40314e0 HEAD -- . ':!intents'` is exactly 3 files:
 `tests/test_config.py` (+3/−3). Inside `intents/`, only `metadata.yml` and
 `review.md` changed.
 
-## Round-2 findings: resolution
+### Round-2 findings: resolution
 | Round-2 finding | Resolution |
 | --- | --- |
 | LOW `plan.md:319-320`: "also guards M02" attribution | open, Worth a look |
@@ -41,7 +279,7 @@ Scope: `git diff 40314e0 HEAD -- . ':!intents'` is exactly 3 files:
 | Pass 9 candidate (wiring every test bypasses with a fake) | open: an owner edit to `REVIEW-POLICY.md` |
 | M40 | equivalent; no action |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | findings (1, LOW, Worth a look): the rename is unplanned and not in Progress, but deliberate and the owner's |
@@ -54,7 +292,7 @@ Scope: `git diff 40314e0 HEAD -- . ':!intents'` is exactly 3 files:
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty; round-1 candidate waits for the owner) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -68,7 +306,7 @@ files and 977 lines is `main` moving (§4 merged), not this branch: against
 the merge base dfb0811, the branch still changes 21 files outside
 `intents/`.
 
-## Findings
+### Findings
 - **LOW** `src/advisor/config.py:39`, `src/advisor/cli.py:71,75`,
   `tests/test_config.py:9,18,44` (79cf6b9) — the rename is unplanned scope:
   it renames a name that has existed on `main` since §1, which pass 1 counts
@@ -107,7 +345,7 @@ re-derive them on the same block, which moved from lines 59-60 to 71-75.
 Other round-1 and round-2 mutants were not re-run: their targets did not
 change.
 
-## Not checked
+### Not checked
 - **Carried** (`src/advisor/models/`, `tracing.py` and the Ollama path are
   unchanged):
   - real Ollama 0.40.9: `tool_name`, `think`, `num_ctx`, the usage counts,
@@ -123,7 +361,7 @@ change.
   clean, and `pytest` on that tree gave "173 passed" (168 plus §4's 5). The
   full `npm run verify` was not run on the merged tree.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/cli.py`, `src/advisor/models/`,
   `src/advisor/tracing.py`), and rule 3 (the real Ollama `/api/chat` round
   trip; the server reading `langfuse.trace.tags`, now on Langfuse v4).
@@ -189,7 +427,7 @@ change.
 
     Either way, leave `live_checked:` empty.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/2-local-model` at 462c9b1, `git status --short` showing only `?? .idea/` before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
