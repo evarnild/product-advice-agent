@@ -14,7 +14,7 @@ live_checked: 2026-11-10 by-agent    # owner: "live checked" (review.md round 3 
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3" (diff read)
 auto_round: 3
-auto_stopped: ship dry-run blocked, changes after the reviewed commit
+auto_stopped: ready for /ship
 follows_up: 1            # the five findings come from §1's change (review rounds 1–4)
 links:
   - intents/1-stack-and-skeleton    source: review.md round 4, open LOW findings
