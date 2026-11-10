@@ -129,3 +129,12 @@ status --short` clean.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — build (all four subtasks)
+
+- Commits: af2e267 (tests + fix + CLAUDE.md line); the status/Progress commit follows it.
+- Shipped: `anthropic.Anthropic(api_key=api_key, open_telemetry=False)` with the two-line comment; two tests in `tests/test_models.py`; one `CLAUDE.md` convention line.
+- Fails on main: both new tests failed against the unfixed adapter (`test_anthropic_adapter_turns_off_sdk_tracing`: KeyError on `open_telemetry`; `test_sdk_tracing_stays_off_even_if_the_environment_enables_it`: `True is False`). 2 failed, 10 passed in that file.
+- Mutants (full suite, restored by copy, tree clean): keyword removed -> 2 failed, 109 passed, killed by both new tests; `open_telemetry=None` -> 2 failed, 109 passed, killed by both new tests.
+- Verify: kit 255 pass; product 111 passed (was 109).
+- Divergences: none. Live check still owed (owner).
