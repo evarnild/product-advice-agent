@@ -48,10 +48,22 @@ Open http://localhost:3000, create an account, an organisation and a
 project, create API keys, and put `LANGFUSE_HOST=http://localhost:3000`
 and the two keys in the root `.env`. Each run then appears as one trace
 (input check, model calls with token usage, tool calls, output check).
-All ports are bound to 127.0.0.1. `docker compose ... down -v` removes the
-stored traces. The compose file needs `infra/langfuse/.env` to exist; to only
+All ports are bound to 127.0.0.1. The stack is Langfuse v4 with every image
+pinned to an exact version. `docker compose ... down -v` removes the stored
+traces. The compose file needs `infra/langfuse/.env` to exist; to only
 check that it parses, run `docker compose --env-file infra/langfuse/.env.example
 -f infra/langfuse/docker-compose.yml config -q`.
+
+**Coming from the v3 stack.** v4 replaces v3; it is not upgraded in place.
+Run `docker compose -f infra/langfuse/docker-compose.yml down -v` first (this
+deletes the v3 traces), then `up -d`, and create the account, project and
+keys again. The traces are local test data, and the in-place path needs the
+latest v3, finished background migrations and a backup, with no way back. If
+you have data to keep, follow
+https://langfuse.com/self-hosting/upgrade/upgrade-guides/upgrade-v3-to-v4.
+
+**Updating a pin.** Change the tag in `infra/langfuse/docker-compose.yml`,
+then run `npm run verify` (`tests/test_compose.py` checks the pins).
 
 ## Check
 

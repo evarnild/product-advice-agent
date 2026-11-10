@@ -1,6 +1,9 @@
-# Self-hosted Langfuse v3 for local runs, adapted from Langfuse's documented
-# docker-compose (https://langfuse.com/self-hosting/docker-compose).
+# Self-hosted Langfuse v4 for local runs, adapted from Langfuse's documented
+# docker-compose (https://langfuse.com/self-hosting/deployment/docker-compose).
 #
+# - Every image is pinned to an exact version or digest; update deliberately
+#   (see the README), and tests/test_compose.py guards it.
+# - No AI gateway service: it is optional, beta and not used by the advisor.
 # - Started by hand; the test suite never needs it.
 # - Every published port is bound to 127.0.0.1 (this machine only).
 # - Secrets come from infra/langfuse/.env (gitignored); copy .env.example.
@@ -44,7 +47,7 @@ x-langfuse-env: &langfuse-env
 
 services:
   langfuse-worker:
-    image: docker.io/langfuse/langfuse-worker:3
+    image: docker.io/langfuse/langfuse-worker:4.78.0
     restart: always
     depends_on: &langfuse-depends-on
       postgres:
@@ -60,7 +63,7 @@ services:
     environment: *langfuse-env
 
   langfuse-web:
-    image: docker.io/langfuse/langfuse:3
+    image: docker.io/langfuse/langfuse:4.78.0
     restart: always
     depends_on: *langfuse-depends-on
     ports:
@@ -69,7 +72,7 @@ services:
       <<: *langfuse-env
 
   clickhouse:
-    image: docker.io/clickhouse/clickhouse-server
+    image: docker.io/clickhouse/clickhouse-server:26.3.62.3
     restart: always
     user: "101:101"
     environment:
@@ -90,7 +93,9 @@ services:
       start_period: 1s
 
   minio:
-    image: cgr.dev/chainguard/minio
+    # Pinned by digest: the free Chainguard image is published only as "latest".
+    # Update: docker buildx imagetools inspect cgr.dev/chainguard/minio:latest
+    image: cgr.dev/chainguard/minio@sha256:fb893e36fc369d41e92f678b17ec27378fa5bf0576aeef7ac15460c13629ab5a
     restart: always
     entrypoint: sh
     # Create the "langfuse" bucket on start, then run MinIO.
@@ -111,7 +116,7 @@ services:
       start_period: 1s
 
   redis:
-    image: docker.io/redis:7
+    image: docker.io/redis:7.4.12
     restart: always
     command: >
       --requirepass ${REDIS_AUTH:?set REDIS_AUTH in infra/langfuse/.env}
@@ -125,7 +130,7 @@ services:
       retries: 10
 
   postgres:
-    image: docker.io/postgres:17
+    image: docker.io/postgres:17.11
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
