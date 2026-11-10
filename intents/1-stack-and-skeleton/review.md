@@ -3,11 +3,283 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: f3fb5d63c4c628ce3bddb602677b94077641b00d
-round: 1
+reviewed-commit: b07e8ac3cc47819e2cb903fd856071c73fd2ce94
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed, as round 1 (path table: `REVIEW-POLICY.md`,
+`scripts/intent-check-lib.mjs`; `review_tier: reviewed`; the HIGH below would
+escalate it anyway). Policy used: main's `REVIEW-POLICY.md` (ffade02) for
+tiers, passes, report format and merging; the branch's rule-1 path list only
+to decide `live-check`.
+
+Scope: f3fb5d6..b07e8ac — 7eccff5 round-1 `review.md`; 1525cab, 51ce473
+metadata and the plan amendment (owner decision B); 9583c64, daf4d06 the
+rework; e951c31 Progress entry; b07e8ac `auto_round: 2`.
+
+Bottom line: the rework does what round 1 asked, but no test proves that
+`SafeTracer` forwards anything, and production always runs through it, so
+B15 and decision A are unproven on the path that runs (new HIGH).
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (decisions A and B done as stated; nothing beyond scope) |
+| 2 | Type check | pass (FAIL only on the owed live check, the owner's gate) |
+| 3 | Behaviour against the spec | pass (decision-A behaviour present; its proof on the `SafeTracer` path is pass 4) |
+| 4 | Tests prove the behaviour, not only pass | findings (3): 47 mutants, 31 killed, 16 survived (4 equivalent, 2 carried LOW) |
+| 5 | Conventions | pass (round-1 LOW on `agent.py` importing `tracing` carried as Worth a look) |
+| 6 | Numbers in prose | pass |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty; two candidates below) |
+
+**Pass 1, against the round-1 asks:**
+- Decision A: `answer_question` (`agent.py:186-193`) wraps `run_agent` in
+  `try/except Exception`, calls `tracer.fail(f"{type(e).__name__}: {e}")`
+  and re-raises; the CLI still exits 1 with the unavailable message
+  (`test_model_failure_exit_1_no_traceback`). `fail()` is on the `Tracer`
+  protocol (`tracing.py:42-44`), `NoopTracer` (`:63-64`), `LangfuseTracer`
+  (`:118-119`, `_close(output=error, level="ERROR")`) and `SafeTracer`
+  (`:159-160`); `_close` (`:121-130`) is shared with `finish`, so the same
+  bounded flush runs on both paths. Only the exception class and message are
+  recorded; `ModelError` reads "Anthropic call failed: <SDK error class>",
+  no key or env value.
+- Decision B: `opentelemetry-sdk` and `httpx` in the dev group
+  (`pyproject.toml:20-21`); `uv.lock` adds only those two dev entries, no
+  version changes; `uv lock --check --offline` and `uv sync --frozen
+  --offline` exit 0. The plan's Dependencies section lists hatchling,
+  opentelemetry-sdk and httpx (51ce473, owner's decision).
+- Optional items taken: the dead `except UnknownProviderError` handler and
+  its import dropped from `cli.py` (provider still rejected first at
+  `cli.py:53`; no behaviour change); `test_blank_text_field_is_rejected`
+  added.
+- The implementer's claim on round-1 finding 5 holds: with the checks
+  present every `ToolError` already names the argument (`'max_price' must be
+  a number`, `'limit' must be an integer`); A1, A2, A8 survived only because
+  the catch-all hid removed checks, and are now killed by
+  `test_bad_argument_errors_name_the_argument`. A3 still survives but is
+  equivalent (`float(v)` vs `v` compare equal for an int).
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 1, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/1-stack-and-skeleton/review.md → ## Live check, then set live_checked: <date> in intents/1-stack-and-skeleton/metadata.yml.
+  note:  40 file(s), 4243 line(s) changed outside intents/.
+```
+The only error is the owed live check, the owner's to clear (review skill,
+step 1's exception).
+
+## Round-1 findings: resolution
+| Round-1 finding | Resolution |
+| --- | --- |
+| HIGH tool arguments unproven (A9, A11, A12, A13, A14) | resolved: `test_each_tool_argument_alone_changes_the_results`, `test_tool_result_carries_all_fields_including_specs` kill all five |
+| HIGH sort tie-break (C24, C24b) | partly: C24 killed; C24b and the new C24c survive (MEDIUM below) |
+| HIGH B15 observation content (T4, T5, T8, T9, T10) | resolved: real-SDK test asserts type, input, output, level, incl. an unknown-tool span at ERROR |
+| HIGH B17 flush (T14, T20) | resolved: `flushed.wait(1)` and `FLUSH_TIMEOUT_SECONDS <= 5` asserted |
+| MEDIUM failed run leaves a broken trace (decision A) | implemented, proven for `answer_question` and `LangfuseTracer` (R1–R9 killed); not proven through `SafeTracer` (HIGH below) |
+| MEDIUM bad-argument errors (A1, A2, A3, A8) | resolved: A1, A2, A8 killed; A3 equivalent |
+| LOW adapter (N1, N14) | resolved, both killed |
+| LOW hard-coded host (T21) | resolved, killed |
+| LOW dependencies (decision B) | resolved |
+| LOW `agent.py` imports `tracing` (and langfuse) | not taken; carried as Worth a look |
+| LOW untested CLI lines (L5, L6, L12) | L12's dead handler removed; L5, L6 carried |
+| LOW catalogue (C4b, C13) | C4b killed; C13 carried |
+| LOW OpenTelemetry stderr line | not taken; carried |
+
+## Findings
+
+- **HIGH** `tests/test_tracing.py` (code `src/advisor/tracing.py:144-160`,
+  `SafeTracer`) — no test shows `SafeTracer` forwarding any call to the
+  tracer it wraps. Every delegation line survives: R14 `begin` → `pass`, R15
+  `check`, R16 `generation`, R17 `tool`, R18 `finish`, R11 `fail`, R12 `fail`
+  forwarded as `"finish"`. The only `SafeTracer` tests use `RaisingTracer`
+  and check that errors are swallowed; the real-SDK tests drive
+  `LangfuseTracer` directly. Production always gets `make_tracer`'s
+  `SafeTracer(LangfuseTracer(client))`, so a `SafeTracer` that dropped calls
+  would send empty or broken traces with the suite green. (Missed in round 1:
+  the delegation lines were not mutated.)
+  Needs rework: a test that wraps a `RecordingTracer` in `SafeTracer`, runs
+  `answer_question` through it and asserts the same `events`, with
+  arguments, as the unwrapped run (begin, check, generation, tool,
+  generation, check, finish); and a failing run through it asserting
+  `("fail", "ModelError: down")`. Kills R11, R12, R14, R15, R16, R17, R18.
+
+- **MEDIUM** `tests/test_catalogue.py:130-150` (code `src/advisor/catalogue.py:138`)
+  — the "then id" tie-break is still not fully proven. P-003 now precedes
+  P-002 (kills C24), but the tied names ("Beta Phone" P-002, "Gamma Laptop"
+  P-003) sort the same way as their ids, so C24c (`key=(price, name)`, a
+  natural slip) and C24b survive. AC3 requires "sort is price then id".
+  Needs rework: give the tied pair names whose order disagrees with their
+  ids (e.g. rename P-002 to "Zeta Phone"; no current keyword assertion uses
+  "beta"); keep the expected `["P-002", "P-003", …]`. Kills C24b, C24c.
+
+- **LOW** `tests/test_tracing.py:117-143` (code `src/advisor/tracing.py:116`)
+  — the root's level on a successful run is not asserted: R13 (`finish`
+  closes with `level="ERROR"`) survives, so a success could show in Langfuse
+  as an error.
+  Needs rework: in `test_langfuse_tracer_with_real_sdk_and_in_memory_exporter`,
+  assert the root has no `langfuse.observation.level` attribute or that it is
+  `DEFAULT`. Kills R13.
+
+- **LOW** (carried) `src/advisor/agent.py:19`, `src/advisor/tracing.py:16` —
+  the pure core module `agent.py` imports `advisor.tracing`, which imports
+  `langfuse` at load. Worth a look: move `Tracer`/`NoopTracer` into an
+  SDK-free module, or import `Langfuse` lazily in `make_tracer`.
+
+- **LOW** (carried) `src/advisor/cli.py:46,49` — L5 (debug log level) and L6
+  (UTF-8 stdout reconfigure) untested. Worth a look.
+
+- **LOW** (carried) `src/advisor/catalogue.py:103` — C13: the not-a-list check
+  is removable; the per-entry check still raises. Worth a look.
+
+- **LOW** (carried, runtime) — with Langfuse unreachable, OpenTelemetry prints
+  "Failed to export spans batch due to timeout, max retries or shutdown." to
+  stderr. Worth a look.
+
+Survivors judged equivalent, no rework: A3 (`float(v)` vs `v`), A21 (fake
+copies the list), T2 (root-None guard; `SafeTracer` swallows), R10 (`_root =
+None` after close; each tracer closes once per run). From round 1, unchanged
+lines: C12, C16, N12, K2, N7 (live-only).
+
+Pass 9 candidates:
+1. **"A fixture already in the expected order, or a test value equal to the
+   default, cannot kill a mutant."** Round 1 (C24, T21, N14) and again here
+   (tied names in id order, C24c).
+2. **"A wrapper tested only for swallowing errors, not for forwarding calls,
+   proves nothing about the path that runs."** (R11–R18.)
+
+## Not checked
+- Live runtime: real Anthropic tool-use round trips, model id
+  `claude-haiku-5-5`, answers citing name and id; the Langfuse v3 stack
+  starting and the trace rendering in its UI; whether Langfuse 5.2 shows the
+  root span's input/output as the trace's; how a failed run's ERROR-level
+  root renders in the UI.
+- The live query's keywords: "noise-cancelling" with a hyphen matches no
+  description, so the model may retry. Advice quality, out of scope, but it
+  bears on AC14.
+- The flush bound against a host that blackholes packets (only a refused
+  connection on 127.0.0.1:1 was tested in round 1); the SDK's atexit
+  `shutdown()` flushes again outside the 5 s join.
+- AC12 (a fresh `npm run spawn` worktree passes verify): not re-created
+  (read-only review); `uv sync --frozen --offline` passes in this worktree.
+- No containers started.
+- Survivors not re-run under the full `npm run verify`: `src/advisor`
+  mutants ran under `pytest -q -x`, so ruff or mypy could kill a few
+  (none looks likely). No `scripts/` file changed this round, so no kit
+  mutants.
+- Round-1 killed mutants on unchanged lines were not re-run; only the rework
+  set, moved equivalents, L5/L6/L16 and the new lines.
+- Test files were not mutated.
+
+## Live check
+- owed: rule 1 (the diff touches `src/advisor/cli.py`,
+  `src/advisor/models/`, `src/advisor/tracing.py`, `src/advisor/prompts/`,
+  `infra/`, as named by the branch's policy); rule 3 (real model output, the
+  Langfuse UI, the ERROR-level trace of a failed run — Not checked); spec
+  AC14.
+- steps:
+  1. In the worktree (or on main after merge): `uv sync --frozen`.
+  2. `cp infra/langfuse/.env.example infra/langfuse/.env`; replace every
+     `replace-me` (`openssl rand -hex 32` for `NEXTAUTH_SECRET`, `SALT`,
+     `ENCRYPTION_KEY` — the last must be 64 hex chars; `openssl rand -base64
+     24` for passwords).
+  3. `docker compose -f infra/langfuse/docker-compose.yml up -d`; wait until
+     `docker compose -f infra/langfuse/docker-compose.yml ps` shows
+     `langfuse-web` running.
+  4. Open http://localhost:3000, sign up, create an organisation, a project
+     and API keys.
+  5. `cp .env.example .env`; set `ANTHROPIC_API_KEY` (real),
+     `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` from step 4, keep
+     `LANGFUSE_HOST=http://localhost:3000`.
+  6. `uv run advisor "I need noise-cancelling headphones under 200 euros"`.
+  7. Failed-run trace (decision A): the same tool with an invalid key for one
+     command (the real environment overrides `.env`). PowerShell:
+     `$env:ANTHROPIC_API_KEY="invalid-key"; uv run advisor "test"; Remove-Item Env:ANTHROPIC_API_KEY`.
+     Git Bash: `ANTHROPIC_API_KEY=invalid-key uv run advisor "test"`.
+  8. Optional: `docker compose -f infra/langfuse/docker-compose.yml stop`,
+     then step 6 again.
+  9. Afterwards `docker compose -f infra/langfuse/docker-compose.yml down`
+     (`-v` to delete stored traces).
+- you should see:
+  - Step 6: exit 0; only catalogue products, each by name and id. In-stock
+    noise-cancelling headphones under €200 are Auralis Calm 300 (P-001,
+    €189) and Kestrel Air Plus (P-005, €129); Sonavo Quiet Pro (P-004, €159)
+    is out of stock and should be flagged if mentioned. No invented
+    products, no traceback.
+  - Step 6 trace in Langfuse (Tracing), one new trace: root `advisor-run`,
+    input the question, output the printed answer, not level ERROR; under it
+    in order `input-check` (guardrail, `allowed: true`), `model-call`
+    generations with model `claude-haiku-5-5` and non-zero token usage,
+    `search_products` tool observations with arguments and `result_count`,
+    `output-check` (`allowed: true`).
+  - Step 7: stderr "The advisor is unavailable right now.", exit 1, no
+    traceback; in Langfuse one new trace, root `advisor-run` at level ERROR,
+    input "test", output like `ModelError: Anthropic call failed:
+    AuthenticationError` (no key), only the `input-check` child.
+  - Step 8: same answer, exit 0, process exits within ~5 s of printing; at
+    most one export-failure line on stderr.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton` at b07e8ac, worktree clean before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "51 files already formatted";
+  mypy "Success: no issues found in 11 source files"; pytest "102 passed".
+  Matches reviewer and implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL, exit 1, only the
+  owed-live-check error (pasted above). Matches.
+- **Coordinator, re-run:** all 16 round-2 survivors (C24b A3 A21 T2 R10 L5
+  L6 R11 R12 R13 C24c R14 R15 R16 R17 R18), new definitions read first,
+  through the reviewer's `harness2.py` (checked identical to round 1's
+  harness apart from file names: copy backup, one change, diff-guard,
+  `pytest -q -x`, restore by copy, diff check) → all 16 SURVIVED. Matches.
+- **Coordinator, re-run:** the round-1 mutants the rework claimed to kill
+  (C4b C24 A1 A2 A8 A9 A11 A12 A13 A14 N1 N14 T4 T5 T8 T9 T10 T14 T20 T21)
+  → all killed, by the same tests the reviewer names; A3 and C24b survive
+  as listed. Matches.
+- **Coordinator, re-run:** `git status --short` empty afterwards.
+
+**Reviewer, verified:**
+- `git rev-parse HEAD` b07e8ac, worktree clean at start, nothing checked out.
+- `npm run verify` at b07e8ac: exit 0, counts as above. The format count
+  rose 50 → 51 because ruff 0.17 also formats Markdown and round 1 committed
+  `review.md`; the tracked `.py` count is unchanged at 23 (`ruff check
+  --show-files`, `ruff format --check -v`).
+- `npm run check:intent`: FAIL with only the owed live check.
+- `uv lock --check --offline` exit 0 ("Resolved 49 packages"); `uv sync
+  --frozen --offline` exit 0 ("Audited 48 packages").
+- `git diff f3fb5d6 HEAD` for `src/`, `tests/`, `pyproject.toml`,
+  `uv.lock`, `plan.md`, `metadata.yml` read in full; decisions A and B as
+  described in pass 1.
+- Mutation testing, 47 mutants via `harness2.py` (pytest `-q -x`): 31 killed,
+  16 survived. Killed: C4b, C24, A1, A2, A8, A9, A11, A12, A13, A14, N1,
+  N14, T4, T5, T8, T9, T10, T14, T20, T21, T13, L16, R1–R9. Survived: C24b,
+  C24c, R11–R18 (rework); A3, A21, T2, R10 (equivalent); L5, L6 (carried).
+- `git status --short` empty after each batch; main unchanged at ffade02; no
+  remote.
+
+**Taken on trust:** that a fresh spawn worktree passes (AC12); Anthropic and
+Langfuse runtime behaviour.
+
+**Mutants the rework should kill** (to re-run next round): R11, R12, R14,
+R15, R16, R17, R18 (`tracing.py` `SafeTracer`, lines 145-160); C24b, C24c
+(`catalogue.py:138`); R13 (`tracing.py:116`).
+
+# Round 1 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: f3fb5d63c4c628ce3bddb602677b94077641b00d
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, set by the path table (`REVIEW-POLICY.md`,
 `scripts/intent-check-lib.mjs`) and by `review_tier: reviewed` in
@@ -21,7 +293,7 @@ make the check owed under either copy.
 Code is identical between 314f611 (where `verify` was first run) and
 f3fb5d6 (HEAD); the commits in between touch only `metadata.yml`.
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (declared divergences judged below) |
@@ -57,7 +329,7 @@ block gives the refusal; B13/B14 exit 2/1 and `--debug`; B18 all 9
 published ports bound to 127.0.0.1; B21 session-wide socket guard with its
 own test). B15 and B17 met on the success path only (MEDIUM below).
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -66,7 +338,7 @@ type-check: PASS (intent 1, feature)
   note:  40 file(s), 4007 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 
 - **HIGH** `tests/test_agent.py:61-67` (code `src/advisor/agent.py:86,115,117-119`)
   — most tool arguments are not proven to reach `search_products`. Surviving:
@@ -188,7 +460,7 @@ Pass 9 candidate: **"A fixture already in the expected order, or a test value
 equal to the default, cannot kill a mutant."** Seen three times here (C24,
 T21, N14).
 
-## Not checked
+### Not checked
 - Live-only runtime: real Anthropic Messages API tool-use round trips,
   model id `claude-haiku-5-5` resolving, answers citing name and id; the
   Langfuse v3 stack starting and the trace rendering in its UI; whether
@@ -212,7 +484,7 @@ T21, N14).
 - Test files were not mutated, apart from the conftest guard, which
   `test_no_network.py` proves directly.
 
-## Live check
+### Live check
 - owed: rule 1 (the diff touches `src/advisor/cli.py`,
   `src/advisor/models/`, `src/advisor/tracing.py`, `src/advisor/prompts/`,
   `infra/`, as named by the branch's policy); rule 3 (real model output and
@@ -253,7 +525,7 @@ T21, N14).
   - Step 8: same answer, exit 0, process exits within ~5 s of printing; at
     most one export-failure line on stderr.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton` at f3fb5d6):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
