@@ -13,8 +13,8 @@ plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 5" (auto_authorized 2
 live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 5"
-auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
-auto_stopped:            # /auto only: why it stopped, written without ` #`; cleared on resume
+auto_round: 1
+auto_stopped:
 follows_up: 1            # the client construction line is §1's (4361ced)
 links:
   - intents/4-langfuse-v4    source: the owner's live-check note
