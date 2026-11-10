@@ -128,8 +128,10 @@ Pass 9 candidates (unchanged from round 2):
      `uv sync --frozen`.
   2. `cp infra/langfuse/.env.example infra/langfuse/.env`; replace every
      `replace-me` (`openssl rand -hex 32` for `NEXTAUTH_SECRET`, `SALT`,
-     `ENCRYPTION_KEY` — the last must be 64 hex chars; `openssl rand -base64
-     24` for passwords).
+     `ENCRYPTION_KEY` — the last must be 64 hex chars; `openssl rand -hex
+     24` for passwords, hex only: base64's `/`, `+`, `=` break the database
+     URLs). *(Corrected 2026-11-10 after the live check, owner: "fix the
+     password instructions".)*
   3. `docker compose -f infra/langfuse/docker-compose.yml up -d`; wait until
      `docker compose -f infra/langfuse/docker-compose.yml ps` shows
      `langfuse-web` running.
