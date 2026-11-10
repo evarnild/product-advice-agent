@@ -288,3 +288,20 @@ Shipped:
 Divergences: the real-SDK tests give each test its own public key, because
 the Langfuse SDK shares one exporter per public key. Not taken: agent.py
 importing tracing, the OTel stderr line.
+
+### 2026-11-10 — Rework round 2 (implementer)
+
+Commit: d4df976 (tests only; no code change).
+
+- SafeTracer forwarding: `test_safe_tracer_forwards_every_call_with_its_arguments`
+  (wrapped RecordingTracer sees the same events and arguments as an
+  unwrapped run) and `test_safe_tracer_forwards_fail` (`("fail",
+  "ModelError: down")`). Kills R11, R12, R14, R15, R16, R17, R18.
+- Tie-break: P-002 renamed "Zeta Handset" in `test_catalogue.py`, so the tied
+  pair's names sort the opposite way to their ids both forwards and
+  reversed. Kills C24, C24b, C24c (C24b survived a first attempt with
+  "Zeta Phone", whose reversed form still sorted in id order).
+- Root level on success: the real-SDK test asserts the root span has no
+  `langfuse.observation.level`. Kills R13.
+- All ten verified with harness2.py (copy backup and restore); status clean.
+- Counts: kit 255 pass; pytest 104 pass; ruff, format, mypy strict clean.
