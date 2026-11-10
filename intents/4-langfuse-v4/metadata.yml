@@ -2,7 +2,7 @@
 id: 4
 slug: langfuse-v4
 type: feature            # feature | fix | refactor | adjustment | experiment
-status: in-review          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: done
 title: Move the local Langfuse stack to v4
 review_tier: reviewed    # infra/langfuse/.env.example (credentials); maybe tracing.py
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
@@ -11,7 +11,7 @@ intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §4"
 spec_accepted: 2026-11-10 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 4" (auto_authorized 2026-11-10)
 live_checked: 2026-11-10 by-agent    # owner: "passed" (extra anthropic.messages.create traces from the Anthropic SDK's own OTel: pre-existing, follow-up fix)
-merged:                  # merge commit hash
+merged: 8b9294a    # 2026-11-10, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 4 /auto 4"
 auto_round: 2
 auto_stopped: live check owed
