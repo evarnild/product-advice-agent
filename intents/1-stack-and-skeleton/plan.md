@@ -256,3 +256,35 @@ Divergences and notes:
 - Kit fixtures moved to `src/advisor/...`, `tests/...` paths; one kit test
   added for non-core vs core paths; no assertion weakened.
 - Python resolved to 3.12.9 in `.venv` (`requires-python >=3.12`).
+
+### 2026-11-10 — Rework round 1 (implementer)
+
+Commits: 9583c64 (failed-run trace, per-argument agent tests, dev deps,
+dead `except UnknownProviderError` dropped), daf4d06 (remaining tests).
+
+Shipped:
+- Owner decision A: `Tracer.fail(error)` (NoopTracer, LangfuseTracer,
+  SafeTracer). `answer_question` calls it with `"<ExceptionClass>: <message>"`
+  when `run_agent` raises, then re-raises, so the CLI still exits 1. The
+  Langfuse root `advisor-run` is ended with that output at level ERROR and
+  flushed with the same bounded wait. Tests: RecordingTracer sees
+  begin, input-check, fail and the exception propagates; the real-SDK
+  in-memory test exports the root with level ERROR.
+- Owner decision B: `opentelemetry-sdk` and `httpx` added to the dev group;
+  `uv.lock` updated (only those entries, no version changes);
+  `uv sync --frozen` works.
+- Finding 5: the tool error text already named the bad argument (for example
+  `'max_price' must be a number`); the gap was the tests. They now assert it.
+- Mutants killed (verified by copy-backup/restore runs, status clean after):
+  A1, A8, A9, A11, A12, A13, A14 (test_agent.py); C24, C24b, C4b
+  (test_catalogue.py); N1, N14 (test_models.py); T4, T5, T8, T9, T10, T14,
+  T20, T21 (test_tracing.py); and a new mutant F1 (`tracer.fail` call
+  removed). A2 and A3 were not run separately; they are covered by the same
+  bad-argument assertions (error text must name the argument and must not
+  contain "failed").
+- Counts: kit tests 255 pass; pytest 102 pass (was 89); ruff, ruff format
+  and mypy strict clean.
+
+Divergences: the real-SDK tests give each test its own public key, because
+the Langfuse SDK shares one exporter per public key. Not taken: agent.py
+importing tracing, the OTel stderr line.
