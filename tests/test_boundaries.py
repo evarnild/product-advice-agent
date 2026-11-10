@@ -1,6 +1,8 @@
 """Provider and tracing SDKs are imported in exactly one module each (spec AC6)."""
 
 import ast
+import subprocess
+import sys
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "src" / "advisor"
@@ -27,3 +29,17 @@ def test_only_the_anthropic_adapter_imports_anthropic():
 
 def test_only_tracing_imports_langfuse():
     assert _importers("langfuse") <= {"tracing.py"}
+
+
+def test_pure_modules_load_no_tracing_sdk():
+    # A fresh interpreter: the pytest process has already imported langfuse.
+    code = (
+        "import sys\n"
+        "import advisor.agent, advisor.catalogue, advisor.guardrails, advisor.models\n"
+        "bad = sorted(m for m in sys.modules\n"
+        "             if m.split('.')[0] in ('langfuse', 'opentelemetry'))\n"
+        "print(bad)\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]

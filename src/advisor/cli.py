@@ -44,6 +44,13 @@ def main(
     if debug:
         logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
         logging.getLogger("advisor").setLevel(logging.DEBUG)
+    else:
+        # Spec B17: a tracing failure never shows as a run error. Without
+        # --debug, OpenTelemetry's own log lines (e.g. "Failed to export span
+        # batch") must not reach stderr via logging.lastResort.
+        otel = logging.getLogger("opentelemetry")
+        otel.addHandler(logging.NullHandler())
+        otel.propagate = False
     reconfigure = getattr(sys.stdout, "reconfigure", None)
     if reconfigure is not None:
         reconfigure(encoding="utf-8", errors="replace")

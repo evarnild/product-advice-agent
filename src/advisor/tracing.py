@@ -11,58 +11,12 @@ from __future__ import annotations
 import logging
 import threading
 from collections.abc import Mapping
-from typing import Any, Protocol
+from typing import Any
 
 from langfuse import Langfuse
 
 from advisor.models.base import Usage
-
-
-class Tracer(Protocol):
-    """One tracer instance records exactly one run (one trace). Never raises."""
-
-    def begin(self, question: str) -> None: ...
-
-    def check(self, stage: str, allowed: bool, reason: str) -> None:
-        """Record a guardrail check; `stage` is 'input' or 'output'."""
-        ...
-
-    def generation(
-        self, model: str, usage: Usage, text: str | None, tool_names: list[str]
-    ) -> None: ...
-
-    def tool(
-        self, name: str, arguments: dict[str, object], result_count: int, error: bool
-    ) -> None: ...
-
-    def finish(self, answer: str) -> None:
-        """Close the trace with the answer and flush with a bounded wait."""
-        ...
-
-    def fail(self, error: str) -> None:
-        """Close the trace of a failed run (level ERROR) and flush with a bounded wait."""
-        ...
-
-
-class NoopTracer:
-    def begin(self, question: str) -> None:
-        pass
-
-    def check(self, stage: str, allowed: bool, reason: str) -> None:
-        pass
-
-    def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
-        pass
-
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
-        pass
-
-    def finish(self, answer: str) -> None:
-        pass
-
-    def fail(self, error: str) -> None:
-        pass
-
+from advisor.tracer import NoopTracer, Tracer
 
 FLUSH_TIMEOUT_SECONDS = 5.0
 REQUIRED_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
