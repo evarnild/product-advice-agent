@@ -1,13 +1,216 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §1 review — Stack decision (Python + Langfuse) and project skeleton
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: b07e8ac3cc47819e2cb903fd856071c73fd2ce94
-round: 2
+reviewed-commit: ac194cb3f098e4efc10d63081d0d3d7f2a1be020
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+No finding needs rework, and the tier is Reviewed, so the owner reads the
+diff before the merge. The live check is still owed; `check:intent` stays
+FAIL until `live_checked:` is recorded.
+
+Tier: Reviewed, as rounds 1 and 2 (path table: `REVIEW-POLICY.md`,
+`scripts/intent-check-lib.mjs`, and the by-meaning paths
+`src/advisor/prompts/**`, `cli.py`, `config.py`, `tracing.py`,
+`guardrails.py`, the `.env.example` files; `review_tier: reviewed`).
+Policy used: main's `REVIEW-POLICY.md` (ffade02) for tiers, passes, report
+format and merging; the branch's rule-1 path list only to decide
+`live-check`.
+
+Scope: b07e8ac..ac194cb — 03f8d44 round-2 `review.md`; d4df976 tests only
+(`tests/test_tracing.py`, `tests/test_catalogue.py`); 19da455 Progress
+entry; ac194cb `auto_round: 3`. `git diff --name-only b07e8ac HEAD` lists
+only `metadata.yml`, `plan.md` (Progress, below the marker), `review.md`
+and the two test files: no `src/`, `scripts/`, config or lock change.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (tests only, scoped to the round-2 findings) |
+| 2 | Type check | pass (FAIL only on the owed live check, the owner's gate) |
+| 3 | Behaviour against the spec | pass (code unchanged since round 2, where B1–B26 were met) |
+| 4 | Tests prove the behaviour, not only pass | pass (13 mutants: 12 killed, 1 survived — R20, unreachable in §1, Worth a look) |
+| 5 | Conventions | pass (one carried Worth a look: `agent.py` imports `tracing`) |
+| 6 | Numbers in prose | pass (Progress "kit 255 pass; pytest 104 pass" reproduced) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass (no new dependency, secret or fixture data; the rename is synthetic) |
+| 9 | Repository-specific footguns | pass (list empty; the two round-2 candidates stand) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 1, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/1-stack-and-skeleton/review.md → ## Live check, then set live_checked: <date> in intents/1-stack-and-skeleton/metadata.yml.
+  note:  40 file(s), 4270 line(s) changed outside intents/.
+```
+The only error is the owed live check, the owner's to clear (review skill,
+step 1's exception).
+
+## Round-2 findings: resolution
+| Round-2 finding | Resolution |
+| --- | --- |
+| HIGH `SafeTracer` forwarding unproven (R11, R12, R14–R18) | resolved: `test_safe_tracer_forwards_every_call_with_its_arguments` (wrapped `RecordingTracer` sees the same events and arguments as an unwrapped run) and `test_safe_tracer_forwards_fail` (`("fail", "ModelError: down")`) kill all seven, plus a new R19 |
+| MEDIUM tie-break (C24b, C24c) | resolved: P-002 renamed "Zeta Handset", so the tied pair's names sort against id order forwards ("Gamma" < "Zeta") and reversed ("potpaL…" < "tesdnaH…"); C24, C24b, C24c killed; no test refers to "Beta" in `test_catalogue.py`, suite green (104) |
+| LOW root level on success (R13) | resolved: the real-SDK test asserts the root has no `langfuse.observation.level`; R13 killed |
+| LOW (carried) `agent.py` imports `tracing` | still Worth a look |
+| LOW (carried) L5, L6 | still Worth a look |
+| LOW (carried) C13 | still Worth a look |
+| LOW (carried) OpenTelemetry stderr line | still Worth a look |
+
+## Findings
+
+- **LOW** `tests/test_tracing.py` (code `src/advisor/tracing.py:148`,
+  `SafeTracer.check`) — R20 (forward `allowed=True` whatever was passed)
+  survives: the forwarding test runs only the allow path, and the
+  blocked-path guardrail tests use an unwrapped `RecordingTracer`. In §1 both
+  checks always allow, so the mislabel cannot happen in production yet; it
+  becomes real when a guardrail intent adds blocking checks. Worth a look:
+  when that intent lands, run a blocked input through
+  `SafeTracer(RecordingTracer())` and assert `("check", "input", False, …)`.
+- **LOW** (carried) `src/advisor/agent.py:19`, `src/advisor/tracing.py:16` —
+  the pure core module `agent.py` imports `advisor.tracing`, which imports
+  `langfuse` at load. Worth a look: move `Tracer`/`NoopTracer` into an
+  SDK-free module, or import `Langfuse` lazily.
+- **LOW** (carried) `src/advisor/cli.py:46,49` — L5 (debug log level), L6
+  (UTF-8 stdout reconfigure) untested. Worth a look.
+- **LOW** (carried) `src/advisor/catalogue.py:103` — C13: the not-a-list check
+  is removable; the per-entry check still raises. Worth a look.
+- **LOW** (carried, runtime) — with Langfuse unreachable, OpenTelemetry prints
+  "Failed to export spans batch due to timeout, max retries or shutdown." to
+  stderr. Worth a look.
+
+None of the carried items needs rework or a decision now: each is
+unreachable in §1, cosmetic, or a structural preference.
+
+Equivalent survivors carried from earlier rounds, all on unchanged code: A3,
+A21, T2, R10, C12, C16, N12, K2, N7 (live-only).
+
+Pass 9 candidates (unchanged from round 2):
+1. **"A fixture already in the expected order, or a test value equal to the
+   default, cannot kill a mutant."** New instance this round: "Zeta Phone"
+   left C24b alive because its reversed form still sorted in id order.
+2. **"A wrapper tested only for swallowing errors, not for forwarding calls,
+   proves nothing about the path that runs."**
+
+## Not checked
+- Live runtime: real Anthropic tool-use round trips, model id
+  `claude-haiku-5-5`, answers citing name and id; the Langfuse v3 stack
+  starting and the trace rendering in its UI; whether Langfuse 5.2 shows the
+  root span's input/output as the trace's; how a failed run's ERROR-level
+  root renders.
+- The live query's keywords: "noise-cancelling" with a hyphen matches no
+  description, so the model may retry within 5 turns. Advice quality, out
+  of scope, but it bears on AC14.
+- The flush bound against a host that blackholes packets (only a refused
+  connection was probed, round 1).
+- AC12 (a fresh `npm run spawn` worktree passes verify): not re-created
+  (read-only review).
+- No containers started.
+- Mutants on unchanged lines not re-run this round (code unchanged since
+  round 2); round-3 mutants ran under `pytest -q -x`, not the full `npm run
+  verify`.
+- Test files were not mutated.
+
+## Live check
+- owed: rule 1 (the diff touches `src/advisor/cli.py`,
+  `src/advisor/models/`, `src/advisor/tracing.py`, `src/advisor/prompts/`,
+  `infra/`, as named by the branch's policy); rule 3 (real model output, the
+  Langfuse UI, the ERROR-level trace of a failed run — Not checked); spec
+  AC14.
+- steps:
+  1. In the worktree `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton`:
+     `uv sync --frozen`.
+  2. `cp infra/langfuse/.env.example infra/langfuse/.env`; replace every
+     `replace-me` (`openssl rand -hex 32` for `NEXTAUTH_SECRET`, `SALT`,
+     `ENCRYPTION_KEY` — the last must be 64 hex chars; `openssl rand -base64
+     24` for passwords).
+  3. `docker compose -f infra/langfuse/docker-compose.yml up -d`; wait until
+     `docker compose -f infra/langfuse/docker-compose.yml ps` shows
+     `langfuse-web` running.
+  4. Open http://localhost:3000, sign up, create an organisation, a project
+     and API keys.
+  5. `cp .env.example .env`; set `ANTHROPIC_API_KEY` (real),
+     `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` from step 4, keep
+     `LANGFUSE_HOST=http://localhost:3000`.
+  6. `uv run advisor "I need noise-cancelling headphones under 200 euros"`.
+  7. Failed-run trace (decision A), an invalid key for one command only (the
+     real environment overrides `.env`). PowerShell:
+     `$env:ANTHROPIC_API_KEY="invalid-key"; uv run advisor "test"; Remove-Item Env:ANTHROPIC_API_KEY`.
+     Git Bash: `ANTHROPIC_API_KEY=invalid-key uv run advisor "test"`.
+  8. Optional: `docker compose -f infra/langfuse/docker-compose.yml stop`,
+     then step 6 again.
+  9. Afterwards `docker compose -f infra/langfuse/docker-compose.yml down`
+     (`-v` to delete stored traces).
+- you should see:
+  - Step 6: exit 0; only catalogue products, each by name and id. In-stock
+    noise-cancelling headphones under €200 are Auralis Calm 300 (P-001,
+    €189) and Kestrel Air Plus (P-005, €129); Sonavo Quiet Pro (P-004, €159)
+    is out of stock and should be flagged if mentioned. No invented
+    products, no traceback.
+  - Step 6 trace in Langfuse (Tracing), one new trace: root `advisor-run`,
+    input the question, output the printed answer, not level ERROR; under it
+    in order `input-check` (guardrail, `allowed: true`), `model-call`
+    generations with model `claude-haiku-5-5` and non-zero token usage,
+    `search_products` tool observations with arguments and `result_count`,
+    `output-check` (`allowed: true`).
+  - Step 7: stderr "The advisor is unavailable right now.", exit 1, no
+    traceback; in Langfuse one new trace, root `advisor-run` at level ERROR,
+    input "test", output like `ModelError: Anthropic call failed:
+    AuthenticationError` (no key), only the `input-check` child.
+  - Step 8: same answer, exit 0, process exits within ~5 s of printing; at
+    most one export-failure line on stderr.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton` at ac194cb, worktree clean before and after):
+- **Coordinator, re-run:** `git diff --name-only b07e8ac HEAD` → the 5 files
+  listed under Scope, none in `src/`. Matches.
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "51 files already formatted";
+  mypy "Success: no issues found in 11 source files"; pytest "104 passed".
+  Matches reviewer and implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL, exit 1, only the
+  owed-live-check error. Matches.
+- **Coordinator, re-run:** the round's mutants C24, C24b, C24c, R11–R19 and
+  the survivor R20 (definitions read; `harness3.py` checked identical to the
+  earlier harness apart from its results file) → R20 SURVIVED, the other 12
+  killed by the same tests the reviewer names. Matches.
+- **Coordinator, re-run:** `git status --short` empty afterwards.
+
+**Reviewer, verified:**
+- `git rev-parse HEAD` ac194cb, worktree clean at start, nothing checked
+  out; `git log --oneline b07e8ac..HEAD` 4 commits; `git diff b07e8ac HEAD
+  -- tests/ plan.md metadata.yml` read in full (plan gained only the
+  Progress entry, metadata only `auto_round: 3`).
+- `grep -n "Beta\|beta" tests/test_catalogue.py`: no hits.
+- `npm run verify` at ac194cb: exit 0, counts as above.
+- `npm run check:intent`: FAIL with only the owed live check.
+- Mutation testing, 13 mutants via `harness3.py` (pytest `-q -x`): 12
+  killed, 1 survived (R20).
+- `npm run sdlc:scan -- --sample-due auto --exclude 1` → "nth attested auto
+  change = 1, every 3, sampled: no".
+- `git status --short` empty after each batch; main unchanged at ffade02; no
+  remote, nothing pushed.
+
+**Taken on trust:** the owner's decisions A and B (recorded in round 2);
+that a fresh spawn worktree passes (AC12); Anthropic and Langfuse runtime
+behaviour.
+
+# Round 2 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: b07e8ac3cc47819e2cb903fd856071c73fd2ce94
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, as round 1 (path table: `REVIEW-POLICY.md`,
 `scripts/intent-check-lib.mjs`; `review_tier: reviewed`; the HIGH below would
@@ -23,7 +226,7 @@ Bottom line: the rework does what round 1 asked, but no test proves that
 `SafeTracer` forwards anything, and production always runs through it, so
 B15 and decision A are unproven on the path that runs (new HIGH).
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (decisions A and B done as stated; nothing beyond scope) |
@@ -63,7 +266,7 @@ B15 and decision A are unproven on the path that runs (new HIGH).
   `test_bad_argument_errors_name_the_argument`. A3 still survives but is
   equivalent (`float(v)` vs `v` compare equal for an int).
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -75,7 +278,7 @@ type-check: FAIL (intent 1, feature)
 The only error is the owed live check, the owner's to clear (review skill,
 step 1's exception).
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round-1 finding | Resolution |
 | --- | --- |
 | HIGH tool arguments unproven (A9, A11, A12, A13, A14) | resolved: `test_each_tool_argument_alone_changes_the_results`, `test_tool_result_carries_all_fields_including_specs` kill all five |
@@ -92,7 +295,7 @@ step 1's exception).
 | LOW catalogue (C4b, C13) | C4b killed; C13 carried |
 | LOW OpenTelemetry stderr line | not taken; carried |
 
-## Findings
+### Findings
 
 - **HIGH** `tests/test_tracing.py` (code `src/advisor/tracing.py:144-160`,
   `SafeTracer`) — no test shows `SafeTracer` forwarding any call to the
@@ -154,7 +357,7 @@ Pass 9 candidates:
 2. **"A wrapper tested only for swallowing errors, not for forwarding calls,
    proves nothing about the path that runs."** (R11–R18.)
 
-## Not checked
+### Not checked
 - Live runtime: real Anthropic tool-use round trips, model id
   `claude-haiku-5-5`, answers citing name and id; the Langfuse v3 stack
   starting and the trace rendering in its UI; whether Langfuse 5.2 shows the
@@ -177,7 +380,7 @@ Pass 9 candidates:
   set, moved equivalents, L5/L6/L16 and the new lines.
 - Test files were not mutated.
 
-## Live check
+### Live check
 - owed: rule 1 (the diff touches `src/advisor/cli.py`,
   `src/advisor/models/`, `src/advisor/tracing.py`, `src/advisor/prompts/`,
   `infra/`, as named by the branch's policy); rule 3 (real model output, the
@@ -225,7 +428,7 @@ Pass 9 candidates:
   - Step 8: same answer, exit 0, process exits within ~5 s of printing; at
     most one export-failure line on stderr.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton` at b07e8ac, worktree clean before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
