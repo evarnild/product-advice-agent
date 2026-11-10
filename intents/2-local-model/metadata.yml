@@ -14,7 +14,7 @@ live_checked: 2026-11-10 by-agent    # owner: "live checked for 2"; step 3's emp
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 2 and did a small change" then "go"
 auto_round: 3
-auto_stopped:
+auto_stopped: merge conflicts with main after §3, rebase needed
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/1-stack-and-skeleton    depends on: ModelClient seam, config, CLI key check
