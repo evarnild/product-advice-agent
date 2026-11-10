@@ -25,13 +25,14 @@ class ExportFailingTracer(NoopTracer):
         logging.getLogger("langfuse").warning("Langfuse host unreachable.")
 
 
-cli.make_tracer = lambda env: ExportFailingTracer()
+cli.make_tracer = lambda env, tags=(): ExportFailingTracer()
 if "--root-handler" in sys.argv:
     sys.argv.remove("--root-handler")
     logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
 client = ScriptedModelClient([ModelTurn(text="Fine answer.")])
-code = cli.main(sys.argv[1:], env={"ANTHROPIC_API_KEY": "placeholder-key"},
-                client_factory=lambda provider, model, key: client)
+env = {"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "placeholder-key"}
+code = cli.main(sys.argv[1:], env=env,
+                client_factory=lambda provider, model, *, api_key=None, base_url=None: client)
 sys.exit(code)
 """
 

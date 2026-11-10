@@ -274,3 +274,56 @@ provider explicitly. None is deleted.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — build (all 10 subtasks)
+
+Commits: `ca0eca7` (httpx runtime dep + `uv lock`, error types, registry,
+config, adapter), `20c9316` (CLI keyless path, trace tags, tests),
+`b4cdcd0` (docs, decision 0002, status `in-review`).
+
+Shipped: B1-B21 as planned. `npm run verify` green: 162 pytest tests (was
+104 before this intent's tests), ruff, ruff format, mypy --strict clean, kit
+tests pass. No Ollama, Anthropic or Langfuse contacted; the adapter is tested
+only through `httpx.MockTransport`.
+
+Divergences from the plan (none changes behaviour):
+- New CLI tests are in `tests/test_cli_ollama.py`, not appended to
+  `tests/test_cli.py`. The existing `test_cli.py` tests were updated in place
+  (keyword factory, explicit `anthropic` provider) and none was deleted.
+- The tag attribute name is a pinned literal `TRACE_TAGS_ATTRIBUTE =
+  "langfuse.trace.tags"` in `tracing.py`, because the SDK constant lives in a
+  private module (`langfuse._client.attributes`). A test asserts it equals the
+  SDK's `TRACE_TAGS`. It is set on the root span at `begin` via the span's
+  `_otel_span.set_attribute` (SDK 5.2 has no public setter); whether the
+  server reads it from a `start_observation` span is for the live check.
+- Subtask 1: `httpx` was moved out of the dev group (uv did not need it
+  there); `uv.lock` changed by two lines.
+- `make_client` for `anthropic` passes `api_key or ""` to satisfy typing; the
+  CLI never calls it without a key.
+- The 5 comparison questions in the README are mine (spec: assumption).
+
+AC10 (live check) is the owner's.
+
+### Rework round 1 (review.md round 1)
+
+Tests and Progress only; no source change.
+
+Corrections to the build entry: the baseline was 104 tests on `main` (the
+"was 128" figure above is corrected to 104). Commit `ca0eca7` alone was not
+verify-green (pytest 13 failed, 91 passed; mypy error at `cli.py:36`); the
+next commit, `20c9316`, restores green. History is not rewritten.
+
+Tests added, and the mutant each kills (each mutant applied by copy, full
+suite red, restored by copy):
+- `tests/test_models.py::test_make_client_ollama_passes_model_and_base_url_through`
+  kills M02 and R04; `test_make_client_ollama_defaults_the_base_url` also
+  guards M02; `test_make_client_anthropic_passes_the_key_to_the_sdk` kills R03.
+- `tests/test_models.py::test_ollama_error_types_are_model_errors` kills B01
+  and B02.
+- `tests/test_ollama_model.py::test_other_failures_are_plain_model_errors`
+  with a 400 body carrying a `message` kills M25.
+- `tests/test_ollama_model.py::test_ipv6_host_keeps_its_brackets_in_the_message`
+  kills M39.
+
+All 7 mutants killed (1 failure each). Optional "worth a look" items left
+unchanged by instruction. Commit: see the git log subject "§2: rework round 1".

@@ -255,3 +255,14 @@ def test_failed_run_does_not_record_finish():
     with pytest.raises(RuntimeError):
         answer_question("q", ScriptedModelClient([RuntimeError("x")]), [], tracer)
     assert "finish" not in tracer.kinds
+
+
+def test_unparsable_ollama_arguments_get_an_error_result_and_the_run_goes_on():
+    fake = ScriptedModelClient(
+        [call({"_unparsable_arguments": "not json"}), final("Sorry, try again.")]
+    )
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    (tool_result,) = tool_results_sent(fake.requests[1])
+    assert tool_result.is_error
+    assert "unknown argument(s): _unparsable_arguments" in tool_result.content
+    assert result.answer == "Sorry, try again."

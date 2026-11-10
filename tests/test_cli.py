@@ -8,7 +8,7 @@ from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import NoopTracer, SafeTracer
 from tests.helpers import RaisingTracer
 
-ENV = {"ANTHROPIC_API_KEY": "placeholder-key"}
+ENV = {"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "placeholder-key"}
 
 
 def script():
@@ -25,14 +25,14 @@ class Factory:
         self.client = client
         self.calls = []
 
-    def __call__(self, provider, model, key):
-        self.calls.append((provider, model, key))
+    def __call__(self, provider, model, *, api_key=None, base_url=None):
+        self.calls.append((provider, model, api_key))
         return self.client
 
 
 @pytest.fixture(autouse=True)
 def _no_tracing(monkeypatch):
-    monkeypatch.setattr(cli, "make_tracer", lambda env: NoopTracer())
+    monkeypatch.setattr(cli, "make_tracer", lambda env, tags=(): NoopTracer())
 
 
 def test_happy_path_prints_answer_exit_0(capsys):
@@ -69,11 +69,17 @@ def test_unknown_provider_exit_1_lists_known_no_client(capsys):
     env = {**ENV, "ADVISOR_MODEL_PROVIDER": "mystery"}
     assert main(["q"], env=env, client_factory=factory) == 1
     err = capsys.readouterr().err
-    assert "mystery" in err and "anthropic" in err
+    assert "mystery" in err and "anthropic" in err and "ollama" in err
     assert factory.calls == []
 
 
-@pytest.mark.parametrize("env", [{}, {"ANTHROPIC_API_KEY": ""}])
+@pytest.mark.parametrize(
+    "env",
+    [
+        {"ADVISOR_MODEL_PROVIDER": "anthropic"},
+        {"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": ""},
+    ],
+)
 def test_missing_key_exit_1_names_variable_no_client(env, capsys):
     factory = Factory(script())
     assert main(["q"], env=env, client_factory=factory) == 1
@@ -82,7 +88,11 @@ def test_missing_key_exit_1_names_variable_no_client(env, capsys):
 
 
 def test_key_is_never_printed(capsys):
-    main(["q"], env={"ANTHROPIC_API_KEY": "sekrit-value"}, client_factory=Factory(script()))
+    main(
+        ["q"],
+        env={"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "sekrit-value"},
+        client_factory=Factory(script()),
+    )
     captured = capsys.readouterr()
     assert "sekrit-value" not in captured.out + captured.err
 
@@ -115,14 +125,16 @@ def test_catalogue_error_exit_1(monkeypatch, capsys):
 
 
 def test_raising_tracer_changes_neither_answer_nor_exit(monkeypatch, capsys):
-    monkeypatch.setattr(cli, "make_tracer", lambda env: SafeTracer(RaisingTracer()))
+    monkeypatch.setattr(cli, "make_tracer", lambda env, tags=(): SafeTracer(RaisingTracer()))
     assert main(["q"], env=ENV, client_factory=Factory(script())) == 0
     assert capsys.readouterr().out.strip() == "Try the Auralis Calm 300 (P-001)."
 
 
 def test_tracer_gets_full_environment(monkeypatch):
     seen = []
-    monkeypatch.setattr(cli, "make_tracer", lambda env: seen.append(dict(env)) or NoopTracer())
+    monkeypatch.setattr(
+        cli, "make_tracer", lambda env, tags=(): seen.append(dict(env)) or NoopTracer()
+    )
     main(["q"], env={**ENV, "LANGFUSE_HOST": "http://x"}, client_factory=Factory(script()))
     assert seen[0]["LANGFUSE_HOST"] == "http://x"
 

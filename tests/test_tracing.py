@@ -91,7 +91,7 @@ def test_raising_tracer_does_not_change_answer():
     assert answer_question("q", _fake(), [search_tool(CAT)], safe) == "Buy P-001."
 
 
-def _real_tracer():
+def _real_tracer(tags=()):
     exporter = InMemorySpanExporter()
     client = Langfuse(
         # The SDK shares one exporter per public key, so each test needs its own key.
@@ -101,7 +101,7 @@ def _real_tracer():
         span_exporter=exporter,
         flush_at=1,
     )
-    return exporter, LangfuseTracer(client)
+    return exporter, LangfuseTracer(client, tags)
 
 
 def _attr(span, name):
@@ -274,3 +274,46 @@ def test_safe_tracer_forwards_a_blocked_check(monkeypatch):
         ("check", "input", False, "off topic"),
         ("finish", REFUSAL_TEXT),
     ]
+
+
+@pytest.mark.parametrize(
+    "tags",
+    [["provider:ollama", "model:qwen3:8b"], ["provider:anthropic", "model:claude-haiku-5-5"]],
+)
+def test_root_span_carries_provider_and_model_tags(tags):
+    exporter, tracer = _real_tracer(tags)
+    answer_question("which phone?", _fake(), [search_tool(CAT)], tracer)
+    spans = exporter.get_finished_spans()
+    (root,) = [s for s in spans if s.parent is None]
+    assert list(root.attributes["langfuse.trace.tags"]) == tags
+
+
+def test_no_tags_sets_no_tag_attribute():
+    exporter, tracer = _real_tracer()
+    answer_question("which phone?", _fake(), [search_tool(CAT)], tracer)
+    (root,) = [s for s in exporter.get_finished_spans() if s.parent is None]
+    assert "langfuse.trace.tags" not in root.attributes
+
+
+def test_tag_attribute_name_matches_the_sdk():
+    from langfuse._client.attributes import LangfuseOtelSpanAttributes
+
+    assert tracing.TRACE_TAGS_ATTRIBUTE == LangfuseOtelSpanAttributes.TRACE_TAGS
+
+
+def test_generation_records_model_and_usage_and_no_cost():
+    exporter, tracer = _real_tracer(["provider:ollama", "model:qwen3:8b"])
+    answer_question("which phone?", _fake(), [search_tool(CAT)], tracer)
+    gens = [s for s in exporter.get_finished_spans() if s.name == "model-call"]
+    assert gens
+    for g in gens:
+        assert _attr(g, "model.name") == "m-1"
+        assert "langfuse.observation.usage_details" in g.attributes
+        assert not [k for k in g.attributes if "cost" in k]
+
+
+def test_make_tracer_passes_tags_to_the_langfuse_tracer(monkeypatch):
+    monkeypatch.setattr(tracing, "Langfuse", lambda **kw: object())
+    tracer = make_tracer(FULL_ENV, ["provider:ollama"])
+    assert isinstance(tracer, SafeTracer)
+    assert tracer._inner._tags == ["provider:ollama"]

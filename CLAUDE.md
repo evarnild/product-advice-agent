@@ -27,7 +27,7 @@ npm run ship -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree
 npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
-uv run advisor "<question>"  # run the agent (needs ANTHROPIC_API_KEY, see README.md)
+uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
 ```
 
 The kit itself needs Node ≥ 22 and nothing else: no `npm install`. The
@@ -159,7 +159,9 @@ Langfuse stack in `infra/langfuse/`.
   the skeleton); a block gives the fixed refusal.
 - `models/`: the `ModelClient` protocol and message types (`base.py`), the
   scripted fake for tests and evals (`fake.py`), and `make_client` with the
-  provider registry. `models/anthropic_model.py` is the Anthropic adapter.
+  provider registry. `models/anthropic_model.py` is the Anthropic adapter and
+  `models/ollama_model.py` the Ollama adapter (the local default, keyless,
+  over `/api/chat` with `httpx`, imported only there).
 
 **Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
 protocol and the no-op, SDK-free and without I/O, so the pure modules
@@ -172,8 +174,9 @@ Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports `Tracer` and
 
 **Conventions worth knowing before editing**
 
-- Provider and tracing SDKs are imported in exactly one module each:
-  `anthropic` only in `models/anthropic_model.py`, `langfuse` only in
+- Provider and tracing libraries are imported in exactly one module each:
+  `anthropic` only in `models/anthropic_model.py`, `httpx` only in
+  `models/ollama_model.py`, `langfuse` only in
   `tracing.py` (`tests/test_boundaries.py` enforces it). The agent and CLI
   see the `ModelClient` and `Tracer` protocols only. The pure modules load
   neither `langfuse` nor `opentelemetry` (a subprocess test in
@@ -196,8 +199,10 @@ Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports `Tracer` and
 - `mypy --strict` covers `src/advisor`; ruff lints and formats everything.
 - Secrets live in `.env` and `infra/langfuse/.env` (both gitignored); only
   `.env.example` files with placeholders are committed.
-- A new provider is a new `models/<provider>.py`, a line in
-  `PROVIDER_KEY_ENV` and `make_client`, and its own tests.
+- A new provider is a new `models/<provider>.py`, a name in `KNOWN_PROVIDERS`
+  and a branch in `make_client`, and its own tests. A provider that needs a
+  key also gets a line in `PROVIDER_KEY_ENV`; a keyless one (ollama) has none,
+  and the CLI then skips the key check and passes no key.
 
 **Live checks (`REVIEW-POLICY.md` → "Live checks", rule 1)** are owed for
 changes to `src/advisor/cli.py`, `src/advisor/models/`,

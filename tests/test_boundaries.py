@@ -43,3 +43,19 @@ def test_pure_modules_load_no_tracing_sdk():
     )
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_only_the_ollama_adapter_imports_httpx():
+    assert _importers("httpx") == {"models/ollama_model.py"}
+
+
+def test_cli_imports_no_http_library_or_provider_module():
+    tree = ast.parse((SRC / "cli.py").read_text(encoding="utf-8"))
+    imported = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(a.name for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module)
+    assert not {i for i in imported if i.split(".")[0] in {"httpx", "anthropic", "langfuse"}}
+    assert not {i for i in imported if i.endswith(("ollama_model", "anthropic_model"))}
