@@ -24,6 +24,9 @@ class RecordingTracer:
     def finish(self, answer):
         self.events.append(("finish", answer))
 
+    def fail(self, error):
+        self.events.append(("fail", error))
+
     @property
     def kinds(self):
         return [e[0] for e in self.events]

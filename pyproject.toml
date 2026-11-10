@@ -17,6 +17,8 @@ dev = [
     "pytest",
     "ruff",
     "mypy",
+    "opentelemetry-sdk",
+    "httpx",
 ]
 
 [build-system]

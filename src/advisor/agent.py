@@ -183,7 +183,14 @@ def answer_question(
     if not verdict.allow:
         tracer.finish(REFUSAL_TEXT)
         return REFUSAL_TEXT
-    answer = run_agent(question, client, tools, tracer).answer
+    try:
+        answer = run_agent(question, client, tools, tracer).answer
+    except Exception as e:
+        # A failed run still closes its trace (level ERROR), then the CLI
+        # reports the failure. Only the exception class and message are
+        # recorded, never configuration or environment values.
+        tracer.fail(f"{type(e).__name__}: {e}")
+        raise
     verdict = check_output(answer)
     tracer.check("output", verdict.allow, verdict.reason)
     if not verdict.allow:

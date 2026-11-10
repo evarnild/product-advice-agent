@@ -39,6 +39,10 @@ class Tracer(Protocol):
         """Close the trace with the answer and flush with a bounded wait."""
         ...
 
+    def fail(self, error: str) -> None:
+        """Close the trace of a failed run (level ERROR) and flush with a bounded wait."""
+        ...
+
 
 class NoopTracer:
     def begin(self, question: str) -> None:
@@ -54,6 +58,9 @@ class NoopTracer:
         pass
 
     def finish(self, answer: str) -> None:
+        pass
+
+    def fail(self, error: str) -> None:
         pass
 
 
@@ -106,8 +113,14 @@ class LangfuseTracer:
         )
 
     def finish(self, answer: str) -> None:
+        self._close(output=answer)
+
+    def fail(self, error: str) -> None:
+        self._close(output=error, level="ERROR")
+
+    def _close(self, **update: Any) -> None:
         if self._root is not None:
-            self._root.update(output=answer)
+            self._root.update(**update)
             self._root.end()
             self._root = None
         # Bounded wait: a down Langfuse must not hold the CLI for long.
@@ -142,6 +155,9 @@ class SafeTracer:
 
     def finish(self, answer: str) -> None:
         self._guard("finish", answer)
+
+    def fail(self, error: str) -> None:
+        self._guard("fail", error)
 
 
 def make_tracer(env: Mapping[str, str]) -> Tracer:

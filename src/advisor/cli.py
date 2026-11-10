@@ -14,7 +14,7 @@ from collections.abc import Callable, Mapping, Sequence
 from advisor.agent import answer_question, search_tool
 from advisor.catalogue import CatalogueError, load_catalogue
 from advisor.config import load_env, load_settings
-from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
+from advisor.models import KNOWN_PROVIDERS, make_client
 from advisor.models.base import ModelClient
 from advisor.tracing import make_tracer
 
@@ -67,8 +67,6 @@ def main(
         client = client_factory(settings.provider, settings.model, api_key)
         tracer = make_tracer(full_env)
         answer = answer_question(question, client, [search_tool(catalogue)], tracer)
-    except UnknownProviderError as e:
-        return _fail(str(e))
     except Exception:
         if debug:
             traceback.print_exc()
