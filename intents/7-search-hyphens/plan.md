@@ -140,3 +140,15 @@ killing test for each, backs up and restores by copy, and finishes with
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — implementation (commits d5f4cc1, plus the bookkeeping commit after it)
+
+- Shipped: the four tests in `tests/test_catalogue.py`, `_norm` in `src/advisor/catalogue.py` (keywords kept only if non-blank after normalising; haystack normalised), the docstring sentence, and the `catalogue.py` line in `CLAUDE.md`. No other intent folder touched; §1's spec untouched.
+- Failing first, against the unfixed `search_products`: all four failed. The three expected ones returned `[]` (wanted `["P-003","P-004"]`; `["P-001"]` for `"in ear"`; `["P-005","P-004","P-001"]` for the committed catalogue). `test_hyphen_only_keyword_is_ignored` also failed, not as the plan guessed: it returned `[]` for `["-"]` where no keywords gives all four products (the plan's own reasoning, `main` returns `[]`, is why it fails against "same as no keywords").
+- Mutants, full suite, each restored by copy; killing tests:
+  - no `.replace`: all four new tests.
+  - keyword side only (haystack not normalised): `test_spaced_keyword_matches_hyphenated_text`.
+  - haystack side only (keywords not normalised): all four new tests.
+  - `.replace("-", "")`: the hyphenated-keyword, spaced-keyword and committed-catalogue tests (the hyphen-only test passes, as the plan predicted, it pins the result and not the mechanism).
+- `npm run verify`: 122 passed (was 118), ruff and mypy clean.
+- Divergences: none. Test count before was 118 (122 minus four new).

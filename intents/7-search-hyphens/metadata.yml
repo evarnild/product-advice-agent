@@ -2,7 +2,7 @@
 id: 7
 slug: search-hyphens
 type: fix
-status: accepted
+status: in-review
 title: Product search misses matches when a keyword and the catalogue differ only by a hyphen
 review_tier:
 intent_accepted: 2026-11-10 by-agent    # owner: "accept intent 7"
