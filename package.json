@@ -10,6 +10,7 @@
   "scripts": {
     "test:kit": "node --test \"scripts/*.test.mjs\"",
     "check:intent": "node scripts/check-intent.mjs",
+    "check:pins": "node scripts/check-pins.mjs",
     "sdlc:scan": "node scripts/sdlc-scan.mjs",
     "queue": "node scripts/queue.mjs",
     "spawn": "node scripts/spawn-intent.mjs",

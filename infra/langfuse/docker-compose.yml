@@ -94,7 +94,7 @@ services:
 
   minio:
     # Pinned by digest: the free Chainguard image is published only as "latest".
-    # Update: docker buildx imagetools inspect cgr.dev/chainguard/minio:latest
+    # Update: npm run check:pins (prints the newest digest to paste)
     image: cgr.dev/chainguard/minio@sha256:fb893e36fc369d41e92f678b17ec27378fa5bf0576aeef7ac15460c13629ab5a
     restart: always
     entrypoint: sh

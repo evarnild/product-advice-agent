@@ -2,7 +2,7 @@
 id: 6
 slug: pin-check-script
 type: adjustment         # feature | fix | refactor | adjustment | experiment
-status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: in-review          # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: A pin-check script for the Langfuse stack's images
 review_tier:             # empty = REVIEW-POLICY.md's path table decides; set only to raise it (attested | reviewed)
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
