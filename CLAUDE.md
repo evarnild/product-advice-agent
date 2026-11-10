@@ -188,6 +188,8 @@ Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports `Tracer` and
 - Tracing never changes a run: every Langfuse call is wrapped and swallowed,
   flush waits at most 5 s, and tracing is a no-op unless `LANGFUSE_HOST`,
   `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all set.
+- Provider SDK clients are built with their own tracing off (the Anthropic
+  adapter passes `open_telemetry=False`), so a run is one Langfuse trace.
 - Tests drive a scripted fake `ModelClient` and assert on what it received.
   `tests/conftest.py` makes any socket connect fail the test. Never build
   the real adapter or Langfuse client in a test without patching it.
