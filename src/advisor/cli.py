@@ -9,19 +9,29 @@ from __future__ import annotations
 import logging
 import sys
 import traceback
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Protocol
 
 from advisor.agent import answer_question, search_tool
 from advisor.catalogue import CatalogueError, load_catalogue
-from advisor.config import load_env, load_settings
+from advisor.config import ConfigError, load_env, load_settings
 from advisor.models import KNOWN_PROVIDERS, make_client
-from advisor.models.base import ModelClient
+from advisor.models.base import ModelClient, ModelNotAvailableError, ModelUnreachableError
 from advisor.tracing import make_tracer
 
 USAGE = 'usage: advisor [--debug] "<question>"'
 UNAVAILABLE = "The advisor is unavailable right now."
 
-ClientFactory = Callable[[str, str, str], ModelClient]
+
+class ClientFactory(Protocol):
+    def __call__(
+        self,
+        provider: str,
+        model: str,
+        *,
+        api_key: str | None = None,
+        base_url: str | None = None,
+    ) -> ModelClient: ...
 
 
 def _fail(message: str, code: int = 1) -> int:
@@ -69,18 +79,35 @@ def main(
             f"Unknown model provider '{settings.provider}'. "
             f"Known providers: {', '.join(KNOWN_PROVIDERS)}."
         )
-    api_key = settings.api_key()
-    if not api_key:
-        return _fail(f"Missing {settings.key_variable}: set it in the environment or in .env.")
+    # Only providers with a key variable need a key; ollama is keyless and
+    # never receives one, even when ANTHROPIC_API_KEY is set.
+    api_key: str | None = None
+    if settings.key_variable is not None:
+        api_key = settings.api_key()
+        if not api_key:
+            return _fail(f"Missing {settings.key_variable}: set it in the environment or in .env.")
+    base_url: str | None = None
+    if settings.provider == "ollama":
+        try:
+            base_url = settings.ollama_url()
+        except ConfigError as e:
+            return _fail(str(e))
     try:
         catalogue = load_catalogue()
     except CatalogueError as e:
         return _fail(f"Catalogue error: {e}")
 
     try:
-        client = client_factory(settings.provider, settings.model, api_key)
-        tracer = make_tracer(full_env)
+        client = client_factory(
+            settings.provider, settings.model, api_key=api_key, base_url=base_url
+        )
+        tags = [f"provider:{settings.provider}", f"model:{settings.model}"]
+        tracer = make_tracer(full_env, tags)
         answer = answer_question(question, client, [search_tool(catalogue)], tracer)
+    except (ModelUnreachableError, ModelNotAvailableError) as e:
+        if debug:
+            traceback.print_exc()
+        return _fail(str(e))
     except Exception:
         if debug:
             traceback.print_exc()

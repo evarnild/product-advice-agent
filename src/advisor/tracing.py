@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from langfuse import Langfuse
@@ -19,6 +19,11 @@ from advisor.models.base import Usage
 from advisor.tracer import NoopTracer, Tracer
 
 FLUSH_TIMEOUT_SECONDS = 5.0
+# Langfuse's trace-tags span attribute (LangfuseOtelSpanAttributes.TRACE_TAGS,
+# a private module in SDK 5.2, so the literal is pinned here and tested).
+# No cost is attached to a generation: Langfuse prices one only when its model
+# name matches a price definition, and a local model's name does not.
+TRACE_TAGS_ATTRIBUTE = "langfuse.trace.tags"
 REQUIRED_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
 log = logging.getLogger("advisor.tracing")
 
@@ -26,14 +31,20 @@ log = logging.getLogger("advisor.tracing")
 class LangfuseTracer:
     """Records one run as one Langfuse trace: a root span with child observations."""
 
-    def __init__(self, client: Any) -> None:
+    def __init__(self, client: Any, tags: Sequence[str] = ()) -> None:
         self._client = client
+        self._tags = list(tags)
         self._root: Any = None
 
     def begin(self, question: str) -> None:
         self._root = self._client.start_observation(
             name="advisor-run", as_type="span", input=question
         )
+        if self._tags:
+            # Trace tags (provider:<p>, model:<m>) let runs of different
+            # providers be filtered side by side in Langfuse. SDK 5.2 has no
+            # update_trace, so set the trace-tags attribute on the root span.
+            self._root._otel_span.set_attribute(TRACE_TAGS_ATTRIBUTE, self._tags)
 
     def _child(self, **kwargs: Any) -> None:
         if self._root is None:
@@ -114,7 +125,7 @@ class SafeTracer:
         self._guard("fail", error)
 
 
-def make_tracer(env: Mapping[str, str]) -> Tracer:
+def make_tracer(env: Mapping[str, str], tags: Sequence[str] = ()) -> Tracer:
     """A Langfuse tracer when all three variables are set, otherwise a no-op."""
     if not all(env.get(k) for k in REQUIRED_ENV):
         log.debug("tracing off: %s not all set", ", ".join(REQUIRED_ENV))
@@ -128,4 +139,4 @@ def make_tracer(env: Mapping[str, str]) -> Tracer:
     except Exception as e:
         log.debug("tracing off: Langfuse client failed (%s)", type(e).__name__)
         return NoopTracer()
-    return SafeTracer(LangfuseTracer(client))
+    return SafeTracer(LangfuseTracer(client, tags))

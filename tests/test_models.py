@@ -14,14 +14,14 @@ TOOL = ToolSpec("search_products", "Search.", {"type": "object", "properties": {
 
 def test_make_client_unknown_provider_lists_known():
     with pytest.raises(UnknownProviderError) as e:
-        make_client("nope", "m", "k")
+        make_client("nope", "m")
     assert "nope" in str(e.value)
     for p in KNOWN_PROVIDERS:
         assert p in str(e.value)
 
 
 def test_make_client_anthropic_does_not_connect():
-    client = make_client("anthropic", "some-model", "placeholder-key")
+    client = make_client("anthropic", "some-model", api_key="placeholder-key")
     assert isinstance(client, AnthropicClient)
 
 
@@ -40,9 +40,19 @@ def test_anthropic_adapter_turns_off_sdk_tracing(monkeypatch):
 
 def test_sdk_tracing_stays_off_even_if_the_environment_enables_it(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_OPEN_TELEMETRY", "true")
-    client = make_client("anthropic", "m", "placeholder-key")
+    client = make_client("anthropic", "m", api_key="placeholder-key")
     # `_open_telemetry` is private to anthropic 2.6.0; a rename fails loudly here.
     assert client._sdk._open_telemetry["traces"]["enabled"] is False  # type: ignore[attr-defined]
+
+
+def test_make_client_ollama_is_keyless_and_does_not_connect():
+    from advisor.models.ollama_model import OllamaClient
+
+    assert isinstance(make_client("ollama", "qwen3:8b"), OllamaClient)
+
+
+def test_known_providers_lists_both():
+    assert set(KNOWN_PROVIDERS) == {"ollama", "anthropic"}
 
 
 def test_fake_records_requests_and_plays_script():
