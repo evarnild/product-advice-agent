@@ -150,7 +150,7 @@ Langfuse stack in `infra/langfuse/`.
 
 - `catalogue.py`: `Product`, `load_catalogue` (validates, names product and
   field), `search_products` (AND of filters, price-then-id order, limit
-  clamped to 1..10). Data: `data/catalogue.json`, synthetic.
+  clamped to 1..10, keywords case-insensitive, a hyphen counts as a space). Data: `data/catalogue.json`, synthetic.
 - `agent.py`: `run_agent` (the tool loop, at most 5 model turns, error tool
   results for bad calls, fixed fallback answer) and `answer_question` (input
   guardrail, agent, output guardrail, one trace). Pure orchestration over a
