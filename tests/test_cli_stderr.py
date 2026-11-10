@@ -25,6 +25,9 @@ class ExportFailingTracer(NoopTracer):
 
 
 cli.make_tracer = lambda env: ExportFailingTracer()
+if "--root-handler" in sys.argv:
+    sys.argv.remove("--root-handler")
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
 client = ScriptedModelClient([ModelTurn(text="Fine answer.")])
 code = cli.main(sys.argv[1:], env={"ANTHROPIC_API_KEY": "placeholder-key"},
                 client_factory=lambda provider, model, key: client)
@@ -50,3 +53,11 @@ def test_export_failure_shows_with_debug():
     assert result.returncode == 0
     assert "Fine answer." in result.stdout
     assert "Failed to export" in result.stderr
+
+
+def test_export_failure_is_silent_even_with_a_root_handler():
+    # Only `propagate = False` keeps the line away from a root handler.
+    result = _run("--root-handler", "q")
+    assert result.returncode == 0
+    assert "Fine answer." in result.stdout
+    assert "Failed to export" not in result.stderr

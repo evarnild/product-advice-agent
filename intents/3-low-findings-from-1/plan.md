@@ -227,3 +227,17 @@ Divergences:
 
 Test counts: see the final `npm run verify` in the report (110 pytest tests
 before the docs commit).
+
+### 2026-11-10 — Rework round 1
+
+Commit: the "§3: cover propagate" commit on this branch (tests and Progress only).
+
+- Added `test_cli_stderr.py::test_export_failure_is_silent_even_with_a_root_handler`:
+  the probe takes a `--root-handler` flag and installs a root
+  `StreamHandler(sys.stderr)` before `cli.main(["q"])` (no `--debug`); asserts
+  exit 0, the answer on stdout, no "Failed to export" on stderr. Passes on
+  unmutated code.
+- C2 (`otel.propagate = False` replaced by `pass`): KILLED by that test.
+  Backup/restore by copy; tree clean afterwards.
+- Optional "worth a look" items not taken.
+- `npm run verify`: green, 111 pytest tests passed.
