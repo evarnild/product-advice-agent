@@ -1,13 +1,192 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §4 review — Move the local Langfuse stack to v4
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 0e644c086113ea7396dcfdb2bd02dc823986c78f
-round: 1
+reviewed-commit: 0368e59368d879028e530588ba90ede9ac3642ed
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+The rework resolves round 1's MEDIUM (C6) with one assertion. No finding
+needs rework, and the tier is Reviewed, so the verdict is escalate: the
+owner reads the diff. The live check is still owed.
+
+Tier: Reviewed, set by input 2 (`review_tier: reviewed`), as in round 1.
+
+Scope: 0e644c0..0368e59 — 18f8829 (the rework: one assertion at
+`tests/test_compose.py:89`, plan Progress), e1d1cfb (the round-1 review),
+0368e59 (`auto_round: 2`). The diff outside `intents/` and `tests/` is
+empty. The Compose file last changed in 3c7f924, before round 1.
+
+## Round-1 findings: resolution
+| Round-1 finding | Resolution |
+| --- | --- |
+| MEDIUM `tests/test_compose.py:89`: major version not asserted (C6 survived) | resolved in 18f8829: `assert version[0] == 4, f"Langfuse must be on major 4, got {version}"`. C6 is killed by `test_langfuse_web_and_worker_share_a_v4_tag`, and T11 shows the new line alone does it |
+| LOW `tests/test_compose.py:17`: floating minor-line tags (C19, C20) | open, Worth a look (plan-settled) |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (exactly the round-1 fix; `plan.md` changed only below Progress; spec and intent unchanged) |
+| 2 | Type check | pass (FAIL only on the owed live check: the owner's to clear) |
+| 3 | Behaviour against the spec | pass (B10's "4.x version ≥ 4.59.0" now asserted; B1–B9, B11, AC1–AC4 unchanged since round 1) |
+| 4 | Tests prove the behaviour, not only pass | findings (1): C6 killed; C5, C14 still killed; C19, C20 survive (the plan-settled LOW) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass ("109 passed" and C6's "1 failed, 108 passed" reproduce) |
+| 7 | Documentation | pass (no doc changed; nothing the rework touches is documented) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty; the "guard that passes whatever the file says" risk re-checked with T11) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 4, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/4-langfuse-v4/review.md → ## Live check, then set live_checked: <date> in intents/4-langfuse-v4/metadata.yml.
+  note:  4 file(s), 144 line(s) changed outside intents/.
+```
+The only error is the owed live check: the owner's to clear (review skill,
+step 1). The 1-line rise from 143 is the new assertion.
+
+## Findings
+- **LOW** `tests/test_compose.py:17` — carried from round 1. `TAG` accepts
+  any tag with two or more numeric parts, so floating minor-line tags pass:
+  C19 (`redis:7.4`) and C20 (`clickhouse-server:26.3`) survive. Spec B1
+  says "a full release tag", but the approved plan defined "exact" as "at
+  least two dot-separated numeric parts", and the guard does what the plan
+  says. The shipped pins are full release tags. Worth a look: tightening
+  means per-image rules, and changes the plan, so the owner raises it.
+
+Mutants this round (backup by copy, exact single-occurrence replacements,
+file-changed and `git diff --quiet` asserted, full pytest, restore by copy
+with a SHA-256 match):
+
+| id | change | result | killing test |
+| --- | --- | --- | --- |
+| C5 | both Langfuse → `4.58.0` | killed (1 failed, 108 passed) | share_a_v4_tag (`>= MIN_LANGFUSE`) |
+| **C6** | **both Langfuse → `5.0.0`** | **killed** (1 failed, 108 passed) | share_a_v4_tag: "Langfuse must be on major 4, got (5, 0, 0)" |
+| C14 | both Langfuse → `3.227.1` | killed (1 failed, 108 passed) | share_a_v4_tag: "… got (3, 227, 1)" |
+| C19 | redis `7.4.12` → `7.4` | survived (109 passed) | — (plan-settled LOW) |
+| C20 | clickhouse `26.3.62.3` → `26.3` | survived (109 passed) | — (plan-settled LOW) |
+| T11 + C6 | drop the new `version[0] == 4` line, with the 5.0.0 file | survived (109 passed) | — (the new line alone kills C6) |
+
+Round 1's other Compose and test-logic mutants were not re-run. The rework
+adds an assertion and removes none, so nothing round 1 killed can newly
+survive.
+
+## Not checked
+- **Whether Langfuse 4.78.0 starts on this file** with these versions and
+  no added variables (B7), including the "no ClickHouse privilege grant on a
+  fresh stack" assumption. Live check (AC5).
+- **The v4 UI and traces:** no deprecation warning; SDK 5.2 traces arrive
+  with §1's shape. Live check.
+- **The two links** (header, README): Langfuse was not contacted.
+- **Whether the Docker Hub tags are immutable** (`postgres:17.11`,
+  `redis:7.4.12` get rebuilt for base-OS updates); no digest baseline.
+- **Pulling or running any image:** not allowed. The registry manifests and
+  `docker compose config -q` were not re-run this round: the Compose file is
+  unchanged since round 1 verified both.
+
+## Live check
+- owed: rule 1 (`infra/langfuse/docker-compose.yml`). This is spec AC5, and
+  it also covers the first two Not-checked items. The rework is done, so it
+  can be run now.
+- **before you start:**
+  - `down -v` deletes the v3 stack's volumes: every stored v3 trace, and the
+    v3 account and API keys. The Compose project name is `langfuse` from
+    both the main checkout and the worktree, so running it from the
+    worktree removes the same stack.
+  - The worktree has no `.env` files (both are gitignored), and the Compose
+    file refuses to start without `infra/langfuse/.env`.
+- steps (Windows PowerShell):
+  1. `cd C:\Users\eric\src\product-advice-agent-wt\4-langfuse-v4`
+  2. `Copy-Item ..\..\product-advice-agent\infra\langfuse\.env
+     infra\langfuse\.env`. Every password must be hex (`openssl rand -hex
+     24`), as in §1. Or make a fresh one from `infra\langfuse\.env.example`.
+  3. `Copy-Item ..\..\product-advice-agent\.env .env` (your
+     `ANTHROPIC_API_KEY`; the `LANGFUSE_*` keys get replaced below). If the
+     main checkout has no `.env`, create one from `.env.example`.
+  4. `docker compose -f infra/langfuse/docker-compose.yml down -v`. This
+     deletes the v3 traces.
+  5. `docker compose -f infra/langfuse/docker-compose.yml up -d`
+  6. `docker compose -f infra/langfuse/docker-compose.yml ps`
+  7. Open http://localhost:3000. Sign up again, and create an organisation,
+     a project and API keys.
+  8. In the worktree's `.env`, set `LANGFUSE_HOST=http://localhost:3000`
+     and the new `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`. Update the
+     main checkout's `.env` later too.
+  9. `uv run advisor "I need noise-cancelling headphones under 200 euros"`
+  10. Run the same with a bad key: `$env:ANTHROPIC_API_KEY =
+      "sk-ant-invalid"`, the command, then `Remove-Item
+      Env:ANTHROPIC_API_KEY`.
+- you should see:
+  - **Step 6:** six containers, all running, with no restart loop. The
+    images are `langfuse:4.78.0` and `langfuse-worker:4.78.0`.
+    - If not: `docker compose -f infra/langfuse/docker-compose.yml logs
+      langfuse-worker langfuse-web`. Look especially for ClickHouse "Not
+      enough privileges", which would be a rework defect.
+  - **Step 7:** no v3 deprecation banner. An "AI gateway not deployed"
+    notice is expected, and is not a deprecation warning.
+  - **Step 9:** an answer, exit 0.
+  - **Step 10:** "The advisor is unavailable right now.", exit 1.
+  - **In Langfuse → Traces:** two traces.
+    - The good one: root `advisor-run` with input and output; then
+      `input-check`, `model-call` generations with model and token usage,
+      `search_products` with arguments and `result_count`, and
+      `output-check`.
+    - The failed one: an `advisor-run` root at level ERROR.
+  - If a step fails, leave `live_checked:` empty, and the change goes back
+    to rework.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/4-langfuse-v4` at 0368e59, `git status --short` empty before and after):
+- **Coordinator, re-run:** `git diff 0e644c0 HEAD -- . ':!intents' ':!tests'`
+  → empty; `--stat` → `plan.md`, `review.md`, `tests/test_compose.py` (+1),
+  plus `metadata.yml`. Matches.
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "61 files already formatted";
+  mypy "Success: no issues found in 11 source files"; pytest "109 passed".
+  Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL, exit 1, with only
+  the owed-live-check error. Matches.
+- **Coordinator, re-run:** mutants with my round-1 harness:
+  - C6 KILLED by test_langfuse_web_and_worker_share_a_v4_tag (1 failed, 108
+    passed);
+  - C5 and C14 KILLED by the same test;
+  - C19 and C20 SURVIVED (109 passed).
+
+  Matches the reviewer and the implementer.
+
+**Reviewer, verified:**
+- HEAD 0368e59, merge base 82bb545 (= local `main`); nothing pushed.
+- The scope diffs as above.
+- `verify` and `check:intent`.
+- `sdlc:scan --sample-due auto --exclude 4` → "nth attested auto change =
+  1, every 3, sampled: no".
+- Seven mutant runs (harness `…/scratchpad/mut4r2/run.py`), restored with a
+  SHA-256 match.
+- The Progress numbers.
+
+**Taken on trust:**
+- the Langfuse-docs facts the spec quotes;
+- that `tracing.py` uses no legacy batch ingestion;
+- that the v4 server accepts SDK 5.2's spans (the live check);
+- round 1's registry-manifest and `config -q` results (the file is
+  unchanged).
+
+# Round 1 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 0e644c086113ea7396dcfdb2bd02dc823986c78f
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, set by input 2: `metadata.yml` has `review_tier:
 reviewed`. On paths alone it would be Attested (`tests/**`, the Compose
@@ -15,7 +194,7 @@ file as build config, `README.md`, `docs/**`). The diff does not touch
 `infra/langfuse/.env.example`. No CRITICAL or HIGH finding; nothing lowers a
 tier.
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (exactly subtasks 1–7; nothing above the Progress marker changed) |
@@ -67,7 +246,7 @@ tier.
   29.8.2, Compose v5.5.1).
 - **AC4.** All four documents read.
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -76,7 +255,7 @@ type-check: PASS (intent 4, feature)
   note:  4 file(s), 143 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **MEDIUM** `tests/test_compose.py:89` — the guard does not assert the
   major version, so web and worker both on `5.0.0` pass (mutant C6
   survived). Spec B10 requires "a 4.x version ≥ 4.59.0", and plan subtask 1
@@ -136,7 +315,7 @@ bad Compose variant it exists to catch.
   - T7: drop the `:latest` assert;
   - T10: drop `len(_images()) == 6`.
 
-## Not checked
+### Not checked
 - **Whether Langfuse 4.78.0 starts on this file** with these ClickHouse,
   Postgres, Redis and MinIO versions and no added variables (B7). This
   includes the spec's assumption that a fresh stack needs no ClickHouse
@@ -152,7 +331,7 @@ bad Compose variant it exists to catch.
 - **Pulling or running any image:** not allowed. Existence was checked by
   registry manifest only.
 
-## Live check
+### Live check
 - owed: rule 1 (`infra/langfuse/docker-compose.yml`). This is spec AC5, and
   it also covers the first two Not-checked items. Run it after the rework.
 - **before you start:**
@@ -204,7 +383,7 @@ bad Compose variant it exists to catch.
   - If a step fails, leave `live_checked:` empty, and the change goes back
     to rework.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/4-langfuse-v4` at 0e644c0, `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
