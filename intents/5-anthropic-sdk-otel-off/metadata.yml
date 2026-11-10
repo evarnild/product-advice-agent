@@ -14,7 +14,7 @@ live_checked:            # only when review.md says live-check: owed — the day
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 5"
 auto_round: 1
-auto_stopped:
+auto_stopped: live check owed
 follows_up: 1            # the client construction line is §1's (4361ced)
 links:
   - intents/4-langfuse-v4    source: the owner's live-check note
