@@ -2,19 +2,19 @@
 id: 3
 slug: low-findings-from-1
 type: fix                # feature | fix | refactor | adjustment | experiment
-status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: in-review         # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: Close the LOW review findings left open by §1
 review_tier: reviewed    # touches tracing.py and cli.py (Reviewed by meaning)
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when
 # an agent recorded it on your request. Leave empty until passed.
 intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §3"
 spec_accepted:           # feature only
-plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 3" (auto_authorized 2026-11-10)
-live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+plan_approved: 2026-11-10 by-agent    # owner: "reapprove the plan" amended in 215fe72 (Risks bullet)
+live_checked: 2026-11-10 by-agent    # owner: "live checked" (review.md round 3 steps)
 merged:                  # merge commit hash
-auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3"
-auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
-auto_stopped:            # /auto only: why it stopped, written without ` #`; cleared on resume
+auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3" (diff read)
+auto_round: 3
+auto_stopped: ready for /ship
 follows_up: 1            # the five findings come from §1's change (review rounds 1–4)
 links:
   - intents/1-stack-and-skeleton    source: review.md round 4, open LOW findings

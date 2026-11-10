@@ -17,7 +17,7 @@ from advisor.models.base import (
     ToolResult,
     ToolSpec,
 )
-from advisor.tracing import Tracer
+from advisor.tracer import Tracer
 
 MAX_TURNS = 5
 FALLBACK_ANSWER = (

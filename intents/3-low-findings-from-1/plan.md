@@ -30,10 +30,12 @@ Nothing changes in answers, refusals, exit codes or trace content.
   `tests/test_cli.py:8` and `tests/test_tracing.py:15` import `NoopTracer`
   (and `SafeTracer` etc.) from `advisor.tracing`. `tracing.py` re-exports
   `Tracer` and `NoopTracer`, so those imports keep working unchanged.
-- **Silencing too much.** Only the `opentelemetry` logger tree is quietened,
-  and only without `--debug`. `advisor` logging and the CLI's own stderr
-  messages (usage, missing key, unavailable) must stay. Existing CLI tests
-  prove those.
+- **Silencing too much.** Without `--debug`, the root `NullHandler`
+  quietens every library logger (`opentelemetry`, `langfuse`, `urllib3`,
+  …), and only when logging is not already set up; a caller's own root
+  handler still gets the lines. The CLI's own stderr messages (usage,
+  missing key, unavailable) go through `print`, not logging, and must stay.
+  Existing CLI tests prove those.
 - **Overlap with §2** (in flight on `feat/2-local-model`). §2 changes
   `cli.py` (keyless path, factory signature, tags), `tracing.py`
   (`make_tracer(env, tags)`, tags at `begin`) and `tests/test_boundaries.py`
@@ -91,11 +93,15 @@ Re-read on `main` at `ccaedba`.
      not contain `Failed to export`;
    - (b) with `--debug`: the line is on stderr.
 
-   (a) fails on `main`. Fix in `cli.py`: without `--debug`, the
-   `opentelemetry` logger gets a `logging.NullHandler()` and
-   `propagate = False`. With `--debug`, nothing changes, and `basicConfig`
-   shows it. Comment site: why (spec §1 B17, a tracing failure never shows
-   as a run error).
+   (a) fails on `main`. Fix in `cli.py` (amended 2026-11-10, owner's
+   request): a `_configure_logging(debug)` helper. Without `--debug`,
+   `logging.basicConfig(handlers=[logging.NullHandler()])`: the CLI speaks
+   through `print` only, so no library's log line reaches stderr, and an
+   existing logging setup is left alone. With `--debug`, nothing changes,
+   and `basicConfig` shows it. Comment site: why (spec §1 B17, a tracing
+   failure never shows as a run error). The probe also logs a `langfuse`
+   warning, and (c) asserts that a root handler installed before `main`
+   still receives the line.
 4. **R20 (item 3).** In `tests/test_tracing.py`, add
    `test_safe_tracer_forwards_a_blocked_check`: it runs `answer_question`
    with `check_input` monkeypatched to block, through
@@ -128,8 +134,9 @@ Re-read on `main` at `ccaedba`.
 | --- | --- | --- |
 | 1 (failing first) | `test_boundaries.py::test_pure_modules_load_no_tracing_sdk` (subprocess) | fails on `main`; fails again if `agent.py` imports from `advisor.tracing` |
 | 1 | existing `test_only_tracing_imports_langfuse` | `langfuse` imported in `tracer.py` |
-| 2 | `test_cli_stderr.py` (a) without `--debug` | fails on `main`; fails if the `NullHandler`/`propagate` lines are removed |
+| 2 | `test_cli_stderr.py` (a) without `--debug` | fails on `main`; fails if the root `NullHandler` is removed, or only `opentelemetry` is quietened |
 | 2 | `test_cli_stderr.py` (b) with `--debug` | fails if the quietening also applies with `--debug` |
+| 2 | `test_cli_stderr.py` (c) existing root handler | fails if the CLI overrides an existing logging setup (`force=True`) |
 | 3 (R20) | `test_tracing.py::test_safe_tracer_forwards_a_blocked_check` | R20 (`allowed` → `True` in `SafeTracer.check`) |
 | 4 (L5) | `test_cli.py::test_debug_sets_advisor_logger_to_debug` | L5 (line 46 removed) |
 | 4 (L6) | `test_cli.py::test_stdout_is_reconfigured_to_utf8` | L6 (line 49 removed, or `encoding` changed) |
@@ -161,9 +168,13 @@ finishes with `git status --short` clean.
   `tracing.py`, but it names what it holds. The intent left the choice to
   the plan; a lazy `Langfuse` import was the other option. It was rejected
   because tests patch `tracing.Langfuse` as a module attribute.
-- **Silencing means a `NullHandler` with `propagate = False`** on the
-  `opentelemetry` logger, not raising its level. This keeps it out of a
-  root handler someone adds later, and needs no change in the SDK.
+- **Silencing means a root `NullHandler` via `basicConfig`** (amended
+  2026-11-10; was a `NullHandler` with `propagate = False` on the
+  `opentelemetry` logger). The advisor never uses logging for user output,
+  so all library log lines are quiet without `--debug`, the `langfuse`
+  logger included. `basicConfig` is a no-op when logging is already set
+  up, so repeated `main()` calls stack nothing, and a caller's own root
+  handler is respected.
 - **The stderr probe emits the log record itself** rather than starting a
   real exporter against a refused port. The test then needs no network or
   timing. The real exporter path is the live check's step 2.
@@ -175,3 +186,94 @@ finishes with `git status --short` clean.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — implementation (single phase)
+
+Commits: 1307fbc (fix items 1 and 2 with their failing-first tests), then the
+R20/L5/L6/C13 tests commit, then the docs/status commit (hashes in the git log
+of this branch).
+
+Shipped:
+- `src/advisor/tracer.py` (Tracer, NoopTracer, SDK-free); `agent.py` imports
+  from it; `tracing.py` imports and still exposes both names.
+- `cli.py`: without `--debug` the `opentelemetry` logger gets a NullHandler
+  and `propagate = False`.
+- Tests: `test_boundaries.py::test_pure_modules_load_no_tracing_sdk`,
+  `test_cli_stderr.py` (2 tests, subprocess), `test_tracing.py::
+  test_safe_tracer_forwards_a_blocked_check`, `test_cli.py::
+  test_debug_sets_advisor_logger_to_debug` and
+  `test_stdout_is_reconfigured_to_utf8`, and the C13 message assertion in
+  `test_catalogue.py` (the only existing assertion changed).
+- `CLAUDE.md` Architecture and Conventions updated. README does not mention
+  the export line; unchanged.
+
+Failing first (run on main's code before the fix):
+- `test_pure_modules_load_no_tracing_sdk`: fails on main (yes).
+- `test_cli_stderr.py::test_export_failure_is_silent_without_debug`: fails on
+  main (yes). The `--debug` test passes on main, as expected (behaviour kept).
+
+Mutants against the new tests (backup/restore by copy; tree clean after):
+- R20 (`allowed` -> `True` in SafeTracer.check): KILLED by
+  `test_safe_tracer_forwards_a_blocked_check`.
+- L5 (advisor logger DEBUG line removed): KILLED by
+  `test_debug_sets_advisor_logger_to_debug`.
+- L6 (reconfigure call removed): KILLED by
+  `test_stdout_is_reconfigured_to_utf8`.
+- C13 (not-a-list check removed): KILLED by
+  `test_catalogue.py::test_not_a_list_bad_json_missing_file_bad_entry`.
+- Extra: `agent.py` importing from `advisor.tracing` again: KILLED by the
+  boundary test. Removing the `NullHandler` line: KILLED by
+  `test_export_failure_is_silent_without_debug`.
+
+Divergences:
+- Removing only the `propagate = False` line SURVIVES: the plan table says the
+  stderr test fails if the NullHandler/propagate lines are removed, which
+  holds for the NullHandler (it alone stops `logging.lastResort`), not for
+  `propagate` alone. `propagate = False` only matters when a root handler
+  exists, which the CLI never installs without `--debug`. Left as the plan
+  specifies; not tested separately.
+- `test_cli_stderr.py` runs an `advisor.cli` probe with `-c`, patching
+  `cli.make_tracer` in the probe, as planned.
+- The `--debug` stderr test passes on main (it asserts unchanged behaviour).
+
+Test counts: see the final `npm run verify` in the report (110 pytest tests
+before the docs commit).
+
+### 2026-11-10 — Rework round 1
+
+Commit: the "§3: cover propagate" commit on this branch (tests and Progress only).
+
+- Added `test_cli_stderr.py::test_export_failure_is_silent_even_with_a_root_handler`:
+  the probe takes a `--root-handler` flag and installs a root
+  `StreamHandler(sys.stderr)` before `cli.main(["q"])` (no `--debug`); asserts
+  exit 0, the answer on stdout, no "Failed to export" on stderr. Passes on
+  unmutated code.
+- C2 (`otel.propagate = False` replaced by `pass`): KILLED by that test.
+  Backup/restore by copy; tree clean afterwards.
+- Optional "worth a look" items not taken.
+- `npm run verify`: green, 111 pytest tests passed.
+
+### 2026-11-10 — Amendment: logging rule (owner's request, after round 2)
+
+Owner asked for a cleaner fix of item 2 after reading the diff; subtask 3,
+the Tests table and the Assumptions are amended above.
+
+- `cli.py`: `_configure_logging(debug)`. Without `--debug`,
+  `logging.basicConfig(handlers=[logging.NullHandler()])` replaces the
+  `opentelemetry` `NullHandler` + `propagate = False`. Closes round 1/2's LOW
+  "repeated `main()` stacks `NullHandler`s" (no logger is mutated when logging
+  is already set up) and covers the `langfuse` logger too.
+- `tests/test_cli_stderr.py`: the probe also logs a `langfuse` warning;
+  tests renamed to `test_library_log_lines_are_silent_without_debug`,
+  `test_library_log_lines_show_with_debug`; the root-handler test flips to
+  `test_an_existing_logging_setup_is_left_alone` (the line reaches the
+  caller's handler).
+- `CLAUDE.md` Conventions: the rule and the helper.
+- Mutants (backup/restore by copy, tree clean after), each KILLED:
+  M1 root `NullHandler` line → `pass`; M2 `if debug:` → `if True:`;
+  M5 the `_configure_logging` call removed (all three by
+  `test_library_log_lines_are_silent_without_debug`); M3 `force=True`
+  (by `test_an_existing_logging_setup_is_left_alone`); M4 the old fix,
+  `opentelemetry` logger only (by the `langfuse` assertion in
+  `test_library_log_lines_are_silent_without_debug`).
+- `npm run verify`: green, 111 pytest tests passed.

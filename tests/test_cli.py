@@ -125,3 +125,42 @@ def test_tracer_gets_full_environment(monkeypatch):
     monkeypatch.setattr(cli, "make_tracer", lambda env: seen.append(dict(env)) or NoopTracer())
     main(["q"], env={**ENV, "LANGFUSE_HOST": "http://x"}, client_factory=Factory(script()))
     assert seen[0]["LANGFUSE_HOST"] == "http://x"
+
+
+def test_debug_sets_advisor_logger_to_debug():
+    import logging
+
+    advisor_log = logging.getLogger("advisor")
+    root = logging.getLogger()
+    before = (advisor_log.level, list(root.handlers))
+    try:
+        assert main(["--debug", "q"], env=ENV, client_factory=Factory(script())) == 0
+        assert advisor_log.level == logging.DEBUG
+    finally:
+        advisor_log.setLevel(before[0])
+        for h in list(root.handlers):
+            if h not in before[1]:
+                root.removeHandler(h)
+
+
+def test_stdout_is_reconfigured_to_utf8(monkeypatch):
+    import sys
+
+    class Stdout:
+        def __init__(self):
+            self.reconfigured = []
+            self.written = []
+
+        def reconfigure(self, **kwargs):
+            self.reconfigured.append(kwargs)
+
+        def write(self, text):
+            self.written.append(text)
+
+        def flush(self):
+            pass
+
+    out = Stdout()
+    monkeypatch.setattr(sys, "stdout", out)
+    assert main(["q"], env=ENV, client_factory=Factory(script())) == 0
+    assert out.reconfigured == [{"encoding": "utf-8", "errors": "replace"}]

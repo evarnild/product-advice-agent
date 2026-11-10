@@ -259,3 +259,18 @@ def test_safe_tracer_forwards_fail():
         )
     assert inner.kinds == ["begin", "check", "fail"]
     assert inner.events[-1] == ("fail", "ModelError: down")
+
+
+def test_safe_tracer_forwards_a_blocked_check(monkeypatch):
+    from advisor import agent
+    from advisor.guardrails import REFUSAL_TEXT, Verdict
+
+    monkeypatch.setattr(agent, "check_input", lambda q: Verdict(False, "off topic"))
+    inner = RecordingTracer()
+    answer = answer_question("q", ScriptedModelClient([]), [search_tool(CAT)], SafeTracer(inner))
+    assert answer == REFUSAL_TEXT
+    assert inner.events == [
+        ("begin", "q"),
+        ("check", "input", False, "off topic"),
+        ("finish", REFUSAL_TEXT),
+    ]
