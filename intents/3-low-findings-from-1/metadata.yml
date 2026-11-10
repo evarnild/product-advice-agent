@@ -12,7 +12,7 @@ spec_accepted:           # feature only
 plan_approved: 2026-11-10 by-agent    # owner: "reapprove the plan" amended in 215fe72 (Risks bullet)
 live_checked: 2026-11-10 by-agent    # owner: "live checked" (review.md round 3 steps)
 merged:                  # merge commit hash
-auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3"
+auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3" (diff read)
 auto_round: 3
 auto_stopped: escalate, owner reads the diff
 follows_up: 1            # the five findings come from §1's change (review rounds 1–4)
