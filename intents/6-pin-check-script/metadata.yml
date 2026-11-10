@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 6
+slug: pin-check-script
+type: adjustment         # feature | fix | refactor | adjustment | experiment
+status: draft            # draft | accepted | in-progress | in-review | done | abandoned | deferred
+title: A pin-check script for the Langfuse stack's images
+review_tier:             # empty = REVIEW-POLICY.md's path table decides; set only to raise it (attested | reviewed)
+# Gates: the date you passed each one (a bare date), or `<date> by-agent` when
+# an agent recorded it on your request. Leave empty until passed.
+intent_accepted:
+spec_accepted:           # feature only
+plan_approved:           # feature, fix, refactor
+live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+merged:                  # merge commit hash
+auto_authorized:         # /auto only: the date the owner typed /auto <id> (a bare date, or `<date> by-agent`); NOT a gate
+auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
+auto_stopped:            # /auto only: why it stopped, written without ` #`; cleared on resume
+follows_up:              # fix only: id of the intent whose change caused this defect, if known
+links:
+  - intents/4-langfuse-v4    the pins this script checks; review Not-checked items
