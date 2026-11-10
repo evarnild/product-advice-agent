@@ -106,6 +106,10 @@ def load_catalogue(path: Path | str = DEFAULT_CATALOGUE_PATH) -> list[Product]:
     return [_parse_product(raw, i, seen) for i, raw in enumerate(data)]
 
 
+def _norm(text: str) -> str:
+    return text.lower().replace("-", " ")
+
+
 def search_products(
     catalogue: Sequence[Product],
     category: str | None = None,
@@ -118,10 +122,11 @@ def search_products(
     """Products matching every given filter, cheapest first (ties by id), at most `limit`.
 
     `limit` is clamped to 1..10. Keywords all have to appear, case-insensitively,
-    in the name, brand or description.
+    in the name, brand or description. A hyphen counts as a space, in keywords and
+    product text alike, so 'noise-cancelling' finds 'noise cancelling' (§7).
     """
     limit = max(MIN_LIMIT, min(MAX_LIMIT, limit))
-    words = [k.lower() for k in keywords or [] if k.strip()]
+    words = [_norm(k) for k in keywords or [] if _norm(k).strip()]
 
     def matches(p: Product) -> bool:
         if category is not None and p.category != category:
@@ -132,7 +137,7 @@ def search_products(
             return False
         if in_stock_only and not p.in_stock:
             return False
-        haystack = f"{p.name} {p.brand} {p.description}".lower()
+        haystack = _norm(f"{p.name} {p.brand} {p.description}")
         return all(w in haystack for w in words)
 
     return sorted((p for p in catalogue if matches(p)), key=lambda p: (p.price_eur, p.id))[:limit]

@@ -193,3 +193,27 @@ def test_blank_text_field_is_rejected(tmp_path, field):
         load_catalogue(_write(tmp_path, [_product(**{field: "   "})]))
     assert f"'{field}'" in str(e.value)
     assert "P-001" in str(e.value)
+
+
+# §7: a hyphen counts as a space, in keywords and product text alike.
+def test_hyphenated_keyword_matches_spaced_text():
+    assert ids(search_products(CAT, keywords=["noise cancelling"])) == ["P-003", "P-004"]
+    assert ids(search_products(CAT, keywords=["noise-cancelling"])) == ["P-003", "P-004"]
+
+
+def test_spaced_keyword_matches_hyphenated_text():
+    hyphenated = [_p("P-001", 10, description="compact in-ear buds")]
+    assert ids(search_products(hyphenated, keywords=["in ear"])) == ["P-001"]
+    assert ids(search_products(hyphenated, keywords=["IN-EAR"])) == ["P-001"]
+
+
+def test_committed_catalogue_noise_cancelling_headphones_under_200():
+    found = search_products(
+        load_catalogue(), category="headphones", max_price=200, keywords=["noise-cancelling"]
+    )
+    assert ids(found) == ["P-005", "P-004", "P-001"]
+
+
+def test_hyphen_only_keyword_is_ignored():
+    assert ids(search_products(CAT, keywords=["-"])) == ids(search_products(CAT))
+    assert ids(search_products(CAT, keywords=["--", "noise"])) == ["P-003", "P-004"]
