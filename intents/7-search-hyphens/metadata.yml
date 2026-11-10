@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 7, do not change the old intent"
 auto_round: 1
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up: 1
 links:
   - intents/1-stack-and-skeleton
