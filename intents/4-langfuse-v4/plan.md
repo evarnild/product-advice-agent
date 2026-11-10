@@ -221,3 +221,14 @@ use, no containers started or pulled).
 
 Divergences: none. Compose diff is image lines, header and two comment
 lines for the MinIO digest. AC5 (live check) is the owner's.
+
+### 2026-11-10 — Rework round 1
+
+Review item 1 (MEDIUM, mutant C6): `test_langfuse_web_and_worker_share_a_v4_tag`
+now asserts `version[0] == 4` with a message, before the `>= (4, 59, 0)`
+check. C6 (web and worker both `5.0.0`, applied by copy, change asserted,
+full suite, restored by copy and compared identical) is killed by that test
+("Langfuse must be on major 4, got (5, 0, 0)"): 1 failed, 108 passed. With
+the real file: `npm run verify` green, 109 passed. The LOW (floating minor
+tags) is untouched, as instructed. Commit: see the next `§4:` commit after
+e1d1cfb.

@@ -86,6 +86,7 @@ def test_langfuse_web_and_worker_share_a_v4_tag() -> None:
     assert tags["langfuse"] == tags["langfuse-worker"]
     version = _tag(f"x:{tags['langfuse']}")
     assert version is not None and len(version) == 3
+    assert version[0] == 4, f"Langfuse must be on major 4, got {version}"
     assert version >= MIN_LANGFUSE
 
 
