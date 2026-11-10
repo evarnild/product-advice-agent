@@ -2,7 +2,7 @@
 id: 3
 slug: low-findings-from-1
 type: fix                # feature | fix | refactor | adjustment | experiment
-status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: in-review         # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: Close the LOW review findings left open by §1
 review_tier: reviewed    # touches tracing.py and cli.py (Reviewed by meaning)
 # Gates: the date you passed each one (a bare date), or `<date> by-agent` when

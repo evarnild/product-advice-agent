@@ -175,3 +175,55 @@ finishes with `git status --short` clean.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — implementation (single phase)
+
+Commits: 1307fbc (fix items 1 and 2 with their failing-first tests), then the
+R20/L5/L6/C13 tests commit, then the docs/status commit (hashes in the git log
+of this branch).
+
+Shipped:
+- `src/advisor/tracer.py` (Tracer, NoopTracer, SDK-free); `agent.py` imports
+  from it; `tracing.py` imports and still exposes both names.
+- `cli.py`: without `--debug` the `opentelemetry` logger gets a NullHandler
+  and `propagate = False`.
+- Tests: `test_boundaries.py::test_pure_modules_load_no_tracing_sdk`,
+  `test_cli_stderr.py` (2 tests, subprocess), `test_tracing.py::
+  test_safe_tracer_forwards_a_blocked_check`, `test_cli.py::
+  test_debug_sets_advisor_logger_to_debug` and
+  `test_stdout_is_reconfigured_to_utf8`, and the C13 message assertion in
+  `test_catalogue.py` (the only existing assertion changed).
+- `CLAUDE.md` Architecture and Conventions updated. README does not mention
+  the export line; unchanged.
+
+Failing first (run on main's code before the fix):
+- `test_pure_modules_load_no_tracing_sdk`: fails on main (yes).
+- `test_cli_stderr.py::test_export_failure_is_silent_without_debug`: fails on
+  main (yes). The `--debug` test passes on main, as expected (behaviour kept).
+
+Mutants against the new tests (backup/restore by copy; tree clean after):
+- R20 (`allowed` -> `True` in SafeTracer.check): KILLED by
+  `test_safe_tracer_forwards_a_blocked_check`.
+- L5 (advisor logger DEBUG line removed): KILLED by
+  `test_debug_sets_advisor_logger_to_debug`.
+- L6 (reconfigure call removed): KILLED by
+  `test_stdout_is_reconfigured_to_utf8`.
+- C13 (not-a-list check removed): KILLED by
+  `test_catalogue.py::test_not_a_list_bad_json_missing_file_bad_entry`.
+- Extra: `agent.py` importing from `advisor.tracing` again: KILLED by the
+  boundary test. Removing the `NullHandler` line: KILLED by
+  `test_export_failure_is_silent_without_debug`.
+
+Divergences:
+- Removing only the `propagate = False` line SURVIVES: the plan table says the
+  stderr test fails if the NullHandler/propagate lines are removed, which
+  holds for the NullHandler (it alone stops `logging.lastResort`), not for
+  `propagate` alone. `propagate = False` only matters when a root handler
+  exists, which the CLI never installs without `--debug`. Left as the plan
+  specifies; not tested separately.
+- `test_cli_stderr.py` runs an `advisor.cli` probe with `-c`, patching
+  `cli.make_tracer` in the probe, as planned.
+- The `--debug` stderr test passes on main (it asserts unchanged behaviour).
+
+Test counts: see the final `npm run verify` in the report (110 pytest tests
+before the docs commit).

@@ -162,8 +162,10 @@ Langfuse stack in `infra/langfuse/`.
   provider registry. `models/anthropic_model.py` is the Anthropic adapter.
 
 **I/O and wiring** (not core; the live check covers them): `cli.py` (entry
-point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
-`Tracer` protocol, a no-op, the Langfuse tracer, `SafeTracer`, `make_tracer`),
+point, exit codes), `config.py` (environment and `.env`), `tracer.py`
+(the `Tracer` protocol and the no-op; SDK-free, so the pure modules import it),
+`tracing.py` (the Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports
+the two names from `tracer.py`),
 `prompts/system.md` (the shipped prompt).
 
 **Conventions worth knowing before editing**
@@ -171,7 +173,11 @@ point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
 - Provider and tracing SDKs are imported in exactly one module each:
   `anthropic` only in `models/anthropic_model.py`, `langfuse` only in
   `tracing.py` (`tests/test_boundaries.py` enforces it). The agent and CLI
-  see the `ModelClient` and `Tracer` protocols only.
+  see the `ModelClient` and `Tracer` protocols only. The pure modules load
+  neither `langfuse` nor `opentelemetry` (a subprocess test in
+  `tests/test_boundaries.py` enforces it).
+- OpenTelemetry's own log lines (e.g. "Failed to export span batch") reach
+  stderr only with `--debug`; `tests/test_cli_stderr.py` proves both cases.
 - Tracing never changes a run: every Langfuse call is wrapped and swallowed,
   flush waits at most 5 s, and tracing is a no-op unless `LANGFUSE_HOST`,
   `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all set.
