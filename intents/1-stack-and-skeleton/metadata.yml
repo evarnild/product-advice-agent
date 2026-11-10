@@ -10,7 +10,7 @@ review_tier: reviewed    # edits REVIEW-POLICY.md and intent-check-lib.mjs; ship
 intent_accepted: 2026-11-09 by-agent
 spec_accepted: 2026-11-09 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-09 by-agent    # auto: owner "/auto 1" (auto_authorized 2026-11-09)
-live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+live_checked: 2026-11-10 by-agent    # owner: "live check passed"
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 1"
 auto_round: 3
