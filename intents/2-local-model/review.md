@@ -1,13 +1,182 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §2 review — Locally run model (Ollama) as the advisor's default
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: ad535f21d4436858caced525abfb48baaaf0f04f
-round: 4
+reviewed-commit: 70ced061b7f4e428525b42a2f5f368c70d083edc
+round: 5
 sampled: no
 run: manual
 live-check: owed
+
+A manual round reviewing the coordinator's second rebase of
+`feat/2-local-model`: from base 96ff0cf (old tip aae8214) onto a08430e,
+which is `main` with §5 at b6766f9, §6 at 2172700, and §7's intent
+artefacts.
+
+**The rebase is faithful, and round 4's conflict finding is resolved:**
+- 20 commits carried over: 19 byte-identical, and 653a984 → 90375fe
+  changed only by the `tests/test_models.py` resolution (§5's two tests
+  first, then §2's; §5's call is now `make_client("anthropic", "m",
+  api_key="placeholder-key")`);
+- nothing from §5, §6 or §2 lost;
+- `git merge-tree --write-tree main HEAD` is clean against `main` 2977169;
+- `npm run verify` passes (182 pytest, 255 kit);
+- all 5 requested mutants are killed.
+
+**The reviewer's verdict was rework, held by one item: the owner's
+decision** on whether the recorded live check covers the rebased code. The
+owner decided in this conversation: "keep recorded live check for 2". With
+that, no finding needs rework or decision, the tier is Reviewed, and the
+verdict is escalate. The owner has already read the diff ("read the diff for
+2 and did a small change", round 3), so the run goes to the ship stop.
+
+Tier: Reviewed, set by the path table (`cli.py`, `config.py`, `tracing.py`,
+`.env.example` by meaning). `review_tier: reviewed` agrees.
+
+## Round-4 findings: resolution
+| Round-4 finding | Resolution |
+| --- | --- |
+| MEDIUM: `tests/test_models.py` conflicts with §5 (positional `make_client`) | resolved in 90375fe: the range-diff shows only the keyword change in the new hunk; §5's tests at `:37`, `:50`, §2's from `:57`; 182 pass; merge-tree clean |
+| MEDIUM: does the recorded live check cover the rebased code? (Needs decision) | **resolved by the owner:** "keep recorded live check for 2". The recorded check stands for the rebased code, including §3's logging and `tracer.py` changes and §5's `open_telemetry=False`, which have not run live together on this branch (Not checked). Recorded beside `live_checked:` in `metadata.yml` |
+| LOW: no Progress line for the rebases and the two cross-intent test adaptations | open, Worth a look: 90375fe, under 20c9316's original subject, also edits §3's `tests/test_cli_stderr.py:28,33-35` and §5's `tests/test_models.py:52` |
+| LOW: pass-9 candidate (a rebase across another intent's rule-1 paths re-opens the live check) | open: an owner edit to `REVIEW-POLICY.md`; this round is a second instance |
+| Older LOWs and nits ("162 pytest tests"; "also guards M02"; private attributes in wiring tests; M42; default URL twice; every 404 → B11) | open, Worth a look, unchanged |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | findings (1, LOW): no Progress line for the rebases and adaptations; no other scope change |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass (§2's lines identical before and after the rebase, except the keyword line; 182 pass; AC10 recorded, and the owner keeps it) |
+| 4 | Tests prove the behaviour, not only pass | pass (5 mutants, 5 killed) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass ("162" nit carried) |
+| 7 | Documentation | pass (`CLAUDE.md` holds §2's text and §5's line at `:195`; README has §6's `check:pins` and §2's sections) |
+| 8 | Guardrails and hygiene | pass (no new dependency since round 4; placeholders only) |
+| 9 | Repository-specific footguns | findings (1, LOW): the policy candidate. The live-check freshness item is resolved by the owner's decision |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 2, feature)
+  note:  27 file(s), 1038 line(s) changed outside intents/.
+```
+`git diff --shortstat main...HEAD -- . ':!intents'` gives 22 files
+(+929/−67). The note's count was not reconciled (kit arithmetic, see Not
+checked).
+
+## Findings
+- **LOW** `intents/2-local-model/plan.md` `## Progress` (ends at `:329`) —
+  neither rebase is recorded, nor that 90375fe also edits §3's
+  `tests/test_cli_stderr.py:28,33-35` probe and §5's
+  `tests/test_models.py:52` keyword call. Worth a look: one Progress line
+  naming both rebases (bases 96ff0cf and a08430e) and both adaptations.
+- **LOW** (pass-9 candidate, carried) — a rebase that brings another
+  intent's rule-1 runtime changes leaves `live_checked:` in place, and
+  `check:intent` still passes. Worth a look, as an owner edit to
+  `REVIEW-POLICY.md` → "Live checks", or record the commit the check ran on.
+- Carried LOWs and nits, Worth a look (see the table).
+
+| id | target | change | result | killing tests |
+| --- | --- | --- | --- | --- |
+| N01 | `src/advisor/cli.py:55` (§3) | `logging.basicConfig(handlers=[logging.NullHandler()])` → `pass` | KILLED (1) | test_cli_stderr::test_library_log_lines_are_silent_without_debug |
+| N04 | `src/advisor/cli.py:85` (§2) | `if settings.api_key_variable is not None:` → `if True:` | KILLED (12) | test_cli_ollama::test_default_provider_is_ollama_without_a_key, … |
+| N07 | `src/advisor/tracing.py:36` (§2) | `self._tags = list(tags)` → `[]` | KILLED (3) | test_tracing::test_root_span_carries_provider_and_model_tags[…]; ::test_make_tracer_passes_tags_to_the_langfuse_tracer |
+| S5a | `src/advisor/models/anthropic_model.py:64` (§5) | `open_telemetry=False` → `True` | KILLED (4) | test_models::test_anthropic_adapter_turns_off_sdk_tracing, ::test_sdk_tracing_stays_off_even_if_the_environment_enables_it, … |
+| S5b | `src/advisor/models/anthropic_model.py:64` (§5) | `, open_telemetry=False` removed | KILLED (2) | test_models::test_anthropic_adapter_turns_off_sdk_tracing, ::test_sdk_tracing_stays_off_even_if_the_environment_enables_it |
+
+## Not checked
+- **Live behaviour of the rebased combination** (rule 3), which the owner
+  chose not to re-run:
+  - a real Ollama run under §3's root `NullHandler`;
+  - whether `langfuse`'s own `httpx` stderr handler lets an `httpx` WARNING
+    from the Ollama adapter appear without `--debug` when tracing is on;
+  - one trace per Anthropic run with §5 on the branch.
+
+  These are unproven live for this combination; the unit tests cover each
+  piece.
+- **The merged tree under a full `verify`:** merge-tree is clean, and
+  `main` differs from the base only in §7's intent files, so the branch's
+  `verify` stands in.
+- **The `check:intent` note's count:** not reconciled.
+- **Earlier rounds' mutants other than the five:** not re-run (byte-identical
+  targets).
+- **Carried:**
+  - Ollama 0.40.9 specifics;
+  - Langfuse not pricing `qwen3:8b`;
+  - the 5 GB figure;
+  - the `--debug` traceback with `user:pw@`;
+  - proxy settings.
+- **Platforms:** Windows only.
+- **§7's hyphen fix is not on this branch.**
+
+## Live check
+- owed: rule 1 (`cli.py`, `models/`, `tracing.py`) and rule 3.
+  `live_checked: 2026-11-10 by-agent` is recorded (owner: "live checked
+  for 2", run on the pre-rebase code). The owner decided it stands for the
+  rebased code ("keep recorded live check for 2"); that decision is now
+  noted in `metadata.yml`.
+- Optional re-check, if wanted later (round 4's steps):
+  1. Start Ollama, then in the worktree run `uv run advisor "I need noise
+     cancelling headphones under 200 euros" 2> err.txt`. You should see an
+     answer, exit 0, and an empty `err.txt`.
+  2. Quit Ollama and repeat. You should see exactly the "not reachable"
+     line, exit 1.
+  3. With `$env:ADVISOR_MODEL_PROVIDER = "anthropic"`, repeat. You should
+     see an answer and an empty `err.txt`.
+  4. In Langfuse: a `provider:ollama` trace, and exactly one
+     `provider:anthropic` trace with no `anthropic.messages.create` beside
+     it.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/2-local-model` at 70ced06, `git status --short` showing only `?? .idea/` before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "75 files already formatted";
+  mypy "Success: no issues found in 13 source files"; pytest "182 passed".
+  Matches the reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS. Matches.
+- **Coordinator, re-run:** mutants with my harness (backup by copy, one
+  replacement, file-changed assertion, full `pytest -q -x`, restore by
+  copy):
+  - N01 KILLED by test_cli_stderr::test_library_log_lines_are_silent_without_debug;
+  - S5b KILLED by test_models::test_anthropic_adapter_turns_off_sdk_tracing;
+  - N07 KILLED by test_tracing::test_root_span_carries_provider_and_model_tags[tags0].
+
+  Each matches the reviewer.
+- **Coordinator, re-run:** `git merge-tree --write-tree main
+  feat/2-local-model` with `main` at 2977169 → clean. Matches.
+- **Coordinator:** the owner's decision "keep recorded live check for 2" was
+  given in this conversation, after round 4 asked for it.
+
+**Reviewer, verified:**
+- HEAD 70ced06; `main` at 2977169.
+- `verify`, `check:intent`, and `sdlc:scan --sample-due manual --exclude
+  2` → "nth attested manual change = 1, every 5, sampled: no".
+- `git range-diff 96ff0cf..aae8214 a08430e..HEAD`: 20↔20 (19 `=`, one `!`,
+  the keyword hunk).
+- The file-by-file comparison of §5's and §6's changes and of §2's own
+  changes.
+- 5 mutants (harness `…/scratchpad/mut2r5/mut.py`).
+- Nothing pushed.
+
+**Taken on trust:**
+- that only 653a984 conflicted (consistent with the range-diff);
+- the owner's recorded live check;
+- the Ollama, Langfuse v4 and Anthropic API behaviour.
+
+# Round 4 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: ad535f21d4436858caced525abfb48baaaf0f04f
+- round: 4
+- sampled: no
+- run: manual
+- live-check: owed
 
 A manual round (the owner's "rebase 2") reviewing the coordinator's rebase
 of `feat/2-local-model` from `dfb0811` onto `96ff0cf` (`main` with §3 at
@@ -31,7 +200,7 @@ and so a round 5.
 Tier: Reviewed, set by the path table (`cli.py`, `config.py`, `tracing.py`,
 `.env.example` by meaning). `review_tier: reviewed` agrees.
 
-## Round-3 findings: resolution
+### Round-3 findings: resolution
 | Round-3 finding | Resolution |
 | --- | --- |
 | LOW: the rename is unplanned and has no Progress line | open, Worth a look (now 7ac0fb7 / a98204d) |
@@ -46,7 +215,7 @@ Tier: Reviewed, set by the path table (`cli.py`, `config.py`, `tracing.py`,
 | Pass 9 candidate (wiring every test bypasses with a fake) | open: an owner edit to `REVIEW-POLICY.md` |
 | M40 | equivalent; no action |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | findings (1, LOW): no Progress line for the rebase and probe adaptation; the range-diff shows no other scope change |
@@ -59,7 +228,7 @@ Tier: Reviewed, set by the path table (`cli.py`, `config.py`, `tracing.py`,
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | findings (1): `main` moved after the rebase base; and a candidate rule (below) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -71,7 +240,7 @@ The note counts against the current local `main` (with §5), so it is
 inflated. Against the merge base 96ff0cf, the branch changes 22 files
 outside `intents/` (+928/−66).
 
-## Findings
+### Findings
 - **MEDIUM** `tests/test_models.py` (branch vs `main` b6766f9) — §5 merged
   after the rebase base. `git merge-tree --write-tree main HEAD` gives
   `CONFLICT (content): Merge conflict in tests/test_models.py`, because both
@@ -141,7 +310,7 @@ For round 5: re-run N01, N04, N07, and §5's `open_telemetry=False` →
 `True` on `anthropic_model.py` (must be killed by
 `test_anthropic_adapter_turns_off_sdk_tracing`).
 
-## Not checked
+### Not checked
 - **The merged tree under the full `verify`:** on a scratch resolution with
   b6766f9, only pytest was run (182 passed after the keyword fix).
 - **Live behaviour of the rebased combination** (rule 3):
@@ -160,7 +329,7 @@ For round 5: re-run N01, N04, N07, and §5's `open_telemetry=False` →
   byte-identical in the range-diff.
 - **Platforms:** Windows only.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/cli.py`, `src/advisor/models/`,
   `src/advisor/tracing.py`), and rule 3 (the rebased combination). The
   recorded check covers §2's own lines on the pre-rebase code, not §3's
@@ -205,7 +374,7 @@ For round 5: re-run N01, N04, N07, and §5's `open_telemetry=False` →
   - A stray stderr line, a missing tag or an extra Anthropic trace is a
     defect: leave `live_checked:` empty.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run:**
 - **Coordinator, re-run:** before this review, on the rebased branch at
