@@ -9,8 +9,8 @@ review_tier: reviewed    # touches tracing.py and cli.py (Reviewed by meaning)
 # an agent recorded it on your request. Leave empty until passed.
 intent_accepted: 2026-11-10 by-agent    # owner: "yes, accept §3"
 spec_accepted:           # feature only
-plan_approved: 2026-11-10 by-agent    # owner: "reapprove" the plan amended in 48b2fd6 (subtask 3, Tests, Assumptions)
-live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+plan_approved: 2026-11-10 by-agent    # owner: "reapprove the plan" amended in 215fe72 (Risks bullet)
+live_checked: 2026-11-10 by-agent    # owner: "live checked" (review.md round 3 steps)
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 3"
 auto_round: 3
