@@ -2,14 +2,14 @@
 id: 7
 slug: search-hyphens
 type: fix
-status: in-review
+status: done
 title: Product search misses matches when a keyword and the catalogue differ only by a hyphen
 review_tier:
 intent_accepted: 2026-11-10 by-agent    # owner: "accept intent 7"
 spec_accepted:
 plan_approved: 2026-11-10 by-agent    # auto: owner "/auto 7" (auto_authorized 2026-11-10)
 live_checked:
-merged:
+merged: 4942b62    # 2026-11-11, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 7, do not change the old intent"
 auto_round: 1
 auto_stopped: ready for /ship
