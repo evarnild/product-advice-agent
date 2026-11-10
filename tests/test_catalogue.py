@@ -107,8 +107,9 @@ def test_unknown_category(tmp_path):
 
 
 def test_not_a_list_bad_json_missing_file_bad_entry(tmp_path):
-    with pytest.raises(CatalogueError):
+    with pytest.raises(CatalogueError) as e:
         load_catalogue(_write(tmp_path, {"a": 1}))
+    assert "must be a JSON list" in str(e.value)
     p = tmp_path / "bad.json"
     p.write_text("{nope", encoding="utf-8")
     with pytest.raises(CatalogueError):
