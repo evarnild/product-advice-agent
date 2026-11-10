@@ -13,7 +13,7 @@ Status: accepted with intent §1 (2026-11-09). Spec: `intents/1-stack-and-skelet
 | Tests | `pytest`, with a session-wide guard that fails any socket connect | No network in the suite (spec B21) without another dependency. |
 | Model provider | Provider-agnostic: an internal `ModelClient` protocol, one shipped Anthropic adapter, plus a scripted fake | Keeps the dependency count and tracing surface small; the fake proves the seam; a second adapter is a small later intent. Not LiteLLM. |
 | Default model | `claude-haiku-5-5`, overridable with `ADVISOR_MODEL` | A small, inexpensive model: a live run costs a few cents. |
-| Tracing | Langfuse, self-hosted with the v3 docker-compose in `infra/langfuse/` (web, worker, Postgres, ClickHouse, Redis, MinIO), bound to localhost | Data stays on the owner's machine. Started by hand for live runs; the suite never needs it; tracing is off unless the three `LANGFUSE_*` variables are set. |
+| Tracing | Langfuse, self-hosted with the v4 docker-compose in `infra/langfuse/` (web, worker, Postgres, ClickHouse, Redis, MinIO; every image pinned to an exact version or digest), bound to localhost | Data stays on the owner's machine. Started by hand for live runs; the suite never needs it; tracing is off unless the three `LANGFUSE_*` variables are set. |
 | Entry point | CLI first (`uv run advisor "<question>"`) | An HTTP API is a later intent. |
 | Catalogue search | A structured filter tool (`search_products`) over a small committed JSON catalogue | Deterministic, testable, no embeddings. |
 | One check | `npm run verify` = kit tests, then `ruff check`, `ruff format --check`, `mypy`, `pytest` | The kit's single-command rule; `npm run setup:worktree` (`uv sync --frozen`) installs the product's dependencies. |
@@ -31,3 +31,7 @@ Status: accepted with intent §1 (2026-11-09). Spec: `intents/1-stack-and-skelet
   all of its use is inside `src/advisor/tracing.py`, and the Anthropic SDK is
   used only in `src/advisor/models/anthropic_model.py` (a test enforces both).
 - Node stays a kit-only requirement; the product needs Python and `uv`.
+- 2026-11-10 (§4): the Langfuse stack moved from v3 to v4. v3 is deprecated,
+  and Python SDK v5 needs a server >= 4.59.0. Every image is pinned exactly
+  (a guard test checks it), there is no AI gateway, and the compose file got
+  a minimal edit. The owner's answers: "Exact versions" and "Minimal edit".

@@ -187,3 +187,48 @@ checks that a test fails:
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-10 — build (subtasks 1-7)
+
+Commits: 3c7f924 (guard test, pins, header, README, decision 0001); the
+status/Progress commit follows it.
+
+Shipped: `tests/test_compose.py` (5 tests: collection sanity, exact images,
+web/worker share a 4.x tag >= 4.59.0, localhost-only ports, exactly six
+services and no gateway). Pins as in subtask 2. Header, README (v4, "Coming
+from the v3 stack", "Updating a pin"), decision 0001 row and dated line.
+`CLAUDE.md`: grep found no v3 mention, so unchanged.
+
+Tags re-checked read-only with `docker buildx imagetools inspect` on
+2026-11-10: langfuse/langfuse 4.78.0, langfuse-worker 4.78.0,
+clickhouse-server 26.3.62.3, redis 7.4.12, postgres 17.11, and the MinIO
+index digest all resolve. No newer version picked.
+
+Guard test against `main`'s Compose file: 2 failed, 3 passed (exact-images
+fails on `langfuse-worker:3`; the v4-tag test fails). Bad variants, each
+applied to the finished file by copy, run, restore-by-copy (helper scripts
+in the session scratchpad; file verified identical afterwards): worker `:4`,
+web/worker diverge, web on 3.227.1, 4.58.0 (below minimum), web `:latest`,
+ClickHouse untagged, MinIO without digest, MinIO `:latest`, Redis `:7`,
+Postgres `:17`, port `3000:3000`, port `0.0.0.0:3000:3000`, added
+`langfuse-ai-gateway`, added seventh service: every one fails (1 or 2
+tests failed each).
+
+`npm run verify`: kit tests green; pytest 109 passed (104 before + 5).
+`docker compose --env-file infra/langfuse/.env.example -f
+infra/langfuse/docker-compose.yml config -q`: exit 0 (parse only; no daemon
+use, no containers started or pulled).
+
+Divergences: none. Compose diff is image lines, header and two comment
+lines for the MinIO digest. AC5 (live check) is the owner's.
+
+### 2026-11-10 — Rework round 1
+
+Review item 1 (MEDIUM, mutant C6): `test_langfuse_web_and_worker_share_a_v4_tag`
+now asserts `version[0] == 4` with a message, before the `>= (4, 59, 0)`
+check. C6 (web and worker both `5.0.0`, applied by copy, change asserted,
+full suite, restored by copy and compared identical) is killed by that test
+("Langfuse must be on major 4, got (5, 0, 0)"): 1 failed, 108 passed. With
+the real file: `npm run verify` green, 109 passed. The LOW (floating minor
+tags) is untouched, as instructed. Commit: see the next `§4:` commit after
+e1d1cfb.
