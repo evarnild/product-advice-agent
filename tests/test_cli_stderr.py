@@ -22,6 +22,7 @@ class ExportFailingTracer(NoopTracer):
         logging.getLogger("opentelemetry.exporter.otlp.common.http").error(
             "Failed to export span batch due to timeout, max retries or shutdown."
         )
+        logging.getLogger("langfuse").warning("Langfuse host unreachable.")
 
 
 cli.make_tracer = lambda env: ExportFailingTracer()
@@ -41,23 +42,25 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_export_failure_is_silent_without_debug():
+def test_library_log_lines_are_silent_without_debug():
     result = _run("q")
     assert result.returncode == 0
     assert "Fine answer." in result.stdout
     assert "Failed to export" not in result.stderr
+    assert "Langfuse host unreachable" not in result.stderr
 
 
-def test_export_failure_shows_with_debug():
+def test_library_log_lines_show_with_debug():
     result = _run("--debug", "q")
     assert result.returncode == 0
     assert "Fine answer." in result.stdout
     assert "Failed to export" in result.stderr
+    assert "Langfuse host unreachable" in result.stderr
 
 
-def test_export_failure_is_silent_even_with_a_root_handler():
-    # Only `propagate = False` keeps the line away from a root handler.
+def test_an_existing_logging_setup_is_left_alone():
+    # Whoever installed a root handler asked for log lines; the CLI keeps out.
     result = _run("--root-handler", "q")
     assert result.returncode == 0
     assert "Fine answer." in result.stdout
-    assert "Failed to export" not in result.stderr
+    assert "Failed to export" in result.stderr

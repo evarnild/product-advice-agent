@@ -29,6 +29,22 @@ def _fail(message: str, code: int = 1) -> int:
     return code
 
 
+def _configure_logging(debug: bool) -> None:
+    """The CLI speaks to the user through `print` only; logging is for --debug.
+
+    Without --debug, a do-nothing root handler stops `logging.lastResort`, so no
+    library's log line reaches stderr. Spec B17: a tracing failure (e.g.
+    OpenTelemetry's "Failed to export span batch") never shows as a run error.
+    `basicConfig` leaves an existing logging setup alone, so repeated calls add
+    nothing.
+    """
+    if debug:
+        logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
+        logging.getLogger("advisor").setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig(handlers=[logging.NullHandler()])
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -41,16 +57,7 @@ def main(
     question = " ".join(words).strip()
     if not question or question.startswith("-"):
         return _fail(USAGE, 2)
-    if debug:
-        logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
-        logging.getLogger("advisor").setLevel(logging.DEBUG)
-    else:
-        # Spec B17: a tracing failure never shows as a run error. Without
-        # --debug, OpenTelemetry's own log lines (e.g. "Failed to export span
-        # batch") must not reach stderr via logging.lastResort.
-        otel = logging.getLogger("opentelemetry")
-        otel.addHandler(logging.NullHandler())
-        otel.propagate = False
+    _configure_logging(debug)
     reconfigure = getattr(sys.stdout, "reconfigure", None)
     if reconfigure is not None:
         reconfigure(encoding="utf-8", errors="replace")

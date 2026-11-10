@@ -176,8 +176,11 @@ the two names from `tracer.py`),
   see the `ModelClient` and `Tracer` protocols only. The pure modules load
   neither `langfuse` nor `opentelemetry` (a subprocess test in
   `tests/test_boundaries.py` enforces it).
-- OpenTelemetry's own log lines (e.g. "Failed to export span batch") reach
-  stderr only with `--debug`; `tests/test_cli_stderr.py` proves both cases.
+- The CLI speaks to the user through `print` only. Library log lines (e.g.
+  OpenTelemetry's "Failed to export span batch") reach stderr only with
+  `--debug`; without it, `cli._configure_logging` gives the root logger a
+  `NullHandler` unless logging is already set up. `tests/test_cli_stderr.py`
+  proves the cases.
 - Tracing never changes a run: every Langfuse call is wrapped and swallowed,
   flush waits at most 5 s, and tracing is a no-op unless `LANGFUSE_HOST`,
   `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all set.
