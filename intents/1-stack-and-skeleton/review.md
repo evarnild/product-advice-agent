@@ -3,11 +3,157 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: ac194cb3f098e4efc10d63081d0d3d7f2a1be020
-round: 3
+reviewed-commit: e92772097711fca261e4dd97b701802ab9374816
+round: 4
 sampled: no
-run: auto
+run: manual
 live-check: owed
+
+A manual round after the `/auto` run ran out of rounds: it covers only what
+changed since round 3's reviewed commit (ac194cb), which the ship dry-run
+refused to merge unreviewed. No finding needs rework; the tier is Reviewed,
+so the owner reads this round's diff (`git diff -M ac194cb e927720`, about
+nine lines of substance outside `intents/`).
+
+Tier: Reviewed, unchanged (`review_tier: reviewed` in `metadata.yml`; the
+path table alone would give Attested for `src/advisor/models/**`, tests and
+`scripts/intent-check-lib.test.mjs`). Policy used: main's `REVIEW-POLICY.md`
+(ffade02) for tiers, passes and merging; the branch's rule-1 path list to
+decide `live-check`.
+
+Scope: ac194cb..e927720 — c3ba7c8 `live_checked` recorded; 727717d the
+owner's rename `src/advisor/models/anthropic.py` →
+`src/advisor/models/anthropic_model.py` (content identical, similarity
+100%) with its references in `models/__init__.py`, `CLAUDE.md`,
+`docs/decisions/0001-stack.md`, `scripts/intent-check-lib.test.mjs`,
+`tests/test_boundaries.py`, `tests/test_models.py`; b619eb7 the password
+instructions (`infra/langfuse/.env.example` comment, round 3's live-check
+step 2 in this file); e927720 `auto_stopped`.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | findings (1): the rename is the owner's, outside the plan; `plan.md` still names the old path |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass (no behaviour change; B5's boundary rule now names the new file) |
+| 4 | Tests prove the behaviour, not only pass | pass (2 mutants, 2 killed) |
+| 5 | Conventions | pass (`anthropic` still imported only in the adapter; `tests/test_boundaries.py` enforces it) |
+| 6 | Numbers in prose | pass (`openssl rand -hex 24` gives 48 hex chars; nothing else measured) |
+| 7 | Documentation | pass (`CLAUDE.md` and the ADR follow the rename; no reference to the old path outside `intents/`) |
+| 8 | Guardrails and hygiene | pass (no dependency, secret or data; `.env.example` holds placeholders only) |
+| 9 | Repository-specific footguns | findings (1): a new candidate, below |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 1, feature)
+  note:  40 file(s), 4272 line(s) changed outside intents/.
+```
+
+## Round-3 findings: resolution
+| Round-3 finding | Resolution |
+| --- | --- |
+| LOW R20 `SafeTracer.check` blocked path untested | open, Worth a look (code unchanged) |
+| LOW `agent.py` imports `tracing` (and so `langfuse`) | open, Worth a look |
+| LOW L5, L6 untested CLI lines | open, Worth a look |
+| LOW C13 removable not-a-list check | open, Worth a look |
+| LOW OpenTelemetry stderr line with Langfuse down | open, Worth a look |
+| (live check) `openssl rand -base64 24` for passwords breaks the Postgres and ClickHouse URLs; found by the owner's live check, missed by rounds 1–3 | resolved in b619eb7: `-hex 24` in `infra/langfuse/.env.example` and in round 3's step 2 |
+
+## Findings
+
+- **LOW** `intents/1-stack-and-skeleton/plan.md:88,132,181` — the plan
+  still names `src/advisor/models/anthropic.py` (subtask text and the B5
+  row of the Tests table). The lines are above the Progress marker, so
+  changing them is a plan amendment, the owner's. Worth a look: add an
+  amendment note, or leave the plan as the record of what was planned.
+- **LOW** (pass 9 candidate) — rounds 1 to 3 read
+  `infra/langfuse/.env.example` and passed it, yet its base64 password
+  advice broke the stack on first start. Candidate rule: "A generated
+  secret that is interpolated into a URL or connection string must be
+  URL-safe; check every `${…}` in a Compose file against how its value is
+  generated." Worth a look: add it to pass 9 in `REVIEW-POLICY.md` (a
+  Reviewed-tier edit).
+- The round-3 LOW items above stay open, all Worth a look.
+
+## Not checked
+- Whether the owner's passing live check (recorded in c3ba7c8) ran with the
+  rename in the working tree. The renamed files' times (16:24–16:26) fall
+  between the first failed step-6 run and the owner's "live check passed",
+  but nothing ties the passing run to that tree.
+- A real Anthropic call through `advisor.models.anthropic_model`: the suite
+  builds `AnthropicClient` via `make_client` without a network call
+  (`test_make_client_anthropic_does_not_connect`), which proves the import
+  path, not a live round trip.
+- The corrected `.env.example` followed from a fresh copy: the coordinator
+  regenerated the passwords with `openssl rand -hex 24` in this session and
+  the stack came up, but no `.env` was created anew from the new comment.
+- Why the rename was made: no note in the commit, the plan or the ADR. A
+  reason such as a tool shadowing the `anthropic` package would belong in
+  the ADR.
+- Mutants on lines unchanged since round 3 were not re-run.
+
+## Live check
+- owed: rule 1 — the diff touches `src/advisor/models/` (the rename) and
+  `infra/` (`.env.example`). `live_checked: 2026-11-10 by-agent` is already
+  recorded (c3ba7c8, before the rename was committed), so `check:intent`
+  does not block the merge; whether that run covered this tree is Not
+  checked. Run the short check below, or say the passing run was already
+  on the renamed tree.
+- steps (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton`,
+  Langfuse still running, the root `.env` with the real key):
+  1. `git status --short` → empty (the tree is the committed one).
+  2. `uv run advisor "I need noise-cancelling headphones under 200 euros"`.
+- you should see: as round 3's step 6 — exit 0, Auralis Calm 300 (P-001,
+  €189) and Kestrel Air Plus (P-005, €129) by name and id, no traceback,
+  and one new `advisor-run` trace in Langfuse with `model-call` generations
+  on `claude-haiku-5-5`.
+
+## Verified myself vs. taken on trust
+
+**Verified myself** (the coordinator ran this round, in the worktree at
+e927720, clean before and after):
+- `git log --oneline ac194cb..HEAD` → the 4 commits in Scope; `git diff -M
+  ac194cb HEAD` outside `intents/` read in full; the adapter is a 100%
+  similarity rename.
+- `git grep` for `models/anthropic.py` and `models.anthropic` outside
+  `intents/`: no hits.
+- `npm run verify` → exit 0; kit `tests 255, pass 255, fail 0`; ruff "All
+  checks passed!"; "51 files already formatted"; mypy "Success: no issues
+  found in 11 source files"; pytest "104 passed".
+- `npm run check:intent` → PASS, exit 0 (pasted above).
+- Mutants (back up by copy, full `pytest -q`, restore by copy):
+  - M1 `src/advisor/models/__init__.py:18`, import from the old module
+    name → killed by
+    `tests/test_models.py::test_make_client_anthropic_does_not_connect`
+    (1 failed, 103 passed); the harness checked the file changed.
+  - M2 a copy of the adapter left at the old path → killed by
+    `tests/test_boundaries.py::test_only_the_anthropic_adapter_imports_anthropic`
+    (1 failed, 103 passed); the copy and its bytecode removed.
+- `git status --short` empty after the mutants.
+- `npm run sdlc:scan -- --sample-due manual --exclude 1` → "nth attested
+  manual change = 1, every 5, sampled: no".
+- Earlier in this session: with base64 passwords, `langfuse-web` restarted
+  on a Postgres (P1000) and then a ClickHouse (code 516) authentication
+  error; after regenerating the passwords as hex, `down -v` and `up -d`, all
+  six containers were up and `http://localhost:3000/api/public/health`
+  answered 200.
+
+**Taken on trust:** the owner's live check and diff read; that the rename
+needs no change in tools outside the repository (IDE run configurations,
+for example).
+
+# Round 3 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: ac194cb3f098e4efc10d63081d0d3d7f2a1be020
+- round: 3
+- sampled: no
+- run: auto
+- live-check: owed
 
 No finding needs rework, and the tier is Reviewed, so the owner reads the
 diff before the merge. The live check is still owed; `check:intent` stays
@@ -27,7 +173,7 @@ entry; ac194cb `auto_round: 3`. `git diff --name-only b07e8ac HEAD` lists
 only `metadata.yml`, `plan.md` (Progress, below the marker), `review.md`
 and the two test files: no `src/`, `scripts/`, config or lock change.
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (tests only, scoped to the round-2 findings) |
@@ -40,7 +186,7 @@ and the two test files: no `src/`, `scripts/`, config or lock change.
 | 8 | Guardrails and hygiene | pass (no new dependency, secret or fixture data; the rename is synthetic) |
 | 9 | Repository-specific footguns | pass (list empty; the two round-2 candidates stand) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -52,7 +198,7 @@ type-check: FAIL (intent 1, feature)
 The only error is the owed live check, the owner's to clear (review skill,
 step 1's exception).
 
-## Round-2 findings: resolution
+### Round-2 findings: resolution
 | Round-2 finding | Resolution |
 | --- | --- |
 | HIGH `SafeTracer` forwarding unproven (R11, R12, R14–R18) | resolved: `test_safe_tracer_forwards_every_call_with_its_arguments` (wrapped `RecordingTracer` sees the same events and arguments as an unwrapped run) and `test_safe_tracer_forwards_fail` (`("fail", "ModelError: down")`) kill all seven, plus a new R19 |
@@ -63,7 +209,7 @@ step 1's exception).
 | LOW (carried) C13 | still Worth a look |
 | LOW (carried) OpenTelemetry stderr line | still Worth a look |
 
-## Findings
+### Findings
 
 - **LOW** `tests/test_tracing.py` (code `src/advisor/tracing.py:148`,
   `SafeTracer.check`) — R20 (forward `allowed=True` whatever was passed)
@@ -98,7 +244,7 @@ Pass 9 candidates (unchanged from round 2):
 2. **"A wrapper tested only for swallowing errors, not for forwarding calls,
    proves nothing about the path that runs."**
 
-## Not checked
+### Not checked
 - Live runtime: real Anthropic tool-use round trips, model id
   `claude-haiku-5-5`, answers citing name and id; the Langfuse v3 stack
   starting and the trace rendering in its UI; whether Langfuse 5.2 shows the
@@ -117,7 +263,7 @@ Pass 9 candidates (unchanged from round 2):
   verify`.
 - Test files were not mutated.
 
-## Live check
+### Live check
 - owed: rule 1 (the diff touches `src/advisor/cli.py`,
   `src/advisor/models/`, `src/advisor/tracing.py`, `src/advisor/prompts/`,
   `infra/`, as named by the branch's policy); rule 3 (real model output, the
@@ -168,7 +314,7 @@ Pass 9 candidates (unchanged from round 2):
   - Step 8: same answer, exit 0, process exits within ~5 s of printing; at
     most one export-failure line on stderr.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/1-stack-and-skeleton` at ac194cb, worktree clean before and after):
 - **Coordinator, re-run:** `git diff --name-only b07e8ac HEAD` → the 5 files
