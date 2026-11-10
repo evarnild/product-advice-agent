@@ -10,11 +10,11 @@ review_tier:             # empty = REVIEW-POLICY.md's path table decides; set on
 intent_accepted: 2026-11-10 by-agent    # owner: "accept §5 and §6"
 spec_accepted:           # feature only
 plan_approved:           # feature, fix, refactor
-live_checked:            # only when review.md says live-check: owed — the day you ran it yourself
+live_checked: 2026-11-10 by-agent    # owner: "6 live checked"
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 6" (resume after too many sessions)
 auto_round: 1
-auto_stopped: live check owed
+auto_stopped:
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/4-langfuse-v4    the pins this script checks; review Not-checked items
