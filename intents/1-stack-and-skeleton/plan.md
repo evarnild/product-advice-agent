@@ -92,6 +92,16 @@ Re-read on `main` at `7a4b288` (code unchanged since `fda34d9`).
   hand-written parser with quoting bugs.
 - `pytest`, `ruff`, `mypy` (dev group) — the test, lint/format and type
   tools chosen in B1/B20.
+- `hatchling` (build backend, `[build-system]`) — builds the `advisor`
+  package for the `src/` layout and its console script; uv's default
+  backend for a packaged project. *(Amended 2026-11-10, owner: "dev group +
+  plan amendment", review round 1.)*
+- `opentelemetry-sdk` (dev group) — the real-SDK tracing test uses its
+  in-memory span exporter; declared so the test does not lean on langfuse's
+  transitive pin. *(Amended 2026-11-10, same.)*
+- `httpx` (dev group) — the Anthropic adapter tests build SDK error and
+  response objects from it; declared so they do not lean on anthropic's
+  transitive pin. *(Amended 2026-11-10, same.)*
 
 No other dependency without amending this plan.
 
