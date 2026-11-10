@@ -14,7 +14,7 @@ live_checked:            # only when review.md says live-check: owed — the day
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "/auto 4"
 auto_round:              # /auto only: the review round a stopped run is in, 1 to 3
-auto_stopped: spec questions
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/1-stack-and-skeleton    the v3 stack and the trace shape it checked live
