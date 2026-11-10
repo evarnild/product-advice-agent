@@ -254,7 +254,7 @@ describe('npm run ship', { timeout: 90_000 }, () => {
 
   it('stops on a ROUTE that review.md does not explain, and ships one it does', () => {
     // core code (CORE_CODE) without a test routes the change to a fuller path
-    const bad = makeIntent(18, { file: 'src/x18.txt' });
+    const bad = makeIntent(18, { file: 'src/advisor/models/x18.txt' });
     const before = git(repo, 'rev-parse', 'main');
     const r = ship(['18']);
     expect(r.status, out(r)).toBe(1);
@@ -262,7 +262,7 @@ describe('npm run ship', { timeout: 90_000 }, () => {
     expect(git(repo, 'rev-parse', 'main')).toBe(before);
     expect(branchExists(bad.branch)).toBe(true);
 
-    const ok = makeIntent(19, { file: 'src/x19.txt', body: '\n## Not checked\n- ROUTE, reason stated: a one-line constant, no behaviour changes.\n' });
+    const ok = makeIntent(19, { file: 'src/advisor/models/x19.txt', body: '\n## Not checked\n- ROUTE, reason stated: a one-line constant, no behaviour changes.\n' });
     const r2 = ship(['19']);
     expect(r2.status, out(r2)).toBe(0);
     expect(r2.stdout).toMatch(/hold \(check:intent ROUTE\)/);

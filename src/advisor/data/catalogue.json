@@ -1,0 +1,458 @@
+[
+  {
+    "id": "P-001",
+    "name": "Auralis Calm 300",
+    "brand": "Auralis",
+    "category": "headphones",
+    "price_eur": 189.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "35 h"
+    },
+    "description": "Over-ear wireless headphones with active noise cancelling and a soft carrying case."
+  },
+  {
+    "id": "P-002",
+    "name": "Auralis Pulse Buds",
+    "brand": "Auralis",
+    "category": "headphones",
+    "price_eur": 79.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "8 h"
+    },
+    "description": "Compact in-ear wireless earbuds for sport, sweat resistant."
+  },
+  {
+    "id": "P-003",
+    "name": "Sonavo Studio X",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "wired"
+    },
+    "description": "Wired studio headphones with a flat, neutral sound."
+  },
+  {
+    "id": "P-004",
+    "name": "Sonavo Quiet Pro",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 159.0,
+    "in_stock": false,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "28 h"
+    },
+    "description": "On-ear wireless headphones with active noise cancelling, currently out of stock."
+  },
+  {
+    "id": "P-005",
+    "name": "Kestrel Air Plus",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 129.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "6 h"
+    },
+    "description": "True wireless earbuds with active noise cancelling and a pocket charging case."
+  },
+  {
+    "id": "P-006",
+    "name": "Kestrel Bass Over",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 59.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "40 h"
+    },
+    "description": "Budget over-ear wireless headphones with boosted bass."
+  },
+  {
+    "id": "P-007",
+    "name": "Norvik Slate 14",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 899.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "14 in"
+    },
+    "description": "Light 14 inch laptop for office work and travel."
+  },
+  {
+    "id": "P-008",
+    "name": "Norvik Forge 16",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1799.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "16 in",
+      "gpu": "discrete"
+    },
+    "description": "Powerful 16 inch laptop with a discrete graphics chip for video editing and gaming."
+  },
+  {
+    "id": "P-009",
+    "name": "Pelagic Go 13",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 649.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "13 in"
+    },
+    "description": "Affordable 13 inch laptop for students and web browsing."
+  },
+  {
+    "id": "P-010",
+    "name": "Pelagic Studio 15",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 1299.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "10-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "15 in"
+    },
+    "description": "Creator laptop with a colour accurate display, currently out of stock."
+  },
+  {
+    "id": "P-011",
+    "name": "Tolvane Edge 14",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 1099.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "14 in",
+      "weight": "1.1 kg"
+    },
+    "description": "Ultra-light business laptop with a long battery life."
+  },
+  {
+    "id": "P-012",
+    "name": "Tolvane Chrome 11",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 329.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "2-core",
+      "ram": "4 GB",
+      "storage": "64 GB",
+      "screen": "11 in"
+    },
+    "description": "Small, inexpensive laptop for children and light use."
+  },
+  {
+    "id": "P-013",
+    "name": "Zephra One",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 699.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Compact phone with a bright screen and a dependable camera."
+  },
+  {
+    "id": "P-014",
+    "name": "Zephra One Max",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 999.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.8 in",
+      "storage": "256 GB",
+      "camera": "108 MP"
+    },
+    "description": "Large flagship phone with a top camera and a two-day battery."
+  },
+  {
+    "id": "P-015",
+    "name": "Kestrel K5",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.5 in",
+      "storage": "128 GB",
+      "camera": "50 MP"
+    },
+    "description": "Mid-range phone with solid battery life at a low price."
+  },
+  {
+    "id": "P-016",
+    "name": "Kestrel K3 Lite",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 149.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.3 in",
+      "storage": "64 GB",
+      "camera": "13 MP"
+    },
+    "description": "Entry-level phone for calls, messages and maps."
+  },
+  {
+    "id": "P-017",
+    "name": "Norvik Fold",
+    "brand": "Norvik",
+    "category": "phone",
+    "price_eur": 1499.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "7.6 in folded out",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Foldable phone that opens into a small tablet, currently out of stock."
+  },
+  {
+    "id": "P-018",
+    "name": "Lumino View 27",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 279.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "2560x1440",
+      "refresh": "75 Hz"
+    },
+    "description": "27 inch monitor for office and home use with slim bezels."
+  },
+  {
+    "id": "P-019",
+    "name": "Lumino Game 32",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "2560x1440",
+      "refresh": "165 Hz"
+    },
+    "description": "Fast 32 inch curved gaming monitor."
+  },
+  {
+    "id": "P-020",
+    "name": "Pelagic Ultra 34",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 599.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "3440x1440",
+      "refresh": "100 Hz"
+    },
+    "description": "Ultrawide monitor for spreadsheets and video timelines."
+  },
+  {
+    "id": "P-021",
+    "name": "Pelagic Mini 22",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "1920x1080",
+      "refresh": "60 Hz"
+    },
+    "description": "Basic 22 inch full HD monitor."
+  },
+  {
+    "id": "P-022",
+    "name": "Zephra Tab 11",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "128 GB",
+      "stylus": "supported"
+    },
+    "description": "11 inch tablet with stylus support for notes and drawing."
+  },
+  {
+    "id": "P-023",
+    "name": "Tolvane Pad 8",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "32 GB",
+      "stylus": "no"
+    },
+    "description": "Small tablet for reading and video."
+  },
+  {
+    "id": "P-024",
+    "name": "Norvik Canvas 13",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 799.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "13 in",
+      "storage": "256 GB",
+      "stylus": "included"
+    },
+    "description": "Large drawing tablet with an included stylus, currently out of stock."
+  },
+  {
+    "id": "P-025",
+    "name": "Auralis Tick S",
+    "brand": "Auralis",
+    "category": "smartwatch",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "4 days",
+      "gps": "yes"
+    },
+    "description": "Sporty smartwatch with GPS and heart-rate tracking."
+  },
+  {
+    "id": "P-026",
+    "name": "Zephra Watch 2",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 329.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.9 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a bright screen and payments."
+  },
+  {
+    "id": "P-027",
+    "name": "Kestrel Band 7",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 49.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.1 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Simple fitness band with a very long battery life."
+  },
+  {
+    "id": "P-028",
+    "name": "Lumino Shot Z",
+    "brand": "Lumino",
+    "category": "camera",
+    "price_eur": 549.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K",
+      "weight": "430 g"
+    },
+    "description": "Mirrorless camera with 4K video and interchangeable lenses."
+  },
+  {
+    "id": "P-029",
+    "name": "Kestrel Action 4",
+    "brand": "Kestrel",
+    "category": "camera",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "4K",
+      "waterproof": "10 m"
+    },
+    "description": "Rugged action camera, waterproof without a case."
+  },
+  {
+    "id": "P-030",
+    "name": "Sonavo Boom Mini",
+    "brand": "Sonavo",
+    "category": "speaker",
+    "price_eur": 69.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "12 h",
+      "waterproof": "IP67"
+    },
+    "description": "Pocket-sized waterproof Bluetooth speaker."
+  },
+  {
+    "id": "P-031",
+    "name": "Sonavo Bar 5",
+    "brand": "Sonavo",
+    "category": "speaker",
+    "price_eur": 229.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "channels": "2.1",
+      "connection": "HDMI eARC"
+    },
+    "description": "TV soundbar with a wireless subwoofer."
+  },
+  {
+    "id": "P-032",
+    "name": "Auralis Home 1",
+    "brand": "Auralis",
+    "category": "speaker",
+    "price_eur": 119.0,
+    "in_stock": false,
+    "specs": {
+      "type": "smart speaker",
+      "battery": "mains",
+      "voice": "yes"
+    },
+    "description": "Smart speaker with a built-in voice assistant, currently out of stock."
+  }
+]

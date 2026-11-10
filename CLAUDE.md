@@ -7,15 +7,17 @@ code in this repository.
 
 product-advice-agent: A small product-advice agent for a synthetic electronics catalogue, with evaluation, tracing and guardrails.
 
-So far the repository holds only the
-AI-native SDLC kit (from ai-sdlc-kit, first built for heraklios). The
-product's stack and architecture are **§1's decision** (intended stack Python + Langfuse (self-hosted), confirmed by §1). Until §1
-merges, there is no product code, and no section below describes any.
+The repository holds the AI-native SDLC kit (from ai-sdlc-kit, first built
+for heraklios) and the product's walking skeleton: a Python package
+`advisor` (`src/advisor/`), managed by `uv`, that answers a question from a
+synthetic catalogue through a provider-agnostic model interface, wrapped in
+a guardrail seam and traced to a self-hosted Langfuse. The stack and the
+reasons are in `docs/decisions/0001-stack.md`.
 
 ## Commands
 
 ```
-npm run verify        # THE check before a change is done (today: the kit's own tests)
+npm run verify        # THE check before a change is done: kit tests, then ruff check, ruff format --check, mypy, pytest
 npm run check:intent  # does this branch's change match its intent? (intents/README.md)
 npm run sdlc:scan     # the evidence behind docs/sdlc-grid.md
 npm run queue         # the intent queue, generated from metadata.yml (--next-id, --json); nobody edits it
@@ -23,11 +25,15 @@ npm run spawn -- <id> # parallel session for an intent (see "Parallel sessions")
 npm run sessions      # what every worktree/session is doing (--json for data, --log for the event tail)
 npm run ship -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /ship skill)
 npm run test:kit      # node --test over scripts/*.test.mjs
+npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
+npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
+uv run advisor "<question>"  # run the agent (needs ANTHROPIC_API_KEY, see README.md)
 ```
 
-The kit needs Node ≥ 22 and nothing else: no `npm install`. §1 extends
-`verify` with the product's build, lint and tests, whatever the stack is.
-Keep it **one** command.
+The kit itself needs Node ≥ 22 and nothing else: no `npm install`. The
+product needs `uv`. `verify` is **one** command that runs both halves, and
+"green on a fresh clone" means green after `npm run setup:worktree` (`uv sync
+--frozen`); `npm run spawn` runs that for a new worktree.
 
 ## How work flows
 
@@ -131,23 +137,60 @@ npm run sessions -- --log 30    # the raw event tail
   once. Merges and reviews are serial, so more sessions mostly add rebases.
 - Spawned worktrees live outside the repo on purpose, so the project's
   tools never pick up a nested checkout. Each worktree installs its own
-  dependencies: §1 defines `npm run setup:worktree` (for example `npm ci` or
-  `uv sync`) once the stack has any, and spawn runs it.
+  dependencies: `npm run setup:worktree` (`uv sync --frozen`), which spawn
+  runs.
 
 ## Architecture
 
-None yet. §1 writes this section: the modules, the boundary between pure,
-tested logic and I/O (model calls, channels, storage), and the conventions
-worth knowing before editing. When it does, it also:
+Python package `advisor` in `src/advisor/`, tests in `tests/`, local
+Langfuse stack in `infra/langfuse/`.
 
-- narrows `CORE_CODE` in `scripts/intent-check-lib.mjs` to the modules whose
-  mistakes cost most;
-- names the runtime paths that owe a live check (`REVIEW-POLICY.md` →
-  "Live checks", rule 1);
-- names the paths behind the Reviewed tier's "by meaning" list (prompts,
-  user-facing output, credentials, personal data);
-- defines `npm run setup:worktree` if a fresh worktree needs dependencies
-  installed before `npm run verify` can pass.
+**Pure, tested logic** (the `CORE_CODE` modules in
+`scripts/intent-check-lib.mjs`):
+
+- `catalogue.py`: `Product`, `load_catalogue` (validates, names product and
+  field), `search_products` (AND of filters, price-then-id order, limit
+  clamped to 1..10). Data: `data/catalogue.json`, synthetic.
+- `agent.py`: `run_agent` (the tool loop, at most 5 model turns, error tool
+  results for bad calls, fixed fallback answer) and `answer_question` (input
+  guardrail, agent, output guardrail, one trace). Pure orchestration over a
+  `ModelClient` and tool functions.
+- `guardrails.py`: `check_input` / `check_output`, the seam (both allow in
+  the skeleton); a block gives the fixed refusal.
+- `models/`: the `ModelClient` protocol and message types (`base.py`), the
+  scripted fake for tests and evals (`fake.py`), and `make_client` with the
+  provider registry. `models/anthropic_model.py` is the Anthropic adapter.
+
+**I/O and wiring** (not core; the live check covers them): `cli.py` (entry
+point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
+`Tracer` protocol, a no-op, the Langfuse tracer, `SafeTracer`, `make_tracer`),
+`prompts/system.md` (the shipped prompt).
+
+**Conventions worth knowing before editing**
+
+- Provider and tracing SDKs are imported in exactly one module each:
+  `anthropic` only in `models/anthropic_model.py`, `langfuse` only in
+  `tracing.py` (`tests/test_boundaries.py` enforces it). The agent and CLI
+  see the `ModelClient` and `Tracer` protocols only.
+- Tracing never changes a run: every Langfuse call is wrapped and swallowed,
+  flush waits at most 5 s, and tracing is a no-op unless `LANGFUSE_HOST`,
+  `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all set.
+- Tests drive a scripted fake `ModelClient` and assert on what it received.
+  `tests/conftest.py` makes any socket connect fail the test. Never build
+  the real adapter or Langfuse client in a test without patching it.
+- `mypy --strict` covers `src/advisor`; ruff lints and formats everything.
+- Secrets live in `.env` and `infra/langfuse/.env` (both gitignored); only
+  `.env.example` files with placeholders are committed.
+- A new provider is a new `models/<provider>.py`, a line in
+  `PROVIDER_KEY_ENV` and `make_client`, and its own tests.
+
+**Live checks (`REVIEW-POLICY.md` → "Live checks", rule 1)** are owed for
+changes to `src/advisor/cli.py`, `src/advisor/models/`,
+`src/advisor/tracing.py`, `src/advisor/prompts/` and `infra/`.
+
+**Reviewed tier by meaning**: `src/advisor/prompts/**`,
+`src/advisor/guardrails.py`, `src/advisor/cli.py`, `src/advisor/config.py`,
+`.env.example` files, `src/advisor/tracing.py`.
 
 ## Conventions that already apply
 

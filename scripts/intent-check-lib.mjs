@@ -141,16 +141,20 @@ function unquote(v) {
   return s;
 }
 
-// Path rules. The stack is not chosen yet (§1 decides it), so these are
-// deliberately language-neutral; §1 narrows CORE_CODE to the modules whose
-// mistakes cost most, for example a domain or engine module.
+// Path rules. TEST_RE is language-neutral. CORE_CODE (set by §1, stack
+// Python) is the modules whose mistakes cost most: the agent loop, the
+// catalogue search, the guardrails and the model interface. cli, config and
+// tracing are wiring and I/O, and the live check covers them.
 const TEST_RE = [
   /\.(test|spec)\.[cm]?[jt]sx?$/, // JS/TS
   /(^|\/)test_[^/]+\.py$/, // pytest
   /_test\.(py|go)$/,
   /(^|\/)(tests?|__tests__)\//, // anything under a test directory
 ];
-export const CORE_CODE = [/^src\//];
+export const CORE_CODE = [
+  /^src\/advisor\/(agent|catalogue|guardrails)\.py$/,
+  /^src\/advisor\/models\//,
+];
 
 const isTest = (p) => TEST_RE.some((re) => re.test(p));
 const isCoreCode = (p) => CORE_CODE.some((re) => re.test(p)) && !isTest(p);

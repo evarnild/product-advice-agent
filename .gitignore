@@ -10,3 +10,12 @@ dist/
 
 # Per-worktree session brief.
 CLAUDE.local.md
+
+# Python product
+.env
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+infra/langfuse/.env

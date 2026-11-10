@@ -27,8 +27,8 @@ const base = (over = {}) => ({
   intentDir: 'intents/27-drift-log',
   intentFiles: ['intent.md', 'plan.md', 'metadata.yml'],
   diff: [
-    { path: 'src/core/router.ts', added: 4, deleted: 1 },
-    { path: 'src/core/router.test.ts', added: 20, deleted: 0 },
+    { path: 'src/advisor/agent.py', added: 4, deleted: 1 },
+    { path: 'tests/test_agent.py', added: 20, deleted: 0 },
   ],
   ...over,
 });
@@ -121,7 +121,7 @@ describe('checkChange', () => {
     const files = Array.from({ length: 6 }, (_, i) => ({ path: `docs/a${i}.md`, added: 1, deleted: 0 }));
     expect(checkChange(base({ ...adj, diff: files })).routes.join()).toMatch(/6 files/);
 
-    const rules = checkChange(base({ ...adj, diff: [{ path: 'src/core/config.ts', added: 1, deleted: 1 }] }));
+    const rules = checkChange(base({ ...adj, diff: [{ path: 'src/advisor/catalogue.py', added: 1, deleted: 1 }] }));
     expect(rules.routes.join()).toMatch(/core code/);
   });
 
@@ -147,11 +147,11 @@ describe('checkChange', () => {
         metadata: meta({ type: 'refactor' }),
         diff: [
           { path: 'web/Board.ts', added: 10, deleted: 200 },
-          { path: 'src/core/triage.test.ts', added: 0, deleted: 12 },
+          { path: 'tests/test_guardrails.py', added: 0, deleted: 12 },
         ],
       }),
     );
-    expect(r.routes.join()).toMatch(/existing tests lost lines \(src\/core\/triage.test.ts\)/);
+    expect(r.routes.join()).toMatch(/existing tests lost lines \(tests\/test_guardrails.py\)/);
   });
 
   it('routes a feature that changed core code without a test', () => {
@@ -160,7 +160,7 @@ describe('checkChange', () => {
         branch: 'feat/27-x',
         metadata: meta({ type: 'feature', spec_accepted: '2026-10-07' }),
         intentFiles: ['intent.md', 'spec.md', 'plan.md', 'metadata.yml'],
-        diff: [{ path: 'src/core/triage.ts', added: 30, deleted: 2 }],
+        diff: [{ path: 'src/advisor/guardrails.py', added: 30, deleted: 2 }],
       }),
     );
     expect(r.routes.join()).toMatch(/Core code .* no test change/);
@@ -240,7 +240,7 @@ describe('type shape boundaries', () => {
 
   it('routes a refactor that removed even one test line', () => {
     const r = checkChange(
-      base({ branch: 'refactor/27-split', metadata: meta({ type: 'refactor' }), diff: [{ path: 'src/core/triage.test.ts', added: 1, deleted: 1 }] }),
+      base({ branch: 'refactor/27-split', metadata: meta({ type: 'refactor' }), diff: [{ path: 'tests/test_guardrails.py', added: 1, deleted: 1 }] }),
     );
     expect(r.routes).toHaveLength(1);
   });
@@ -378,8 +378,24 @@ describe('live checks', () => {
 
 describe('language-neutral path rules', () => {
   it('counts pytest, Go and test-directory files as tests', () => {
-    for (const path of ['src/core/test_router.py', 'src/core/router_test.py', 'pkg/router_test.go', 'tests/e2e/smoke.py', 'web/router.spec.tsx']) {
-      expect(checkChange(base({ diff: [{ path: 'src/core/router.py', added: 4, deleted: 1 }, { path, added: 9, deleted: 0 }] })).routes, path).toEqual([]);
+    for (const path of ['src/advisor/test_agent.py', 'src/advisor/agent_test.py', 'pkg/router_test.go', 'tests/e2e/smoke.py', 'web/router.spec.tsx']) {
+      expect(checkChange(base({ diff: [{ path: 'src/advisor/agent.py', added: 4, deleted: 1 }, { path, added: 9, deleted: 0 }] })).routes, path).toEqual([]);
+    }
+  });
+
+  it('narrowed CORE_CODE: wiring and I/O modules are not core, the model interface is', () => {
+    const feature = (path) =>
+      base({
+        branch: 'feat/27-x',
+        metadata: meta({ type: 'feature', spec_accepted: '2026-10-07' }),
+        intentFiles: ['intent.md', 'spec.md', 'plan.md', 'metadata.yml'],
+        diff: [{ path, added: 4, deleted: 1 }],
+      });
+    for (const path of ['src/advisor/cli.py', 'src/advisor/config.py', 'src/advisor/tracing.py', 'src/advisor/prompts/system.md']) {
+      expect(checkChange(feature(path)).routes, path).toEqual([]);
+    }
+    for (const path of ['src/advisor/agent.py', 'src/advisor/catalogue.py', 'src/advisor/guardrails.py', 'src/advisor/models/anthropic_model.py']) {
+      expect(checkChange(feature(path)).routes.join(), path).toMatch(/Core code .* no test change/);
     }
   });
 

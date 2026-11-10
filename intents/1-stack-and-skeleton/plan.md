@@ -92,6 +92,16 @@ Re-read on `main` at `7a4b288` (code unchanged since `fda34d9`).
   hand-written parser with quoting bugs.
 - `pytest`, `ruff`, `mypy` (dev group) — the test, lint/format and type
   tools chosen in B1/B20.
+- `hatchling` (build backend, `[build-system]`) — builds the `advisor`
+  package for the `src/` layout and its console script; uv's default
+  backend for a packaged project. *(Amended 2026-11-10, owner: "dev group +
+  plan amendment", review round 1.)*
+- `opentelemetry-sdk` (dev group) — the real-SDK tracing test uses its
+  in-memory span exporter; declared so the test does not lean on langfuse's
+  transitive pin. *(Amended 2026-11-10, same.)*
+- `httpx` (dev group) — the Anthropic adapter tests build SDK error and
+  response objects from it; declared so they do not lean on anthropic's
+  transitive pin. *(Amended 2026-11-10, same.)*
 
 No other dependency without amending this plan.
 
@@ -215,3 +225,83 @@ Each ends with `npm run verify` green and a commit.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-09 — subtasks 1–9 (implementer)
+
+Commits: ecf3f3a (scaffold), 3d4f3ac (catalogue), 4361ced (models), 5efe313
+(agent, prompt, guardrails), 44b72e9 (tracing), a9323b2 (config, CLI),
+2a2dd92 (Langfuse compose), 6453c2e (docs, CORE_CODE, REVIEW-POLICY,
+CLAUDE.md). A stalled stream interrupted subtask 3; it resumed from the
+uncommitted files.
+
+Shipped: everything in subtasks 1–9. `npm run verify` = kit tests (255 pass)
++ ruff check + ruff format --check + mypy strict (11 source files) + pytest
+(89 pass). `check:intent` PASS.
+
+Divergences and notes:
+- `answer_question` (input guardrail, agent, output guardrail, one trace)
+  lives in `agent.py`, not `cli.py`, so the guardrail wiring is pure and
+  testable; the CLI calls it. Plan said "wiring ... in cli".
+- The `Tracer` protocol and `NoopTracer` are in `tracing.py` (created in
+  subtask 4, filled in subtask 6); `SafeTracer` wraps every Langfuse call.
+- `make_client(provider, model, api_key)` takes the key as an argument;
+  config looks it up via `PROVIDER_KEY_ENV`.
+- `docker compose -f infra/langfuse/docker-compose.yml config -q` exits 0
+  only once `infra/langfuse/.env` exists, because secrets are required
+  (`${VAR:?}`), not defaulted. With `--env-file infra/langfuse/.env.example`
+  it exits 0 (done; documented in README). Nothing was started.
+- Added `tests/helpers.py` (recording and raising tracers) and
+  `tests/test_config.py`; a real-SDK tracing test uses Langfuse with an
+  in-memory OpenTelemetry exporter (no network).
+- Kit fixtures moved to `src/advisor/...`, `tests/...` paths; one kit test
+  added for non-core vs core paths; no assertion weakened.
+- Python resolved to 3.12.9 in `.venv` (`requires-python >=3.12`).
+
+### 2026-11-10 — Rework round 1 (implementer)
+
+Commits: 9583c64 (failed-run trace, per-argument agent tests, dev deps,
+dead `except UnknownProviderError` dropped), daf4d06 (remaining tests).
+
+Shipped:
+- Owner decision A: `Tracer.fail(error)` (NoopTracer, LangfuseTracer,
+  SafeTracer). `answer_question` calls it with `"<ExceptionClass>: <message>"`
+  when `run_agent` raises, then re-raises, so the CLI still exits 1. The
+  Langfuse root `advisor-run` is ended with that output at level ERROR and
+  flushed with the same bounded wait. Tests: RecordingTracer sees
+  begin, input-check, fail and the exception propagates; the real-SDK
+  in-memory test exports the root with level ERROR.
+- Owner decision B: `opentelemetry-sdk` and `httpx` added to the dev group;
+  `uv.lock` updated (only those entries, no version changes);
+  `uv sync --frozen` works.
+- Finding 5: the tool error text already named the bad argument (for example
+  `'max_price' must be a number`); the gap was the tests. They now assert it.
+- Mutants killed (verified by copy-backup/restore runs, status clean after):
+  A1, A8, A9, A11, A12, A13, A14 (test_agent.py); C24, C24b, C4b
+  (test_catalogue.py); N1, N14 (test_models.py); T4, T5, T8, T9, T10, T14,
+  T20, T21 (test_tracing.py); and a new mutant F1 (`tracer.fail` call
+  removed). A2 and A3 were not run separately; they are covered by the same
+  bad-argument assertions (error text must name the argument and must not
+  contain "failed").
+- Counts: kit tests 255 pass; pytest 102 pass (was 89); ruff, ruff format
+  and mypy strict clean.
+
+Divergences: the real-SDK tests give each test its own public key, because
+the Langfuse SDK shares one exporter per public key. Not taken: agent.py
+importing tracing, the OTel stderr line.
+
+### 2026-11-10 — Rework round 2 (implementer)
+
+Commit: d4df976 (tests only; no code change).
+
+- SafeTracer forwarding: `test_safe_tracer_forwards_every_call_with_its_arguments`
+  (wrapped RecordingTracer sees the same events and arguments as an
+  unwrapped run) and `test_safe_tracer_forwards_fail` (`("fail",
+  "ModelError: down")`). Kills R11, R12, R14, R15, R16, R17, R18.
+- Tie-break: P-002 renamed "Zeta Handset" in `test_catalogue.py`, so the tied
+  pair's names sort the opposite way to their ids both forwards and
+  reversed. Kills C24, C24b, C24c (C24b survived a first attempt with
+  "Zeta Phone", whose reversed form still sorted in id order).
+- Root level on success: the real-SDK test asserts the root span has no
+  `langfuse.observation.level`. Kills R13.
+- All ten verified with harness2.py (copy backup and restore); status clean.
+- Counts: kit 255 pass; pytest 104 pass; ruff, format, mypy strict clean.

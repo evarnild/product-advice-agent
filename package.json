@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "SDLC kit only for now; the stack is §1's decision. The kit's scripts need Node ≥ 22 and nothing else.",
-  "engines": { "node": ">=22" },
+  "description": "Product-advice agent (Python + Langfuse) with the SDLC kit. The kit scripts need Node >= 22 and nothing else; the product needs uv (npm run setup:worktree).",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test:kit": "node --test \"scripts/*.test.mjs\"",
     "check:intent": "node scripts/check-intent.mjs",
@@ -13,6 +15,8 @@
     "spawn": "node scripts/spawn-intent.mjs",
     "sessions": "node scripts/sessions.mjs",
     "ship": "node scripts/ship.mjs",
-    "verify": "npm run test:kit"
+    "verify": "npm run test:kit && npm run verify:product",
+    "setup:worktree": "uv sync --frozen",
+    "verify:product": "uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest"
   }
 }
