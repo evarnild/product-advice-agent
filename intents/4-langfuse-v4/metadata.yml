@@ -14,7 +14,7 @@ live_checked:            # only when review.md says live-check: owed — the day
 merged:                  # merge commit hash
 auto_authorized: 2026-11-10 by-agent    # owner: "read the diff for 4 /auto 4"
 auto_round: 2
-auto_stopped: escalate, owner reads the diff
+auto_stopped: live check owed
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   - intents/1-stack-and-skeleton    the v3 stack and the trace shape it checked live
