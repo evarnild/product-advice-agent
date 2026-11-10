@@ -6,7 +6,16 @@ import pytest
 
 from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
 from advisor.models.anthropic_model import AnthropicClient
-from advisor.models.base import Message, ModelError, ModelTurn, ToolCall, ToolResult, ToolSpec
+from advisor.models.base import (
+    Message,
+    ModelError,
+    ModelNotAvailableError,
+    ModelTurn,
+    ModelUnreachableError,
+    ToolCall,
+    ToolResult,
+    ToolSpec,
+)
 from advisor.models.fake import ScriptedModelClient
 
 TOOL = ToolSpec("search_products", "Search.", {"type": "object", "properties": {}})
@@ -49,6 +58,29 @@ def test_make_client_ollama_is_keyless_and_does_not_connect():
     from advisor.models.ollama_model import OllamaClient
 
     assert isinstance(make_client("ollama", "qwen3:8b"), OllamaClient)
+
+
+def test_make_client_ollama_passes_model_and_base_url_through():
+    client = make_client("ollama", "m-x", base_url="http://box:9/")
+    assert client._model == "m-x"
+    assert client._base_url == "http://box:9"
+
+
+def test_make_client_ollama_defaults_the_base_url():
+    client = make_client("ollama", "m")
+    assert client._model == "m"
+    assert client._base_url == "http://localhost:11434"
+
+
+def test_make_client_anthropic_passes_the_key_to_the_sdk():
+    client = make_client("anthropic", "m", api_key="placeholder-key")
+    assert client._sdk.api_key == "placeholder-key"
+    assert client._model == "m"
+
+
+def test_ollama_error_types_are_model_errors():
+    assert issubclass(ModelUnreachableError, ModelError)
+    assert issubclass(ModelNotAvailableError, ModelError)
 
 
 def test_known_providers_lists_both():

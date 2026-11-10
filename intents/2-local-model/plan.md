@@ -282,7 +282,7 @@ config, adapter), `20c9316` (CLI keyless path, trace tags, tests),
 `b4cdcd0` (docs, decision 0002, status `in-review`).
 
 Shipped: B1-B21 as planned. `npm run verify` green: 162 pytest tests (was
-128 before this intent's tests), ruff, ruff format, mypy --strict clean, kit
+104 before this intent's tests), ruff, ruff format, mypy --strict clean, kit
 tests pass. No Ollama, Anthropic or Langfuse contacted; the adapter is tested
 only through `httpx.MockTransport`.
 
@@ -303,3 +303,27 @@ Divergences from the plan (none changes behaviour):
 - The 5 comparison questions in the README are mine (spec: assumption).
 
 AC10 (live check) is the owner's.
+
+### Rework round 1 (review.md round 1)
+
+Tests and Progress only; no source change.
+
+Corrections to the build entry: the baseline was 104 tests on `main` (the
+"was 128" figure above is corrected to 104). Commit `ca0eca7` alone was not
+verify-green (pytest 13 failed, 91 passed; mypy error at `cli.py:36`); the
+next commit, `20c9316`, restores green. History is not rewritten.
+
+Tests added, and the mutant each kills (each mutant applied by copy, full
+suite red, restored by copy):
+- `tests/test_models.py::test_make_client_ollama_passes_model_and_base_url_through`
+  kills M02 and R04; `test_make_client_ollama_defaults_the_base_url` also
+  guards M02; `test_make_client_anthropic_passes_the_key_to_the_sdk` kills R03.
+- `tests/test_models.py::test_ollama_error_types_are_model_errors` kills B01
+  and B02.
+- `tests/test_ollama_model.py::test_other_failures_are_plain_model_errors`
+  with a 400 body carrying a `message` kills M25.
+- `tests/test_ollama_model.py::test_ipv6_host_keeps_its_brackets_in_the_message`
+  kills M39.
+
+All 7 mutants killed (1 failure each). Optional "worth a look" items left
+unchanged by instruction. Commit: see the git log subject "§2: rework round 1".

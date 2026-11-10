@@ -210,6 +210,12 @@ def test_credentials_are_stripped_from_the_printed_url():
     assert "usr" not in text and "pw" not in text
 
 
+def test_ipv6_host_keeps_its_brackets_in_the_message():
+    with pytest.raises(ModelUnreachableError) as e:
+        Server(httpx.ConnectError("x")).client("http://[::1]:11434").complete("s", [], [])
+    assert "http://[::1]:11434." in str(e.value)
+
+
 def test_404_says_to_pull_the_model():
     server = Server(httpx.Response(404, json={"error": "model 'x' not found"}))
     with pytest.raises(ModelNotAvailableError) as e:
@@ -221,6 +227,7 @@ def test_404_says_to_pull_the_model():
     "response",
     [
         httpx.Response(500, json={"error": "boom"}),
+        httpx.Response(400, json={"message": {"role": "assistant", "content": "x"}}),
         httpx.Response(200, content=b"<html>not json</html>"),
         httpx.Response(200, json={"model": "m"}),
         httpx.Response(200, json=[1]),
