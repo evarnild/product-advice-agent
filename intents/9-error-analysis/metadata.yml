@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "/auto 9"
 auto_round: 2
-auto_stopped:
+auto_stopped: escalate, owner reads the diff
 follows_up:
 links:
   - intents/8-offline-evals    builds on its question set, runner and checks
