@@ -1,13 +1,216 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §9 review — Error analysis on top of the eval suite: synthetic questions by dimension, a trace viewer and pass/fail labels with critiques
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 35f2762e52e756d0fab986b0d537d0596161db8c
-round: 1
+reviewed-commit: fdcb37e1fdab6c8f5c84bc534da53170bc791213
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed, set by round 1's input 3 (its HIGH); nothing lowers it.
+Input 1 gives Attested for this round's diff (`src/advisor/evals/**`,
+tests, `.gitignore`); input 2 is empty.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 9` → "nth
+attested auto change = 4, every 3, sampled: no".
+
+No finding needs rework. All five round-1 survivors are killed, and the
+four rework findings are fixed. `check:intent` FAILs only on the owed live
+check (the owner's gate). The tier is Reviewed, so the verdict is
+escalate: the owner reads the diff.
+
+## Round-1 findings: resolution
+| Round 1 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| HIGH | unknown-tool calls missing from `tools`; calls under the wrong turn (B5/B9) | fixed | `RecordingTracer.tool` records every call in order (`run.py:68-79`); `_recording_tool` hands results over with `offer_results`; `test_an_unknown_tool_call_is_recorded_in_order_with_error_true`; V12 killed by `test_each_tool_call_renders_under_its_own_turn`; a mixed-turn probe is correct |
+| MEDIUM | `.sesskey` committed | fixed | no longer tracked; `.gitignore:26`; `secret_key=secrets.token_hex(32)` at `view.py:278`; S1 killed; the full suite leaves no `.sesskey`. The old key stays in branch history (8b70983); it signed nothing and is unused |
+| MEDIUM | BLOCKED guardrail unproven (V13) | fixed | V13 killed by `test_a_blocked_guardrail_shows_as_blocked_with_its_reason` |
+| MEDIUM | socket-guard conditions unproven (C1–C3); `endswith` matched `websocket.py` | fixed | `conftest.py:29` `caller.co_filename == socket.__file__`; four single-condition tests; C1, C2, C3, C6 killed |
+| LOW | Origin/Host checks | open, Worth a look | not done; reason in the plan's Progress |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (43bd508 touches only what round 1 named; `plan.md` gains only a Progress entry) |
+| 2 | Type check | FAIL on the owed live check only (the owner's gate, not rework) |
+| 3 | Behaviour against the spec | pass (B5/B6 order and attribution probed; §8's `searches` and scores unchanged; AC4 holds) |
+| 4 | Tests prove the behaviour | findings (1 LOW: double mutant O11 survives; O2, O3 equivalent alone) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (464 → 472 = 1 run, 3 viewer, 4 no-network tests; kit 255) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass (`.sesskey` untracked and ignored; none after the full suite; no dependency or suppression change); round-1 LOW carried |
+| 9 | Repository-specific footguns | pass (list empty; round 1's proposed entry is the owner's to add) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 9, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/9-error-analysis/review.md → ## Live check, then set live_checked: <date> in intents/9-error-analysis/metadata.yml.
+  note:  30 file(s), 4249 line(s) changed outside intents/.
+```
+Exit 1. The only error is the owed live check: not rework.
+
+## Findings
+- **LOW** `src/advisor/evals/run.py:69`, `:74` — no test proves that an
+  error call coming *after* a successful one gets `results: []`. Two
+  guards protect it (the reset at line 69 and `error or` at line 74); each
+  alone is equivalent (O2, O3), but dropping both (O11) survives all 472
+  tests, and O11 is a real leak (simulated outside the repo: a laptop
+  search then `get_product` records `get_product error=True results=[P-012,
+  P-009]`). The code is correct today (probe: success, bad arguments,
+  unknown tool, success and an empty success in one turn all right). Worth
+  a look: one test with a turn of `[search ok, search {"colour":"red"},
+  unknown tool, search ok]`, asserting each call's own `results`.
+- **LOW** (carried) `src/advisor/evals/view.py` (`save_label`) — cross-origin
+  POSTs and any `Host` accepted; not re-probed; unchanged by 43bd508. No
+  defect against the spec ("no authentication", synthetic data, bound to
+  127.0.0.1); the implementer's reason (port unknown in `make_app`; the test
+  client's host is `testserver`) is fair. Worth a look.
+- **Nit:** `plan.md:120` still says `_recording_tool(tool, sink)`; above
+  the Progress marker, and the Rework round 1 entry records the change.
+- **Note — `main` has moved:** `git merge-tree --write-tree --name-only
+  main HEAD` (main at 5fade27) → exit 1, one conflict in
+  `tests/test_evals_run.py` (both sides append tests at the same point;
+  keep both); `README.md` and `run.py` auto-merge. The rebase needs the
+  owner's word and then a new review round.
+
+**Mutants** (reviewer's harness outside the repo: backup by copy, one
+byte-exact replacement asserted once, `git diff --quiet` non-zero, full
+pytest, restore by copy in `finally`; `git status --short` empty at the
+end). 20 run:
+
+| id | target | mutation | result | killed by |
+| --- | --- | --- | --- | --- |
+| V12 | view.py `_turns` | `mine, tools = tools, []` | KILLED | test_each_tool_call_renders_under_its_own_turn |
+| V13 | view.py `_guardrails` | always `'allowed'` | KILLED | test_a_blocked_guardrail_shows_as_blocked_with_its_reason |
+| C1 | conftest.py:28 | co_name condition → True | KILLED | test_another_function_in_the_socket_module_file_is_blocked |
+| C2 | conftest.py:29 | filename condition → True | KILLED | test_the_right_function_name_in_another_file_is_blocked, test_a_file_whose_name_only_ends_in_socket_py_is_blocked |
+| C3 | conftest.py:31 | address condition → True | KILLED | test_the_socketpair_function_in_the_socket_file_may_not_leave_loopback |
+| C6 | conftest.py:29 | back to `.endswith("socket.py")` | KILLED | test_a_file_whose_name_only_ends_in_socket_py_is_blocked |
+| R5 | run.py:70 | tool record dropped | KILLED | test_the_report_keeps_turns_tools_with_results_and_guardrails (+5) |
+| R6 | run.py:97 | `offer_results` not called | KILLED | same (+3) |
+| S1 | view.py:278 | `secret_key` removed | KILLED | test_make_app_writes_no_file_in_the_working_directory |
+| O1 | run.py:70 | `insert(0, …)` | KILLED | test_an_unknown_tool_call_is_recorded_in_order_with_error_true |
+| O2 | run.py:69 | pending not reset | equivalent | – |
+| O3 | run.py:74 | `error or` dropped | equivalent | – |
+| O11 | run.py:69 + :74 | both guards dropped | **SURVIVED** (LOW) | – |
+| O4 | run.py:75 | `"error": False` | KILLED | test_a_bad_tool_call_is_recorded_as_an_error (+2) |
+| O5 | run.py:75 | `"error": not error` | KILLED | test_the_report_keeps_turns_tools_with_results_and_guardrails (+3) |
+| O6 | run.py:73 | arguments `{}` | KILLED | same (+2) |
+| O7 | run.py:72 | name fixed | KILLED | test_an_unknown_tool_call_is_recorded_in_order_with_error_true |
+| O8 | run.py:275 | `record["tools"] = []` | KILLED | test_the_report_keeps_turns_tools_with_results_and_guardrails (+3) |
+| O9 | run.py:97 | `offer_results([])` | KILLED | same (+3) |
+| O10 | run.py:74 | results always `[]` | KILLED | same (+3) |
+
+Survived: O11 (LOW; the test above would kill it). Equivalent: O2, O3.
+
+## Not checked
+- **Live model behaviour (AC9):** what `qwen3:8b` generates, how many
+  candidates coverage keeps, the taxonomy draft's quality.
+- **Hotkeys in a real browser,** B9's "no sideways scroll", real
+  `uvicorn.run` serving.
+- **The rebase onto `main`:** only `merge-tree`.
+- **The round-1 LOW:** not re-probed.
+- **`socket.__file__ == co_filename` on other installs** (a zipped or
+  frozen stdlib would make the viewer tests fail loudly, not silently).
+- **Package release dates:** not re-checked; no dependency changed.
+
+## Live check
+- owed: rule 3 (AC9). Rule 1 does not apply.
+- **When:** after the rebase onto `main` (so `advisor-eval --provider`
+  exists). Ollama with `qwen3:8b`; Windows PowerShell in
+  `C:\Users\eric\src\product-advice-agent-wt\9-error-analysis`.
+- steps:
+  1. `$env:ADVISOR_MODEL_PROVIDER="ollama"; $env:ADVISOR_MODEL="qwen3:8b"`.
+  2. `uv run advisor-analysis generate` — a line per scenario (`asked N,
+     kept K, dropped D (…)`), then `wrote K questions to
+     evals\generated.jsonl`; exit 0.
+  3. Read and edit `evals\generated.jsonl`: `gen-<scenario>-<n>` ids,
+     three `dimensions`, a `probe` in `note`, off-topic lines
+     `"must_decline": true`. Run one `no-match` question through `uv run
+     advisor "<q>"`: nothing found. Check one `spelling-differs` question:
+     no probe keyword in it verbatim.
+  4. `uv run advisor-eval --cases evals\generated.jsonl` — each case has
+     `dimensions`, `turns`, `tools` with `results`, `guardrails`; the report
+     has `prompt_sha256`. A non-existent tool or bad arguments show in
+     `tools` in order with `"error": true` and `"results": []`.
+  5. `uv run advisor-analysis view evals\runs\<stamp>.json`, open
+     `http://127.0.0.1:5209`. `http://<your LAN IP>:5209` must not answer.
+     One screen shows everything B9 lists, no sideways scroll; each tool
+     call (error calls too) under its own model turn.
+  6. Label at least 20 with the keyboard: `p` saves a pass and stays; `f`
+     focuses the critique, `Enter` saves the fail and moves on; `j`/`k` next
+     and back; `f` then `Enter` with an empty box is refused. Filters: `j`/`k`
+     stay inside them. Ctrl+C and `view` again: labels and counts kept.
+     Each line of `evals\labels\<stamp>.jsonl` has `case_id, label,
+     critique, labelled_at` (UTC, `Z`), `question`, `answer`.
+  7. `uv run advisor-analysis taxonomy evals\labels\<stamp>.jsonl` →
+     `evals\taxonomy.draft.json`. On "Draft rejected" (exit 1), rerun.
+  8. Edit the draft, save as `evals\taxonomy.json`.
+  9. `uv run advisor-analysis counts evals\runs\<stamp>.json --out
+     $env:TEMP\counts.md` — four tables matching your labels. Map one case
+     to an unknown mode: `Taxonomy error: …`, exit 2; undo.
+  10. `git status`: only `evals/generated.jsonl`, `evals/labels/*.jsonl`,
+      `evals/taxonomy.json` new; no `.sesskey`, no `taxonomy.draft.json`.
+- you should see: every happy-path command exits 0; the viewer answers only
+  on 127.0.0.1; each tool call under its own turn; labels survive a
+  restart; the counts match your labels.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/9-error-analysis` at fdcb37e; `git status --short` empty before and after; no `.sesskey` before or after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `pass 255, fail
+  0`; ruff "All checks passed!"; "112 files already formatted"; mypy
+  "Success: no issues found in 26 source files"; pytest "472 passed".
+  Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL, exit 1, on the
+  owed live check only, as pasted. Matches.
+- **Coordinator, re-run:** with my own harness (backup by copy, the
+  replacement(s), file-changed assertion, full pytest, restore by copy):
+  V12 KILLED by test_each_tool_call_renders_under_its_own_turn; V13 KILLED
+  by test_a_blocked_guardrail_shows_as_blocked_with_its_reason; C1 KILLED by
+  test_another_function_in_the_socket_module_file_is_blocked; C2 KILLED (2
+  failed) by test_the_right_function_name_in_another_file_is_blocked; C3
+  KILLED by test_the_socketpair_function_in_the_socket_file_may_not_leave_loopback
+  (34 s: the mutant let one test attempt the non-routable 10.255.255.1:9);
+  O11 (both guards dropped) SURVIVED, 472 passed. Each matches the
+  reviewer and the implementer.
+
+**Reviewer, verified** (HEAD fdcb37e, nothing checked out):
+- `npm run verify` exit 0 (472 passed); `check:intent` FAIL on the live
+  check only; `sdlc:scan` sampling as above.
+- `git merge-tree` as in the Note; `main` unchanged at 5fade27; no
+  upstream for the branch.
+- AC4: `git diff main...HEAD -- tests/test_evals_{run,score,cases}.py`
+  removes only two import lines; `searches` still filled in `tool()` for
+  every `search_products` call.
+- B5/B6 probe with the scripted fake (one turn: search ok, bad arguments,
+  unknown tool, search ok, empty search): each call its own results, errors
+  `[]`, nothing pending at the end.
+- 20 mutants as tabled; the O11 leak reproduced in-process. The reviewer's
+  S1 mutant wrote a `.sesskey`, which it deleted; a clean re-run of the
+  suite wrote none.
+- 43bd508 adds no `noqa`, `type: ignore` or `pragma`, and changes neither
+  `pyproject.toml` nor `uv.lock`.
+
+**Taken on trust:**
+- that the new tests failed on the pre-rework code (checked equivalently:
+  O8, R5, R6 and C6 reproduce the old behaviour and are killed);
+- round 1's verified items outside this diff.
+
+# Round 1 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 35f2762e52e756d0fab986b0d537d0596161db8c
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, set by input 3 (this report: the HIGH finding on B5/B9).
 Input 1 (paths) gives Attested: `src/**` outside the by-meaning list,
@@ -22,7 +225,7 @@ none of these raised the tier; the HIGH did, and nothing lowers it.
 Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 9` → "nth
 attested auto change = 5, every 3, sampled: no".
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (`report.py`, `modeljson.py` are factoring within scope) |
@@ -35,7 +238,7 @@ attested auto change = 5, every 3, sampled: no".
 | 8 | Guardrails and hygiene | findings (MEDIUM `.sesskey` committed; LOW cross-origin POSTs) |
 | 9 | Repository-specific footguns | pass (list empty; one entry proposed below) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -45,7 +248,7 @@ type-check: PASS (intent 9, feature)
 ```
 Exit 0.
 
-## Findings
+### Findings
 - **HIGH** `src/advisor/evals/run.py:71-91` (`_recording_tool`) and
   `src/advisor/evals/view.py:204-213` (`_turns`) — a call to an unknown
   tool is missing from `tools`, and the viewer then attributes later tool
@@ -195,7 +398,7 @@ Survived: V12, V13 (`view.py:208`, `:240`), C1, C2, C3
 (`tests/conftest.py:27-30`); the rework is expected to kill all five, and
 the HIGH's new `test_evals_run.py` test must fail on today's `run.py:71-91`.
 
-## Not checked
+### Not checked
 - **Live model behaviour (AC9):** what `qwen3:8b` generates, how many
   candidates survive coverage, whether no-match questions read naturally;
   the taxonomy draft's quality and whether qwen's output parses beyond the
@@ -212,7 +415,7 @@ the HIGH's new `test_evals_run.py` test must fail on today's `run.py:71-91`.
 - **`uvicorn.run` serving for real:** replaced in every test.
 - **The rebase onto `main`:** not run (see the Note).
 
-## Live check
+### Live check
 - owed: rule 3 (AC9; the Not-checked items above are runtime behaviour
   only a live run shows). Rule 1 does not apply.
 - **When:** after the rework and the rebase onto `main` (so `advisor-eval
@@ -270,7 +473,7 @@ the HIGH's new `test_evals_run.py` test must fail on today's `run.py:71-91`.
   answers only on 127.0.0.1, labels survive a restart, and the counts match
   your labels.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/9-error-analysis` at 35f2762; `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `pass 255, fail
