@@ -3,13 +3,18 @@ import io
 import json
 from datetime import UTC, datetime, timedelta
 
-from advisor.evals.run import main
+import pytest
+
+from advisor.agent import SYSTEM_PROMPT_PATH, ToolError, search_tool
+from advisor.catalogue import load_catalogue
+from advisor.evals.run import RecordingTracer, _recording_tool, main
 from advisor.models.base import (
     ModelError,
     ModelNotAvailableError,
     ModelTurn,
     ModelUnreachableError,
     ToolCall,
+    Usage,
 )
 from advisor.models.fake import ScriptedModelClient
 
@@ -333,3 +338,96 @@ def test_anthropic_flag_without_a_key_exits_2(tmp_path):
     assert code == 2
     assert "Missing ANTHROPIC_API_KEY" in err
     assert factory.calls == []
+# --- §9 B5, B6: the report keeps everything -------------------------------
+
+
+DIMS = {"feature": "headphones", "scenario": "several-matches", "persona": "a gift buyer"}
+DIM_CASES = [{**CASES[0], "dimensions": DIMS}, *CASES[1:]]
+
+
+def test_the_report_keeps_turns_tools_with_results_and_guardrails(tmp_path):
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, cases=DIM_CASES)
+    first = report_of(tmp_path)["cases"][0]
+    assert first["turns"] == [
+        {"text": None, "tools": ["search_products"]},
+        {"text": "Try the Auralis Calm 300 (P-001) at 189 euros.", "tools": []},
+    ]
+    (call,) = first["tools"]
+    assert call["name"] == "search_products"
+    assert call["arguments"] == {"category": "headphones", "max_price": 200}
+    expected = search_tool(load_catalogue()).run({"category": "headphones", "max_price": 200})
+    assert call["results"] == expected
+    assert call["results"][0]["id"] == "P-006"  # the products the model saw, cheapest first
+    assert call["error"] is False
+    assert [g["stage"] for g in first["guardrails"]] == ["input", "output"]
+    assert all(set(g) == {"stage", "allowed", "reason"} for g in first["guardrails"])
+    assert first["guardrails"][0]["allowed"] is True
+
+
+def test_dimensions_are_recorded_only_for_cases_that_have_them(tmp_path):
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, cases=DIM_CASES)
+    cases = report_of(tmp_path)["cases"]
+    assert cases[0]["dimensions"] == DIMS
+    assert "dimensions" not in cases[1]
+
+
+def test_prompt_sha256_is_the_hash_of_the_shipped_system_prompt(tmp_path):
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK)
+    assert (
+        report_of(tmp_path)["prompt_sha256"]
+        == hashlib.sha256(SYSTEM_PROMPT_PATH.read_bytes()).hexdigest()
+    )
+
+
+def test_a_bad_tool_call_is_recorded_as_an_error(tmp_path):
+    bad_call = [
+        ModelTurn(tool_calls=(ToolCall("c1", "search_products", {"colour": "red"}),)),
+        ModelTurn(text="Sorry."),
+    ]
+    run(tmp_path, bad_call + LAP_OK + OFF_OK)
+    (call,) = report_of(tmp_path)["cases"][0]["tools"]
+    assert call["arguments"] == {"colour": "red"}
+    assert call["results"] == []
+    assert call["error"] is True
+
+
+def test_a_case_that_errors_keeps_what_was_recorded_before(tmp_path):
+    script = [
+        ModelTurn(tool_calls=(ToolCall("c1", "search_products", {"category": "headphones"}),)),
+        ModelError("boom"),
+    ]
+    run(tmp_path, script + LAP_OK + OFF_OK)
+    first = report_of(tmp_path)["cases"][0]
+    assert first["status"] == "ERROR"
+    assert len(first["tools"]) == 1 and first["tools"][0]["results"]
+    assert len(first["turns"]) == 1
+
+
+def test_the_wrapped_tool_returns_exactly_what_the_tool_returns():
+    tool = search_tool(load_catalogue())
+    sink: list = []
+    wrapped = _recording_tool(tool, sink)
+    args = {"category": "laptop", "max_price": 700}
+    assert wrapped.spec is tool.spec
+    assert wrapped.run(dict(args)) == tool.run(dict(args))
+    assert sink[0]["results"] == tool.run(dict(args))
+
+
+def test_the_wrapped_tool_reraises_what_the_tool_raises():
+    tool = search_tool(load_catalogue())
+    sink: list = []
+    wrapped = _recording_tool(tool, sink)
+    with pytest.raises(ToolError):
+        wrapped.run({"colour": "red"})
+    assert sink[0]["error"] is True
+
+
+def test_recording_tracer_keeps_searches_turns_and_guardrails():
+    t = RecordingTracer()
+    t.check("input", False, "why")
+    t.generation("m", Usage(), "hi", ["a", "b"])
+    t.tool("search_products", {"category": "laptop"}, 1, False)
+    t.tool("other", {"x": 1}, 0, True)
+    assert t.guardrails == [{"stage": "input", "allowed": False, "reason": "why"}]
+    assert t.turns == [{"text": "hi", "tools": ["a", "b"]}]
+    assert t.searches == [{"category": "laptop"}]
