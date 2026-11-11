@@ -302,11 +302,12 @@ this line is the implementer's to edit. -->
 
 ### 2026-11-11 — implementation (all 11 subtasks)
 
-Commits (on `feat/9-error-analysis`, after `c806886`): `8e5ea0a` dimensions
-(1), `00caf0d`... see `git log`; in order: dimensions (1), grid and coverage
-(2), recording (3), generator (4), labels (5), dependency and viewer (6),
-taxonomy (7), counts (8), the `advisor-analysis` command (9), boundaries and
-docs (10, 11), and one extra test commit from mutant M6.
+Commits (on `feat/9-error-analysis`, after `c806886`): `8e5ea0a` dimensions (1),
+`2f2707c` grid and coverage (2), `00caf0d` recording (3), `13f99dc` generator (4),
+`56c9211` labels (5), `8b70983` dependency and viewer (6), `3d2bda8` taxonomy (7),
+`ee0b1b8` counts (8), `2e075ec` the command (9), `526be10` boundaries and docs
+(10, 11), `a7f4c26` an extra test from mutant M6, and the final commit for
+status and this entry.
 
 What shipped:
 - `cases.py` `dimensions` (B1); `coverage.py`, `generate.py`, `modeljson.py`,
