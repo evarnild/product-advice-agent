@@ -11,7 +11,28 @@ from advisor.catalogue import CATEGORIES, Product
 
 # The `search_products` argument names a case may constrain (spec B9).
 SEARCH_CONSTRAINTS = ("category", "max_price", "min_price", "in_stock_only", "keywords_any")
-_FIELDS = ("id", "question", "expect_ids", "forbid_ids", "must_decline", "expect_search", "note")
+_FIELDS = (
+    "id",
+    "question",
+    "expect_ids",
+    "forbid_ids",
+    "must_decline",
+    "expect_search",
+    "note",
+    "dimensions",
+)
+# The values `dimensions` may take (§9 B1).
+FEATURES = (*CATEGORIES, "off-topic")
+SCENARIOS = (
+    "exact-match",
+    "several-matches",
+    "no-match",
+    "budget-too-low",
+    "out-of-stock",
+    "off-topic",
+    "spelling-differs",
+)
+_DIMENSION_KEYS = ("feature", "scenario", "persona")
 
 
 class CaseFileError(ValueError):
@@ -27,6 +48,7 @@ class Case:
     must_decline: bool = False
     expect_search: dict[str, Any] = field(default_factory=dict)
     note: str = ""
+    dimensions: dict[str, str] | None = None
 
 
 _Fail = Callable[[str, str], CaseFileError]
@@ -67,6 +89,26 @@ def _search(raw: dict[str, Any], fail: _Fail) -> dict[str, Any]:
         ):
             raise fail("expect_search", "'keywords_any' must be a non-empty list of words")
     return dict(value)
+
+
+def _dimensions(raw: dict[str, Any], fail: _Fail) -> dict[str, str]:
+    value = raw["dimensions"]
+    if not isinstance(value, dict):
+        raise fail("dimensions", "must be an object")
+    extra = sorted(set(value) - set(_DIMENSION_KEYS))
+    if extra:
+        raise fail("dimensions", f"has unknown key '{extra[0]}'")
+    for key in _DIMENSION_KEYS:
+        if key not in value:
+            raise fail("dimensions", f"is missing '{key}'")
+    if value["feature"] not in FEATURES:
+        raise fail("dimensions", f"'feature' must be one of {', '.join(FEATURES)}")
+    if value["scenario"] not in SCENARIOS:
+        raise fail("dimensions", f"'scenario' must be one of {', '.join(SCENARIOS)}")
+    persona = value["persona"]
+    if not isinstance(persona, str) or not persona.strip():
+        raise fail("dimensions", "'persona' must be a non-empty string")
+    return {k: value[k] for k in _DIMENSION_KEYS}
 
 
 def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
@@ -116,6 +158,7 @@ def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
                 must_decline=must_decline,
                 expect_search=_search(raw, fail) if "expect_search" in raw else {},
                 note=note,
+                dimensions=_dimensions(raw, fail) if "dimensions" in raw else None,
             )
         )
     if not cases:
