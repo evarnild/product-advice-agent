@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 9
+slug: error-analysis
+type: feature
+status: accepted
+title: Error analysis on top of the eval suite: synthetic questions by dimension, a trace viewer and pass/fail labels with critiques
+review_tier:
+intent_accepted: 2026-11-11 by-agent    # owner: "go with a custom viewer, accept intent 9"
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/8-offline-evals    builds on its question set, runner and checks
+  - intents/7-search-hyphens
+  - intents/2-local-model
+  - intents/10-langfuse-annotation    the same labelling in Langfuse annotation queues
