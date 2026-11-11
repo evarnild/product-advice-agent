@@ -2,10 +2,10 @@
 id: 11
 slug: eval-provider-flag
 type: adjustment
-status: draft            # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: accepted            # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: Choose the eval's model provider with a flag on advisor-eval
 review_tier:
-intent_accepted:
+intent_accepted: 2026-11-11 by-agent    # owner: "accept intent 11"
 spec_accepted:
 plan_approved:
 live_checked:
