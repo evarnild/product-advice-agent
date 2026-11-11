@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 10
+slug: langfuse-annotation
+type: feature
+status: draft
+title: Label eval runs in Langfuse annotation queues as an alternative to the custom viewer
+review_tier: reviewed    # touches src/advisor/tracing.py (Reviewed by meaning: what is sent to Langfuse)
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/9-error-analysis    the labels, taxonomy and counts this feeds
+  - intents/8-offline-evals    the question set and runner
+  - intents/4-langfuse-v4    the self-hosted stack it uses
