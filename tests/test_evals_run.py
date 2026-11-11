@@ -338,6 +338,8 @@ def test_anthropic_flag_without_a_key_exits_2(tmp_path):
     assert code == 2
     assert "Missing ANTHROPIC_API_KEY" in err
     assert factory.calls == []
+
+
 # --- §9 B5, B6: the report keeps everything -------------------------------
 
 
