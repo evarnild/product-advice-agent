@@ -301,3 +301,22 @@ T2 separator removed (7, same test), T3 digit lookbehind dropped
 `test_price_mentioned_rejects_other_numbers[1189]`), T4 plain form dropped
 (`...accepts_thousands_separators[1799]`,
 `test_price_with_cents_over_1000_accepts_separator`).
+
+### 2026-11-11: Rework round 2
+
+Commit: the "§8: rework round 2" commit that touches this entry. Tests only
+(`tests/test_evals_score.py`); no source change.
+
+- Rejects for 1799.0 gain "1,798", "1.800", "1 899", "1-799", "1/799".
+- New `test_price_of_exactly_1000_takes_a_separator` ("1,000", "1.000,00").
+- The accepts list writes the no-break spaces as escapes (`\u00a0`,
+  `\u202f`), not invisible characters.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+N12 later groups any three digits (`rejects_other_numbers[1,798]`, `[1.800]`,
+`[1 899]`); N8 separator any non-digit (`[1-799]`, `[1/799]`); N1 `>= 1000`
+to `> 1000` (`test_price_of_exactly_1000_takes_a_separator`); N4b no-break
+space removed (`accepts_thousands_separators[1\xa0799]`); N4c narrow
+no-break space removed (`accepts_thousands_separators[1\u202f799]`).
+
+Counts: pytest 273 passed in `npm run verify` (266 before).

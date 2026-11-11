@@ -40,15 +40,47 @@ def test_price_with_cents_needs_two_decimals():
 
 
 @pytest.mark.parametrize(
-    "text", ["€1,799", "1.799 €", "1 799 euros", "1,799.00", "1.799,00", "1799", "1799.00", "1 799"]
+    "text",
+    [
+        "€1,799",
+        "1.799 €",
+        "1 799 euros",
+        "1,799.00",
+        "1.799,00",
+        "1799",
+        "1799.00",
+        "1\u00a0799",
+        "1\u202f799",
+    ],
 )
 def test_price_over_1000_accepts_thousands_separators(text):
     assert price_mentioned(text, 1799.0)
 
 
-@pytest.mark.parametrize("text", ["1,79", "11,799", "1,7990", "1,799.5", "799", "21 799", "1.7990"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "1,79",
+        "11,799",
+        "1,7990",
+        "1,799.5",
+        "799",
+        "21 799",
+        "1.7990",
+        "1,798",
+        "1.800",
+        "1 899",
+        "1-799",
+        "1/799",
+    ],
+)
 def test_price_over_1000_rejects_other_numbers(text):
     assert not price_mentioned(text, 1799.0)
+
+
+def test_price_of_exactly_1000_takes_a_separator():
+    assert price_mentioned("1,000", 1000.0)
+    assert price_mentioned("1.000,00", 1000.0)
 
 
 def test_price_with_cents_over_1000_accepts_separator():
