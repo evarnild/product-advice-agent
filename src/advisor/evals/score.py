@@ -51,6 +51,12 @@ def price_mentioned(answer: str, price: float) -> bool:
     return re.search(pattern, answer) is not None
 
 
+def says_out_of_stock(answer: str) -> bool:
+    """The answer flags stock: it contains "out of stock", any case. Shared by
+    the stock check and the prices exemption so the two cannot drift apart."""
+    return "out of stock" in answer.lower()
+
+
 def _is_number(v: Any) -> bool:
     return isinstance(v, int | float) and not isinstance(v, bool)
 
@@ -99,8 +105,17 @@ def score(
     )
 
     # "the stated price" is read as: the catalogue price appears as a number
-    # in the answer; which product it sits next to is not parsed (spec).
-    unpriced = [i for i in cited if i in by_id and not price_mentioned(answer, by_id[i].price_eur)]
+    # in the answer; which product it sits next to is not parsed (spec). A
+    # cited out-of-stock product is exempt when the answer says "out of stock"
+    # (the stock check's own test): such an answer need not quote its price.
+    flagged = says_out_of_stock(answer)
+    unpriced = [
+        i
+        for i in cited
+        if i in by_id
+        and not (flagged and not by_id[i].in_stock)
+        and not price_mentioned(answer, by_id[i].price_eur)
+    ]
     checks.append(
         Check(
             "prices",
@@ -139,7 +154,6 @@ def score(
             )
         )
 
-    flagged = "out of stock" in answer.lower()
     unflagged = [i for i in cited if i in by_id and not by_id[i].in_stock and not flagged]
     checks.append(
         Check(

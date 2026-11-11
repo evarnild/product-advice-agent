@@ -172,3 +172,30 @@ def test_search_min_price_and_stock_only():
     assert verdicts(case, GOOD, [{"min_price": 100, "in_stock_only": True}])["search"]
     assert not verdicts(case, GOOD, [{"min_price": 50, "in_stock_only": True}])["search"]
     assert not verdicts(case, GOOD, [{"min_price": 100}])["search"]
+
+
+OOS_NO_PRICE = "The Sonavo Quiet Pro (P-004) is out of stock."
+
+
+def test_prices_exempts_out_of_stock_cited_id_that_says_so():
+    assert verdicts(Case("c", "q"), OOS_NO_PRICE)["prices"]
+
+
+def test_prices_out_of_stock_without_saying_so_fails_naming_the_id():
+    case = Case("c", "q")
+    answer = "The Sonavo Quiet Pro (P-004) is great."
+    assert not verdicts(case, answer)["prices"]
+    reasons = {c.name: c.reason for c in score(case, answer, [], CATALOGUE)}
+    assert "P-004" in reasons["prices"]
+
+
+def test_prices_in_stock_cited_id_still_needs_price_when_out_of_stock_said_elsewhere():
+    case = Case("c", "q")
+    answer = "The Auralis Calm 300 (P-001) is good. The Sonavo Quiet Pro (P-004) is out of stock."
+    assert not verdicts(case, answer)["prices"]
+    reasons = {c.name: c.reason for c in score(case, answer, [], CATALOGUE)}
+    assert "P-001" in reasons["prices"] and "P-004" not in reasons["prices"]
+
+
+def test_prices_out_of_stock_exemption_is_case_insensitive():
+    assert verdicts(Case("c", "q"), "The Sonavo Quiet Pro (P-004) is Out Of Stock.")["prices"]
