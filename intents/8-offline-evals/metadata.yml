@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "read the diff /auto 8"
 auto_round: 3
-auto_stopped: escalate, owner reads the diff
+auto_stopped: live check owed
 follows_up:
 links:
   - intents/1-stack-and-skeleton
