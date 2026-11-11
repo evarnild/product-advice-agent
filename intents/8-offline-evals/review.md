@@ -1,13 +1,189 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §8 review — An offline eval suite that scores the advisor's answers against a fixed question set
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 6e7d305bb5300d830bf2f78fc0dc2a555b3fc1ae
-round: 2
+reviewed-commit: 01a5eda9b5b1f3a88b197ea98037ae2e4c35f761
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed. It is set by input 1 (the branch changes
+`scripts/intent-check-lib.mjs`, the kit's enforcement), and `review_tier:
+reviewed` agrees.
+
+Scope: 6e7d305..01a5eda — 278aea1 (round-2 review), bd32a14 (rework),
+01a5eda (`auto_round: 3`). `git diff --stat 6e7d305 HEAD -- . ':!intents'`
+shows only `tests/test_evals_score.py` (+34 −2); no source changed. Inside
+`intents/`, the rework adds a "Rework round 2" entry below the Progress
+marker.
+
+The rework is tests only and closes every round-2 rework finding. N12, N8,
+N1 and N4b are now killed, and so are N4c and N4d (each no-break space
+removed on its own). No new finding needs rework. The tier is Reviewed, so
+the verdict is escalate: the owner reads the diff, and the live check (AC6)
+is still owed.
+
+## Round-2 findings: resolution
+| Round 2 | Finding | Resolution | Verified |
+| --- | --- | --- | --- |
+| HIGH | N12 (`score.py:48`): wrong later groups not rejected | "1,798", "1.800", "1 899" in `test_price_over_1000_rejects_other_numbers` (`tests/test_evals_score.py:60-79`) | N12 KILLED (3 failed) |
+| MEDIUM | N8 (`score.py:19`): any separator accepted | "1-799", "1/799" in the rejects | N8 KILLED |
+| MEDIUM | N1 (`score.py:42`): the 1000 boundary untested | `test_price_of_exactly_1000_takes_a_separator` (`:82-84`) | N1 KILLED |
+| LOW | N4b (`score.py:19`): U+202F untested; an invisible U+00A0 literal | `"1\u00a0799"` and `"1\u202f799"` written as escapes; the only non-ASCII character left in the test file is `€` | N4b/N4c and N4d KILLED |
+| LOW | a digit and a space before the price ("1 189" counts for 189; "1 799" for 799) | carried (the owner's call) | probe: still True for both |
+| LOW | `CORE_CODE` anchors (K5, K6) | carried; practically equivalent | — |
+| LOW | `CORE_CODE` header comment; `CLAUDE.md:169` long line | carried | — |
+| LOW (round 1) | M27, M19 equivalent; a first-case abort writes no report | carried | — |
+| Pass 9 suggestion | "test inputs make the code irrelevant" | open (an owner edit to `REVIEW-POLICY.md`) | — |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (tests only; no source, kit or docs change) |
+| 2 | Type check | pass (FAIL only on the owed live check: the owner's to clear) |
+| 3 | Behaviour against the spec | pass (amended B5 unchanged in code; tests match its wording) |
+| 4 | Tests prove the behaviour, not only pass | pass (every round-2 survivor killed, plus N4c and N4d; sampled round-1 resolutions still killed) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | findings (1 LOW: mutant naming in `plan.md`); "273 passed (266 before)" reproduced: +5 rejects, +1 accept, +1 test |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass (`uv lock --check` exit 0; no secrets) |
+| 9 | Repository-specific footguns | pass (list empty; suggestion carried) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 8, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/8-offline-evals/review.md → ## Live check, then set live_checked: <date> in intents/8-offline-evals/metadata.yml.
+  note:  15 file(s), 1115 line(s) changed outside intents/.
+```
+The only error is the owed live check (rule 3, AC6): the owner's to clear.
+
+## Findings
+- **LOW** `intents/8-offline-evals/plan.md` (Progress, "Rework round 2") —
+  the plan calls "U+00A0 removed" N4b and "U+202F removed" N4c, while round
+  2's review defines N4b as U+202F removed. All are killed; only the labels
+  differ. Worth a look.
+- **LOW** `src/advisor/evals/score.py:50` (carried) — a digit and a space
+  before the price are not excluded: "1 189" counts as 189, and "1 799"
+  (P-008) counts as P-024's 799. This contradicts the docstring's "Never
+  inside a longer number". Worth a look in the live check. A fix changes
+  the rule for prices below 1000, which is the owner's call.
+- **LOW** `scripts/intent-check-lib.mjs:158` (carried) — K5 and K6 (the
+  anchors) survive `test:kit`; practically equivalent. Worth a look.
+- **LOW** `scripts/intent-check-lib.mjs:144-147`, `CLAUDE.md:169` (carried)
+  — the header comment doesn't mention evals, and the `CLAUDE.md` line is
+  long and unwrapped. Worth a look.
+- **Note:** the branch is 3 commits behind `main`, in `intents/9-*` and
+  `intents/10-*` only, so no overlap.
+
+**Mutants** (reviewer's harness `…/scratchpad/mut8r3/mut.py`, ASCII source,
+escapes written as text; backup by copy, one match, `git diff --quiet`
+non-zero, full pytest, restore by copy in `finally`):
+
+| id | target | change | result | killing test |
+| --- | --- | --- | --- | --- |
+| N12 | `score.py:48` | later groups `\d{3}` | KILLED (3) | test_price_over_1000_rejects_other_numbers[1,798], [1.800], [1 899] |
+| N8 | `score.py:19` | `\D` separator | KILLED (2) | test_price_over_1000_rejects_other_numbers[1-799], [1/799] |
+| N1 | `score.py:42` | `> 1000` | KILLED (1) | test_price_of_exactly_1000_takes_a_separator |
+| N4b/N4c | `score.py:19` | U+202F removed | KILLED (1) | test_price_over_1000_accepts_thousands_separators[1\u202f799] |
+| N4d | `score.py:19` | U+00A0 removed | KILLED (1) | test_price_over_1000_accepts_thousands_separators[1\xa0799] |
+| M13 | `run.py` | abort on any `ModelError` | KILLED | test_a_model_error_on_the_first_case_does_not_abort |
+| M14, M14b | `score.py` | `_norm` removed | KILLED | test_search_keywords_are_normalised_on_both_sides |
+| M43 | `run.py` | `duration_s` 0 | KILLED | test_duration_is_measured_with_the_clock |
+
+Survived: none. Equivalent, carried: N2, N9, M19, M27, and K5/K6
+(practically).
+
+## Not checked
+- **Real model output and the scorer's verdicts on it** (AC6): the price
+  format `qwen3:8b` writes for P-008; `(P-001)` citations; stock wording.
+- **`advisor-eval` against a real Ollama.**
+- **Untested paths** (unchanged since round 1): `--debug` traceback
+  output; the `--report-dir` write failure; `CatalogueError` → exit 2.
+- **Prices with cents at 1000 € or more in real answers:** unit-tested
+  only.
+- **Mutants not re-run this round:** the rest of the N- and K-series and
+  the round-1 set. They were killed in round 2, the source and kit are
+  unchanged, and added tests cannot revive them.
+
+## Live check
+- owed: rule 3 (AC6).
+- steps (Windows PowerShell, in the worktree, before the merge):
+  1. Start Ollama. `ollama list` must show `qwen3:8b`; otherwise run
+     `ollama pull qwen3:8b`.
+  2. `cd C:\Users\eric\src\product-advice-agent-wt\8-offline-evals`. There
+     is no `.env` here or above, so the defaults apply (`ollama`,
+     `qwen3:8b`). No key is needed, and evals don't trace.
+  3. `Remove-Item Env:ADVISOR_MODEL_PROVIDER, Env:ADVISOR_MODEL,
+     Env:ADVISOR_OLLAMA_URL -ErrorAction SilentlyContinue`
+  4. `uv run advisor-eval; echo "exit: $LASTEXITCODE"`. It takes several
+     minutes on CPU.
+  5. `Get-ChildItem evals\runs`; open the newest `.json`.
+  6. Stop Ollama, then run `uv run advisor-eval` once more.
+- you should see:
+  - 15 lines of `PASS`/`FAIL`/`ERROR <id>…`, then `N/15 passed (ollama,
+    qwen3:8b)` and `report: evals\runs\<YYYYMMDDTHHMMSSZ>-ollama.json`;
+    exit 0 if all pass, else 1;
+  - `PASS nc-headphones-under-200`;
+  - `git status --short` shows nothing new;
+  - read 2–3 answers, including `video-editing-laptop` (P-008, 1799 €).
+    "1799", "1,799", "1.799", "1 799", with or without ".00"/",00", all
+    count, so a `prices` FAIL there means the price is missing or wrong.
+    Read `off-topic-poem` and an out-of-stock case too. A verdict you
+    disagree with is a §8 defect (AC6); other FAILs are findings for later
+    intents. Note any answer where "1 799" made P-024 (799 €) pass (the
+    carried LOW);
+  - after step 6, only the "cannot reach" message, exit 1, and no report.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 01a5eda, `git status --short` empty before and after):
+- **Coordinator, re-run:** `git diff --name-only 6e7d305 HEAD -- .
+  ':!intents'` → `tests/test_evals_score.py` only. Matches.
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "88 files already formatted";
+  mypy "Success: no issues found in 17 source files"; pytest "273 passed".
+  Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL with only the
+  owed-live-check error. Matches.
+- **Coordinator, re-run:** the four mutants the rework says it now kills,
+  with my own harness (backup by copy, one replacement, file-changed
+  assertion, full pytest, restore by copy):
+  - N12 KILLED by test_evals_score::test_price_over_1000_rejects_other_numbers[1,798] (3 failed);
+  - N8 KILLED by ::test_price_over_1000_rejects_other_numbers[1-799] (2 failed);
+  - N1 KILLED by ::test_price_of_exactly_1000_takes_a_separator;
+  - N4b KILLED by ::test_price_over_1000_accepts_thousands_separators[1\u202f799].
+
+  Each matches the reviewer and the implementer.
+
+**Reviewer, verified:**
+- `uv lock --check` exit 0.
+- `sdlc:scan --sample-due auto --exclude 8` → "nth attested auto change =
+  4, every 3, sampled: no".
+- The rework diff and the intent diffs read.
+- A non-ASCII scan of the test file (only `€`).
+- 10 mutants, as above.
+- A `price_mentioned` probe at HEAD.
+- Nothing touched `main`; nothing pushed.
+
+**Taken on trust:**
+- the owner's words as recorded in 14a9e8d;
+- `ScriptedModelClient` at the `ModelClient` boundary;
+- round 2's kills of the mutants not re-run.
+
+# Round 2 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 6e7d305bb5300d830bf2f78fc0dc2a555b3fc1ae
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed. It is set by input 1 (`scripts/intent-check-lib.mjs` is the
 kit's enforcement), and input 2 (`review_tier: reviewed`) agrees.
@@ -27,7 +203,7 @@ thousands-separator code behaves as amended B5 says, but its reject tests
 don't vary the parts the code computes. Four mutants on it survive. All the
 fixes are tests: mechanical.
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round 1 | Finding | Resolution | Verified |
 | --- | --- | --- | --- |
 | HIGH | `_norm` unproven (M14, M14b) | `test_search_keywords_are_normalised_on_both_sides` (`tests/test_evals_score.py:126`) | M14, M14b killed |
@@ -41,7 +217,7 @@ fixes are tests: mechanical.
 | LOW | M27, M19 (equivalent); a first-case abort writes no report | unchanged | — |
 | Pass 9 suggestion | the "test inputs make the code irrelevant" class | open (an owner edit to `REVIEW-POLICY.md`); N12 and N8 are the same class again | — |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (only `score.py`, the eval tests, the `CORE_CODE` entry and its kit test, `CLAUDE.md`) |
@@ -63,7 +239,7 @@ module):
 - **U+00A0 and U+202F:** both accepted. This is within the amendment's
   intent (a typeset "1 799"), but U+202F is untested.
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -75,7 +251,7 @@ type-check: FAIL (intent 8, feature)
 The only error is the owed live check (round 1, rule 3): the owner's to
 clear.
 
-## Findings
+### Findings
 - **HIGH** `tests/test_evals_score.py:49`
   (`test_price_over_1000_rejects_other_numbers`), target
   `src/advisor/evals/score.py:48`. No test rejects a grouped number whose
@@ -141,7 +317,7 @@ restore by copy):
   CORE_CODE: wiring and I/O modules are not core, the model interface is".
   K5 and K6 (anchors) SURVIVED, practically equivalent.
 
-## Not checked
+### Not checked
 - **Real model output and the scorer's verdicts on it** (AC6): which price
   format `qwen3:8b` writes for P-008; `(P-001)` citations; stock wording.
 - **`advisor-eval` against a real Ollama.**
@@ -151,7 +327,7 @@ restore by copy):
 - **Prices with cents at 1000 € or more in real answers:** the catalogue
   has none; unit-tested only.
 
-## Live check
+### Live check
 - owed: rule 3 (AC6). Run it after the rework.
 - steps (Windows PowerShell, in the worktree, before the merge):
   1. Start Ollama. `ollama list` must show `qwen3:8b`; otherwise run
@@ -179,7 +355,7 @@ restore by copy):
     findings for later intents;
   - after step 6, only the "cannot reach" message, exit 1, and no report.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 6e7d305, `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
