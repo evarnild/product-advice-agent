@@ -206,3 +206,40 @@ clean.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-11: build (subtasks 1-6)
+
+Commits: `9ab314f` (cases file, validator, scorers and their tests),
+`aa4060b` (runner, `advisor-eval` entry, boundary test, `.gitignore`,
+README, CLAUDE.md), plus the status commit.
+
+Shipped: `src/advisor/evals/{cases,score,run}.py`, `evals/cases.jsonl` (15
+cases as in the plan table), `tests/test_evals_{cases,score,run}.py`, the
+subprocess boundary test, `[project.scripts] advisor-eval`. Tests: 241 pass
+in `npm run verify` (was 187; +54: cases 14, score 27, run 13, boundary 1
+minus none). `uv lock --check` passes with no lock change (a script entry
+adds no dependency).
+
+Mutants (each run once against the full suite, restored by copy, `git status
+--short` clean afterwards), all killed:
+- price regex accepting any digits: `test_price_mentioned_*` (accepts/rejects/cents), `test_a_failing_case_exits_1_and_names_the_reason`;
+- `cited_ids` without boundaries: `test_cited_ids_ignores_longer_or_malformed_tokens` (`P-0011`, `XP-001`, `AP-123x`);
+- stock check dropped: `test_stock`;
+- `max_price` compared with `>=`: `test_search_max_price_category_and_keywords` and three runner tests;
+- exit code always 0: `test_a_failing_case_exits_1_and_names_the_reason` and three more;
+- `ERROR` counted as a pass: `test_a_model_error_marks_error_counts_as_failure_and_run_continues`, `test_later_unreachable_is_an_error_not_an_abort`.
+
+Divergences and choices:
+- Tests were written right after each module, in the same commit, not
+  strictly before it; the mutant run is the check that they bite.
+- `main` also takes an `err` stream (errors and the abort message go to it,
+  per-case lines and the total to `out`). Config errors (missing key,
+  unknown provider, bad Ollama URL) exit 2 as the plan says, where `cli.py`
+  uses 1. A catalogue load error also exits 2.
+- Any non-`ModelError` exception on a case is recorded as `ERROR unexpected
+  <Type>` and the run goes on (tracebacks with `--debug`).
+- A first-case unreachable/not-available abort writes no report.
+- `keywords_any` reads the call's `keywords` argument (the tool's name for
+  it). `in_stock_only` absent in a call counts as false.
+- `scripts/intent-check-lib.mjs` `CORE_CODE` was not touched (outside the
+  plan's file list); `evals/` pure modules are not listed there.

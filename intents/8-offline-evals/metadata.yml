@@ -2,7 +2,7 @@
 id: 8
 slug: offline-evals
 type: feature
-status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+status: in-review         # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: An offline eval suite that scores the advisor's answers against a fixed question set
 review_tier:
 intent_accepted: 2026-11-11 by-agent    # owner: "accept intent 8"
