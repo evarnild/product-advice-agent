@@ -59,3 +59,19 @@ def test_cli_imports_no_http_library_or_provider_module():
             imported.add(node.module)
     assert not {i for i in imported if i.split(".")[0] in {"httpx", "anthropic", "langfuse"}}
     assert not {i for i in imported if i.endswith(("ollama_model", "anthropic_model"))}
+
+
+def test_eval_runner_loads_no_sdk():
+    # A fresh interpreter; adapters are imported lazily by make_client, and the
+    # suite never imports advisor.tracing.
+    code = (
+        "import sys\n"
+        "import advisor.evals.run\n"
+        "bad = sorted(m for m in sys.modules\n"
+        "             if m.split('.')[0] in ('langfuse', 'opentelemetry', 'anthropic', 'httpx')\n"
+        "             or m == 'advisor.tracing')\n"
+        "print(bad)\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]

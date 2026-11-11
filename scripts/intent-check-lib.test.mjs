@@ -391,10 +391,10 @@ describe('language-neutral path rules', () => {
         intentFiles: ['intent.md', 'spec.md', 'plan.md', 'metadata.yml'],
         diff: [{ path, added: 4, deleted: 1 }],
       });
-    for (const path of ['src/advisor/cli.py', 'src/advisor/config.py', 'src/advisor/tracing.py', 'src/advisor/prompts/system.md']) {
+    for (const path of ['src/advisor/cli.py', 'src/advisor/config.py', 'src/advisor/tracing.py', 'src/advisor/prompts/system.md', 'src/advisor/evals/run.py']) {
       expect(checkChange(feature(path)).routes, path).toEqual([]);
     }
-    for (const path of ['src/advisor/agent.py', 'src/advisor/catalogue.py', 'src/advisor/guardrails.py', 'src/advisor/models/anthropic_model.py']) {
+    for (const path of ['src/advisor/agent.py', 'src/advisor/catalogue.py', 'src/advisor/guardrails.py', 'src/advisor/models/anthropic_model.py', 'src/advisor/evals/cases.py', 'src/advisor/evals/score.py']) {
       expect(checkChange(feature(path)).routes.join(), path).toMatch(/Core code .* no test change/);
     }
   });

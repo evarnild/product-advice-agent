@@ -188,6 +188,29 @@ clean.
   3. Open the report and read two or three answers. Do the scorer's
      verdicts match your own reading?
 
+## Amendments
+
+*(2026-11-11, the owner, after review round 1.)*
+
+- **`CORE_CODE`** (owner: "yes cases.py and score.py should be core code").
+  - `scripts/intent-check-lib.mjs` → `CORE_CODE` gains
+    `/^src\/advisor\/evals\/(cases|score)\.py$/`. `run.py` is I/O and
+    stays out.
+  - The comment above `CORE_CODE` says why: the scorers decide pass or
+    fail.
+  - The kit test that pins `CORE_CODE` (`scripts/intent-check-lib.test.mjs`,
+    "narrowed CORE_CODE") lists both files as core and
+    `src/advisor/evals/run.py` as not core.
+  - `CLAUDE.md` says the two are core.
+  - This is a Reviewed-tier path, so `review_tier: reviewed`.
+- **Prices with thousands separators** (owner: "a"). The spec's B5 is
+  amended: a price of 1000 or more also matches "1,799", "1.799" or "1 799",
+  with optional two decimals after it. `price_mentioned` and its tests
+  change accordingly:
+  - "€1,799", "1.799 €", "1 799" and "1,799.00" pass for 1799.0;
+  - "1,79", "11,799" and "1,7990" fail;
+  - a price below 1000 is unchanged ("1,189" must still not match 189).
+
 ## Assumptions I made
 
 - **15 cases** (the spec allows 12–20); the case table is the plan's
@@ -206,3 +229,139 @@ clean.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-11: build (subtasks 1-6)
+
+Commits: `9ab314f` (cases file, validator, scorers and their tests),
+`aa4060b` (runner, `advisor-eval` entry, boundary test, `.gitignore`,
+README, CLAUDE.md), plus the status commit.
+
+Shipped: `src/advisor/evals/{cases,score,run}.py`, `evals/cases.jsonl` (15
+cases as in the plan table), `tests/test_evals_{cases,score,run}.py`, the
+subprocess boundary test, `[project.scripts] advisor-eval`. Tests: 241 pass
+in `npm run verify` (186 before; +55: cases 14, score 27, run 13, boundary 1). `uv lock --check` passes with no lock change (a script entry
+adds no dependency).
+
+Mutants (each run once against the full suite, restored by copy, `git status
+--short` clean afterwards), all killed:
+- price regex accepting any digits: `test_price_mentioned_*` (accepts/rejects/cents), `test_a_failing_case_exits_1_and_names_the_reason`;
+- `cited_ids` without boundaries: `test_cited_ids_ignores_longer_or_malformed_tokens` (`P-0011`, `XP-001`, `AP-123x`);
+- stock check dropped: `test_stock`;
+- `max_price` compared with `>=`: `test_search_max_price_category_and_keywords` and three runner tests;
+- exit code always 0: `test_a_failing_case_exits_1_and_names_the_reason` and three more;
+- `ERROR` counted as a pass: `test_a_model_error_marks_error_counts_as_failure_and_run_continues`, `test_later_unreachable_is_an_error_not_an_abort`.
+
+Divergences and choices:
+- Tests were written right after each module, in the same commit, not
+  strictly before it; the mutant run is the check that they bite.
+- `main` also takes an `err` stream (errors and the abort message go to it,
+  per-case lines and the total to `out`). Config errors (missing key,
+  unknown provider, bad Ollama URL) exit 2 as the plan says, where `cli.py`
+  uses 1. A catalogue load error also exits 2.
+- Any non-`ModelError` exception on a case is recorded as `ERROR unexpected
+  <Type>` and the run goes on (tracebacks with `--debug`).
+- A first-case unreachable/not-available abort writes no report.
+- `keywords_any` reads the call's `keywords` argument (the tool's name for
+  it). `in_stock_only` absent in a call counts as false.
+- `scripts/intent-check-lib.mjs` `CORE_CODE` was not touched (outside the
+  plan's file list); `evals/` pure modules are not listed there.
+
+### 2026-11-11: Rework round 1
+
+Commit: see the "§8: rework round 1" commit (the one touching this entry).
+
+Shipped:
+- Tests for the review's gaps: `keywords_any` normalised on both sides
+  (`test_search_keywords_are_normalised_on_both_sides`); a plain `ModelError`
+  on the first case does not abort; a `RuntimeError` on a middle case gives
+  `ERROR ... unexpected RuntimeError` with no traceback; the report's
+  `cases_sha256` and full `totals`; a ticking clock gives non-zero
+  `duration_s`; four more bad-file rows (`category`, `in_stock_only`,
+  `keywords_any`, `must_decline`).
+- Owner amendment, spec B5: `price_mentioned` accepts a thousands separator
+  (comma, dot, space, no-break spaces) for prices of 1000 or more, with the
+  two decimals after it; shorter or longer digit runs still fail.
+- Owner amendment, plan: `CORE_CODE` gains
+  `src/advisor/evals/(cases|score).py`; the kit's "narrowed CORE_CODE" test
+  lists both as core and `run.py` as not core; CLAUDE.md says so.
+
+Counts: `npm run verify` 266 pytest passed (241 before, +25), kit tests 255
+pass; `npm run check:intent` run after the commit (see the report).
+
+Mutants (once each against the full suite, restore by copy, tree clean), all
+killed: M13 `test_a_model_error_on_the_first_case_does_not_abort`; M14, M14b
+`test_search_keywords_are_normalised_on_both_sides`; M23, M24, M25, M42 the
+matching `test_bad_files_name_the_case_and_field` rows; M32, M38
+`test_a_failing_case_totals_and_case_file_hash_in_the_report`; M34
+`test_an_unexpected_exception_is_an_error_and_the_run_goes_on`; M43
+`test_duration_is_measured_with_the_clock`. New thousands-branch mutants:
+T1 branch off (7 failures, `test_price_over_1000_accepts_thousands_separators`),
+T2 separator removed (7, same test), T3 digit lookbehind dropped
+(`test_price_over_1000_rejects_other_numbers[11,799]`, `[21 799]`,
+`test_price_mentioned_rejects_other_numbers[1189]`), T4 plain form dropped
+(`...accepts_thousands_separators[1799]`,
+`test_price_with_cents_over_1000_accepts_separator`).
+
+### 2026-11-11: Rework round 2
+
+Commit: the "§8: rework round 2" commit that touches this entry. Tests only
+(`tests/test_evals_score.py`); no source change.
+
+- Rejects for 1799.0 gain "1,798", "1.800", "1 899", "1-799", "1/799".
+- New `test_price_of_exactly_1000_takes_a_separator` ("1,000", "1.000,00").
+- The accepts list writes the no-break spaces as escapes (`\u00a0`,
+  `\u202f`), not invisible characters.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+N12 later groups any three digits (`rejects_other_numbers[1,798]`, `[1.800]`,
+`[1 899]`); N8 separator any non-digit (`[1-799]`, `[1/799]`); N1 `>= 1000`
+to `> 1000` (`test_price_of_exactly_1000_takes_a_separator`); N4b no-break
+space removed (`accepts_thousands_separators[1\xa0799]`); N4c narrow
+no-break space removed (`accepts_thousands_separators[1\u202f799]`).
+
+Counts: pytest 273 passed in `npm run verify` (266 before).
+
+### 2026-11-11: Rework (live check, owner "a")
+
+Commit: the "§8: prices check exempts a cited out-of-stock product" commit
+(82f2b4d). Live check found "The Sonavo Quiet Pro (P-004) is out of stock."
+failing `prices` (nc-headphones-under-200). Spec B5 amended by the owner
+(28b47b8): a cited out-of-stock product is exempt from `prices` when the
+answer says "out of stock", case-insensitive.
+
+- `src/advisor/evals/score.py`: new `says_out_of_stock(answer)`, used by both
+  the `prices` exemption and the `stock` check so they cannot drift apart.
+- `tests/test_evals_score.py`: four tests: exempt id passes; same answer
+  without the phrase fails naming P-004; in-stock P-001 without price still
+  fails (P-004 not named) when "out of stock" appears elsewhere;
+  "Out Of Stock" case.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+M1 exemption removed (3 new tests: exempts, in_stock_cited, case_insensitive);
+M2 in-stock condition dropped, exempt any id
+(`test_prices_in_stock_cited_id_still_needs_price_...`); M3 case-insensitivity
+dropped (`test_prices_out_of_stock_exemption_is_case_insensitive`, also
+`test_stock`); M4 "says out of stock" condition dropped
+(`test_prices_out_of_stock_without_saying_so_fails_naming_the_id`).
+
+Counts: pytest 277 passed in `npm run verify` (273 before).
+
+### 2026-11-11: Rework round 4 (manual)
+
+Commit: 7f22550 (tests and README only; `src/` untouched). Fixes review
+round 4: MEDIUM `says_out_of_stock` unpinned, LOW README prices bullet.
+
+- `tests/test_evals_score.py`: `test_near_misses_of_out_of_stock_do_not_count`
+  (3 params: "is in stock.", "is out of budget.", "is out-of-stock." for P-004
+  with no price; each must fail both `stock` and `prices`) and
+  `test_out_of_stock_phrase_counts_mid_text` ("... P-004 is out of stock;
+  ... Kestrel Air Plus (P-005) costs 129 €." passes both; P-005 is 129.0).
+- `README.md`: the **prices** bullet now carries the exemption.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+R5 `"out of"` by the "out of budget" param; R6 `"stock"` by the "in stock"
+and "out-of-stock" params; R7 also accepting `"out-of-stock"` by the
+"out-of-stock" param; R9 `endswith("out of stock.")` by
+`test_out_of_stock_phrase_counts_mid_text`.
+
+Counts: pytest 281 passed in `npm run verify` (277 before).

@@ -19,3 +19,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 infra/langfuse/.env
+
+# Eval run reports (local only)
+evals/runs/

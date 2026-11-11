@@ -28,6 +28,7 @@ npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
+uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
 ```
 
 The kit itself needs Node ≥ 22 and nothing else: no `npm install`. The
@@ -162,6 +163,13 @@ Langfuse stack in `infra/langfuse/`.
   provider registry. `models/anthropic_model.py` is the Anthropic adapter and
   `models/ollama_model.py` the Ollama adapter (the local default, keyless,
   over `/api/chat` with `httpx`, imported only there).
+
+**Offline evals** (`src/advisor/evals/`, console script `advisor-eval`):
+`cases.py` (the case model and file validation) and `score.py` (the
+deterministic checks) are pure and core code (in `CORE_CODE`); `run.py` is the I/O (case file, client,
+clock, stdout, the JSON report in `evals/runs/`) with its own recording
+tracer. It imports neither `advisor.tracing` nor a provider SDK. Cases are
+data in `evals/cases.jsonl`.
 
 **Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
 protocol and the no-op, SDK-free and without I/O, so the pure modules

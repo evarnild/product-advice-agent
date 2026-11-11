@@ -154,6 +154,8 @@ const TEST_RE = [
 export const CORE_CODE = [
   /^src\/advisor\/(agent|catalogue|guardrails)\.py$/,
   /^src\/advisor\/models\//,
+  // The eval scorers decide pass or fail; the runner (run.py) is I/O.
+  /^src\/advisor\/evals\/(cases|score)\.py$/,
 ];
 
 const isTest = (p) => TEST_RE.some((re) => re.test(p));

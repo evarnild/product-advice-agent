@@ -105,6 +105,46 @@ then run `npm run verify` (`tests/test_compose.py` checks the pins).
 `npm run check:pins` (needs Docker and network; not part of verify) shows
 whether each pin still resolves, and the newer MinIO digest.
 
+## Evaluating answers
+
+```
+uv run advisor-eval                       # all cases in evals/cases.jsonl
+uv run advisor-eval --only nc-headphones-under-200,gps-watch
+uv run advisor-eval --cases other.jsonl --report-dir some/dir --debug
+```
+
+The suite asks each question in `evals/cases.jsonl` once, through the same
+agent as `advisor`, and scores the answer with fixed checks. There is no
+judge model. **A run uses a real model**: the local one by default (slow on
+CPU, minutes for the 15 cases), or Anthropic when `ADVISOR_MODEL_PROVIDER` is
+set (cents per run). It reads the same environment and `.env` as `advisor`
+and does not trace to Langfuse.
+
+Each case prints `PASS`, `FAIL` (with the failing reasons) or `ERROR` (the
+model call failed), then a total. A report with the answers, search calls and
+checks goes to `evals/runs/<UTC time>-<provider>.json` (gitignored). Exit
+code 0 when every case passes, 1 when any fails or errors, 2 for a bad case
+file or bad arguments.
+
+Checks (a product is cited by its id, `P-` and three digits, as the prompt
+asks):
+
+- **grounded**: every cited id is in the catalogue.
+- **prices**: each cited product's price appears as a number (not which
+  product it sits next to); a cited out-of-stock product needs none when
+  the answer says "out of stock".
+- **expected** / **forbidden**: the case's `expect_ids` are cited, its
+  `forbid_ids` are not.
+- **declines** (off-topic cases): no product id is cited, or the answer is
+  the refusal text. Wording is not judged.
+- **stock**: a cited out-of-stock product comes with "out of stock".
+- **search** (when the case has `expect_search`): at least one
+  `search_products` call matched `category`, `max_price`, `min_price`,
+  `in_stock_only` and `keywords_any`.
+
+The suite reports; it does not gate anything, and `npm run verify` never runs
+it (it tests the scorers and the runner with a scripted fake).
+
 ## Check
 
 ```
