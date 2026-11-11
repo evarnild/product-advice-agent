@@ -131,7 +131,8 @@ asks):
 
 - **grounded**: every cited id is in the catalogue.
 - **prices**: each cited product's price appears as a number (not which
-  product it sits next to).
+  product it sits next to); a cited out-of-stock product needs none when
+  the answer says "out of stock".
 - **expected** / **forbidden**: the case's `expect_ids` are cited, its
   `forbid_ids` are not.
 - **declines** (off-topic cases): no product id is cited, or the answer is

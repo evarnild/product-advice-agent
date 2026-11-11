@@ -199,3 +199,27 @@ def test_prices_in_stock_cited_id_still_needs_price_when_out_of_stock_said_elsew
 
 def test_prices_out_of_stock_exemption_is_case_insensitive():
     assert verdicts(Case("c", "q"), "The Sonavo Quiet Pro (P-004) is Out Of Stock.")["prices"]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "The Sonavo Quiet Pro (P-004) is in stock.",
+        "The Sonavo Quiet Pro (P-004) is out of budget.",
+        "The Sonavo Quiet Pro (P-004) is out-of-stock.",
+    ],
+)
+def test_near_misses_of_out_of_stock_do_not_count(answer):
+    # Only the exact phrase "out of stock" flags stock and exempts the price.
+    v = verdicts(Case("c", "q"), answer)
+    assert not v["stock"]
+    assert not v["prices"]
+
+
+def test_out_of_stock_phrase_counts_mid_text():
+    answer = (
+        "The Sonavo Quiet Pro (P-004) is out of stock; the Kestrel Air Plus (P-005) costs 129 €."
+    )
+    v = verdicts(Case("c", "q"), answer)
+    assert v["stock"]
+    assert v["prices"]
