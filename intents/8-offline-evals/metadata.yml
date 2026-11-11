@@ -11,8 +11,8 @@ plan_approved: 2026-11-11 by-agent    # auto: owner "/auto 8" (auto_authorized 2
 live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "/auto 8"
-auto_round: 1
-auto_stopped: decision needed
+auto_round: 2
+auto_stopped:
 follows_up:
 links:
   - intents/1-stack-and-skeleton
