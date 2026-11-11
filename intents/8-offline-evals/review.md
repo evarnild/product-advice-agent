@@ -1,13 +1,242 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §8 review — An offline eval suite that scores the advisor's answers against a fixed question set
 
-verdict: escalate
+verdict: rework
 tier: reviewed
-reviewed-commit: 01a5eda9b5b1f3a88b197ea98037ae2e4c35f761
-round: 3
+reviewed-commit: 76fd919b30b707246f103c3166ba6dd1b5b0e5cd
+round: 4
 sampled: no
-run: auto
+run: manual
 live-check: owed
+
+Tier: Reviewed. Input 1 sets it (the branch changes
+`scripts/intent-check-lib.mjs`, the kit's enforcement), and `review_tier:
+reviewed` agrees. This round's findings do not raise it.
+
+Round 4 is manual: `/auto` used its three rounds (`auto_stopped: out of
+rounds, continues by hand`), and the owner typed `/review 8`.
+
+Scope: 01a5eda..76fd919. Outside `intents/`, only `src/advisor/evals/score.py`
+(+17 −3) and `tests/test_evals_score.py` (+27) changed, both in 82f2b4d.
+Inside `intents/`: 28b47b8, the owner's B5 amendment ("a", after the live
+check); 3fa6728 and the resume/stop commits (metadata); 76fd919, a Progress
+entry below the marker (`plan.md` unchanged above it).
+
+The code matches the amended B5 exactly, and extracting
+`says_out_of_stock` leaves the stock check unchanged. The verdict is rework:
+the tests do not pin the phrase itself, so four looser variants of
+`says_out_of_stock` survive (R5, R6, R7, R9); for example "P-004 is in
+stock" would count as flagged. The gap is as old as round 1, but the prices
+check now goes through the same phrase. The fix is tests only, plus a
+README line.
+
+## Round-3 findings: resolution
+| Round 3 | Finding | Resolution |
+| --- | --- | --- |
+| LOW | `plan.md` mutant labels N4b/N4c | carried (unchanged) |
+| LOW | `score.py:50`: "1 189" counts as 189, "1 799" as P-024's 799 | carried; probe at HEAD gives the same |
+| LOW | `intent-check-lib.mjs:158` K5/K6 | carried (`scripts/` unchanged since 01a5eda) |
+| LOW | `intent-check-lib.mjs:144-147` header, `CLAUDE.md:169` | carried (unchanged) |
+| LOW (round 1) | M19/M27 equivalent; a first-case abort writes no report | carried |
+| Live check (AC6) | owner's first run: 9/15; nc-headphones-under-200 and voice-speaker failed `prices` on a flagged out-of-stock id | spec B5 amended (28b47b8); exemption built (82f2b4d); the owner's exact answer now passes `prices`. Owner's second run after 82f2b4d: 11/15, both pass (see Live check) |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (the exemption plus a shared `says_out_of_stock`; the Progress entry names both) |
+| 2 | Type check | pass (at 76fd919, FAIL only on the then-owed live check; PASS at 2e8f827 once it was recorded) |
+| 3 | Behaviour against the spec | pass (amended B5 met word for word; stock check unchanged, probed against 01a5eda) |
+| 4 | Tests prove the behaviour, not only pass | findings (1 MEDIUM: R5, R6, R7, R9 survive on `score.py:57`) |
+| 5 | Conventions | pass (pure module, no I/O, no model; CORE_CODE unchanged) |
+| 6 | Numbers in prose | pass ("277 passed (273 before)" = 273 + 4 tests, reproduced; M1–M4 as stated in Progress, reproduced) |
+| 7 | Documentation | findings (1 LOW: `README.md:133-134`) |
+| 8 | Guardrails and hygiene | pass (ruff, format, mypy green; no dependency change; no secrets) |
+| 9 | Repository-specific footguns | pass (list empty). Suggestion carried and sharpened: "a substring or regex match tested only with inputs that contain it, so loosening it survives" (N8 in round 2, R5/R6 now) |
+
+## Type check
+At the reviewed commit 76fd919 (the reviewer's run):
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 8, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/8-offline-evals/review.md → ## Live check, then set live_checked: <date> in intents/8-offline-evals/metadata.yml.
+  note:  15 file(s), 1156 line(s) changed outside intents/.
+```
+At 2e8f827 (`live_checked` recorded on the owner's "live check was ok";
+the coordinator's run):
+```
+type-check: PASS (intent 8, feature)
+  note:  15 file(s), 1156 line(s) changed outside intents/.
+```
+
+## Pass 3 detail (amended B5)
+- **Per id.** `score.py:111-118`: `flagged` is set once per answer; a cited
+  id is exempt from `prices` only when `flagged and not
+  by_id[i].in_stock`. An in-stock id is never exempt (M2 killed); an
+  out-of-stock id needs the phrase (M4 killed).
+- **"not out of stock"** counts as flagged ("P-004 is not out of stock."
+  passes `stock` and `prices` at HEAD; at 01a5eda it passed `stock` and
+  failed `prices`).
+- **"out-of-stock"** (hyphen), "out\nof stock", two spaces and U+00A0 do
+  not count, for either check, identically before and after.
+- **Stock check unchanged:** the old inline `"out of stock" in
+  answer.lower()` is the helper's body; 11 probe answers give identical
+  `stock` verdicts and reasons at 01a5eda and HEAD.
+- **The owner's live answer** fails `prices` at 01a5eda ("price of P-004
+  not stated") and passes at HEAD; `stock` passes in both.
+- **"1 799"**: unchanged ("P-008 costs 1 799 €. P-024 too." passes
+  `prices`; so does "P-001 costs 1 189 €.").
+
+## Findings
+- **MEDIUM** `src/advisor/evals/score.py:57` (`says_out_of_stock`) — four
+  variants of the phrase match survive the full suite: R6 (`"stock"`: "P-004
+  is in stock" counts as flagged), R5 (`"out of"`: "out of budget" counts),
+  R9 (phrase only at the end: every test answer ends in "out of stock."),
+  R7 (also accepting "out-of-stock": no test pins B5's literal phrase).
+  Before 82f2b4d these loosened only `stock`; now they loosen `prices` too.
+  Needs rework: in `tests/test_evals_score.py`, add answers citing P-004
+  without its price that must fail both `stock` and `prices`: "The Sonavo
+  Quiet Pro (P-004) is in stock." (R6), "… is out of budget." (R5), "… is
+  out-of-stock." (R7; B5's literal "contains 'out of stock'" decides it);
+  and one passing answer with the phrase mid-text, e.g. "The Sonavo Quiet
+  Pro (P-004) is out of stock; the Kestrel Air Plus (P-005) costs 129 €."
+  (R9).
+- **LOW** `README.md:133-134` — the **prices** bullet says "each cited
+  product's price appears as a number" and omits the amended exemption, so
+  a reader expects §7's case to fail on P-004. Needs rework: add "; a
+  cited out-of-stock product needs none when the answer says 'out of
+  stock'" (the amended B5 wording).
+- **LOW** `src/advisor/evals/score.py:111,116` — the flag is answer-wide,
+  as B5 says: one "out of stock" exempts every cited out-of-stock id ("P-004
+  is out of stock. P-032 is a speaker." passes `prices` without P-032's 119
+  €); "not out of stock" counts; "out-of-stock" does not. This is the
+  spec's wording and the stock check's long-standing rule, so no defect.
+  Worth a look: if `qwen3:8b` writes "out-of-stock", changing that is a spec
+  amendment (the owner's).
+- **LOW** `src/advisor/evals/score.py:50` (carried) — "1 189" counts as
+  189, and "1 799" (P-008) as P-024's 799, against the docstring's "Never
+  inside a longer number". Worth a look; a fix changes the rule below 1000,
+  the owner's call.
+- **LOW** `intents/8-offline-evals/plan.md` (Progress, "Rework round 2";
+  carried) — N4b/N4c labels differ from round 2's. Worth a look.
+- **LOW** `scripts/intent-check-lib.mjs:158` (carried) — K5, K6 survive
+  `test:kit`; practically equivalent. Worth a look.
+- **LOW** `scripts/intent-check-lib.mjs:144-147`, `CLAUDE.md:169`
+  (carried) — the header comment doesn't mention evals; the `CLAUDE.md`
+  line is long. Worth a look.
+- **LOW** (round 1, carried) — M19, M27 equivalent; a first-case abort
+  writes no report. Worth a look.
+- **Note:** `main` moved to da7d754 (5 behind, 22 ahead); main's new
+  commits touch only `intents/9-*`, `10-*`, `11-*`, so no overlap.
+
+**Mutants** (reviewer's harness, outside the repo: backup by copy, one
+byte replacement with count 1 asserted, `git diff --quiet` non-zero, full
+pytest with the worktree venv, restore by copy in `finally`; `git status
+--short` empty after):
+
+| id | target | change | result | killing test(s) |
+| --- | --- | --- | --- | --- |
+| M1 | `score.py:116` | exemption line removed | KILLED (3) | test_prices_exempts_out_of_stock_cited_id_that_says_so, test_prices_in_stock_cited_id_still_needs_price_when_out_of_stock_said_elsewhere, test_prices_out_of_stock_exemption_is_case_insensitive |
+| M2 | `score.py:116` | any id exempt | KILLED (1) | test_prices_in_stock_cited_id_still_needs_price_when_out_of_stock_said_elsewhere |
+| M3 | `score.py:57` | `.lower()` dropped | KILLED (2) | test_prices_out_of_stock_exemption_is_case_insensitive, test_stock |
+| M4 | `score.py:116` | phrase not required | KILLED (1) | test_prices_out_of_stock_without_saying_so_fails_naming_the_id |
+| R1 | `score.py:116` | `flagged and in_stock` | KILLED (3) | test_prices_exempts_…, test_prices_in_stock_cited_…, test_prices_…_case_insensitive |
+| R2 | `score.py:116` | `flagged or not in_stock` | KILLED (2) | test_prices_out_of_stock_without_saying_so_…, test_prices_in_stock_cited_… |
+| R3 | `score.py:111` | `flagged = False` | KILLED (4) | test_stock, test_prices_exempts_…, test_prices_in_stock_cited_…, test_prices_…_case_insensitive |
+| R4 | `score.py:111` | `flagged = True` | KILLED (2) | test_stock, test_prices_out_of_stock_without_saying_so_… |
+| R5 | `score.py:57` | `"out of"` | **SURVIVED** | none |
+| R6 | `score.py:57` | `"stock"` | **SURVIVED** | none |
+| R7 | `score.py:57` | also `"out-of-stock"` | **SURVIVED** | none |
+| R8 | `score.py:157` | case-sensitive phrase in the stock check | KILLED (1) | test_stock |
+| R9 | `score.py:57` | `endswith("out of stock.")` | **SURVIVED** | none |
+
+Survived: R5, R6, R7, R9, all on `score.py:57`; the MEDIUM rework is
+expected to kill all four.
+
+## Not checked
+- **Real answers that write "out-of-stock" or other stock wording:** the
+  owner's second run had none failing `prices`, but the answers were not
+  read for the wording.
+- **`advisor-eval` against a real Ollama** by the reviewer or coordinator
+  (the owner ran it).
+- **Untested paths** (unchanged since round 1): `--debug` traceback
+  output; the `--report-dir` write failure; `CatalogueError` → exit 2.
+- **Mutants not re-run:** the round 1–3 series on `run.py`, `cases.py`,
+  `price_mentioned` and the kit; those files are unchanged since 01a5eda
+  and the tests only grew.
+- **`uv lock --check`:** not re-run; no dependency file changed.
+
+## Live check
+- owed: rule 3 (AC6), re-run because the scorer changed in 82f2b4d.
+- **Done:** the owner ran it after 82f2b4d (report
+  `evals/runs/20261111T095353Z-ollama.json`, started 09:53:53Z; 82f2b4d is
+  09:46:44Z) and said "live check was ok"; recorded as `live_checked:
+  2026-11-11 by-agent` in 2e8f827. That run: 11/15,
+  `PASS nc-headphones-under-200`, `PASS voice-speaker`; the four FAILs
+  (sport-earbuds, video-editing-laptop, tv-sound, out-of-stock-quiet-pro)
+  are model behaviour, no `prices` failure.
+- The MEDIUM and LOW rework touch tests and `README.md` only, so this run
+  stands for the reworked branch unless the rework touches `score.py`.
+- Steps, if it must be redone (Windows PowerShell, in the worktree):
+  1. Start Ollama; `ollama list` shows `qwen3:8b`.
+  2. `cd C:\Users\eric\src\product-advice-agent-wt\8-offline-evals` (no
+     `.env`: `ollama`, `qwen3:8b`).
+  3. `Remove-Item Env:ADVISOR_MODEL_PROVIDER, Env:ADVISOR_MODEL,
+     Env:ADVISOR_OLLAMA_URL -ErrorAction SilentlyContinue`
+  4. `uv run advisor-eval; echo "exit: $LASTEXITCODE"`
+  5. Open the newest `evals\runs\*.json`.
+  6. Stop Ollama and run it again.
+- You should see: 15 case lines, `N/15 passed (ollama, qwen3:8b)` and a
+  `report:` line; `PASS nc-headphones-under-200` (a `prices` FAIL naming an
+  out-of-stock id is a §8 defect only if the answer contains "out of
+  stock"); after step 6 only the "cannot reach" message, exit 1, no report.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 2e8f827, which adds only `metadata.yml` to 76fd919; `git status --short` empty before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `pass 255, fail
+  0`; ruff "All checks passed!"; "88 files already formatted"; mypy
+  "Success: no issues found in 17 source files"; pytest "277 passed".
+  Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS. The reviewer's
+  FAIL at 76fd919 was the owed live check only, since recorded (2e8f827);
+  no other difference.
+- **Coordinator, re-run:** the four survivors with my own harness (backup
+  by copy, one replacement, file-changed assertion, full pytest, restore
+  by copy): R5, R6, R7, R9 each SURVIVED, 277 passed. Matches.
+- **Coordinator, read:** the owner's second report's `started`
+  (09:53:53Z) is after 82f2b4d's commit time (09:46:44Z), so the recorded
+  live check ran the amended scorer; and `README.md:133-134` as quoted.
+
+**Reviewer, verified** (HEAD 76fd919, nothing checked out):
+- `git diff --name-only 01a5eda HEAD`; the code, test, spec, plan and
+  metadata diffs read; `git show 28b47b8 --stat` (`spec.md` only).
+- `npm run verify` exit 0 (255 kit, 277 pytest); `npm run check:intent`
+  FAIL, live check only.
+- `npm run sdlc:scan -- --sample-due manual --exclude 8` → "nth attested
+  manual change = 1, every 5, sampled: no".
+- 11 probe answers through HEAD's and 01a5eda's `score.py` against the
+  real catalogue (pass 3).
+- 13 mutants as tabled; `git status --short` empty after.
+- `main...HEAD` = 5 / 22, main's side `intents/9-*`, `10-*`, `11-*` only;
+  nothing pushed, nothing touched `main`.
+
+**Taken on trust:**
+- the owner's live-check results and their "a" choice (28b47b8);
+- the round 1–3 mutant results for files unchanged since 01a5eda;
+- that `qwen3:8b` wrote the answer quoted from the first run (the
+  reviewer probed that exact text).
+
+# Round 3 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: 01a5eda9b5b1f3a88b197ea98037ae2e4c35f761
+- round: 3
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed. It is set by input 1 (the branch changes
 `scripts/intent-check-lib.mjs`, the kit's enforcement), and `review_tier:
@@ -25,7 +254,7 @@ removed on its own). No new finding needs rework. The tier is Reviewed, so
 the verdict is escalate: the owner reads the diff, and the live check (AC6)
 is still owed.
 
-## Round-2 findings: resolution
+### Round-2 findings: resolution
 | Round 2 | Finding | Resolution | Verified |
 | --- | --- | --- | --- |
 | HIGH | N12 (`score.py:48`): wrong later groups not rejected | "1,798", "1.800", "1 899" in `test_price_over_1000_rejects_other_numbers` (`tests/test_evals_score.py:60-79`) | N12 KILLED (3 failed) |
@@ -38,7 +267,7 @@ is still owed.
 | LOW (round 1) | M27, M19 equivalent; a first-case abort writes no report | carried | — |
 | Pass 9 suggestion | "test inputs make the code irrelevant" | open (an owner edit to `REVIEW-POLICY.md`) | — |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (tests only; no source, kit or docs change) |
@@ -51,7 +280,7 @@ is still owed.
 | 8 | Guardrails and hygiene | pass (`uv lock --check` exit 0; no secrets) |
 | 9 | Repository-specific footguns | pass (list empty; suggestion carried) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -62,7 +291,7 @@ type-check: FAIL (intent 8, feature)
 ```
 The only error is the owed live check (rule 3, AC6): the owner's to clear.
 
-## Findings
+### Findings
 - **LOW** `intents/8-offline-evals/plan.md` (Progress, "Rework round 2") —
   the plan calls "U+00A0 removed" N4b and "U+202F removed" N4c, while round
   2's review defines N4b as U+202F removed. All are killed; only the labels
@@ -98,7 +327,7 @@ non-zero, full pytest, restore by copy in `finally`):
 Survived: none. Equivalent, carried: N2, N9, M19, M27, and K5/K6
 (practically).
 
-## Not checked
+### Not checked
 - **Real model output and the scorer's verdicts on it** (AC6): the price
   format `qwen3:8b` writes for P-008; `(P-001)` citations; stock wording.
 - **`advisor-eval` against a real Ollama.**
@@ -110,7 +339,7 @@ Survived: none. Equivalent, carried: N2, N9, M19, M27, and K5/K6
   the round-1 set. They were killed in round 2, the source and kit are
   unchanged, and added tests cannot revive them.
 
-## Live check
+### Live check
 - owed: rule 3 (AC6).
 - steps (Windows PowerShell, in the worktree, before the merge):
   1. Start Ollama. `ollama list` must show `qwen3:8b`; otherwise run
@@ -139,7 +368,7 @@ Survived: none. Equivalent, carried: N2, N9, M19, M27, and K5/K6
     carried LOW);
   - after step 6, only the "cannot reach" message, exit 1, and no report.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 01a5eda, `git status --short` empty before and after):
 - **Coordinator, re-run:** `git diff --name-only 6e7d305 HEAD -- .
