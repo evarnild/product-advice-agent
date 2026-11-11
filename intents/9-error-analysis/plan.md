@@ -389,3 +389,39 @@ Divergences from the plan:
 - `p` saves a pass and stays on the page; `Enter` in the critique box saves
   and moves on (B10 names only `Enter` as moving).
 - `CORE_CODE` is not changed (the plan's assumption).
+
+### 2026-11-11 — Rework round 1
+
+Commits: `43bd508` (the four findings and their tests) and the commit of this
+entry. Tests: pytest 464 -> 472; kit tests unchanged (255).
+
+- **HIGH, unknown tool calls.** `RecordingTracer.tool` now records every
+  call, in call order (unknown tools, bad arguments and successes), as
+  `tools`. The `_recording_tool` wrapper no longer owns the list: it hands
+  the products a tool returned to the tracer (`offer_results`), and the
+  agent's next `tool()` report claims them, so `results` still come from the
+  wrapper (B6). `_turns` in the viewer is unchanged; it is right once the
+  list is complete. New tests: `test_an_unknown_tool_call_is_recorded_in_order_with_error_true`
+  (failed on the old `run.py`), and
+  `test_each_tool_call_renders_under_its_own_turn` (calls in two turns).
+- **MEDIUM, `.sesskey`.** `FastHTML(..., secret_key=secrets.token_hex(32))`;
+  `.sesskey` removed from git and added to `.gitignore`;
+  `test_make_app_writes_no_file_in_the_working_directory` (failed before).
+- **MEDIUM, BLOCKED guardrail.** `test_a_blocked_guardrail_shows_as_blocked_with_its_reason`.
+- **MEDIUM, socket guard.** `tests/conftest.py` compares `co_filename` with
+  `socket.__file__`. Four tests in `test_no_network.py`, each failing one
+  condition (compiled with `compile(src, filename, "exec")`); the
+  `websocket.py` one failed on the old `endswith` check.
+- **LOW (Origin and Host checks): not done.** The viewer does not know its
+  port inside `make_app`, and the test client's host is `testserver`, so a
+  correct check needs more plumbing than a small change; left for the owner
+  to decide.
+- Mutants, re-run (full pytest, restore by copy): V12 killed by
+  `test_each_tool_call_renders_under_its_own_turn`; V13 by
+  `test_a_blocked_guardrail_shows_as_blocked_with_its_reason`; C1 by
+  `test_another_function_in_the_socket_module_file_is_blocked`; C2 by
+  `test_the_right_function_name_in_another_file_is_blocked`; C3 by
+  `test_the_socketpair_function_in_the_socket_file_may_not_leave_loopback`;
+  dropping the tracer's tool record (R5) and not offering results (R6) by
+  `test_the_report_keeps_turns_tools_with_results_and_guardrails`; removing
+  `secret_key` (S1) by the no-file test.
