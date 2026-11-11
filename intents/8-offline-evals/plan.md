@@ -320,3 +320,28 @@ space removed (`accepts_thousands_separators[1\xa0799]`); N4c narrow
 no-break space removed (`accepts_thousands_separators[1\u202f799]`).
 
 Counts: pytest 273 passed in `npm run verify` (266 before).
+
+### 2026-11-11: Rework (live check, owner "a")
+
+Commit: the "§8: prices check exempts a cited out-of-stock product" commit
+(82f2b4d). Live check found "The Sonavo Quiet Pro (P-004) is out of stock."
+failing `prices` (nc-headphones-under-200). Spec B5 amended by the owner
+(28b47b8): a cited out-of-stock product is exempt from `prices` when the
+answer says "out of stock", case-insensitive.
+
+- `src/advisor/evals/score.py`: new `says_out_of_stock(answer)`, used by both
+  the `prices` exemption and the `stock` check so they cannot drift apart.
+- `tests/test_evals_score.py`: four tests: exempt id passes; same answer
+  without the phrase fails naming P-004; in-stock P-001 without price still
+  fails (P-004 not named) when "out of stock" appears elsewhere;
+  "Out Of Stock" case.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+M1 exemption removed (3 new tests: exempts, in_stock_cited, case_insensitive);
+M2 in-stock condition dropped, exempt any id
+(`test_prices_in_stock_cited_id_still_needs_price_...`); M3 case-insensitivity
+dropped (`test_prices_out_of_stock_exemption_is_case_insensitive`, also
+`test_stock`); M4 "says out of stock" condition dropped
+(`test_prices_out_of_stock_without_saying_so_fails_naming_the_id`).
+
+Counts: pytest 277 passed in `npm run verify` (273 before).
