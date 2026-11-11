@@ -3,11 +3,227 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: 6a534f60c5bcf187fa2d8c77a3356e8d6bd24c24
-round: 1
+reviewed-commit: 6e7d305bb5300d830bf2f78fc0dc2a555b3fc1ae
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed. It is set by input 1 (`scripts/intent-check-lib.mjs` is the
+kit's enforcement), and input 2 (`review_tier: reviewed`) agrees.
+
+Scope: 6a534f6..6e7d305:
+- 6f724aa, 7263a8a: the round-1 review and stop;
+- 14a9e8d: the owner's amendments to `spec.md` B5 and `plan.md` →
+  "## Amendments";
+- 630b551: the rework;
+- 6e7d305: `auto_round: 2`.
+
+The rework edits `plan.md` only below the Progress marker.
+
+**Round 1 is resolved:** all 11 survivors are now killed, and the
+`CORE_CODE` change matches the owner's amendment exactly. The new
+thousands-separator code behaves as amended B5 says, but its reject tests
+don't vary the parts the code computes. Four mutants on it survive. All the
+fixes are tests: mechanical.
+
+## Round-1 findings: resolution
+| Round 1 | Finding | Resolution | Verified |
+| --- | --- | --- | --- |
+| HIGH | `_norm` unproven (M14, M14b) | `test_search_keywords_are_normalised_on_both_sides` (`tests/test_evals_score.py:126`) | M14, M14b killed |
+| HIGH | a first-case plain `ModelError` must not abort (M13) | `test_a_model_error_on_the_first_case_does_not_abort` (`tests/test_evals_run.py:106`) | M13 killed |
+| MEDIUM | an unexpected exception becomes ERROR, the run goes on (M34) | `test_an_unexpected_exception_is_an_error_and_the_run_goes_on` (`:115`) | killed |
+| MEDIUM | `cases_sha256`, `failed` (M32, M38) | `test_a_failing_case_totals_and_case_file_hash_in_the_report` (`:123`) | killed |
+| MEDIUM | `duration_s` (M43) | `test_duration_is_measured_with_the_clock` (`:132`) | killed |
+| MEDIUM | four validations (M23, M24, M25, M42) | four rows in `test_bad_files_name_the_case_and_field` (`tests/test_evals_cases.py:70-79`) | killed |
+| MEDIUM, Needs decision | thousands separators for prices ≥ 1000 | owner chose "a"; spec B5 amended; `price_mentioned` accepts them, with tests | behaviour correct; test gaps below |
+| Owner decision | `cases.py`, `score.py` join `CORE_CODE` | done as amended: regex and comment (`scripts/intent-check-lib.mjs:157-158`), kit test (`scripts/intent-check-lib.test.mjs:394,397`), `CLAUDE.md:169` | K1–K4 killed by the kit test |
+| LOW | M27, M19 (equivalent); a first-case abort writes no report | unchanged | — |
+| Pass 9 suggestion | the "test inputs make the code irrelevant" class | open (an owner edit to `REVIEW-POLICY.md`); N12 and N8 are the same class again | — |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (only `score.py`, the eval tests, the `CORE_CODE` entry and its kit test, `CLAUDE.md`) |
+| 2 | Type check | pass (FAIL only on the owed live check: the owner's to clear; no ROUTE, so the core change with tests is handled correctly) |
+| 3 | Behaviour against the spec | pass (two LOW notes) |
+| 4 | Tests prove the behaviour, not only pass | findings (4) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass ("266 … +25", "kit 255" reproduced) |
+| 7 | Documentation | pass (one LOW) |
+| 8 | Guardrails and hygiene | pass (no new dependency; `uv lock --check` exit 0) |
+| 9 | Repository-specific footguns | pass (list empty; suggestion repeated) |
+
+**Pass 3, amended B5** (`score.py:34-51`, plus a probe against the real
+module):
+- **Accepted for 1799:** "1,799", "1.799", "1 799", "1,799.00",
+  "1.799,00".
+- **Rejected:** "1,79", "11,799", "1,7990", "21 799".
+- **Below 1000:** unchanged ("1,189" and "1.189" rejected for 189).
+- **U+00A0 and U+202F:** both accepted. This is within the amendment's
+  intent (a typeset "1 799"), but U+202F is untested.
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 8, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/8-offline-evals/review.md → ## Live check, then set live_checked: <date> in intents/8-offline-evals/metadata.yml.
+  note:  15 file(s), 1083 line(s) changed outside intents/.
+```
+The only error is the owed live check (round 1, rule 3): the owner's to
+clear.
+
+## Findings
+- **HIGH** `tests/test_evals_score.py:49`
+  (`test_price_over_1000_rejects_other_numbers`), target
+  `src/advisor/evals/score.py:48`. No test rejects a grouped number whose
+  later groups are the wrong digits. N12 (later groups replaced by `\d{3}`)
+  survives, so "1,800" or "1.000" would count as the price of a 1799 €
+  product. AC2 requires "a price with the wrong number". Needs rework: add
+  "1,798", "1.800" and "1 899" to the rejects for 1799.0.
+- **MEDIUM** `tests/test_evals_score.py:49`, target `score.py:19`
+  (`_GROUP_SEP`). No test rejects a separator outside the spec's list. N8
+  (`_GROUP_SEP = "\D"`) survives, so "1-799" or "1/799" would count. Needs
+  rework: add "1-799" and "1/799" to the rejects.
+- **MEDIUM** `score.py:42` (`if whole >= 1000:`). The spec's boundary
+  ("1000 or more") is untested: N1 (`> 1000`) survives. N2 (`if True:`) is
+  equivalent. Needs rework: `assert price_mentioned("1,000", 1000.0)` and
+  `assert price_mentioned("1.000,00", 1000.0)`.
+- **LOW** `tests/test_evals_score.py:43`, target `score.py:19`. The accepts
+  parametrize has a literal, invisible U+00A0 in `"1 799"`, which reads like
+  a plain space. U+202F, which the code accepts, is untested: N4b (dropping
+  `\u202f`) survives. Needs rework: write it `"1\u00a0799"` and add
+  `"1\u202f799"`.
+- **LOW** `score.py:50` — the lookbehinds exclude a digit, or a digit
+  followed by `.` or `,`, before the price, but not a digit followed by a
+  space. So "1 189" counts for 189, and "1 799" (P-008) also counts as
+  P-024's 799 €. This follows the amendment ("below 1000 unchanged") but
+  contradicts the docstring's "Never inside a longer number". Low risk
+  with the current cases. Worth a look: watch for it in the live check. A
+  fix changes the rule for prices below 1000, which is the owner's call.
+- **LOW** `scripts/intent-check-lib.mjs:158` — dropping the new entry's `$`
+  or `^` survives `npm run test:kit` (K5, K6). The existing entries'
+  anchors are unpinned too, and paths are repo-relative, so this is
+  practically equivalent. Worth a look.
+- **LOW** documentation — the header comment above `CORE_CODE`
+  (`scripts/intent-check-lib.mjs:144-147`) still lists only the agent loop,
+  the search, the guardrails and the model interface (the inline comment
+  covers evals); `CLAUDE.md:169` is a long unwrapped line. Worth a look.
+- **Note:** the branch is 3 commits behind `main`, in `intents/9-*` and
+  `intents/10-*` only, so no overlap.
+
+**Mutants** (reviewer's harness `…/scratchpad/mut8r2/mut.py`; backup by copy,
+one match, `git diff --quiet` non-zero, full pytest or `npm run test:kit`,
+restore by copy):
+- **Round-1 survivors, all KILLED:**
+  - M13: test_a_model_error_on_the_first_case_does_not_abort;
+  - M14, M14b: test_search_keywords_are_normalised_on_both_sides;
+  - M23, M24, M25, M42: the `test_bad_files_name_the_case_and_field` rows;
+  - M32, M38: test_a_failing_case_totals_and_case_file_hash_in_the_report;
+  - M34: test_an_unexpected_exception_is_an_error_and_the_run_goes_on;
+  - M43: test_duration_is_measured_with_the_clock.
+- **New thousands-separator code, KILLED:** N3 (branch off), N4 (both
+  no-break spaces removed), N5–N7 (space, dot or comma removed), N10–N11
+  (groups of 2 or 4), N13–N14 (plain or grouped form dropped), N15–N17
+  (cents), N18–N21 (lookbehinds and lookaheads).
+- **Survived:**
+  - N12 `score.py:48`: later groups `\d{3}`;
+  - N8 `score.py:19`: `\D` separator;
+  - N1 `score.py:42`: `> 1000`;
+  - N4b `score.py:19`: `\u202f` removed.
+
+  A rework is expected to kill all four.
+- **Equivalent:** N2 (`if True:`), N9 (separator optional).
+- **`CORE_CODE`:** K1 (`score` dropped), K2 (`cases` dropped), K3 (widened
+  to all of `evals/`) and K4 (line removed) are KILLED by "narrowed
+  CORE_CODE: wiring and I/O modules are not core, the model interface is".
+  K5 and K6 (anchors) SURVIVED, practically equivalent.
+
+## Not checked
+- **Real model output and the scorer's verdicts on it** (AC6): which price
+  format `qwen3:8b` writes for P-008; `(P-001)` citations; stock wording.
+- **`advisor-eval` against a real Ollama.**
+- **Untested paths** (unchanged since round 1, not mutated): `--debug`
+  traceback output; the `--report-dir` write failure; `CatalogueError` →
+  exit 2.
+- **Prices with cents at 1000 € or more in real answers:** the catalogue
+  has none; unit-tested only.
+
+## Live check
+- owed: rule 3 (AC6). Run it after the rework.
+- steps (Windows PowerShell, in the worktree, before the merge):
+  1. Start Ollama. `ollama list` must show `qwen3:8b`; otherwise run
+     `ollama pull qwen3:8b`.
+  2. `cd C:\Users\eric\src\product-advice-agent-wt\8-offline-evals`. There
+     is no `.env` here or above, so the defaults apply (`ollama`,
+     `qwen3:8b`). No key is needed, and evals don't trace.
+  3. `Remove-Item Env:ADVISOR_MODEL_PROVIDER, Env:ADVISOR_MODEL,
+     Env:ADVISOR_OLLAMA_URL -ErrorAction SilentlyContinue`
+  4. `uv run advisor-eval; echo "exit: $LASTEXITCODE"`. It takes several
+     minutes on CPU.
+  5. `Get-ChildItem evals\runs`; open the newest `.json`.
+  6. Stop Ollama, then run `uv run advisor-eval` once more.
+- you should see:
+  - 15 lines of `PASS`/`FAIL`/`ERROR <id>…`, then `N/15 passed (ollama,
+    qwen3:8b)` and `report: evals\runs\<YYYYMMDDTHHMMSSZ>-ollama.json`;
+    exit 0 if all pass, else 1;
+  - `PASS nc-headphones-under-200`;
+  - `git status --short` shows nothing new;
+  - read 2–3 answers, including `video-editing-laptop` (P-008, 1799 €):
+    "1799", "1,799", "1.799", "1 799" and any of these followed by
+    ".00"/",00" **now count**, so a `prices` FAIL there means the price is
+    really missing or wrong. Read `off-topic-poem` and an out-of-stock case
+    too. A verdict you disagree with is a §8 defect (AC6); other FAILs are
+    findings for later intents;
+  - after step 6, only the "cannot reach" message, exit 1, and no report.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 6e7d305, `git status --short` empty before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
+  255, fail 0`; ruff "All checks passed!"; "88 files already formatted";
+  mypy "Success: no issues found in 17 source files"; pytest "266 passed".
+  Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL with only the
+  owed-live-check error. Matches.
+- **Coordinator, re-run:** the four survivors with my own harness (backup
+  by copy, one replacement, file-changed assertion, full pytest, restore by
+  copy): N1, N4b, N8 and N12 each SURVIVED ("266 passed"). Matches.
+  - My first attempt at N4b found no match, and nothing was changed: my
+    harness file had saved `\u00a0` as the literal character. I fixed the
+    harness and re-ran N4b, N8 and N12.
+- **Coordinator, re-run:** sampled round-1 survivors, now killed:
+  - M13 by test_evals_run::test_a_model_error_on_the_first_case_does_not_abort;
+  - M14 by test_evals_score::test_search_keywords_are_normalised_on_both_sides;
+  - M43 by test_evals_run::test_duration_is_measured_with_the_clock.
+
+  Each matches the reviewer.
+
+**Reviewer, verified:**
+- `uv lock --check` exit 0.
+- `sdlc:scan --sample-due auto --exclude 8` → "nth attested auto change =
+  4, every 3, sampled: no".
+- 33 Python mutants and 6 kit mutants, as above.
+- A probe of `price_mentioned` (`…/mut8r2/edge.py`).
+- The catalogue scan: ≥ 1000 € are P-008, P-010, P-011, P-017; P-024 is
+  799.
+- The diffs read; nothing touched `main`; nothing pushed.
+
+**Taken on trust:**
+- the owner's words as recorded in 14a9e8d;
+- `ScriptedModelClient` at the `ModelClient` boundary.
+
+# Round 1 (history)
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 6a534f60c5bcf187fa2d8c77a3356e8d6bd24c24
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 **Tier:**
 - **Input 1 (paths):** Attested. `src/advisor/evals/**` is `src/**`, plus
@@ -23,7 +239,7 @@ live-check: owed
   `scripts/intent-check-lib.mjs`, the kit's enforcement, which is
   Reviewed by path.
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (only the plan's files; `agent.py`, `catalogue.py`, `guardrails.py`, `prompts/`, `tracing.py`, `cli.py`, `models/`, `config.py`, data unchanged; `uv.lock` unchanged) |
@@ -62,7 +278,7 @@ live-check: owed
   Worth a look.
 - **(e)** `CORE_CODE`: decided by the owner (see Tier).
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -71,7 +287,7 @@ type-check: PASS (intent 8, feature)
   note:  13 file(s), 978 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **HIGH** `tests/test_evals_score.py` (`test_search_max_price_category_and_keywords`),
   target `src/advisor/evals/score.py:59-60` — AC2 requires proof with a
   hyphenated keyword for `keywords_any`, but `["noise"]` against
@@ -161,7 +377,7 @@ pytest, restore by copy):
   - M43 `run.py:228`, `duration_s` hard-coded to 0;
   - M27 `run.py:55` and M19 `score.py:117`: equivalent; no rework.
 
-## Not checked
+### Not checked
 - **Real model output and the scorer's verdicts on it** (AC6): price
   formats above 1000 €; whether `qwen3:8b` cites ids in the `(P-001)` form;
   the stock wording in `voice-speaker` and `out-of-stock-quiet-pro`.
@@ -170,7 +386,7 @@ pytest, restore by copy):
 - **The `--report-dir` write-failure path** (`run.py:196`) and the
   `CatalogueError` → exit 2 path (`run.py:110`): untested, not mutated.
 
-## Live check
+### Live check
 - owed: rule 3 (real model output and the scorer's verdicts on it; AC6).
   Run it after the rework.
 - steps (Windows PowerShell, in the worktree, before the merge):
@@ -197,7 +413,7 @@ pytest, restore by copy):
   - with Ollama off: only the "cannot reach" message, exit 1, and no
     report.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/8-offline-evals` at 6a534f6, `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `tests 255, pass
