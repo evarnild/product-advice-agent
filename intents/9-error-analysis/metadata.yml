@@ -2,7 +2,7 @@
 id: 9
 slug: error-analysis
 type: feature
-status: accepted
+status: in-review
 title: Error analysis on top of the eval suite: synthetic questions by dimension, a trace viewer and pass/fail labels with critiques
 review_tier:
 intent_accepted: 2026-11-11 by-agent    # owner: "go with a custom viewer, accept intent 9"
