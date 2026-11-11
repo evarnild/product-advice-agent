@@ -151,6 +151,52 @@ asks):
 The suite reports; it does not gate anything, and `npm run verify` never runs
 it (it tests the scorers and the runner with a scripted fake).
 
+### Error analysis: from questions to failure modes
+
+The first loop of the field guide, on top of the suite. Every command here
+that calls a model uses the local one by default and never runs from
+`npm run verify`.
+
+```
+uv run advisor-analysis generate                     # ~60 questions -> evals/generated.jsonl
+uv run advisor-eval --cases evals/generated.jsonl    # a report that keeps every conversation
+uv run advisor-analysis view evals/runs/<report>.json   # label them at http://127.0.0.1:5209
+uv run advisor-analysis taxonomy evals/labels/<report>.jsonl   # draft failure modes
+uv run advisor-analysis counts evals/runs/<report>.json        # the tables
+```
+
+1. **generate** asks the model for questions only, one call per cell of
+   feature x scenario x persona (two questions a cell, `--count`, `--seed`,
+   `--force` to overwrite). Each question comes with a *probe*, the
+   `search_products` arguments it expresses, and is kept only if the probe
+   fits its scenario against the real catalogue (a "no match" question must
+   match nothing, and so on). It prints asked / kept / dropped per scenario.
+   Read and edit `evals/generated.jsonl` before you use it. Cases carry an
+   optional `dimensions` object (`feature`, `scenario`, `persona`).
+2. **advisor-eval** records, per case, the model turns, each tool call with
+   the products it returned, and the guardrail checks, plus `prompt_sha256`
+   in the report.
+3. **view** is a local page (127.0.0.1 only, `--port`): one conversation per
+   screen. `p` labels pass, `f` labels fail and moves to the critique box,
+   `Enter` saves the critique and goes to the next one, `j` / `k` move on and
+   back. A fail needs a critique. Filter by dimension, label or status.
+   Every change is saved at once.
+4. **Labels** go to `evals/labels/<report name>.jsonl` (committed): one JSON
+   line per change with `case_id`, `label` (`pass` or `fail`), `critique`,
+   `labelled_at` (UTC), `question` and `answer`. The last line for a
+   `case_id` is the current label. Other tools may write the same format.
+5. **taxonomy** sends the critiques of the fails to the model in one call and
+   writes `evals/taxonomy.draft.json` (not committed). Edit it and save it as
+   `evals/taxonomy.json` (committed): `labels` (the labels file it maps),
+   `modes` (`id`, `name`, `description`) and `mapping` (failed case id to
+   mode ids). Every failed case needs a mode.
+6. **counts** prints failed conversations per mode, per mode and dimension,
+   and where the automatic status and your label disagree (`--out` also
+   writes them to a file). It reports; it changes no check.
+
+No model grades an answer: you label every conversation. Reports stay local
+(`evals/runs/`); questions, labels and the taxonomy are committed.
+
 ## Check
 
 ```

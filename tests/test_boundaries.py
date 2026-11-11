@@ -75,3 +75,45 @@ def test_eval_runner_loads_no_sdk():
     )
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+# --- §9: the web framework lives in the viewer only -------------------------
+
+
+def test_only_the_viewer_imports_the_web_framework():
+    for package in ("fasthtml", "starlette", "uvicorn"):
+        assert _importers(package) == {"evals/view.py"}, package
+
+
+_WEB = ("fasthtml", "starlette", "uvicorn")
+_SDKS = ("langfuse", "opentelemetry", "anthropic", "httpx")
+
+
+def _loads_none_of(modules: str, banned: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+    code = (
+        "import sys\n"
+        f"for name in {modules!r}.split(','):\n"
+        "    __import__(name)\n"
+        f"bad = sorted(m for m in sys.modules if m.split('.')[0] in {banned!r})\n"
+        "print(bad)\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+
+
+def test_pure_analysis_modules_load_no_web_framework_and_no_sdk():
+    pure = "cases,coverage,labels,taxonomy,counts,report,modeljson,generate"
+    modules = ",".join(f"advisor.evals.{m}" for m in pure.split(","))
+    result = _loads_none_of(modules, _WEB + _SDKS)
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_the_command_and_the_runner_load_no_web_framework_until_view_runs():
+    result = _loads_none_of("advisor.evals.analysis,advisor.evals.run", _WEB + _SDKS)
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_the_checker_catches_a_banned_import():
+    # Guards the guard: a module that does load the framework is reported.
+    result = _loads_none_of("advisor.evals.view", _WEB)
+    assert result.returncode == 1
