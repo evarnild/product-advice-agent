@@ -72,7 +72,10 @@ than repeating them, and records the decisions that have no other home.
   - **prices:** for every cited id, the product's price appears in the
     answer as a number. A whole price counts in integer form ("189") or
     with two decimals ("189.00" / "189,00"); a price with cents counts only
-    with its two decimals;
+    with its two decimals. A price of 1000 or more also counts with a
+    thousands separator: "1,799", "1.799" or "1 799" (and with two decimals
+    after it, e.g. "1,799.00" / "1.799,00"). *(Amended 2026-11-11, owner:
+    "a", review round 1's Needs decision.)*;
   - **expected:** every `expect_ids` id is cited;
   - **forbidden:** no `forbid_ids` id is cited;
   - **declines** (only for `must_decline`): the answer cites no id, or

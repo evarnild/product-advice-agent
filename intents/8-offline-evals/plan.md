@@ -188,6 +188,29 @@ clean.
   3. Open the report and read two or three answers. Do the scorer's
      verdicts match your own reading?
 
+## Amendments
+
+*(2026-11-11, the owner, after review round 1.)*
+
+- **`CORE_CODE`** (owner: "yes cases.py and score.py should be core code").
+  - `scripts/intent-check-lib.mjs` → `CORE_CODE` gains
+    `/^src\/advisor\/evals\/(cases|score)\.py$/`. `run.py` is I/O and
+    stays out.
+  - The comment above `CORE_CODE` says why: the scorers decide pass or
+    fail.
+  - The kit test that pins `CORE_CODE` (`scripts/intent-check-lib.test.mjs`,
+    "narrowed CORE_CODE") lists both files as core and
+    `src/advisor/evals/run.py` as not core.
+  - `CLAUDE.md` says the two are core.
+  - This is a Reviewed-tier path, so `review_tier: reviewed`.
+- **Prices with thousands separators** (owner: "a"). The spec's B5 is
+  amended: a price of 1000 or more also matches "1,799", "1.799" or "1 799",
+  with optional two decimals after it. `price_mentioned` and its tests
+  change accordingly:
+  - "€1,799", "1.799 €", "1 799" and "1,799.00" pass for 1799.0;
+  - "1,79", "11,799" and "1,7990" fail;
+  - a price below 1000 is unchanged ("1,189" must still not match 189).
+
 ## Assumptions I made
 
 - **15 cases** (the spec allows 12–20); the case table is the plan's
