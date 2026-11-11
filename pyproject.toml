@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 advisor = "advisor.cli:main"
+advisor-eval = "advisor.evals.run:main"
 
 [dependency-groups]
 dev = [
