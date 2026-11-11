@@ -4,7 +4,7 @@ slug: offline-evals
 type: feature
 status: in-review         # draft | accepted | in-progress | in-review | done | abandoned | deferred
 title: An offline eval suite that scores the advisor's answers against a fixed question set
-review_tier:
+review_tier: reviewed    # round 1 HIGH findings; owner: cases.py and score.py join CORE_CODE (scripts/intent-check-lib.mjs)
 intent_accepted: 2026-11-11 by-agent    # owner: "accept intent 8"
 spec_accepted: 2026-11-11 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-11 by-agent    # auto: owner "/auto 8" (auto_authorized 2026-11-11)
@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "/auto 8"
 auto_round: 1
-auto_stopped:
+auto_stopped: decision needed
 follows_up:
 links:
   - intents/1-stack-and-skeleton
