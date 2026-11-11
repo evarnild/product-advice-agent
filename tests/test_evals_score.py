@@ -39,6 +39,24 @@ def test_price_with_cents_needs_two_decimals():
     assert not price_mentioned("only 19.9", 19.99)
 
 
+@pytest.mark.parametrize(
+    "text", ["€1,799", "1.799 €", "1 799 euros", "1,799.00", "1.799,00", "1799", "1799.00", "1 799"]
+)
+def test_price_over_1000_accepts_thousands_separators(text):
+    assert price_mentioned(text, 1799.0)
+
+
+@pytest.mark.parametrize("text", ["1,79", "11,799", "1,7990", "1,799.5", "799", "21 799", "1.7990"])
+def test_price_over_1000_rejects_other_numbers(text):
+    assert not price_mentioned(text, 1799.0)
+
+
+def test_price_with_cents_over_1000_accepts_separator():
+    assert price_mentioned("1,234.56", 1234.56)
+    assert price_mentioned("1234,56", 1234.56)
+    assert not price_mentioned("1,234", 1234.56)
+
+
 GOOD = "The Auralis Calm 300 (P-001) costs 189 euros."
 
 
@@ -103,6 +121,18 @@ def test_search_max_price_category_and_keywords():
     assert not verdicts(case, GOOD, [call(keywords=["wireless"])])["search"]
     assert not verdicts(case, GOOD, [])["search"]
     assert verdicts(case, GOOD, [call(max_price=999), call()])["search"]  # any one call
+
+
+def test_search_keywords_are_normalised_on_both_sides():
+    def ok(want, got):
+        case = Case("c", "q", expect_search={"keywords_any": want})
+        return verdicts(case, GOOD, [{"keywords": got}])["search"]
+
+    assert ok(["noise cancelling"], ["Noise-Cancelling"])  # hyphen and case, call side
+    assert ok(["noise-cancelling"], ["noise cancelling"])  # hyphen, case-file side
+    assert ok(["noise"], ["NOISE"])
+    assert ok(["NOISE"], ["noise"])
+    assert not ok(["noise"], ["wireless"])
 
 
 def test_search_min_price_and_stock_only():

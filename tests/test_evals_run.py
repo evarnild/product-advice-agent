@@ -1,6 +1,7 @@
+import hashlib
 import io
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from advisor.evals.run import main
 from advisor.models.base import (
@@ -55,7 +56,12 @@ def write_cases(tmp_path, cases=CASES):
     return path
 
 
-def run(tmp_path, script, *extra, cases=CASES, env=ENV):
+def ticking_clock(step_seconds=1.5):
+    ticks = iter(range(10_000))
+    return lambda: CLOCK_TIME + timedelta(seconds=step_seconds * next(ticks))
+
+
+def run(tmp_path, script, *extra, cases=CASES, env=ENV, now=lambda: CLOCK_TIME):
     out, err = io.StringIO(), io.StringIO()
     factory = Factory(script)
     code = main(
@@ -70,7 +76,7 @@ def run(tmp_path, script, *extra, cases=CASES, env=ENV):
         client_factory=factory,
         out=out,
         err=err,
-        now=lambda: CLOCK_TIME,
+        now=now,
     )
     return code, out.getvalue(), err.getvalue(), factory
 
@@ -90,6 +96,44 @@ def test_a_failing_case_exits_1_and_names_the_reason(tmp_path):
     assert out.splitlines()[0].startswith("FAIL hp: ")
     assert "price of P-001 not stated" in out
     assert "2/3 passed" in out
+
+
+def report_of(tmp_path):
+    (path,) = list((tmp_path / "runs").iterdir())
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_a_model_error_on_the_first_case_does_not_abort(tmp_path):
+    code, out, err, factory = run(tmp_path, [ModelError("boom")] + LAP_OK + OFF_OK)
+    assert code == 1
+    assert out.splitlines()[:3] == ["ERROR hp: boom", "PASS lap", "PASS off"]
+    assert "2/3 passed" in out
+    assert len(factory.client.requests) == 3
+    assert report_of(tmp_path)["cases"][0]["status"] == "ERROR"
+
+
+def test_an_unexpected_exception_is_an_error_and_the_run_goes_on(tmp_path):
+    code, out, err, _ = run(tmp_path, HP_OK + [RuntimeError("x")] + OFF_OK)
+    assert code == 1
+    assert out.splitlines()[:3] == ["PASS hp", "ERROR lap: unexpected RuntimeError", "PASS off"]
+    assert "Traceback" not in err and "Traceback" not in out
+    assert report_of(tmp_path)["totals"]["errors"] == 1
+
+
+def test_a_failing_case_totals_and_case_file_hash_in_the_report(tmp_path):
+    code, _, _, _ = run(tmp_path, HP_BAD + LAP_OK + OFF_OK)
+    assert code == 1
+    report = report_of(tmp_path)
+    assert report["totals"] == {"total": 3, "passed": 2, "failed": 1, "errors": 0}
+    expected = hashlib.sha256((tmp_path / "cases.jsonl").read_bytes()).hexdigest()
+    assert report["cases_sha256"] == expected
+
+
+def test_duration_is_measured_with_the_clock(tmp_path):
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, now=ticking_clock(1.5))
+    durations = [c["duration_s"] for c in report_of(tmp_path)["cases"]]
+    assert all(d > 0 for d in durations)
+    assert durations == [1.5, 1.5, 1.5]
 
 
 def test_a_model_error_marks_error_counts_as_failure_and_run_continues(tmp_path):

@@ -15,6 +15,10 @@ from advisor.guardrails import REFUSAL_TEXT
 _ID_RE = re.compile(r"(?<![A-Za-z0-9])P-\d{3}(?!\d)")
 
 
+# Between thousands groups: comma, dot, space, no-break space, narrow no-break space.
+_GROUP_SEP = "[,. \u00a0\u202f]"
+
+
 @dataclass(frozen=True)
 class Check:
     name: str
@@ -29,9 +33,20 @@ def cited_ids(answer: str) -> list[str]:
 
 def price_mentioned(answer: str, price: float) -> bool:
     """The price appears as a number: a whole price as "189", "189.00" or "189,00";
-    a price with cents only with its two decimals. Never inside a longer number."""
+    a price with cents only with its two decimals. A price of 1000 or more also
+    counts with a thousands separator ("1,799", "1.799", "1 799"), then with its
+    two decimals if any ("1,799.00", "1.799,00"). Never inside a longer number."""
     whole, frac = divmod(round(price * 100), 100)
-    body = rf"{whole}(?:[.,]00)?" if frac == 0 else rf"{whole}[.,]{frac:02d}"
+    digits = str(whole)
+    number = digits
+    if whole >= 1000:
+        groups: list[str] = []
+        while digits:
+            groups.insert(0, digits[-3:])
+            digits = digits[:-3]
+        # Plain, or grouped by a comma, dot or (non-breaking) space.
+        number = "(?:" + str(whole) + "|" + _GROUP_SEP.join(groups) + ")"
+    body = rf"{number}(?:[.,]00)?" if frac == 0 else rf"{number}[.,]{frac:02d}"
     pattern = rf"(?<!\d)(?<!\d[.,]){body}(?!\d)(?![.,]\d)"
     return re.search(pattern, answer) is not None
 

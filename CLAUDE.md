@@ -166,7 +166,7 @@ Langfuse stack in `infra/langfuse/`.
 
 **Offline evals** (`src/advisor/evals/`, console script `advisor-eval`):
 `cases.py` (the case model and file validation) and `score.py` (the
-deterministic checks) are pure; `run.py` is the I/O (case file, client,
+deterministic checks) are pure and core code (in `CORE_CODE`); `run.py` is the I/O (case file, client,
 clock, stdout, the JSON report in `evals/runs/`) with its own recording
 tracer. It imports neither `advisor.tracing` nor a provider SDK. Cases are
 data in `evals/cases.jsonl`.

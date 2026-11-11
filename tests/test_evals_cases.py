@@ -67,6 +67,16 @@ def test_blank_lines_are_ignored_and_defaults_apply():
         (line() + "\n{not json", ["line 2", "not valid JSON"]),
         (line(question=""), ["case 'c1'", "'question'"]),
         (line(expect_search={"max_price": "cheap"}), ["'expect_search'", "max_price"]),
+        (line(expect_search={"category": "toaster"}), ["case 'c1'", "'expect_search'", "category"]),
+        (
+            line(expect_search={"in_stock_only": "yes"}),
+            ["case 'c1'", "'expect_search'", "in_stock"],
+        ),
+        (
+            line(expect_search={"keywords_any": []}),
+            ["case 'c1'", "'expect_search'", "keywords_any"],
+        ),
+        (line(must_decline="yes"), ["case 'c1'", "'must_decline'"]),
         ("", ["no cases"]),
     ],
 )

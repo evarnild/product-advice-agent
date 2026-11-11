@@ -265,3 +265,39 @@ Divergences and choices:
   it). `in_stock_only` absent in a call counts as false.
 - `scripts/intent-check-lib.mjs` `CORE_CODE` was not touched (outside the
   plan's file list); `evals/` pure modules are not listed there.
+
+### 2026-11-11: Rework round 1
+
+Commit: see the "§8: rework round 1" commit (the one touching this entry).
+
+Shipped:
+- Tests for the review's gaps: `keywords_any` normalised on both sides
+  (`test_search_keywords_are_normalised_on_both_sides`); a plain `ModelError`
+  on the first case does not abort; a `RuntimeError` on a middle case gives
+  `ERROR ... unexpected RuntimeError` with no traceback; the report's
+  `cases_sha256` and full `totals`; a ticking clock gives non-zero
+  `duration_s`; four more bad-file rows (`category`, `in_stock_only`,
+  `keywords_any`, `must_decline`).
+- Owner amendment, spec B5: `price_mentioned` accepts a thousands separator
+  (comma, dot, space, no-break spaces) for prices of 1000 or more, with the
+  two decimals after it; shorter or longer digit runs still fail.
+- Owner amendment, plan: `CORE_CODE` gains
+  `src/advisor/evals/(cases|score).py`; the kit's "narrowed CORE_CODE" test
+  lists both as core and `run.py` as not core; CLAUDE.md says so.
+
+Counts: `npm run verify` 266 pytest passed (241 before, +25), kit tests 255
+pass; `npm run check:intent` run after the commit (see the report).
+
+Mutants (once each against the full suite, restore by copy, tree clean), all
+killed: M13 `test_a_model_error_on_the_first_case_does_not_abort`; M14, M14b
+`test_search_keywords_are_normalised_on_both_sides`; M23, M24, M25, M42 the
+matching `test_bad_files_name_the_case_and_field` rows; M32, M38
+`test_a_failing_case_totals_and_case_file_hash_in_the_report`; M34
+`test_an_unexpected_exception_is_an_error_and_the_run_goes_on`; M43
+`test_duration_is_measured_with_the_clock`. New thousands-branch mutants:
+T1 branch off (7 failures, `test_price_over_1000_accepts_thousands_separators`),
+T2 separator removed (7, same test), T3 digit lookbehind dropped
+(`test_price_over_1000_rejects_other_numbers[11,799]`, `[21 799]`,
+`test_price_mentioned_rejects_other_numbers[1189]`), T4 plain form dropped
+(`...accepts_thousands_separators[1799]`,
+`test_price_with_cents_over_1000_accepts_separator`).
