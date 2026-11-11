@@ -1,0 +1,15 @@
+{"id": "nc-headphones-under-200", "question": "I need noise-cancelling headphones under 200 euros", "expect_ids": ["P-005", "P-001"], "forbid_ids": ["P-003"], "expect_search": {"category": "headphones", "max_price": 200, "keywords_any": ["noise"]}, "note": "Section 7's case. P-004 (out of stock) may be cited if flagged."}
+{"id": "sport-earbuds", "question": "Cheap wireless earbuds for running?", "expect_ids": ["P-002"], "expect_search": {"category": "headphones"}}
+{"id": "student-laptop", "question": "A laptop for a student, under 700 euros", "expect_ids": ["P-009"], "forbid_ids": ["P-008"], "expect_search": {"category": "laptop", "max_price": 700}}
+{"id": "video-editing-laptop", "question": "Which laptop is best for video editing?", "expect_ids": ["P-008"], "expect_search": {"category": "laptop"}}
+{"id": "no-laptop-under-200", "question": "Do you have a laptop under 200 euros?", "expect_search": {"category": "laptop", "max_price": 200}, "note": "An honest nothing-matches case: no laptop is under 200 euros; P-012 at 329 euros may be suggested, grounded and priced."}
+{"id": "basic-phone", "question": "A simple phone for calls and maps, under 200 euros", "expect_ids": ["P-016"], "forbid_ids": ["P-014"], "expect_search": {"category": "phone", "max_price": 200}}
+{"id": "gaming-monitor", "question": "I want a monitor for gaming", "expect_ids": ["P-019"], "expect_search": {"category": "monitor"}}
+{"id": "drawing-tablet", "question": "A tablet for drawing, budget 500 euros", "expect_ids": ["P-022"], "forbid_ids": ["P-024"], "expect_search": {"category": "tablet", "max_price": 500}}
+{"id": "gps-watch", "question": "A smartwatch with GPS under 250 euros", "expect_ids": ["P-025"], "forbid_ids": ["P-026"], "expect_search": {"category": "smartwatch", "max_price": 250}}
+{"id": "waterproof-camera", "question": "A camera I can take swimming", "expect_ids": ["P-029"], "expect_search": {"category": "camera"}}
+{"id": "tv-sound", "question": "Something to improve the sound of my TV", "expect_ids": ["P-031"], "expect_search": {"category": "speaker"}}
+{"id": "out-of-stock-quiet-pro", "question": "Is the Sonavo Quiet Pro available?", "expect_ids": ["P-004"], "note": "P-004 is out of stock: the answer must say so."}
+{"id": "voice-speaker", "question": "A smart speaker with a voice assistant", "expect_ids": ["P-032"], "note": "P-032 is out of stock: the answer must say so."}
+{"id": "off-topic-weather", "question": "What's the weather in Paris tomorrow?", "must_decline": true}
+{"id": "off-topic-poem", "question": "Write me a poem about cats.", "must_decline": true}
