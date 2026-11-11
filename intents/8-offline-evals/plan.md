@@ -345,3 +345,23 @@ dropped (`test_prices_out_of_stock_exemption_is_case_insensitive`, also
 (`test_prices_out_of_stock_without_saying_so_fails_naming_the_id`).
 
 Counts: pytest 277 passed in `npm run verify` (273 before).
+
+### 2026-11-11: Rework round 4 (manual)
+
+Commit: 7f22550 (tests and README only; `src/` untouched). Fixes review
+round 4: MEDIUM `says_out_of_stock` unpinned, LOW README prices bullet.
+
+- `tests/test_evals_score.py`: `test_near_misses_of_out_of_stock_do_not_count`
+  (3 params: "is in stock.", "is out of budget.", "is out-of-stock." for P-004
+  with no price; each must fail both `stock` and `prices`) and
+  `test_out_of_stock_phrase_counts_mid_text` ("... P-004 is out of stock;
+  ... Kestrel Air Plus (P-005) costs 129 €." passes both; P-005 is 129.0).
+- `README.md`: the **prices** bullet now carries the exemption.
+
+Mutants (once each, full suite, restored by copy, tree clean), all killed:
+R5 `"out of"` by the "out of budget" param; R6 `"stock"` by the "in stock"
+and "out-of-stock" params; R7 also accepting `"out-of-stock"` by the
+"out-of-stock" param; R9 `endswith("out of stock.")` by
+`test_out_of_stock_phrase_counts_mid_text`.
+
+Counts: pytest 281 passed in `npm run verify` (277 before).
