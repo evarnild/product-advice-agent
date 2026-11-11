@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "/auto 8"
 auto_round:
-auto_stopped:
+auto_stopped: spec questions
 follows_up:
 links:
   - intents/1-stack-and-skeleton
