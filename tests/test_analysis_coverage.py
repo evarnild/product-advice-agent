@@ -80,6 +80,12 @@ def test_spelling_differs_keyword_must_not_appear_verbatim():
     assert "verbatim" in reason("spelling-differs", probe, "noise cancelling")
 
 
+def test_spelling_differs_compares_a_capitalised_keyword_case_insensitively():
+    probe = Probe(category="headphones", keywords=("Noise Cancelling",))
+    assert not ok("spelling-differs", probe, "noise cancelling headphones")
+    assert ok("spelling-differs", probe, "noise-cancelling headphones")
+
+
 def test_spelling_differs_needs_a_match_and_keywords():
     assert not ok("spelling-differs", Probe(category="laptop", keywords=("zzzz",)), "q")
     assert "no keywords" in reason("spelling-differs", Probe(category="laptop"), "q")
