@@ -75,7 +75,10 @@ than repeating them, and records the decisions that have no other home.
     with its two decimals. A price of 1000 or more also counts with a
     thousands separator: "1,799", "1.799" or "1 799" (and with two decimals
     after it, e.g. "1,799.00" / "1.799,00"). *(Amended 2026-11-11, owner:
-    "a", review round 1's Needs decision.)*;
+    "a", review round 1's Needs decision.)* An out-of-stock product is
+    exempt when the answer contains "out of stock" (case-insensitive, as
+    in **stock**): naming it only to flag it needs no price. *(Amended
+    2026-11-11, owner: "a", live check: §7's case failed on P-004.)*;
   - **expected:** every `expect_ids` id is cited;
   - **forbidden:** no `forbid_ids` id is cited;
   - **declines** (only for `must_decline`): the answer cites no id, or
