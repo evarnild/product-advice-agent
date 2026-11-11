@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 8
+slug: offline-evals
+type: feature
+status: accepted          # draft | accepted | in-progress | in-review | done | abandoned | deferred
+title: An offline eval suite that scores the advisor's answers against a fixed question set
+review_tier:
+intent_accepted: 2026-11-11 by-agent    # owner: "accept intent 8"
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/1-stack-and-skeleton
+  - intents/2-local-model
+  - intents/7-search-hyphens
