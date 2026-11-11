@@ -10,7 +10,7 @@ spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-11 by-agent    # owner: "/auto 11"
+auto_authorized: 2026-11-11 by-agent    # owner: "a /auto 11"
 auto_round: 1
 auto_stopped: decision needed
 follows_up:
