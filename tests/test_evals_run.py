@@ -240,3 +240,96 @@ def test_expect_search_is_read_through_the_recording_tracer(tmp_path):
 def test_the_suite_does_not_write_outside_the_report_dir(tmp_path):
     run(tmp_path, HP_OK + LAP_OK + OFF_OK)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["cases.jsonl", "runs"]
+
+
+ANTHROPIC_ENV = {
+    "ADVISOR_MODEL_PROVIDER": "anthropic",
+    "ADVISOR_MODEL": "claude-env-model",
+    "ANTHROPIC_API_KEY": "test-key-not-real",
+}
+
+
+def test_provider_flag_wins_over_the_environment_and_uses_its_default_model(tmp_path):
+    code, out, _, factory = run(
+        tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "ollama", env=ANTHROPIC_ENV
+    )
+    assert code == 0
+    assert factory.calls == [("ollama", "qwen3:8b", None, "http://localhost:11434")]
+    assert "3/3 passed (ollama, qwen3:8b)" in out
+    assert report_of(tmp_path)["provider"] == "ollama"
+    (path,) = list((tmp_path / "runs").iterdir())
+    assert path.name.endswith("-ollama.json")
+
+
+def test_provider_flag_uses_the_anthropic_default_model_and_key(tmp_path):
+    env = {**ENV, "ANTHROPIC_API_KEY": "test-key-not-real"}
+    code, out, _, factory = run(
+        tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "anthropic", env=env
+    )
+    assert code == 0
+    assert factory.calls == [("anthropic", "claude-haiku-5-5", "test-key-not-real", None)]
+    assert "(anthropic, claude-haiku-5-5)" in out
+    assert "test-key-not-real" not in out
+
+
+def test_provider_flag_naming_the_env_provider_still_takes_the_default_model(tmp_path):
+    env = {
+        **ENV,
+        "ADVISOR_MODEL_PROVIDER": "anthropic",
+        "ADVISOR_MODEL": "claude-other-model",
+        "ANTHROPIC_API_KEY": "test-key-not-real",
+    }
+    code, out, _, factory = run(
+        tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "anthropic", env=env
+    )
+    assert code == 0
+    assert factory.calls == [("anthropic", "claude-haiku-5-5", "test-key-not-real", None)]
+    assert "claude-other-model" not in out
+
+
+def test_provider_flag_naming_the_env_provider_ignores_env_model_for_ollama(tmp_path):
+    env = {**ENV, "ADVISOR_MODEL_PROVIDER": "ollama", "ADVISOR_MODEL": "env-model"}
+    code, _, _, factory = run(tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "ollama", env=env)
+    assert code == 0
+    assert factory.calls == [("ollama", "qwen3:8b", None, "http://localhost:11434")]
+
+
+def test_model_flag_alone_overrides_only_the_model(tmp_path):
+    code, out, _, factory = run(tmp_path, HP_OK + LAP_OK + OFF_OK, "--model", "other-model")
+    assert code == 0
+    assert factory.calls == [("ollama", "other-model", None, "http://localhost:11434")]
+    assert "(ollama, other-model)" in out
+
+
+def test_provider_and_model_flags_together(tmp_path):
+    code, _, _, factory = run(
+        tmp_path,
+        HP_OK + LAP_OK + OFF_OK,
+        "--provider",
+        "ollama",
+        "--model",
+        "m2",
+        env=ANTHROPIC_ENV,
+    )
+    assert code == 0
+    assert factory.calls == [("ollama", "m2", None, "http://localhost:11434")]
+
+
+def test_without_flags_the_environment_decides(tmp_path):
+    code, _, _, factory = run(tmp_path, HP_OK + LAP_OK + OFF_OK, env=ANTHROPIC_ENV)
+    assert code == 0
+    assert factory.calls == [("anthropic", "claude-env-model", "test-key-not-real", None)]
+
+
+def test_unknown_provider_flag_exits_2_listing_the_known_ones(tmp_path, capsys):
+    code, _, _, factory = run(tmp_path, [], "--provider", "nope")
+    assert code == 2
+    assert factory.calls == []
+    assert "ollama" in capsys.readouterr().err
+
+
+def test_anthropic_flag_without_a_key_exits_2(tmp_path):
+    code, out, err, factory = run(tmp_path, [], "--provider", "anthropic")
+    assert code == 2
+    assert "Missing ANTHROPIC_API_KEY" in err
+    assert factory.calls == []

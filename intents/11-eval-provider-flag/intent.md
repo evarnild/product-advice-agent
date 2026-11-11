@@ -22,8 +22,10 @@ uses Anthropic unless the owner remembers to change it.
   `ADVISOR_MODEL_PROVIDER` says in the environment or `.env`; the total
   line and the report name show the provider used.
 - `--model <name>` overrides the model the same way; without it, the
-  provider's default model applies (`qwen3:8b`, `claude-haiku-5-5`) when the
-  flag changes the provider, else `ADVISOR_MODEL` as today.
+  provider's default model applies (`qwen3:8b`, `claude-haiku-5-5`) whenever
+  `--provider` is given, even if it names the provider the environment
+  already selects; without `--provider`, `ADVISOR_MODEL` as today.
+  *(Amended 2026-11-11, owner: "a", review round 1's Needs decision.)*
 - Without the flags, behaviour is unchanged. An unknown `--provider` value
   exits 2 with the known providers listed (argparse `choices`); `--provider
   anthropic` without `ANTHROPIC_API_KEY` exits 2 with today's message.

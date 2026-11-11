@@ -111,7 +111,13 @@ whether each pin still resolves, and the newer MinIO digest.
 uv run advisor-eval                       # all cases in evals/cases.jsonl
 uv run advisor-eval --only nc-headphones-under-200,gps-watch
 uv run advisor-eval --cases other.jsonl --report-dir some/dir --debug
+uv run advisor-eval --provider ollama     # local model (qwen3:8b unless --model)
+uv run advisor-eval --provider anthropic  # claude-haiku-5-5 unless --model; needs ANTHROPIC_API_KEY
 ```
+
+`--provider` and `--model` win over `ADVISOR_MODEL_PROVIDER` and
+`ADVISOR_MODEL`; `--provider` without `--model` uses that provider's default
+model. An Anthropic run **costs money** and needs `ANTHROPIC_API_KEY`.
 
 The suite asks each question in `evals/cases.jsonl` once, through the same
 agent as `advisor`, and scores the answer with fixed checks. There is no

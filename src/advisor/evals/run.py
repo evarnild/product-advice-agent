@@ -14,13 +14,14 @@ import json
 import sys
 import traceback
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TextIO
 
 from advisor.agent import answer_question, search_tool
 from advisor.catalogue import CatalogueError, load_catalogue
-from advisor.config import ConfigError, load_env, load_settings
+from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
 from advisor.evals.cases import Case, CaseFileError, parse_cases
 from advisor.evals.score import Check, score
 from advisor.models import KNOWN_PROVIDERS, make_client
@@ -73,6 +74,12 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--cases", type=Path, default=DEFAULT_CASES, help="the JSON-lines case file")
     p.add_argument("--only", default="", help="comma-separated case ids to run")
     p.add_argument("--report-dir", type=Path, default=DEFAULT_REPORT_DIR)
+    p.add_argument(
+        "--provider",
+        choices=KNOWN_PROVIDERS,
+        help="model provider for this run (overrides ADVISOR_MODEL_PROVIDER)",
+    )
+    p.add_argument("--model", help="model name (overrides ADVISOR_MODEL)")
     p.add_argument("--debug", action="store_true", help="show tracebacks")
     return p
 
@@ -124,6 +131,12 @@ def main(
         cases = [c for c in cases if c.id in wanted]
 
     settings = load_settings(load_env(env))
+    if args.provider:
+        settings = replace(
+            settings, provider=args.provider, model=DEFAULT_MODELS.get(args.provider, "")
+        )
+    if args.model:
+        settings = replace(settings, model=args.model)
     if settings.provider not in KNOWN_PROVIDERS:
         return fail(
             f"Unknown model provider '{settings.provider}'. "
