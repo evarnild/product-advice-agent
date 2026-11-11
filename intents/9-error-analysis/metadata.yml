@@ -6,13 +6,13 @@ status: accepted
 title: Error analysis on top of the eval suite: synthetic questions by dimension, a trace viewer and pass/fail labels with critiques
 review_tier:
 intent_accepted: 2026-11-11 by-agent    # owner: "go with a custom viewer, accept intent 9"
-spec_accepted:
+spec_accepted: 2026-11-11 by-agent    # owner: "yes" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-11 by-agent    # owner: "/auto 9"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    builds on its question set, runner and checks
