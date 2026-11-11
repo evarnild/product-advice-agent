@@ -216,8 +216,7 @@ README, CLAUDE.md), plus the status commit.
 Shipped: `src/advisor/evals/{cases,score,run}.py`, `evals/cases.jsonl` (15
 cases as in the plan table), `tests/test_evals_{cases,score,run}.py`, the
 subprocess boundary test, `[project.scripts] advisor-eval`. Tests: 241 pass
-in `npm run verify` (was 187; +54: cases 14, score 27, run 13, boundary 1
-minus none). `uv lock --check` passes with no lock change (a script entry
+in `npm run verify` (186 before; +55: cases 14, score 27, run 13, boundary 1). `uv lock --check` passes with no lock change (a script entry
 adds no dependency).
 
 Mutants (each run once against the full suite, restored by copy, `git status
