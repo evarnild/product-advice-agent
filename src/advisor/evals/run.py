@@ -48,6 +48,14 @@ class RecordingTracer:
         self.searches: list[dict[str, object]] = []
         self.turns: list[dict[str, Any]] = []
         self.guardrails: list[dict[str, Any]] = []
+        # Every tool call the agent reports, in call order (unknown tools and bad
+        # arguments included); `results` come from the `_recording_tool` wrapper.
+        self.tools: list[dict[str, Any]] = []
+        self._pending_results: list[dict[str, Any]] | None = None
+
+    def offer_results(self, results: list[dict[str, Any]]) -> None:
+        """The products a tool just returned; the agent's next `tool()` report claims them."""
+        self._pending_results = results
 
     def begin(self, question: str) -> None:
         pass
@@ -59,6 +67,15 @@ class RecordingTracer:
         self.turns.append({"text": text, "tools": list(tool_names)})
 
     def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
+        results, self._pending_results = self._pending_results, None
+        self.tools.append(
+            {
+                "name": name,
+                "arguments": dict(arguments),
+                "results": [] if error or results is None else results,
+                "error": error,
+            }
+        )
         if name == "search_products":
             self.searches.append(dict(arguments))
 
@@ -69,24 +86,17 @@ class RecordingTracer:
         pass
 
 
-def _recording_tool(tool: Tool, sink: list[dict[str, Any]]) -> Tool:
-    """`tool` with the same behaviour, appending each call and its results to `sink` (§9 B6).
+def _recording_tool(tool: Tool, tracer: RecordingTracer) -> Tool:
+    """`tool` with the same behaviour, handing its results to `tracer` (§9 B6).
 
     It returns exactly what the tool returned and re-raises what it raised, so
-    the agent cannot tell the difference.
+    the agent cannot tell the difference. The call itself is recorded by the
+    tracer's `tool()`, which the agent also calls for tools it never runs.
     """
 
     def run(args: dict[str, Any]) -> list[dict[str, Any]]:
-        entry: dict[str, Any] = {
-            "name": tool.spec.name,
-            "arguments": dict(args),
-            "results": [],
-            "error": True,
-        }
-        sink.append(entry)
         results = tool.run(args)
-        entry["results"] = results
-        entry["error"] = False
+        tracer.offer_results(results)
         return results
 
     return Tool(tool.spec, run)
@@ -193,14 +203,11 @@ def main(
     for index, case in enumerate(cases):
         began = now()
         tracer = RecordingTracer()
-        tool_calls: list[dict[str, Any]] = []
         answer = ""
         checks: list[Check] = []
         error: str | None = None
         try:
-            answer = answer_question(
-                case.question, client, [_recording_tool(tool, tool_calls)], tracer
-            )
+            answer = answer_question(case.question, client, [_recording_tool(tool, tracer)], tracer)
             checks = score(case, answer, tracer.searches, catalogue)
         except (ModelUnreachableError, ModelNotAvailableError) as e:
             if args.debug:
@@ -216,9 +223,7 @@ def main(
             if args.debug:
                 traceback.print_exc(file=err)
             error = f"unexpected {type(e).__name__}"
-        results.append(
-            _record(case, answer, tracer.searches, checks, error, now() - began, tracer, tool_calls)
-        )
+        results.append(_record(case, answer, tracer.searches, checks, error, now() - began, tracer))
         if error is not None:
             print(_result_line("ERROR", case.id, error), file=out)
         else:
@@ -262,7 +267,6 @@ def _record(
     error: str | None,
     duration: Any,
     tracer: RecordingTracer | None = None,
-    tool_calls: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if error is not None:
         status = "ERROR"
@@ -281,7 +285,7 @@ def _record(
     if case.dimensions is not None:
         record["dimensions"] = dict(case.dimensions)
     record["turns"] = tracer.turns if tracer is not None else []
-    record["tools"] = tool_calls if tool_calls is not None else []
+    record["tools"] = tracer.tools if tracer is not None else []
     record["guardrails"] = tracer.guardrails if tracer is not None else []
     return record
 

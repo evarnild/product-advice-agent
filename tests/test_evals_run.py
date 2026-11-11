@@ -405,21 +405,44 @@ def test_a_case_that_errors_keeps_what_was_recorded_before(tmp_path):
 
 def test_the_wrapped_tool_returns_exactly_what_the_tool_returns():
     tool = search_tool(load_catalogue())
-    sink: list = []
-    wrapped = _recording_tool(tool, sink)
+    tracer = RecordingTracer()
+    wrapped = _recording_tool(tool, tracer)
     args = {"category": "laptop", "max_price": 700}
     assert wrapped.spec is tool.spec
     assert wrapped.run(dict(args)) == tool.run(dict(args))
-    assert sink[0]["results"] == tool.run(dict(args))
+    tracer.tool("search_products", args, 1, False)  # the agent reports after the run
+    assert tracer.tools[0]["results"] == tool.run(dict(args))
 
 
 def test_the_wrapped_tool_reraises_what_the_tool_raises():
     tool = search_tool(load_catalogue())
-    sink: list = []
-    wrapped = _recording_tool(tool, sink)
+    tracer = RecordingTracer()
+    wrapped = _recording_tool(tool, tracer)
     with pytest.raises(ToolError):
         wrapped.run({"colour": "red"})
-    assert sink[0]["error"] is True
+    tracer.tool("search_products", {"colour": "red"}, 0, True)
+    assert tracer.tools[0]["error"] is True and tracer.tools[0]["results"] == []
+
+
+def test_an_unknown_tool_call_is_recorded_in_order_with_error_true(tmp_path):
+    script = [
+        ModelTurn(tool_calls=(ToolCall("c1", "get_product", {"id": "P-001"}),)),
+        ModelTurn(
+            tool_calls=(
+                ToolCall("c2", "search_products", {"category": "headphones", "max_price": 200}),
+            )
+        ),
+        ModelTurn(text="Try the Auralis Calm 300 (P-001) at 189 euros."),
+    ]
+    run(tmp_path, script + LAP_OK + OFF_OK)
+    first = report_of(tmp_path)["cases"][0]
+    assert [t["name"] for t in first["tools"]] == ["get_product", "search_products"]
+    assert first["tools"][0]["error"] is True
+    assert first["tools"][0]["arguments"] == {"id": "P-001"}
+    assert first["tools"][0]["results"] == []
+    assert first["tools"][1]["error"] is False
+    assert first["tools"][1]["results"][0]["id"] == "P-006"
+    assert [t["tools"] for t in first["turns"]] == [["get_product"], ["search_products"], []]
 
 
 def test_recording_tracer_keeps_searches_turns_and_guardrails():

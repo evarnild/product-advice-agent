@@ -396,3 +396,69 @@ def test_a_bad_report_is_an_error(tmp_path):
         make_app(bad, tmp_path / "l.jsonl")
     with pytest.raises(OSError):
         make_app(tmp_path / "missing.json", tmp_path / "l.jsonl")
+
+
+# --- review round 1: calls under their own turn, BLOCKED, no stray files -----
+
+TWO_TURNS = case(
+    "t",
+    "FAIL",
+    "laptop",
+    "exact-match",
+    "a student",
+    turns=[
+        {"text": "TURN-ONE-TEXT", "tools": ["get_product"]},
+        {"text": "TURN-TWO-TEXT", "tools": ["search_products"]},
+        {"text": "FINAL-TEXT", "tools": []},
+    ],
+    tools=[
+        {"name": "get_product", "arguments": {"id": "P-555"}, "results": [], "error": True},
+        {
+            "name": "search_products",
+            "arguments": {"category": "laptop", "max_price": 700},
+            "results": [
+                {"id": "P-808", "name": "Pelagic Go", "price_eur": 649.0, "in_stock": True}
+            ],
+            "error": False,
+        },
+    ],
+    guardrails=[
+        {"stage": "input", "allowed": False, "reason": "blocked-because-xyz"},
+        {"stage": "output", "allowed": True, "reason": ""},
+    ],
+)
+
+
+def two_turn_page(tmp_path):
+    report = tmp_path / "t.json"
+    report.write_text(json.dumps({"cases": [TWO_TURNS]}), encoding="utf-8")
+    return TestClient(make_app(report, tmp_path / "l.jsonl", lambda: NOW)).get("/c/t").text
+
+
+def test_each_tool_call_renders_under_its_own_turn(tmp_path):
+    html = two_turn_page(tmp_path)
+    one, two, final = (html.index(x) for x in ("TURN-ONE-TEXT", "TURN-TWO-TEXT", "FINAL-TEXT"))
+    assert one < two < final
+    unknown = html.index("get_product")
+    search = html.index("search_products")
+    assert one < unknown < two  # the unknown tool belongs to turn 1
+    assert two < search < final  # the search belongs to turn 2
+    assert '{"id": "P-555"}' in html and unknown < html.index("P-555") < two
+    assert 'max_price": 700' in html and two < html.index('max_price": 700') < final
+    assert two < html.index("P-808") < html.index("Pelagic Go") < final
+    assert "the tool call was an error" in html
+
+
+def test_a_blocked_guardrail_shows_as_blocked_with_its_reason(tmp_path):
+    html = two_turn_page(tmp_path)
+    assert "input: BLOCKED (blocked-because-xyz)" in html
+    assert "output: allowed" in html
+
+
+def test_make_app_writes_no_file_in_the_working_directory(paths, tmp_path, monkeypatch):
+    elsewhere = tmp_path / "cwd"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    app = make_app(*paths)
+    TestClient(app).get("/c/a")
+    assert list(elsewhere.iterdir()) == []

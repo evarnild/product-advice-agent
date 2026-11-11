@@ -26,7 +26,7 @@ def _block_network():
         address = args[0] if args else None
         if (
             caller.co_name == "_fallback_socketpair"
-            and caller.co_filename.endswith("socket.py")
+            and caller.co_filename == socket.__file__
             and isinstance(address, tuple)
             and address[0] in ("127.0.0.1", "::1")
         ):

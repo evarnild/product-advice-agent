@@ -9,6 +9,7 @@ a few lines of inline script for the hotkeys, so they work without JavaScript.
 from __future__ import annotations
 
 import json
+import secrets
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -274,7 +275,7 @@ def make_app(
         key: sorted({(c.get("dimensions") or {}).get(key, "") for c in cases} - {""})
         for key in _DIMENSIONS
     }
-    app = FastHTML(default_hdrs=False, pico=False, live=False)
+    app = FastHTML(default_hdrs=False, pico=False, live=False, secret_key=secrets.token_hex(32))
 
     def filtered(f: Filters) -> list[dict[str, Any]]:
         return [c for c in cases if _matches(c, labels.get(c["id"]), f)]
