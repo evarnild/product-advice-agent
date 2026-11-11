@@ -272,6 +272,28 @@ def test_provider_flag_uses_the_anthropic_default_model_and_key(tmp_path):
     assert "test-key-not-real" not in out
 
 
+def test_provider_flag_naming_the_env_provider_still_takes_the_default_model(tmp_path):
+    env = {
+        **ENV,
+        "ADVISOR_MODEL_PROVIDER": "anthropic",
+        "ADVISOR_MODEL": "claude-other-model",
+        "ANTHROPIC_API_KEY": "test-key-not-real",
+    }
+    code, out, _, factory = run(
+        tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "anthropic", env=env
+    )
+    assert code == 0
+    assert factory.calls == [("anthropic", "claude-haiku-5-5", "test-key-not-real", None)]
+    assert "claude-other-model" not in out
+
+
+def test_provider_flag_naming_the_env_provider_ignores_env_model_for_ollama(tmp_path):
+    env = {**ENV, "ADVISOR_MODEL_PROVIDER": "ollama", "ADVISOR_MODEL": "env-model"}
+    code, _, _, factory = run(tmp_path, HP_OK + LAP_OK + OFF_OK, "--provider", "ollama", env=env)
+    assert code == 0
+    assert factory.calls == [("ollama", "qwen3:8b", None, "http://localhost:11434")]
+
+
 def test_model_flag_alone_overrides_only_the_model(tmp_path):
     code, out, _, factory = run(tmp_path, HP_OK + LAP_OK + OFF_OK, "--model", "other-model")
     assert code == 0
