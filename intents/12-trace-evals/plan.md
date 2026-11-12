@@ -201,9 +201,9 @@ parameter on `main`, per-case tags `eval`, `provider:`, `model:`,
 `test_eval_runner_loads_no_sdk` unedited. Docs: README (two places),
 CLAUDE.md "Offline evals", run.py docstring, §8 spec B11 one line.
 
-Tests: pytest 477 -> 491 (14 added: 9 in `tests/test_evals_run.py`... see
-the diff; 2 in `tests/test_boundaries.py`). Each Tests-table row was
-mutation-checked and killed.
+Tests: pytest 481 -> 491 (10 added: 8 in `tests/test_evals_run.py`, 2 in
+`tests/test_boundaries.py`). Each Tests-table row was mutation-checked and
+killed.
 
 Divergences: line numbers in "Verified against the codebase" drifted
 (e.g. `RecordingTracer` now at run.py:40 as planned, `main` settings at
