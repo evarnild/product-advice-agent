@@ -50,9 +50,12 @@ reach Langfuse, it must not be confused with ordinary `uv run advisor` runs.
 
 ## Constraints
 
-- **§9 first.** `run.py`'s `RecordingTracer` and the tool wrapper change in
-  §9 (`feat/9-error-analysis`). This starts after §9 is merged, so there is
-  one rebase, not two. §10 then builds on it (tool results, dimensions,
+- **Built on §9's branch until §9 merges** (owner, 2026-11-12: "we can
+  run it until the merge"). `run.py`'s `RecordingTracer` and the tool
+  wrapper change in §9 (`feat/9-error-analysis`), so §12's branch starts
+  from §9's branch, not from `main`, and is rebased onto `main` once §9 is
+  merged. §12 merges only after §9; if §9's last round reworks `run.py`,
+  §12 rebases onto it. §10 then builds on this (tool results, dimensions,
   queues); this intent does none of §10's work.
 - **Architecture (`CLAUDE.md`).** `langfuse` is imported only in
   `tracing.py`. The eval suite keeps its recording tracer, which the
