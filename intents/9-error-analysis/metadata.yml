@@ -10,7 +10,7 @@ spec_accepted: 2026-11-11 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-11 by-agent    # auto: owner "/auto 9" (auto_authorized 2026-11-11)
 live_checked:
 merged:
-auto_authorized: 2026-11-11 by-agent    # owner: "/auto 9"
+auto_authorized: 2026-11-12 by-agent    # owner: "/auto 9" (diff read)
 auto_round: 2
 auto_stopped: escalate, owner reads the diff
 follows_up:
