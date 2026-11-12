@@ -2,7 +2,7 @@
 id: 12
 slug: trace-evals
 type: feature
-status: accepted
+status: in-review
 title: Trace eval runs to Langfuse, tagged as evals
 review_tier: reviewed    # changes what is sent to Langfuse (by meaning, as for §10); likely touches src/advisor/tracing.py
 intent_accepted: 2026-11-12 by-agent    # owner: "accept 12"

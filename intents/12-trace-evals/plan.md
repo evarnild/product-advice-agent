@@ -187,3 +187,25 @@ with and returns a `FakeTracer`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-12 — build (subtasks 1-3)
+
+Commits: e81c4d3 (tracer seam, fan-out, tag tests), 516328f (boundary
+tests), 7fc7a56 (docs), plus the Progress/status commit that follows.
+
+Shipped: `_LANGFUSE_ENV`, `_default_tracer_factory` (lazy `make_tracer`),
+`_FanOutTracer` (recording first, secondary guarded), `tracer_factory`
+parameter on `main`, per-case tags `eval`, `provider:`, `model:`,
+`run:<stamp>`, `case:<id>` with the stamp taken from the existing `started`
+(no new `now()` call). `tracing.py`, `agent.py`, `cli.py` untouched;
+`test_eval_runner_loads_no_sdk` unedited. Docs: README (two places),
+CLAUDE.md "Offline evals", run.py docstring, §8 spec B11 one line.
+
+Tests: pytest 477 -> 491 (14 added: 9 in `tests/test_evals_run.py`... see
+the diff; 2 in `tests/test_boundaries.py`). Each Tests-table row was
+mutation-checked and killed.
+
+Divergences: line numbers in "Verified against the codebase" drifted
+(e.g. `RecordingTracer` now at run.py:40 as planned, `main` settings at
+:172 became :189 after the added code); no behavioural drift. Nothing
+else diverged.
