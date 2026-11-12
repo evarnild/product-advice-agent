@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 12
+slug: trace-evals
+type: feature
+status: draft
+title: Trace eval runs to Langfuse, tagged as evals
+review_tier: reviewed    # changes what is sent to Langfuse (by meaning, as for §10); likely touches src/advisor/tracing.py
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/8-offline-evals    reverses its B11 (no Langfuse during evals)
+  - intents/9-error-analysis    must merge first: it changes run.py's recording tracer
+  - intents/10-langfuse-annotation    builds on these traces
+  - intents/4-langfuse-v4    the self-hosted stack it uses
