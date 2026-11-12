@@ -77,6 +77,45 @@ def test_eval_runner_loads_no_sdk():
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
 
 
+def test_an_untraced_eval_run_loads_neither_tracing_nor_langfuse(tmp_path):
+    # A fresh interpreter runs one case with the scripted fake and no LANGFUSE_*.
+    code = (
+        "import io, json, sys\n"
+        "from pathlib import Path\n"
+        "from advisor.evals.run import main\n"
+        "from advisor.models.base import ModelTurn\n"
+        "from advisor.models.fake import ScriptedModelClient\n"
+        "tmp = Path(sys.argv[1])\n"
+        "cases = tmp / 'cases.jsonl'\n"
+        "case = {'id': 'lap', 'question': 'a laptop?', 'expect_ids': ['P-009']}\n"
+        "cases.write_text(json.dumps(case), encoding='utf-8')\n"
+        "text = 'The Pelagic Go 13 (P-009) costs 649 euros.'\n"
+        "client = ScriptedModelClient([ModelTurn(text=text)])\n"
+        "out = io.StringIO()\n"
+        "rc = main(['--cases', str(cases), '--report-dir', str(tmp / 'runs')],\n"
+        "          env={'ADVISOR_MODEL_PROVIDER': 'ollama', 'ADVISOR_MODEL': 'm'},\n"
+        "          client_factory=lambda *a, **k: client, out=out, err=io.StringIO())\n"
+        "assert rc == 0, out.getvalue()\n"
+        "bad = sorted(m for m in sys.modules\n"
+        "             if m.split('.')[0] in ('langfuse', 'opentelemetry')\n"
+        "             or m == 'advisor.tracing')\n"
+        "print(bad)\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(tmp_path)], capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_eval_runner_langfuse_variables_match_the_tracing_module():
+    from advisor.evals.run import _LANGFUSE_ENV
+    from advisor.tracing import REQUIRED_ENV
+
+    assert set(_LANGFUSE_ENV) == set(REQUIRED_ENV)
+    assert tuple(_LANGFUSE_ENV) == tuple(REQUIRED_ENV)
+
+
 # --- §9: the web framework lives in the viewer only -------------------------
 
 
