@@ -552,54 +552,87 @@ def test_run_tag_matches_the_report_file_name(tmp_path):
     assert {tags[3] for _, tags in tf.calls} == {f"run:{stamp}"}
 
 
-def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path, monkeypatch):
-    seen = []
-    import advisor.evals.run as runner
-
-    original = runner.RecordingTracer
-
-    class Spy(original):
-        def __init__(self):
-            super().__init__()
-            seen.append(self)
-
-    monkeypatch.setattr(runner, "RecordingTracer", Spy)
-    unknown_tool = [
-        ModelTurn(tool_calls=(ToolCall("c1", "no_such_tool", {}),)),
-        ModelTurn(text="Sorry, I could not look that up."),
+def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path):
+    u1, u2, u3 = Usage(11, 12), Usage(21, 22), Usage(31, 32)
+    search_args = {"category": "headphones", "max_price": 200}
+    hp = [
+        ModelTurn(
+            tool_calls=(ToolCall("c1", "search_products", search_args),),
+            usage=u1,
+            model="m-one",
+            text="looking",
+        ),
+        ModelTurn(text="Try the Auralis Calm 300 (P-001) at 189 euros.", usage=u2, model="m-two"),
     ]
-    cases = [CASES[0], CASES[1], CASES[2]]
+    lap = [
+        ModelTurn(tool_calls=(ToolCall("c2", "no_such_tool", {"x": 1}),), usage=u3, model="m-3"),
+        ModelTurn(text="Sorry, I could not look that up.", usage=u3, model="m-3"),
+    ]
     tf = TracerFactory()
     code, out, err, _ = run(
-        tmp_path,
-        HP_OK + unknown_tool + [RuntimeError("x")],
-        cases=cases,
-        env=LANGFUSE_ENV,
+        tmp_path, hp + lap + [RuntimeError("x")], env=LANGFUSE_ENV, tracer_factory=tf
+    )
+    lines = out.splitlines()
+    assert lines[0] == "PASS hp"
+    assert lines[1].startswith("FAIL lap")
+    assert lines[2] == "ERROR off: unexpected RuntimeError"
+    report = report_of(tmp_path)["cases"]
+    hp_tool = report[0]["tools"][0]
+    assert tf.tracers[0].calls == [
+        ("begin", "headphones under 200?"),
+        ("check", "input", True, ""),
+        ("generation", "m-one", u1, "looking", ["search_products"]),
+        ("tool", "search_products", search_args, len(hp_tool["results"]), False),
+        ("generation", "m-two", u2, "Try the Auralis Calm 300 (P-001) at 189 euros.", []),
+        ("check", "output", True, ""),
+        ("finish", report[0]["answer"]),
+    ]
+    assert len(hp_tool["results"]) > 0
+    assert tf.tracers[1].calls == [
+        ("begin", "a laptop?"),
+        ("check", "input", True, ""),
+        ("generation", "m-3", u3, None, ["no_such_tool"]),
+        ("tool", "no_such_tool", {"x": 1}, 0, True),
+        ("generation", "m-3", u3, "Sorry, I could not look that up.", []),
+        ("check", "output", True, ""),
+        ("finish", report[1]["answer"]),
+    ]
+    assert tf.tracers[2].calls == [
+        ("begin", "weather?"),
+        ("check", "input", True, ""),
+        ("fail", "RuntimeError: x"),
+    ]
+
+
+def test_the_tracer_factory_gets_the_dotenv_merged_environment(tmp_path, monkeypatch):
+    names = ("LANGFUSE_HOST", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY")
+    for name in (*names, "ADVISOR_MODEL_PROVIDER", "ADVISOR_MODEL"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".env").write_text(
+        "LANGFUSE_HOST=http://langfuse.invalid\nLANGFUSE_PUBLIC_KEY=pk-dotenv\n"
+        "LANGFUSE_SECRET_KEY=sk-dotenv\nADVISOR_MODEL_PROVIDER=ollama\nADVISOR_MODEL=m-env\n",
+        encoding="utf-8",
+    )
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text(json.dumps(CASES[1]) + "\n", encoding="utf-8")
+    tf = TracerFactory()
+    factory = Factory(LAP_OK)
+    code = main(
+        ["--cases", str(cases), "--report-dir", str(tmp_path / "runs")],
+        env=None,
+        client_factory=factory,
+        out=io.StringIO(),
+        err=io.StringIO(),
+        now=lambda: CLOCK_TIME,
         tracer_factory=tf,
     )
-    assert out.splitlines()[:3] == [
-        "PASS hp",
-        "FAIL lap: " + out.splitlines()[1][10:],
-        "ERROR off: unexpected RuntimeError",
-    ]
-    assert len(tf.tracers) == len(seen) == 3
-    for fake, recording in zip(tf.tracers, seen, strict=True):
-        names = [c[0] for c in fake.calls]
-        assert names[0] == "begin"
-        assert names[-1] in ("finish", "fail")
-        assert [c[1:] for c in fake.calls if c[0] == "check"] == [
-            (g["stage"], g["allowed"], g["reason"]) for g in recording.guardrails
-        ]
-        assert [c[1:3] for c in fake.calls if c[0] == "tool"] == [
-            (t["name"], t["arguments"]) for t in recording.tools
-        ]
-        assert [c[4] for c in fake.calls if c[0] == "generation"] == [
-            t["tools"] for t in recording.turns
-        ]
-    assert [c[0] for c in tf.tracers[0].calls].count("tool") == 1
-    assert tf.tracers[1].calls[-1][0] == "finish"
-    assert any(c[0] == "tool" and c[1] == "no_such_tool" for c in tf.tracers[1].calls)
-    assert tf.tracers[2].calls[-1][0] == "fail"
+    assert code == 0
+    (env, tags) = tf.calls[0]
+    assert env["LANGFUSE_HOST"] == "http://langfuse.invalid"
+    assert env["LANGFUSE_PUBLIC_KEY"] == "pk-dotenv"
+    assert env["LANGFUSE_SECRET_KEY"] == "sk-dotenv"
+    assert tags[2] == "model:m-env"
 
 
 def _normalised(tmp_path, code, out):
@@ -610,7 +643,7 @@ def _normalised(tmp_path, code, out):
 
 
 def test_a_raising_tracer_changes_nothing(tmp_path):
-    script = HP_BAD + [ModelError("boom")] + OFF_OK
+    script = HP_OK + [ModelError("boom")] + OFF_OK
     plain_dir, raising_dir = tmp_path / "plain", tmp_path / "raising"
     plain_dir.mkdir()
     raising_dir.mkdir()
@@ -621,6 +654,7 @@ def test_a_raising_tracer_changes_nothing(tmp_path):
     a = _normalised(plain_dir, code1, out1)
     b = _normalised(raising_dir, code2, out2)
     assert a[0] == b[0] == 1
+    assert a[2]["cases"][0]["tools"]  # the tool call was exercised
     assert a[1] == b[1].replace("raising", "plain")
     assert a[2] == b[2]
 

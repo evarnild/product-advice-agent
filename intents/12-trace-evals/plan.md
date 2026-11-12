@@ -209,3 +209,28 @@ Divergences: line numbers in "Verified against the codebase" drifted
 (e.g. `RecordingTracer` now at run.py:40 as planned, `main` settings at
 :172 became :189 after the added code); no behavioural drift. Nothing
 else diverged.
+
+### 2026-11-12 — rework after review round 1 (tests only)
+
+Commit: the one following 6eca700 (see `git log`). `run.py` and the other
+source files are unchanged.
+
+- Raising-tracer test: its script now starts with `HP_OK`, so a tool call is
+  made, and the test asserts the case's tool was exercised.
+- Same-calls test: now asserts the full call tuples (begin question;
+  generation model, usage, text, tool names; tool name, arguments,
+  result_count, error; finish answer; fail `RuntimeError: x`; check
+  stage/allowed/reason) for a passing, an unknown-tool and a raising case.
+- New `test_the_tracer_factory_gets_the_dotenv_merged_environment`
+  (`main(env=None)`, a `.env` in `tmp_path`, `chdir`, env vars deleted).
+
+Tests: pytest 491 -> 492 (one added; two rewritten).
+
+Mutants (full pytest, restore by copy, tree clean after), all KILLED:
+T-tool (no try/except around `secondary.tool`) by
+`test_a_raising_tracer_changes_nothing`; A-begin, A-gen text, A-gen model,
+A-gen usage, A-gen tool names, A-tool result_count, A-tool error, A-finish,
+A-fail by `test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer`;
+W01 (`tracer_factory(env, tags)`) by
+`test_the_tracer_factory_gets_the_dotenv_merged_environment`.
+A-check was not mutated (skeleton reason is always empty).
