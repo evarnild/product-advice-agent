@@ -66,7 +66,7 @@ def ticking_clock(step_seconds=1.5):
     return lambda: CLOCK_TIME + timedelta(seconds=step_seconds * next(ticks))
 
 
-def run(tmp_path, script, *extra, cases=CASES, env=ENV, now=lambda: CLOCK_TIME):
+def run(tmp_path, script, *extra, cases=CASES, env=ENV, now=lambda: CLOCK_TIME, **kw):
     out, err = io.StringIO(), io.StringIO()
     factory = Factory(script)
     code = main(
@@ -82,6 +82,7 @@ def run(tmp_path, script, *extra, cases=CASES, env=ENV, now=lambda: CLOCK_TIME):
         out=out,
         err=err,
         now=now,
+        **kw,
     )
     return code, out.getvalue(), err.getvalue(), factory
 
@@ -456,3 +457,209 @@ def test_recording_tracer_keeps_searches_turns_and_guardrails():
     assert t.guardrails == [{"stage": "input", "allowed": False, "reason": "why"}]
     assert t.turns == [{"text": "hi", "tools": ["a", "b"]}]
     assert t.searches == [{"category": "laptop"}]
+
+
+# --- §12: eval runs are traced when Langfuse is configured -------------------
+
+LANGFUSE_ENV = {
+    **ENV,
+    "LANGFUSE_HOST": "http://langfuse.invalid",
+    "LANGFUSE_PUBLIC_KEY": "pk-test",
+    "LANGFUSE_SECRET_KEY": "sk-test",
+}
+STAMP = "20261111T093005Z"
+
+
+class FakeTracer:
+    def __init__(self, raises=False):
+        self.calls = []
+        self.raises = raises
+
+    def _record(self, name, *args):
+        self.calls.append((name, *args))
+        if self.raises:
+            raise RuntimeError("langfuse down")
+
+    def begin(self, question):
+        self._record("begin", question)
+
+    def check(self, stage, allowed, reason):
+        self._record("check", stage, allowed, reason)
+
+    def generation(self, model, usage, text, tool_names):
+        self._record("generation", model, usage, text, list(tool_names))
+
+    def tool(self, name, arguments, result_count, error):
+        self._record("tool", name, arguments, result_count, error)
+
+    def finish(self, answer):
+        self._record("finish", answer)
+
+    def fail(self, error):
+        self._record("fail", error)
+
+
+class TracerFactory:
+    def __init__(self, raises=False):
+        self.raises = raises
+        self.calls = []
+        self.tracers = []
+
+    def __call__(self, env, tags):
+        self.calls.append((dict(env), list(tags)))
+        tracer = FakeTracer(self.raises)
+        self.tracers.append(tracer)
+        return tracer
+
+
+def test_each_case_gets_a_tracer_with_eval_run_and_case_tags(tmp_path):
+    tf = TracerFactory()
+    code, out, err, _ = run(tmp_path, HP_OK + LAP_OK + OFF_OK, env=LANGFUSE_ENV, tracer_factory=tf)
+    assert code == 0, out + err
+    assert [tags for _, tags in tf.calls] == [
+        ["eval", "provider:ollama", "model:test-model", f"run:{STAMP}", f"case:{cid}"]
+        for cid in ("hp", "lap", "off")
+    ]
+    assert all(env["LANGFUSE_HOST"] == "http://langfuse.invalid" for env, _ in tf.calls)
+
+
+def test_trace_tags_follow_the_provider_and_model_flags(tmp_path):
+    tf = TracerFactory()
+    code, out, err, _ = run(
+        tmp_path,
+        LAP_OK,
+        "--provider",
+        "anthropic",
+        "--model",
+        "m",
+        "--only",
+        "lap",
+        env={**LANGFUSE_ENV, "ANTHROPIC_API_KEY": "k"},
+        tracer_factory=tf,
+    )
+    assert code == 0, out + err
+    assert [tags for _, tags in tf.calls] == [
+        ["eval", "provider:anthropic", "model:m", f"run:{STAMP}", "case:lap"]
+    ]
+
+
+def test_run_tag_matches_the_report_file_name(tmp_path):
+    tf = TracerFactory()
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, now=ticking_clock(1.5), tracer_factory=tf)
+    (path,) = list((tmp_path / "runs").iterdir())
+    stamp = path.name.removesuffix("-ollama.json")
+    assert stamp == STAMP
+    assert {tags[3] for _, tags in tf.calls} == {f"run:{stamp}"}
+
+
+def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path, monkeypatch):
+    seen = []
+    import advisor.evals.run as runner
+
+    original = runner.RecordingTracer
+
+    class Spy(original):
+        def __init__(self):
+            super().__init__()
+            seen.append(self)
+
+    monkeypatch.setattr(runner, "RecordingTracer", Spy)
+    unknown_tool = [
+        ModelTurn(tool_calls=(ToolCall("c1", "no_such_tool", {}),)),
+        ModelTurn(text="Sorry, I could not look that up."),
+    ]
+    cases = [CASES[0], CASES[1], CASES[2]]
+    tf = TracerFactory()
+    code, out, err, _ = run(
+        tmp_path,
+        HP_OK + unknown_tool + [RuntimeError("x")],
+        cases=cases,
+        env=LANGFUSE_ENV,
+        tracer_factory=tf,
+    )
+    assert out.splitlines()[:3] == [
+        "PASS hp",
+        "FAIL lap: " + out.splitlines()[1][10:],
+        "ERROR off: unexpected RuntimeError",
+    ]
+    assert len(tf.tracers) == len(seen) == 3
+    for fake, recording in zip(tf.tracers, seen, strict=True):
+        names = [c[0] for c in fake.calls]
+        assert names[0] == "begin"
+        assert names[-1] in ("finish", "fail")
+        assert [c[1:] for c in fake.calls if c[0] == "check"] == [
+            (g["stage"], g["allowed"], g["reason"]) for g in recording.guardrails
+        ]
+        assert [c[1:3] for c in fake.calls if c[0] == "tool"] == [
+            (t["name"], t["arguments"]) for t in recording.tools
+        ]
+        assert [c[4] for c in fake.calls if c[0] == "generation"] == [
+            t["tools"] for t in recording.turns
+        ]
+    assert [c[0] for c in tf.tracers[0].calls].count("tool") == 1
+    assert tf.tracers[1].calls[-1][0] == "finish"
+    assert any(c[0] == "tool" and c[1] == "no_such_tool" for c in tf.tracers[1].calls)
+    assert tf.tracers[2].calls[-1][0] == "fail"
+
+
+def _normalised(tmp_path, code, out):
+    report = report_of(tmp_path)
+    for c in report["cases"]:
+        c.pop("duration_s")
+    return code, out.replace(str(tmp_path), "<tmp>"), report
+
+
+def test_a_raising_tracer_changes_nothing(tmp_path):
+    script = HP_BAD + [ModelError("boom")] + OFF_OK
+    plain_dir, raising_dir = tmp_path / "plain", tmp_path / "raising"
+    plain_dir.mkdir()
+    raising_dir.mkdir()
+    code1, out1, _, _ = run(plain_dir, script)
+    code2, out2, _, _ = run(
+        raising_dir, script, env=LANGFUSE_ENV, tracer_factory=TracerFactory(raises=True)
+    )
+    a = _normalised(plain_dir, code1, out1)
+    b = _normalised(raising_dir, code2, out2)
+    assert a[0] == b[0] == 1
+    assert a[1] == b[1].replace("raising", "plain")
+    assert a[2] == b[2]
+
+
+def test_the_recording_tracer_feeds_the_report_when_traced(tmp_path):
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, env=LANGFUSE_ENV, tracer_factory=TracerFactory())
+    first = report_of(tmp_path)["cases"][0]
+    assert first["searches"] == [{"category": "headphones", "max_price": 200}]
+    assert [t["name"] for t in first["tools"]] == ["search_products"]
+    assert first["tools"][0]["results"]
+    assert len(first["turns"]) == 2
+
+
+def test_default_factory_is_noop_without_all_three_variables(monkeypatch):
+    import advisor.evals.run as runner
+    import advisor.tracing as tracing
+
+    called = []
+    monkeypatch.setattr(tracing, "make_tracer", lambda env, tags: called.append(1))
+    for missing in runner._LANGFUSE_ENV:
+        for value in (None, ""):
+            env = {k: "x" for k in runner._LANGFUSE_ENV}
+            if value is None:
+                del env[missing]
+            else:
+                env[missing] = value
+            assert type(runner._default_tracer_factory(env, ["t"])).__name__ == "NoopTracer"
+    assert called == []
+
+
+def test_default_factory_calls_make_tracer_with_env_and_tags_when_configured(monkeypatch):
+    import advisor.evals.run as runner
+    import advisor.tracing as tracing
+
+    sentinel = FakeTracer()
+    got = []
+    monkeypatch.setattr(
+        tracing, "make_tracer", lambda env, tags: got.append((dict(env), list(tags))) or sentinel
+    )
+    env = {k: "x" for k in runner._LANGFUSE_ENV}
+    assert runner._default_tracer_factory(env, ["eval", "case:a"]) is sentinel
+    assert got == [(env, ["eval", "case:a"])]

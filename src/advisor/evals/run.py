@@ -32,9 +32,27 @@ from advisor.models.base import (
     ModelUnreachableError,
     Usage,
 )
+from advisor.tracer import NoopTracer, Tracer
 
 DEFAULT_CASES = Path("evals") / "cases.jsonl"
 DEFAULT_REPORT_DIR = Path("evals") / "runs"
+
+# The same three names as `advisor.tracing.REQUIRED_ENV` (a test compares them).
+# Importing that constant would load `langfuse`, which an unconfigured run must
+# not do (§12 B9).
+_LANGFUSE_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
+
+TracerFactory = Callable[[Mapping[str, str], Sequence[str]], Tracer]
+
+
+def _default_tracer_factory(env: Mapping[str, str], tags: Sequence[str]) -> Tracer:
+    """A Langfuse tracer when configured, else a no-op, without loading `advisor.tracing`."""
+    if not all(env.get(k) for k in _LANGFUSE_ENV):
+        return NoopTracer()
+    # Lazy on purpose: importing `advisor.tracing` loads langfuse (§12 B9).
+    from advisor.tracing import make_tracer
+
+    return make_tracer(env, tags)
 
 
 class RecordingTracer:
@@ -86,6 +104,60 @@ class RecordingTracer:
         pass
 
 
+class _FanOutTracer:
+    """Passes every call to the recording tracer, then to a second tracer.
+
+    The second tracer's failures are swallowed: a failure in the Langfuse
+    tracer never reaches the recording tracer or the run (§12 B8).
+    """
+
+    def __init__(self, primary: RecordingTracer, secondary: Tracer) -> None:
+        self._primary = primary
+        self._secondary = secondary
+
+    def begin(self, question: str) -> None:
+        self._primary.begin(question)
+        try:
+            self._secondary.begin(question)
+        except Exception:
+            pass
+
+    def check(self, stage: str, allowed: bool, reason: str) -> None:
+        self._primary.check(stage, allowed, reason)
+        try:
+            self._secondary.check(stage, allowed, reason)
+        except Exception:
+            pass
+
+    def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
+        self._primary.generation(model, usage, text, tool_names)
+        try:
+            self._secondary.generation(model, usage, text, tool_names)
+        except Exception:
+            pass
+
+    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
+        self._primary.tool(name, arguments, result_count, error)
+        try:
+            self._secondary.tool(name, arguments, result_count, error)
+        except Exception:
+            pass
+
+    def finish(self, answer: str) -> None:
+        self._primary.finish(answer)
+        try:
+            self._secondary.finish(answer)
+        except Exception:
+            pass
+
+    def fail(self, error: str) -> None:
+        self._primary.fail(error)
+        try:
+            self._secondary.fail(error)
+        except Exception:
+            pass
+
+
 def _recording_tool(tool: Tool, tracer: RecordingTracer) -> Tool:
     """`tool` with the same behaviour, handing its results to `tracer` (§9 B6).
 
@@ -135,6 +207,7 @@ def main(
     out: TextIO | None = None,
     err: TextIO | None = None,
     now: Callable[[], datetime] = _utc_now,
+    tracer_factory: TracerFactory = _default_tracer_factory,
 ) -> int:
     out = sys.stdout if out is None else out
     err = sys.stderr if err is None else err
@@ -169,7 +242,8 @@ def main(
             return fail(f"--only names unknown case id(s): {', '.join(unknown) or '(none)'}", 2)
         cases = [c for c in cases if c.id in wanted]
 
-    settings = load_settings(load_env(env))
+    full_env = load_env(env)
+    settings = load_settings(full_env)
     if args.provider:
         settings = replace(
             settings, provider=args.provider, model=DEFAULT_MODELS.get(args.provider, "")
@@ -198,16 +272,25 @@ def main(
     client = client_factory(settings.provider, settings.model, api_key=api_key, base_url=base_url)
 
     started = now()
+    stamp = started.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
     tool = search_tool(catalogue)
     results: list[dict[str, Any]] = []
     for index, case in enumerate(cases):
         began = now()
         tracer = RecordingTracer()
+        tags = [
+            "eval",
+            f"provider:{settings.provider}",
+            f"model:{settings.model}",
+            f"run:{stamp}",
+            f"case:{case.id}",
+        ]
+        traced = _FanOutTracer(tracer, tracer_factory(full_env, tags))
         answer = ""
         checks: list[Check] = []
         error: str | None = None
         try:
-            answer = answer_question(case.question, client, [_recording_tool(tool, tracer)], tracer)
+            answer = answer_question(case.question, client, [_recording_tool(tool, tracer)], traced)
             checks = score(case, answer, tracer.searches, catalogue)
         except (ModelUnreachableError, ModelNotAvailableError) as e:
             if args.debug:
@@ -250,7 +333,6 @@ def main(
     }
     try:
         args.report_dir.mkdir(parents=True, exist_ok=True)
-        stamp = started.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
         path = args.report_dir / f"{stamp}-{settings.provider}.json"
         path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     except OSError as e:
