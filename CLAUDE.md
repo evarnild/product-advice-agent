@@ -169,7 +169,7 @@ Langfuse stack in `infra/langfuse/`.
 `cases.py` (the case model and file validation) and `score.py` (the
 deterministic checks) are pure and core code (in `CORE_CODE`); `run.py` is the I/O (case file, client,
 clock, stdout, the JSON report in `evals/runs/`) with its own recording
-tracer. It imports neither `advisor.tracing` nor a provider SDK. Cases are
+tracer. It loads `advisor.tracing` only when the three `LANGFUSE_*` variables are set (it then traces each case, tagged `eval`), and imports no provider SDK. Cases are
 data in `evals/cases.jsonl`.
 
 **Error analysis** (`advisor-analysis`, §9, same package). Pure: `coverage.py`

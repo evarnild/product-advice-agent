@@ -2,8 +2,10 @@
 
 Runs each case once through `answer_question`, scores the answer with the
 pure scorers, prints a line per case and a total, and writes a JSON report.
-It uses its own recording tracer and never imports `advisor.tracing`, so an
-eval run does not reach Langfuse.
+The recording tracer feeds the scorers and the report. When the three
+`LANGFUSE_*` variables are set, each case is also traced to Langfuse through
+`make_tracer`, tagged `eval`, provider, model, run and case (§12); that
+module is loaded lazily, so an untraced run never imports `advisor.tracing`.
 """
 
 from __future__ import annotations

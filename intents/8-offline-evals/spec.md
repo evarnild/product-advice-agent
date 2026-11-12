@@ -138,6 +138,7 @@ than repeating them, and records the decisions that have no other home.
   `evals/runs/` is gitignored, and nothing else is written.
 - **B11.** The suite does not trace to Langfuse: it uses its own recording
   tracer, not `make_tracer`. It imports no provider SDK and not `langfuse`.
+  Superseded by §12: eval runs are traced when Langfuse is configured.
 
 **Tests in `verify`**
 
