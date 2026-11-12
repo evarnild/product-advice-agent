@@ -6,13 +6,13 @@ status: accepted
 title: Trace eval runs to Langfuse, tagged as evals
 review_tier: reviewed    # changes what is sent to Langfuse (by meaning, as for §10); likely touches src/advisor/tracing.py
 intent_accepted: 2026-11-12 by-agent    # owner: "accept 12"
-spec_accepted:
+spec_accepted: 2026-11-12 by-agent    # owner: "yes" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-12 by-agent    # owner: "/auto 12"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    reverses its B11 (no Langfuse during evals)
