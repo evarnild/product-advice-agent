@@ -3,11 +3,231 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: fdcb37e1fdab6c8f5c84bc534da53170bc791213
-round: 2
+reviewed-commit: 2421d9ebd24bd5cfab64dc8281aa1568e3adcf45
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed, set by round 1's input 3 (its HIGH); nothing lowers it.
+Input 1 alone gives this round's delta Attested (`src/advisor/evals/run.py`,
+`tests/test_evals_run.py`); input 2 (`review_tier:`) is empty.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 9` → "sample-due
+auto: nth attested auto change = 5, every 3, sampled: no".
+
+This round reviews the rebase onto `main` 5fade27 (§11). Round 2's reviewed
+commit fdcb37e is no longer an ancestor. The rebase is content-identical to
+it except the one resolved conflict, and §11's code lands unchanged. No
+finding needs rework. `check:intent` FAILs only on the owed live check (the
+owner's gate). The tier is Reviewed, so the verdict is escalate. The owner
+read the diff at fdcb37e; the delta since is the merge below.
+
+## Round-2 findings: resolution
+| Round 2 | Finding | Resolution |
+| --- | --- | --- |
+| LOW | double mutant O11 survives (`run.py:70` + `:75`) | open, carried; unchanged by the merge |
+| LOW | viewer accepts cross-origin POSTs and any `Host` | open, carried; not re-probed |
+
+## Merge correctness
+- `git range-diff c806886..fdcb37e main..2fc988f`: 18 commits map one to
+  one; 17 are `=` (patch-identical). One is `!`: 00caf0d → 2631729 ("eval
+  report keeps turns, tool results, guardrails, prompt hash"), differing
+  only in §11's `from advisor.config import DEFAULT_MODELS, …` context line
+  and the test hunk's anchor (now after §11's
+  `test_anthropic_flag_without_a_key_exits_2`).
+- c061983 adds only the two blank lines `ruff format` needs between §11's
+  last test and §9's `# --- §9 B5, B6` banner. ecfce25 and 2421d9e touch
+  `metadata.yml` only.
+- Diff of diffs (`git diff c806886 fdcb37e -- <f>` against `git diff
+  main...HEAD -- <f>`, ignoring `index` and `@@` lines): identical for every
+  file outside `intents/`, README included, except `run.py` (the
+  `DEFAULT_MODELS` context line) and `tests/test_evals_run.py` (anchor and
+  blank lines).
+- §11 intact: its `if args.provider:` / `if args.model:` blocks
+  (`run.py:173-178`) do not appear in `git diff main...HEAD`.
+- Test names in `tests/test_evals_run.py`: c806886 17, main 26, fdcb37e 26,
+  HEAD 35 = 26 + 26 − 17; none missing, none duplicated.
+- `main` has since moved by intents-only commits (§12's intent, spec and
+  plan); `git merge-tree --write-tree --name-only main HEAD` exits 0, no
+  conflicts.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (`intent.md`, `spec.md`, `plan.md` byte-identical to fdcb37e; the code delta is the merge with §11) |
+| 2 | Type check | FAIL on the owed live check only (the owner's gate, not rework) |
+| 3 | Behaviour against the spec | pass (B5/B6 record fields, `prompt_sha256`, `dimensions` intact; §8's `searches` still filled, R12 killed) |
+| 4 | Tests prove the behaviour | findings (1 LOW, carried: O11; O2 and O3 equivalent alone) |
+| 5 | Conventions | pass (no import beyond §9's own) |
+| 6 | Numbers in prose | pass (481 = 472 + §11's 9; kit 255; "30 file(s), 4249 line(s)" as in round 2) |
+| 7 | Documentation | pass (README reads correctly with §11's and §9's sections; `CLAUDE.md` diff unchanged) |
+| 8 | Guardrails and hygiene | pass (no `.sesskey`; no dependency change) |
+| 9 | Repository-specific footguns | pass (list empty; round 1's proposed entry is the owner's to add) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 9, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/9-error-analysis/review.md → ## Live check, then set live_checked: <date> in intents/9-error-analysis/metadata.yml.
+  note:  30 file(s), 4249 line(s) changed outside intents/.
+```
+The only error is the owed live check: not rework.
+
+## Findings
+- **LOW (carried)** `src/advisor/evals/run.py:70` and `:75`: O11 (drop both
+  the pending-results reset and `error or`) survives all 481 tests; each
+  alone is equivalent (O2, O3). Worth a look: one test with a single turn
+  `[search ok, search {"colour":"red"}, unknown tool, search ok]` asserting
+  each call's own `results`.
+- **LOW (carried)** `src/advisor/evals/view.py` (`save_label`): no
+  Origin/Host check. Allowed by the spec (localhost, no authentication,
+  synthetic data). Worth a look.
+- **Nit (carried):** `plan.md:120` says `_recording_tool(tool, sink)`
+  (above the Progress marker).
+
+**Mutants** (reviewer's harness outside the repo: backup by copy, each
+replacement asserted once, `git diff --quiet` non-zero, full pytest, restore
+by copy in `finally`; `git status --short` empty after; 27 mutants; line
+numbers are HEAD's, "(n)" is the number of failing tests):
+
+| id | target | mutation | result | killed by |
+| --- | --- | --- | --- | --- |
+| M1 (§11) | run.py:173 | `if args.provider:` → `if False:` | KILLED (6) | test_provider_flag_wins_over_the_environment_and_uses_its_default_model (+5) |
+| M2 (§11) | run.py:175 | default → `settings.model` | KILLED (4) | test_provider_flag_uses_the_anthropic_default_model_and_key (+3) |
+| M3 (§11) | run.py:177 | `if args.model:` → `if False:` | KILLED (2) | test_model_flag_alone_overrides_only_the_model, test_provider_and_model_flags_together |
+| M5 (§11) | run.py:173-178 | the two blocks swapped | KILLED | test_provider_and_model_flags_together |
+| R5 | run.py:71 | tool record dropped | KILLED (6) | test_the_report_keeps_turns_tools_with_results_and_guardrails (+5) |
+| R6 | run.py:99 | `offer_results` → `pass` | KILLED (4) | test_the_wrapped_tool_returns_exactly_what_the_tool_returns (+3) |
+| R7 | run.py:210 | `_recording_tool(tool, tracer)` → `tool` | KILLED (3) | test_an_unknown_tool_call_is_recorded_in_order_with_error_true (+2) |
+| O1 | run.py:71 | `append` → `insert(0, …)` | KILLED | test_an_unknown_tool_call_is_recorded_in_order_with_error_true |
+| O2 | run.py:70 | pending not reset | equivalent | – |
+| O3 | run.py:75 | `error or` dropped | equivalent | – |
+| O11 | run.py:70 + :75 | both guards dropped | **SURVIVED** (LOW, carried) | – |
+| O4 | run.py:76 | `"error": False` | KILLED (3) | test_a_bad_tool_call_is_recorded_as_an_error (+2) |
+| O5 | run.py:76 | `"error": not error` | KILLED (4) | test_a_bad_tool_call_is_recorded_as_an_error (+3) |
+| O6 | run.py:74 | arguments `{}` | KILLED (3) | test_the_report_keeps_turns_tools_with_results_and_guardrails (+2) |
+| O7 | run.py:73 | name fixed to `search_products` | KILLED | test_an_unknown_tool_call_is_recorded_in_order_with_error_true |
+| O8 | run.py:288 | `record["tools"] = []` | KILLED (4) | test_the_report_keeps_turns_tools_with_results_and_guardrails (+3) |
+| O9 | run.py:99 | `offer_results([])` | KILLED (4) | same (+3) |
+| O10 | run.py:75 | results always `[]` | KILLED (4) | same (+3) |
+| R2 | run.py:64 | guardrail `allowed: True` | KILLED | test_recording_tracer_keeps_searches_turns_and_guardrails |
+| R3 | run.py:241 | `prompt_sha256` of `b""` | KILLED | test_prompt_sha256_is_the_hash_of_the_shipped_system_prompt |
+| R4 | run.py:67 | turn text `None` | KILLED (2) | test_the_report_keeps_turns_tools_with_results_and_guardrails (+1) |
+| R8 | run.py:67 | turn tools `[]` | KILLED (3) | same (+2) |
+| R9 | run.py:285 | dimensions never recorded | KILLED | test_dimensions_are_recorded_only_for_cases_that_have_them |
+| R10 | run.py:287 | `record["turns"] = []` | KILLED (3) | test_the_report_keeps_turns_tools_with_results_and_guardrails (+2) |
+| R11 | run.py:289 | `record["guardrails"] = []` | KILLED | same |
+| R12 | run.py:79 | `searches` never filled | KILLED (12) | test_all_pass_exits_0_with_a_line_per_case_and_a_total (+11) |
+| V12 | view.py:209 | `mine, tools = tools, []` | KILLED | test_each_tool_call_renders_under_its_own_turn |
+
+Survived: O11 (LOW, carried). Equivalent: O2, O3.
+
+## Not checked
+- **Live model behaviour (AC9):** what `qwen3:8b` generates, how many
+  candidates coverage keeps, the taxonomy draft's quality.
+- **Browser behaviour:** hotkeys in a real browser, B9's "no sideways
+  scroll", real `uvicorn.run` serving.
+- **The Origin/Host LOW:** not re-probed.
+- **§11 mutants beyond M1, M2, M3 and M5** (for example the unknown
+  `--provider` path): lines unchanged from `main`, reviewed in §11.
+- **`socket.__file__ == co_filename` on other installs** (a zipped or
+  frozen stdlib would fail the viewer tests loudly, not silently).
+- **Package release dates:** not re-checked; no dependency changed.
+
+## Live check
+Owed by rule 3 (AC9: model output on real input, and the viewer in a real
+browser); rule 1 does not apply. Run it in Windows PowerShell in
+`C:\Users\eric\src\product-advice-agent-wt\9-error-analysis`, with Ollama
+running and `qwen3:8b` pulled.
+
+1. `$env:ADVISOR_MODEL_PROVIDER="ollama"; $env:ADVISOR_MODEL="qwen3:8b"`
+   (`advisor-analysis generate` and `taxonomy` read only these; they have
+   no `--provider` flag).
+2. `uv run advisor-analysis generate`. Expect one line per scenario
+   (`<scenario>: asked N, kept K, dropped D (…)`), then `wrote K questions
+   to evals\generated.jsonl`, exit 0. Note any scenario that drops most of
+   its questions, and why.
+3. Read and edit `evals\generated.jsonl`: `gen-<scenario>-<n>` ids, three
+   keys in `dimensions`, a `probe` in `note`, `"must_decline": true` on
+   off-topic lines. Ask one `no-match` question with `uv run advisor "<q>"`:
+   nothing is found. Check one `spelling-differs` question: none of its
+   probe keywords appears verbatim. Delete or reword anything unnatural.
+4. `uv run advisor-eval --provider ollama --cases evals\generated.jsonl`.
+   The total reads `… passed (ollama, qwen3:8b)`; the report is
+   `evals\runs\<stamp>-ollama.json`. In it: each case has `dimensions`,
+   `turns`, `tools` with `results`, and `guardrails`; the report has
+   `prompt_sha256`; an unknown tool or bad arguments show in `tools`, in
+   order, with `"error": true` and `"results": []`.
+5. `uv run advisor-analysis view evals\runs\<stamp>-ollama.json`, then open
+   `http://127.0.0.1:5209`. `http://<your LAN IP>:5209` must not answer.
+   One screen shows what B9 lists, with no sideways scroll; each tool call,
+   error calls included, sits under its own model turn.
+6. Label at least 20 conversations with the keyboard: `p` saves a pass and
+   stays; `f` focuses the critique and `Enter` saves the fail and moves on;
+   `j`/`k` go to the next/previous; `f` then `Enter` on an empty box is
+   refused ("A fail needs a critique."). With filters on, `j`/`k` stay
+   inside them. Ctrl+C and `view` again: labels and counts are kept. Each
+   line of `evals\labels\<stamp>-ollama.jsonl` has `case_id`, `label`,
+   `critique`, `labelled_at` (UTC, ending in `Z`), `question` and `answer`.
+7. `uv run advisor-analysis taxonomy evals\labels\<stamp>-ollama.jsonl`
+   writes `evals\taxonomy.draft.json`. On "Draft rejected" (exit 1), note
+   why and rerun.
+8. Edit the draft so every failed case maps to a mode, keep `"labels"`,
+   and save it as `evals\taxonomy.json`.
+9. `uv run advisor-analysis counts evals\runs\<stamp>-ollama.json --out
+   $env:TEMP\counts.md`: four tables matching your labels. Change one
+   mapping to an unknown mode: `Taxonomy error: …`, exit 2. Undo it.
+10. `git status`: the only new files are `evals/generated.jsonl`,
+    `evals/labels/*.jsonl` and `evals/taxonomy.json`; no `.sesskey`, no
+    `taxonomy.draft.json`.
+
+You should see: every happy-path command exits 0, the viewer answers only on
+127.0.0.1, each tool call sits under its own turn, labels survive a restart,
+and the counts match your labels.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/9-error-analysis` at 2421d9e; `git status --short` empty before and after):
+- **Coordinator, re-run:** `npm run verify` → exit 0; ruff "All checks
+  passed!"; "113 files already formatted"; mypy "Success: no issues found in
+  26 source files"; pytest "481 passed". Matches the reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL on the owed live
+  check only, "30 file(s), 4249 line(s)". Matches.
+- **Coordinator, re-run:** O11, the one surviving mutant, with my own
+  harness (backup by copy, both replacements asserted once, full pytest,
+  restore by copy): SURVIVED, "481 passed". Matches the reviewer.
+- **Coordinator, re-run:** `git range-diff c806886..fdcb37e main..2fc988f`
+  → 17 `=` and 1 `!`. Matches.
+
+**Reviewer, verified:**
+- HEAD 2421d9e on `feat/9-error-analysis`; nothing pushed (no upstream;
+  `origin/main` is 5fade27).
+- `npm run verify` (481 passed, kit 255/255); `npm run check:intent` (FAIL,
+  live check only); the sampling line.
+- The range-diff, the per-file diff of diffs, the test-name sets, and `git
+  merge-tree` against the moved `main`.
+- Main's own suite: "290 passed" (the basis for 481 = 472 + 9; run in the
+  main checkout, nothing written, no checkout).
+- 27 mutants as tabled; `git status --short` empty after.
+
+**Taken on trust:**
+- Round 2's verified items outside the merge delta (the B5/B6 probe, viewer
+  escaping, the conftest guard mutants C1-C3 and C6): their commits are
+  patch-identical to fdcb37e under range-diff.
+- §11's own review, for §11 code beyond the four mutants.
+
+# Round 2 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: fdcb37e1fdab6c8f5c84bc534da53170bc791213
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, set by round 1's input 3 (its HIGH); nothing lowers it.
 Input 1 gives Attested for this round's diff (`src/advisor/evals/**`,
@@ -21,7 +241,7 @@ four rework findings are fixed. `check:intent` FAILs only on the owed live
 check (the owner's gate). The tier is Reviewed, so the verdict is
 escalate: the owner reads the diff.
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round 1 | Finding | Resolution | Evidence |
 | --- | --- | --- | --- |
 | HIGH | unknown-tool calls missing from `tools`; calls under the wrong turn (B5/B9) | fixed | `RecordingTracer.tool` records every call in order (`run.py:68-79`); `_recording_tool` hands results over with `offer_results`; `test_an_unknown_tool_call_is_recorded_in_order_with_error_true`; V12 killed by `test_each_tool_call_renders_under_its_own_turn`; a mixed-turn probe is correct |
@@ -30,7 +250,7 @@ escalate: the owner reads the diff.
 | MEDIUM | socket-guard conditions unproven (C1–C3); `endswith` matched `websocket.py` | fixed | `conftest.py:29` `caller.co_filename == socket.__file__`; four single-condition tests; C1, C2, C3, C6 killed |
 | LOW | Origin/Host checks | open, Worth a look | not done; reason in the plan's Progress |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (43bd508 touches only what round 1 named; `plan.md` gains only a Progress entry) |
@@ -43,7 +263,7 @@ escalate: the owner reads the diff.
 | 8 | Guardrails and hygiene | pass (`.sesskey` untracked and ignored; none after the full suite; no dependency or suppression change); round-1 LOW carried |
 | 9 | Repository-specific footguns | pass (list empty; round 1's proposed entry is the owner's to add) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -54,7 +274,7 @@ type-check: FAIL (intent 9, feature)
 ```
 Exit 1. The only error is the owed live check: not rework.
 
-## Findings
+### Findings
 - **LOW** `src/advisor/evals/run.py:69`, `:74` — no test proves that an
   error call coming *after* a successful one gets `results: []`. Two
   guards protect it (the reset at line 69 and `error or` at line 74); each
@@ -108,7 +328,7 @@ end). 20 run:
 
 Survived: O11 (LOW; the test above would kill it). Equivalent: O2, O3.
 
-## Not checked
+### Not checked
 - **Live model behaviour (AC9):** what `qwen3:8b` generates, how many
   candidates coverage keeps, the taxonomy draft's quality.
 - **Hotkeys in a real browser,** B9's "no sideways scroll", real
@@ -119,7 +339,7 @@ Survived: O11 (LOW; the test above would kill it). Equivalent: O2, O3.
   frozen stdlib would make the viewer tests fail loudly, not silently).
 - **Package release dates:** not re-checked; no dependency changed.
 
-## Live check
+### Live check
 - owed: rule 3 (AC9). Rule 1 does not apply.
 - **When:** after the rebase onto `main` (so `advisor-eval --provider`
   exists). Ollama with `qwen3:8b`; Windows PowerShell in
@@ -160,7 +380,7 @@ Survived: O11 (LOW; the test above would kill it). Equivalent: O2, O3.
   on 127.0.0.1; each tool call under its own turn; labels survive a
   restart; the counts match your labels.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/9-error-analysis` at fdcb37e; `git status --short` empty before and after; no `.sesskey` before or after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; kit `pass 255, fail
