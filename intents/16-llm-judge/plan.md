@@ -150,3 +150,21 @@ All with fakes; no socket, no key.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: build (subtasks 1-8)
+
+Commits: `ff218a1` pure judge logic and prompt; `039c813` score config and batch writes in `tracing.py`; `2ac5c8a` `judge` and `judge-validate`; `d029d36` validate tests; `50ece67` initial split; docs commit; this entry.
+
+Shipped: `src/advisor/evals/judge.py` (scope, conversation, prompt, verdict, split, agreement, `validation.md`), `src/advisor/evals/judging.py` (the two commands' I/O), `judge-no-fit.md` prompt, `LangfuseAnnotations.ensure_judge_config` / `write_scores` (SDK 5.2.0 `api.scores.create(request=[CreateScoreRequest(id, trace_id, name, value, data_type, comment, config_id, source)])`, `queue_id` left unset), `evals/judge/split.json` (8 few-shot: 4 pass, 4 fail; 9 held out: 6 pass, 3 fail), README and CLAUDE.md. No live call was made; `validation.md` is not committed (the live check produces it).
+
+Tests: 608 before, 678 after (pytest); kit tests 255 unchanged. Mutations checked by backup and restore: `tpr <= MIN_RATE` and a non-Anthropic provider both fail tests.
+
+Divergences from the plan:
+- The prompt is `src/advisor/evals/prompts/judge-no-fit.md` (beside `taxonomy.md`), not `evals/prompts/`, which does not exist.
+- Prompt written with subtask 1 (the shipped-template test needs it), not as its own commit.
+- The `judge` / `judge-validate` bodies are in a new module `judging.py` (analysis.py only parses and dispatches), to keep analysis.py readable.
+- `write_scores(scores, config_id)` takes the config id (the command calls `ensure_judge_config` once), and a batch with `rejected > 0` is an `AnnotationError` at step `score-write`.
+- `JUDGE_SCORE_NAME` lives in `annotate.py`; `judge` added to the pure-module list in `test_boundaries.py`.
+- B7 minimums (30 conversations, 10 fails) count conversations with a verdict (judge errors excluded), and a zero-owner-fail table is "not trusted".
+- Extra options `--labels-dir`, `--runs-dir`, `--judgements-dir` (defaults are the repo paths) so tests need no chdir.
+- The few-shot examples need their run reports in `evals/runs/` (local, not committed); without one, `judge` exits 2 naming it. `judge-validate` skips a held-out conversation whose report is missing.

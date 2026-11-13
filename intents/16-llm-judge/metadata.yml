@@ -2,7 +2,7 @@
 id: 16
 slug: llm-judge
 type: feature
-status: accepted
+status: in-review
 title: An LLM judge for one failure mode, validated against the owner's labels
 review_tier: reviewed    # writes scores to Langfuse through src/advisor/tracing.py (Reviewed by meaning)
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 16 /auto 16"
