@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 15
+slug: fifty-cases
+type: feature
+status: draft
+title: A committed set of 50 real-looking eval questions with expected behaviour
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/8-offline-evals    the case format and code checks
+  - intents/9-error-analysis    the generated questions and dimensions
+  - intents/13-catalogue-change-rules    its consistency test checks the 50
+  - intents/14-catalogue-500    the catalogue the 50 are written against
