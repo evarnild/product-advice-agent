@@ -509,6 +509,23 @@ def test_each_case_gets_a_tracer_with_eval_run_and_case_tags(tmp_path):
     assert all(env["LANGFUSE_HOST"] == "http://langfuse.invalid" for env, _ in tf.calls)
 
 
+def test_dimensions_become_three_more_tags_in_order(tmp_path):
+    tf = TracerFactory()
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, cases=DIM_CASES, env=LANGFUSE_ENV, tracer_factory=tf)
+    base = ["eval", "provider:ollama", "model:test-model", f"run:{STAMP}"]
+    assert [tags for _, tags in tf.calls] == [
+        [
+            *base,
+            "case:hp",
+            "feature:headphones",
+            "scenario:several-matches",
+            "persona:a gift buyer",
+        ],
+        [*base, "case:lap"],
+        [*base, "case:off"],
+    ]
+
+
 def test_trace_tags_follow_the_provider_and_model_flags(tmp_path):
     tf = TracerFactory()
     code, out, err, _ = run(

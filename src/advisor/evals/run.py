@@ -269,6 +269,9 @@ def main(
             f"run:{stamp}",
             f"case:{case.id}",
         ]
+        # §10 B4: the §9 dimensions, so the Tracing table filters on them.
+        if case.dimensions is not None:
+            tags += [f"{k}:{case.dimensions[k]}" for k in ("feature", "scenario", "persona")]
         traced = _FanOutTracer(tracer, tracer_factory(full_env, tags))
         answer = ""
         checks: list[Check] = []
