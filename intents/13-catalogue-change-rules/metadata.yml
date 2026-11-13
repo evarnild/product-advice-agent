@@ -2,7 +2,7 @@
 id: 13
 slug: catalogue-change-rules
 type: feature
-status: accepted
+status: in-review
 title: Catalogue changes cannot silently break the eval set
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 13 /auto 13"

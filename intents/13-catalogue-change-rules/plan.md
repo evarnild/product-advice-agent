@@ -122,3 +122,24 @@ All in-process, no model, no socket.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13 — build (subtasks 1-5)
+
+Commits: d9ec739 (check), 6755a73 (committed-cases test), the
+`catalogue_sha256` commit, the rules commit (ADR 0003, README, CLAUDE.md),
+and this finish commit.
+
+Shipped: `catalogue_problems(cases, catalogue) -> list[str]` in
+`src/advisor/evals/cases.py` (with a private `_expected_results`), unit tests
+in the new `tests/test_evals_consistency.py`, the committed-cases test in
+`tests/test_evals_cases.py`, `catalogue_sha256` in the run report plus a test,
+a test that `advisor-analysis counts` and `view` accept a report without it,
+ADR 0003, the README "Changing the catalogue" section and two CLAUDE.md lines.
+
+Tests: 608 -> 622 passed. No committed case needed fixing.
+
+Divergences: `cases.py` imports the private `_norm` and `MAX_LIMIT` from
+`advisor.catalogue` (as `score.py` already uses a `_norm`), rather than a
+copy. The README section is a `###` under "Evaluating answers" (placed after
+the error-analysis text, before "Check"). Subtasks 1 and 2 were run as one
+verify cycle, committed separately.
