@@ -15,10 +15,10 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
+from advisor.evals.annotate import JUDGE_SCORE_NAME
 from advisor.evals.modeljson import extract_json
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "judge-no-fit.md"
-SCORE_NAME_JUDGE = "judge-no-fit"
 
 # Interpretation (spec): in scope by the case's scenario, not by its search
 # results. The scenario is fixed by the probe check (§9); a model that did not
@@ -125,7 +125,7 @@ def parse_verdict(text: str) -> Verdict | JudgeError:
 
 def score_id(stamp: str, case_id: str) -> str:
     """B9: the same id for the same run and case, so a rerun replaces the score."""
-    return str(uuid.uuid5(_SCORE_NAMESPACE, f"{SCORE_NAME_JUDGE}:{stamp}:{case_id}"))
+    return str(uuid.uuid5(_SCORE_NAMESPACE, f"{JUDGE_SCORE_NAME}:{stamp}:{case_id}"))
 
 
 # --- The split --------------------------------------------------------------

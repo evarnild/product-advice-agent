@@ -16,9 +16,21 @@ from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 from langfuse import Langfuse
-from langfuse.api import AnnotationQueueObjectType
+from langfuse.api import (
+    AnnotationQueueObjectType,
+    CreateScoreRequest,
+    CreateScoreSource,
+    ScoreDataType,
+)
 
-from advisor.evals.annotate import SCORE_NAME, AnnotationError, RunTrace, Score
+from advisor.evals.annotate import (
+    JUDGE_SCORE_NAME,
+    SCORE_NAME,
+    AnnotationError,
+    JudgeScore,
+    RunTrace,
+    Score,
+)
 from advisor.models.base import Usage
 from advisor.tracer import NoopTracer, Tracer
 
@@ -158,6 +170,10 @@ def make_tracer(env: Mapping[str, str], tags: Sequence[str] = ()) -> Tracer:
 PAGE_LIMIT = 100
 OBSERVATIONS_LIMIT = 1000
 CONFIG_DESCRIPTION = "pass/fail label; the critique goes in the comment"
+JUDGE_CONFIG_DESCRIPTION = (
+    "LLM judge: an honest answer when nothing fits; the reason is the comment"
+)
+SCORE_BATCH = 100
 QUEUE_DESCRIPTION = "Eval run traces to label pass/fail; imported with advisor-analysis import"
 _T = TypeVar("_T")
 
@@ -218,26 +234,66 @@ class LangfuseAnnotations:
             if not cursor:
                 return found
 
-    def ensure_score_config(self) -> str:
+    def _ensure_config(self, name: str, description: str) -> str:
         def run() -> str:
             api = self._api.score_configs
             configs = self._pages(lambda page: api.get(page=page, limit=PAGE_LIMIT))
-            named = [c for c in configs if c.name == SCORE_NAME]
+            named = [c for c in configs if c.name == name]
             for found in named:
                 if found.data_type == "BOOLEAN":
                     return str(found.id)
             if named:
                 raise AnnotationError(
                     "config",
-                    f"a score config named '{SCORE_NAME}' exists with data type "
+                    f"a score config named '{name}' exists with data type "
                     f"{named[0].data_type}, not BOOLEAN; rename or archive it in Langfuse",
                 )
-            created = api.create(
-                name=SCORE_NAME, data_type="BOOLEAN", description=CONFIG_DESCRIPTION
-            )
+            created = api.create(name=name, data_type="BOOLEAN", description=description)
             return str(created.id)
 
         return self._call("config", run)
+
+    def ensure_score_config(self) -> str:
+        return self._ensure_config(SCORE_NAME, CONFIG_DESCRIPTION)
+
+    def ensure_judge_config(self) -> str:
+        # Its own config and name (§16 B10): `import` reads only `pass` scores of a queue.
+        return self._ensure_config(JUDGE_SCORE_NAME, JUDGE_CONFIG_DESCRIPTION)
+
+    def write_scores(self, scores: Sequence[JudgeScore], config_id: str) -> None:
+        """Create the BOOLEAN `judge-no-fit` scores (SDK 5.2.0 `api.scores.create`, a batch).
+
+        Each carries its deterministic id, so a rerun replaces it. No `queue_id`
+        is set and the source is `API`, so a score is never an annotation (B10).
+        """
+        if not scores:
+            return
+        requests = [
+            CreateScoreRequest(
+                id=s.score_id,
+                trace_id=s.trace_id,
+                name=JUDGE_SCORE_NAME,
+                value=1.0 if s.value else 0.0,
+                data_type=ScoreDataType("BOOLEAN"),
+                comment=s.comment,
+                config_id=config_id,
+                source=CreateScoreSource("API"),
+            )
+            for s in scores
+        ]
+
+        def run() -> None:
+            for start in range(0, len(requests), SCORE_BATCH):
+                reply = self._api.scores.create(request=requests[start : start + SCORE_BATCH])
+                rejected = getattr(reply, "rejected", 0)
+                if rejected:
+                    errors = "; ".join(e.message for e in getattr(reply, "errors", ()))
+                    raise AnnotationError(
+                        "score-write",
+                        _redact(f"{rejected} score(s) rejected: {errors}", self._secrets),
+                    )
+
+        self._call("score-write", run)
 
     def _queues(self) -> list[Any]:
         api = self._api.annotation_queues
