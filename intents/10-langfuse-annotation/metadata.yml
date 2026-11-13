@@ -8,11 +8,11 @@ review_tier: reviewed    # touches src/advisor/tracing.py (Reviewed by meaning: 
 intent_accepted: 2026-11-11 by-agent    # owner: "accept 10"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 10" (auto_authorized 2026-11-13)
-live_checked:
+live_checked: 2026-11-13 by-agent    # owner: "live checked 10"
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 10" (after the escalate stop: diff read)
 auto_round: 2
-auto_stopped: live check owed
+auto_stopped:
 follows_up:
 links:
   - intents/9-error-analysis    the labels, taxonomy and counts this feeds
