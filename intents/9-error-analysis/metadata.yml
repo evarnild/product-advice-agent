@@ -8,11 +8,11 @@ review_tier:
 intent_accepted: 2026-11-11 by-agent    # owner: "go with a custom viewer, accept intent 9"
 spec_accepted: 2026-11-11 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-11 by-agent    # auto: owner "/auto 9" (auto_authorized 2026-11-11)
-live_checked:
+live_checked: 2026-11-13 by-agent    # owner: "live check ok"
 merged:
 auto_authorized: 2026-11-12 by-agent    # owner: "/auto 9" (diff read after round 3)
 auto_round: 3
-auto_stopped: live check owed
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    builds on its question set, runner and checks
