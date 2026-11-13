@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseBranch, parseMetadata } from './intent-check-lib.mjs';
+import { blockerState, parseBlockers } from './blockers-lib.mjs';
 import { EVENT_LOG } from './session-lib.mjs';
 
 /** Runs git in `cwd` and returns trimmed stdout. Throws on a non-zero exit. */
@@ -81,4 +82,32 @@ export function readIntentMetadata(root, id) {
   const dir = findIntentDir(root, id);
   const file = dir && join(root, dir, 'metadata.yml');
   return file && existsSync(file) ? { dir, metadata: parseMetadata(readFileSync(file, 'utf8')) } : null;
+}
+
+/**
+ * The state of intent `id`'s `blocked_by` items, read from main (never from the
+ * intent's own branch). Returns `{ blockers: [{id, reason, state}], problems }`;
+ * state is 'cleared' (main has a non-empty merged:), 'open', or 'unknown' (no
+ * intent with that id on main, on a local branch or in the checkout at `root`).
+ */
+export function readBlockers(root, id, metadata) {
+  const parsed = parseBlockers(metadata, id);
+  const mainMetaOf = (blockerId) => {
+    try {
+      const dirs = git(root, 'ls-tree', '--name-only', 'main:intents').split(/\r?\n/);
+      const dir = dirs.find((d) => d.startsWith(`${blockerId}-`));
+      return dir ? parseMetadata(git(root, 'show', `main:intents/${dir}/metadata.yml`)) : null;
+    } catch {
+      return null;
+    }
+  };
+  const exists = (blockerId) => {
+    try {
+      return findIntentDir(root, blockerId) !== null || readIntentMetadataFromBranch(root, blockerId) !== null;
+    } catch {
+      return true; // on more than one branch: it exists
+    }
+  };
+  const blockers = parsed.items.map((b) => ({ ...b, state: blockerState(b.id, mainMetaOf, exists) }));
+  return { blockers, problems: parsed.problems };
 }
