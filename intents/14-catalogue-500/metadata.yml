@@ -7,12 +7,12 @@ title: Grow the catalogue to 500 products
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 14"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 14" to the spec stop
-plan_approved:
+plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 14 /auto 17" (auto_authorized 2026-11-13)
 live_checked:
 merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14 /auto 17"
+auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14 /auto 17", then "run both anyway"
 auto_round:
-auto_stopped: too many sessions
+auto_stopped:
 follows_up:
 links:
   - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth
