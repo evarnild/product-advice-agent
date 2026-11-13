@@ -8,7 +8,7 @@ review_tier: reviewed    # changes what is sent to Langfuse (by meaning, as for 
 intent_accepted: 2026-11-12 by-agent    # owner: "accept 12"
 spec_accepted: 2026-11-12 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-12 by-agent    # auto: owner "/auto 12" (auto_authorized 2026-11-12)
-live_checked:
+live_checked: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
 auto_round: 2
