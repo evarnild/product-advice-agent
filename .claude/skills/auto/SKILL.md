@@ -225,6 +225,34 @@ report. Do not write a green `review.md` over a mismatch.
 Put the results in the report's "Verified myself" section, each line marked
 **Coordinator, re-run**, as `/review` does for the commands it re-runs.
 
+### The eval run (REVIEW-POLICY.md → "Eval runs")
+
+After the re-check above and before writing `review.md`:
+
+1. In the worktree, run `uv run advisor-analysis owes-run --base main`. On
+   "not owed", the report's `## Eval run` says `not owed (no listed path)`
+   and you go on.
+2. On "owed", run `uv run advisor-eval` in the worktree at the reviewed
+   commit, on the default provider (Ollama). A paid provider only when the
+   owner asked for it in this conversation. Copy the report it names into
+   the main checkout's `evals/runs/` (gitignored), so it outlives the
+   worktree.
+3. Run `uv run advisor-analysis compare <report>` against the committed
+   `evals/baseline.json` (`--baseline <path>` for another file). Put the
+   report's name, provider and model, the comparison, and the commit the
+   run was made at in the `## Eval run` section and under "Verified myself".
+   Read the hash warnings: a run whose `prompt_sha256`, `cases_sha256` or
+   `catalogue_sha256` does not match the branch's files is not a run of the
+   reviewed content.
+4. Every case in "regressed" (PASS to FAIL or ERROR) is one finding,
+   "Needs decision: accept the regressions or rework", so the run stops
+   with `auto_stopped: decision needed`. The owner decides; no threshold
+   blocks. No regression, and the run goes on. Cases that are fixed, added
+   or removed are listed and are not findings.
+5. If the run cannot complete (Ollama down or the model missing, or every
+   case an ERROR), stop with `auto_stopped: eval run failed` and say why.
+   Never write a green `review.md` for a change that owes a run and has none.
+
 ## 7. The stop rules
 
 **Needs rework or needs decision.** "Needs rework:" is mechanical: the

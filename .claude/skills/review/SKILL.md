@@ -72,6 +72,13 @@ Pass 4 (mutations) is the expensive one, and the one that matters most:
 - back up and restore files yourself (never `git checkout --`);
 - end with `git status --short` clean.
 
+Eval-run check (`REVIEW-POLICY.md` → "Eval runs", part of pass 3): run
+`uv run advisor-analysis owes-run --base main`. When it says "owed", the
+change must name an eval run made on the reviewed content. Without one, write
+a HIGH finding "Needs rework: make the eval run". When the coordinator runs
+this review, it makes the run as `/auto` step 6 describes. A reviewer agent
+only checks that the run is named and that its hashes match.
+
 ## 4. Write `review.md`
 
 Use exactly the format in `REVIEW-POLICY.md` → "The report".
@@ -104,6 +111,9 @@ Use exactly the format in `REVIEW-POLICY.md` → "The report".
     That never replaces the owner's check, and you never write
     `live_checked:` unless the owner asks you to, after running the check
     themselves.
+- **`## Eval run`:** after `## Live check`, either `not owed (no listed
+  path)` or the run report's name, provider and model, the comparison
+  (`advisor-analysis compare`), and your reading of it.
 - **`run:`** `auto` when `/auto` called this review (its brief says so),
   otherwise `manual`.
 - **`sampled:`** run `npm run sdlc:scan -- --sample-due <run> --exclude <id>`
