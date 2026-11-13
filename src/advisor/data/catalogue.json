@@ -454,5 +454,6614 @@
       "voice": "yes"
     },
     "description": "Smart speaker with a built-in voice assistant, currently out of stock."
+  },
+  {
+    "id": "P-033",
+    "name": "Auralis Ridge 33",
+    "brand": "Auralis",
+    "category": "laptop",
+    "price_eur": 439.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-034",
+    "name": "Zephra Glint 97",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 1639.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-035",
+    "name": "Quillon Echo 17",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 159.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "37 h"
+    },
+    "description": "Everyday wireless over-ear headphones with a clear, balanced sound and 37 h of battery life."
+  },
+  {
+    "id": "P-036",
+    "name": "Sonavo Arc 58",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 339.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Budget 22 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-037",
+    "name": "Kestrel Glide 8",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 209.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "yes"
+    },
+    "description": "Budget 8 inch tablet with stylus support and 64 GB of storage."
+  },
+  {
+    "id": "P-038",
+    "name": "Tolvane Tick 7",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 239.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-039",
+    "name": "Sonavo Snap 56",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 2299.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a APS-C sensor and 6K video."
+  },
+  {
+    "id": "P-040",
+    "name": "Sonavo Beat 31",
+    "brand": "Sonavo",
+    "category": "speaker",
+    "price_eur": 159.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "24 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget portable speaker, 24 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-041",
+    "name": "Tolvane Orbit 93",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 1389.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "14 in"
+    },
+    "description": "Everyday 14 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-042",
+    "name": "Quillon Ember 44",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-043",
+    "name": "Pelagic Tempo 65",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "27 h"
+    },
+    "description": "Everyday wireless over-ear headphones with a clear, balanced sound and 27 h of battery life."
+  },
+  {
+    "id": "P-044",
+    "name": "Ostrel Pane 38",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 989.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 27 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-045",
+    "name": "Verdane Pad 98",
+    "brand": "Verdane",
+    "category": "tablet",
+    "price_eur": 1309.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-046",
+    "name": "Halcyra Orbit 86",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 509.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-047",
+    "name": "Halcyra Trail 80",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 1199.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-048",
+    "name": "Kestrel Stage 34",
+    "brand": "Kestrel",
+    "category": "speaker",
+    "price_eur": 69.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "25 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget pocket speaker, 25 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-049",
+    "name": "Sonavo Ridge 47",
+    "brand": "Sonavo",
+    "category": "laptop",
+    "price_eur": 499.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-050",
+    "name": "Pelagic Glint 12",
+    "brand": "Pelagic",
+    "category": "phone",
+    "price_eur": 499.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-051",
+    "name": "Pelagic Echo 33",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 109.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "28 h"
+    },
+    "description": "Budget wireless over-ear headphones with a clear, balanced sound and 28 h of battery life."
+  },
+  {
+    "id": "P-052",
+    "name": "Norvik Prism 26",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 479.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-053",
+    "name": "Ostrel Pad 16",
+    "brand": "Ostrel",
+    "category": "tablet",
+    "price_eur": 339.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-054",
+    "name": "Ostrel Stride 43",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 389.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-055",
+    "name": "Sonavo Frame 51",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 829.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "4K",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 4K video, waterproof without a case."
+  },
+  {
+    "id": "P-056",
+    "name": "Norvik Beat 12",
+    "brand": "Norvik",
+    "category": "speaker",
+    "price_eur": 659.0,
+    "in_stock": false,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-057",
+    "name": "Tolvane Edge 79",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 2709.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-058",
+    "name": "Auralis Pebble 83",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 1279.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "512 GB",
+      "camera": "108 MP"
+    },
+    "description": "Capable phone with a 6.7 inch screen, 512 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-059",
+    "name": "Lumino Hush 65",
+    "brand": "Lumino",
+    "category": "headphones",
+    "price_eur": 369.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "10 h"
+    },
+    "description": "Premium wireless in-ear headphones with active noise cancelling and 10 h of battery life."
+  },
+  {
+    "id": "P-060",
+    "name": "Sonavo Prism 13",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 619.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Everyday 24 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-061",
+    "name": "Zephra Glide 9",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 929.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-062",
+    "name": "Norvik Dial 14",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 269.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "10 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 10 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-063",
+    "name": "Quillon Focus 96",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 649.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-064",
+    "name": "Verdane Hum 4",
+    "brand": "Verdane",
+    "category": "speaker",
+    "price_eur": 489.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-065",
+    "name": "Kestrel Orbit 14",
+    "brand": "Kestrel",
+    "category": "laptop",
+    "price_eur": 1819.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 6-core processor, 16 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-066",
+    "name": "Ostrel Ember 20",
+    "brand": "Ostrel",
+    "category": "phone",
+    "price_eur": 1759.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-067",
+    "name": "Pelagic Tempo 33",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "6 h"
+    },
+    "description": "Capable wireless in-ear headphones with active noise cancelling and 6 h of battery life."
+  },
+  {
+    "id": "P-068",
+    "name": "Lumino Frame 32",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 809.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Capable 27 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-069",
+    "name": "Halcyra Tab 89",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 1009.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "no"
+    },
+    "description": "Capable 11 inch tablet for reading and video and 256 GB of storage."
+  },
+  {
+    "id": "P-070",
+    "name": "Kestrel Pace 39",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 14 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-071",
+    "name": "Verdane Shot 58",
+    "brand": "Verdane",
+    "category": "camera",
+    "price_eur": 2669.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-072",
+    "name": "Lumino Beat 61",
+    "brand": "Lumino",
+    "category": "speaker",
+    "price_eur": 229.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "21 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 21 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-073",
+    "name": "Zephra Edge 17",
+    "brand": "Zephra",
+    "category": "laptop",
+    "price_eur": 379.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-074",
+    "name": "Sonavo Quest 97",
+    "brand": "Sonavo",
+    "category": "phone",
+    "price_eur": 779.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-075",
+    "name": "Halcyra Muse 80",
+    "brand": "Halcyra",
+    "category": "headphones",
+    "price_eur": 329.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "44 h"
+    },
+    "description": "Capable wireless on-ear headphones with active noise cancelling and 44 h of battery life."
+  },
+  {
+    "id": "P-076",
+    "name": "Quillon Prism 56",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 969.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-077",
+    "name": "Pelagic Slate 64",
+    "brand": "Pelagic",
+    "category": "tablet",
+    "price_eur": 1249.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-078",
+    "name": "Auralis Tempo 94",
+    "brand": "Auralis",
+    "category": "smartwatch",
+    "price_eur": 339.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-079",
+    "name": "Lumino Snap 38",
+    "brand": "Lumino",
+    "category": "camera",
+    "price_eur": 1329.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a APS-C sensor and 4K video, waterproof without a case."
+  },
+  {
+    "id": "P-080",
+    "name": "Halcyra Roam 77",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 609.0,
+    "in_stock": false,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-081",
+    "name": "Tolvane Studio 54",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 2609.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 8-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-082",
+    "name": "Halcyra Flux 36",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 1009.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-083",
+    "name": "Verdane Tempo 93",
+    "brand": "Verdane",
+    "category": "headphones",
+    "price_eur": 279.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "44 h"
+    },
+    "description": "Capable wireless over-ear headphones with active noise cancelling and 44 h of battery life."
+  },
+  {
+    "id": "P-084",
+    "name": "Norvik View 19",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 1469.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-085",
+    "name": "Zephra Page 86",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 529.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-086",
+    "name": "Norvik Loop 46",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 679.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "no"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-087",
+    "name": "Verdane Capture 72",
+    "brand": "Verdane",
+    "category": "camera",
+    "price_eur": 2539.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a APS-C sensor and 6K video."
+  },
+  {
+    "id": "P-088",
+    "name": "Zephra Hum 72",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 419.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "10 h",
+      "waterproof": "yes"
+    },
+    "description": "Capable party speaker, 10 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-089",
+    "name": "Sonavo Slate 86",
+    "brand": "Sonavo",
+    "category": "laptop",
+    "price_eur": 2969.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-090",
+    "name": "Quillon Glint 42",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 1069.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Capable phone with a 6.1 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-091",
+    "name": "Ostrel Hush 78",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 439.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "21 h"
+    },
+    "description": "Premium wireless on-ear headphones with active noise cancelling and 21 h of battery life."
+  },
+  {
+    "id": "P-092",
+    "name": "Kestrel Lumen 35",
+    "brand": "Kestrel",
+    "category": "monitor",
+    "price_eur": 219.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-093",
+    "name": "Sonavo Note 98",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 959.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-094",
+    "name": "Norvik Beacon 31",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 349.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-095",
+    "name": "Zephra Frame 39",
+    "brand": "Zephra",
+    "category": "camera",
+    "price_eur": 2589.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-096",
+    "name": "Ostrel Stage 54",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "25 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday portable speaker, 25 h of battery life."
+  },
+  {
+    "id": "P-097",
+    "name": "Verdane Slate 74",
+    "brand": "Verdane",
+    "category": "laptop",
+    "price_eur": 969.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 4-core processor, 8 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-098",
+    "name": "Lumino Glint 4",
+    "brand": "Lumino",
+    "category": "phone",
+    "price_eur": 299.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-099",
+    "name": "Zephra Wave 34",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "29 h"
+    },
+    "description": "Capable wireless on-ear headphones with active noise cancelling and 29 h of battery life."
+  },
+  {
+    "id": "P-100",
+    "name": "Kestrel Prism 32",
+    "brand": "Kestrel",
+    "category": "monitor",
+    "price_eur": 1029.0,
+    "in_stock": false,
+    "specs": {
+      "size": "32 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-101",
+    "name": "Norvik Canvas 1",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 1359.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-102",
+    "name": "Pelagic Stride 46",
+    "brand": "Pelagic",
+    "category": "smartwatch",
+    "price_eur": 39.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-103",
+    "name": "Auralis Lens 14",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 759.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-104",
+    "name": "Lumino Echo 10",
+    "brand": "Lumino",
+    "category": "speaker",
+    "price_eur": 439.0,
+    "in_stock": false,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-105",
+    "name": "Tolvane Slate 88",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 1879.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-106",
+    "name": "Halcyra Pebble 98",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 1739.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-107",
+    "name": "Quillon Muse 6",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 29.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "6 h"
+    },
+    "description": "Budget wireless in-ear headphones with a clear, balanced sound and 6 h of battery life."
+  },
+  {
+    "id": "P-108",
+    "name": "Halcyra Pane 66",
+    "brand": "Halcyra",
+    "category": "monitor",
+    "price_eur": 1219.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-109",
+    "name": "Sonavo Page 42",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 439.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-110",
+    "name": "Verdane Pace 24",
+    "brand": "Verdane",
+    "category": "smartwatch",
+    "price_eur": 109.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "yes"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 10 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-111",
+    "name": "Halcyra Aperture 56",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 1489.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a APS-C sensor and 4K 60 video, waterproof without a case."
+  },
+  {
+    "id": "P-112",
+    "name": "Ostrel Cube 86",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "29 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday party speaker, 29 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-113",
+    "name": "Kestrel Studio 15",
+    "brand": "Kestrel",
+    "category": "laptop",
+    "price_eur": 1299.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "1 TB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 16 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-114",
+    "name": "Ostrel Flux 36",
+    "brand": "Ostrel",
+    "category": "phone",
+    "price_eur": 559.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-115",
+    "name": "Ostrel Wave 60",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "37 h"
+    },
+    "description": "Budget wireless on-ear headphones with a clear, balanced sound and 37 h of battery life."
+  },
+  {
+    "id": "P-116",
+    "name": "Lumino Horizon 9",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 1129.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-117",
+    "name": "Kestrel Page 11",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 379.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-118",
+    "name": "Tolvane Orbit 63",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 779.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-119",
+    "name": "Lumino Capture 94",
+    "brand": "Lumino",
+    "category": "camera",
+    "price_eur": 1649.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K 60",
+      "waterproof": "yes"
+    },
+    "description": "Capable camera with a 1 in sensor and 4K 60 video, waterproof without a case."
+  },
+  {
+    "id": "P-120",
+    "name": "Quillon Boom 60",
+    "brand": "Quillon",
+    "category": "speaker",
+    "price_eur": 109.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "29 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget pocket speaker, 29 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-121",
+    "name": "Halcyra Orbit 6",
+    "brand": "Halcyra",
+    "category": "laptop",
+    "price_eur": 2069.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 8-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-122",
+    "name": "Sonavo Pebble 94",
+    "brand": "Sonavo",
+    "category": "phone",
+    "price_eur": 1559.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-123",
+    "name": "Kestrel Calm 46",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 49.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "30 h"
+    },
+    "description": "Budget wireless over-ear headphones with active noise cancelling and 30 h of battery life."
+  },
+  {
+    "id": "P-124",
+    "name": "Sonavo Horizon 94",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 1079.0,
+    "in_stock": false,
+    "specs": {
+      "size": "32 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-125",
+    "name": "Norvik Canvas 51",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 1069.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-126",
+    "name": "Quillon Stride 51",
+    "brand": "Quillon",
+    "category": "smartwatch",
+    "price_eur": 769.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-127",
+    "name": "Norvik Aperture 61",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 2849.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-128",
+    "name": "Halcyra Bar 56",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 389.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "15 h",
+      "waterproof": "yes"
+    },
+    "description": "Capable party speaker, 15 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-129",
+    "name": "Zephra Edge 64",
+    "brand": "Zephra",
+    "category": "laptop",
+    "price_eur": 619.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-130",
+    "name": "Halcyra Glint 36",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 639.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 5.8 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-131",
+    "name": "Ostrel Wave 83",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 379.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "33 h"
+    },
+    "description": "Premium wireless over-ear headphones with active noise cancelling and 33 h of battery life."
+  },
+  {
+    "id": "P-132",
+    "name": "Ostrel View 48",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 1299.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-133",
+    "name": "Quillon Slate 47",
+    "brand": "Quillon",
+    "category": "tablet",
+    "price_eur": 1189.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-134",
+    "name": "Verdane Stride 77",
+    "brand": "Verdane",
+    "category": "smartwatch",
+    "price_eur": 89.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-135",
+    "name": "Auralis Shot 72",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 2449.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 4K 60 video."
+  },
+  {
+    "id": "P-136",
+    "name": "Pelagic Roam 64",
+    "brand": "Pelagic",
+    "category": "speaker",
+    "price_eur": 319.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "25 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday party speaker, 25 h of battery life."
+  },
+  {
+    "id": "P-137",
+    "name": "Pelagic Slate 71",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 1239.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "16 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Everyday 14 inch laptop with a 8-core processor, 16 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-138",
+    "name": "Pelagic Ember 14",
+    "brand": "Pelagic",
+    "category": "phone",
+    "price_eur": 889.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "50 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-139",
+    "name": "Quillon Aria 38",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 389.0,
+    "in_stock": false,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "29 h"
+    },
+    "description": "Premium wireless on-ear headphones with active noise cancelling and 29 h of battery life."
+  },
+  {
+    "id": "P-140",
+    "name": "Quillon Horizon 71",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 1199.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 32 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-141",
+    "name": "Pelagic Pad 26",
+    "brand": "Pelagic",
+    "category": "tablet",
+    "price_eur": 649.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 10 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-142",
+    "name": "Verdane Dial 33",
+    "brand": "Verdane",
+    "category": "smartwatch",
+    "price_eur": 529.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.8 inch display, 2 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-143",
+    "name": "Zephra Shot 52",
+    "brand": "Zephra",
+    "category": "camera",
+    "price_eur": 2139.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 6K video."
+  },
+  {
+    "id": "P-144",
+    "name": "Quillon Bar 46",
+    "brand": "Quillon",
+    "category": "speaker",
+    "price_eur": 239.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "8 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 8 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-145",
+    "name": "Kestrel Forge 51",
+    "brand": "Kestrel",
+    "category": "laptop",
+    "price_eur": 2909.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-146",
+    "name": "Ostrel Ember 74",
+    "brand": "Ostrel",
+    "category": "phone",
+    "price_eur": 99.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-147",
+    "name": "Zephra Hush 60",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 239.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "34 h"
+    },
+    "description": "Capable wireless on-ear headphones with active noise cancelling and 34 h of battery life."
+  },
+  {
+    "id": "P-148",
+    "name": "Sonavo Frame 17",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 299.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 24 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-149",
+    "name": "Auralis Tab 89",
+    "brand": "Auralis",
+    "category": "tablet",
+    "price_eur": 999.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "512 GB",
+      "stylus": "no"
+    },
+    "description": "Capable 11 inch tablet for reading and video and 512 GB of storage."
+  },
+  {
+    "id": "P-150",
+    "name": "Quillon Beacon 36",
+    "brand": "Quillon",
+    "category": "smartwatch",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-151",
+    "name": "Norvik Snap 46",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 2179.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-152",
+    "name": "Ostrel Roam 80",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 59.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "20 h",
+      "waterproof": "no"
+    },
+    "description": "Budget pocket speaker, 20 h of battery life."
+  },
+  {
+    "id": "P-153",
+    "name": "Pelagic Atlas 37",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 2879.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-154",
+    "name": "Verdane Ember 16",
+    "brand": "Verdane",
+    "category": "phone",
+    "price_eur": 1199.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-155",
+    "name": "Auralis Calm 42",
+    "brand": "Auralis",
+    "category": "headphones",
+    "price_eur": 219.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "12 h"
+    },
+    "description": "Everyday wireless in-ear headphones with active noise cancelling and 12 h of battery life."
+  },
+  {
+    "id": "P-156",
+    "name": "Auralis Lumen 49",
+    "brand": "Auralis",
+    "category": "monitor",
+    "price_eur": 939.0,
+    "in_stock": false,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 27 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-157",
+    "name": "Norvik Pad 23",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 1189.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-158",
+    "name": "Norvik Stride 69",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "10 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 10 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-159",
+    "name": "Sonavo Focus 41",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video, waterproof without a case."
+  },
+  {
+    "id": "P-160",
+    "name": "Norvik Bar 78",
+    "brand": "Norvik",
+    "category": "speaker",
+    "price_eur": 179.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "8 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget pocket speaker, 8 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-161",
+    "name": "Quillon Edge 4",
+    "brand": "Quillon",
+    "category": "laptop",
+    "price_eur": 2459.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-162",
+    "name": "Sonavo Quest 5",
+    "brand": "Sonavo",
+    "category": "phone",
+    "price_eur": 509.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-163",
+    "name": "Verdane Aria 1",
+    "brand": "Verdane",
+    "category": "headphones",
+    "price_eur": 229.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "9 h"
+    },
+    "description": "Everyday wireless in-ear headphones with active noise cancelling and 9 h of battery life."
+  },
+  {
+    "id": "P-164",
+    "name": "Kestrel Pane 38",
+    "brand": "Kestrel",
+    "category": "monitor",
+    "price_eur": 359.0,
+    "in_stock": false,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-165",
+    "name": "Kestrel Note 38",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 489.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-166",
+    "name": "Auralis Loop 14",
+    "brand": "Auralis",
+    "category": "smartwatch",
+    "price_eur": 519.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.8 inch display, 2 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-167",
+    "name": "Kestrel Aperture 56",
+    "brand": "Kestrel",
+    "category": "camera",
+    "price_eur": 2479.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 4K 60 video."
+  },
+  {
+    "id": "P-168",
+    "name": "Halcyra Stage 30",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 309.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "21 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday party speaker, 21 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-169",
+    "name": "Verdane Studio 33",
+    "brand": "Verdane",
+    "category": "laptop",
+    "price_eur": 2379.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "15 in"
+    },
+    "description": "Premium 15 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-170",
+    "name": "Verdane Flux 58",
+    "brand": "Verdane",
+    "category": "phone",
+    "price_eur": 959.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 256 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-171",
+    "name": "Tolvane Drift 55",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 339.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "5 h"
+    },
+    "description": "Capable wireless in-ear headphones with active noise cancelling and 5 h of battery life."
+  },
+  {
+    "id": "P-172",
+    "name": "Tolvane Horizon 88",
+    "brand": "Tolvane",
+    "category": "monitor",
+    "price_eur": 1179.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Premium 32 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-173",
+    "name": "Auralis Slate 91",
+    "brand": "Auralis",
+    "category": "tablet",
+    "price_eur": 229.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-174",
+    "name": "Halcyra Tick 76",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 539.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-175",
+    "name": "Auralis Snap 31",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 539.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-176",
+    "name": "Lumino Echo 50",
+    "brand": "Lumino",
+    "category": "speaker",
+    "price_eur": 99.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "8 h",
+      "waterproof": "no"
+    },
+    "description": "Budget pocket speaker, 8 h of battery life."
+  },
+  {
+    "id": "P-177",
+    "name": "Auralis Studio 92",
+    "brand": "Auralis",
+    "category": "laptop",
+    "price_eur": 1939.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 8-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-178",
+    "name": "Sonavo Quest 41",
+    "brand": "Sonavo",
+    "category": "phone",
+    "price_eur": 599.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "12 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-179",
+    "name": "Ostrel Pulse 51",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 429.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "43 h"
+    },
+    "description": "Premium wireless on-ear headphones with active noise cancelling and 43 h of battery life."
+  },
+  {
+    "id": "P-180",
+    "name": "Pelagic Vista 59",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 1439.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-181",
+    "name": "Ostrel Glide 98",
+    "brand": "Ostrel",
+    "category": "tablet",
+    "price_eur": 1119.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "no"
+    },
+    "description": "Capable 11 inch tablet for reading and video and 256 GB of storage."
+  },
+  {
+    "id": "P-182",
+    "name": "Zephra Tempo 21",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-183",
+    "name": "Auralis Trail 99",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 2899.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-184",
+    "name": "Ostrel Bar 94",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 649.0,
+    "in_stock": false,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-185",
+    "name": "Norvik Ridge 25",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 2809.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-186",
+    "name": "Tolvane Pebble 63",
+    "brand": "Tolvane",
+    "category": "phone",
+    "price_eur": 1329.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-187",
+    "name": "Norvik Muse 33",
+    "brand": "Norvik",
+    "category": "headphones",
+    "price_eur": 399.0,
+    "in_stock": false,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "11 h"
+    },
+    "description": "Premium wireless in-ear headphones with active noise cancelling and 11 h of battery life."
+  },
+  {
+    "id": "P-188",
+    "name": "Sonavo View 53",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 689.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 27 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-189",
+    "name": "Kestrel Glide 54",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 849.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-190",
+    "name": "Verdane Pace 49",
+    "brand": "Verdane",
+    "category": "smartwatch",
+    "price_eur": 179.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 10 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-191",
+    "name": "Ostrel Lens 42",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 1409.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K 60",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K 60 video, waterproof without a case."
+  },
+  {
+    "id": "P-192",
+    "name": "Norvik Boom 14",
+    "brand": "Norvik",
+    "category": "speaker",
+    "price_eur": 219.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "21 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 21 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-193",
+    "name": "Halcyra Slate 4",
+    "brand": "Halcyra",
+    "category": "laptop",
+    "price_eur": 649.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-194",
+    "name": "Pelagic Quest 33",
+    "brand": "Pelagic",
+    "category": "phone",
+    "price_eur": 569.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 5.8 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-195",
+    "name": "Auralis Tempo 57",
+    "brand": "Auralis",
+    "category": "headphones",
+    "price_eur": 179.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "11 h"
+    },
+    "description": "Everyday wireless in-ear headphones with a clear, balanced sound and 11 h of battery life."
+  },
+  {
+    "id": "P-196",
+    "name": "Auralis Frame 15",
+    "brand": "Auralis",
+    "category": "monitor",
+    "price_eur": 1099.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "QHD",
+      "refresh": "165 Hz"
+    },
+    "description": "Capable 32 inch monitor with QHD resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-197",
+    "name": "Zephra Pad 73",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 419.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "8 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-198",
+    "name": "Lumino Dial 24",
+    "brand": "Lumino",
+    "category": "smartwatch",
+    "price_eur": 369.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-199",
+    "name": "Quillon Trail 48",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video, waterproof without a case."
+  },
+  {
+    "id": "P-200",
+    "name": "Verdane Hum 95",
+    "brand": "Verdane",
+    "category": "speaker",
+    "price_eur": 689.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-201",
+    "name": "Lumino Edge 29",
+    "brand": "Lumino",
+    "category": "laptop",
+    "price_eur": 2249.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 12-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-202",
+    "name": "Kestrel Nova 25",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 1609.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-203",
+    "name": "Norvik Calm 63",
+    "brand": "Norvik",
+    "category": "headphones",
+    "price_eur": 129.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "43 h"
+    },
+    "description": "Everyday wireless over-ear headphones with a clear, balanced sound and 43 h of battery life."
+  },
+  {
+    "id": "P-204",
+    "name": "Auralis Arc 29",
+    "brand": "Auralis",
+    "category": "monitor",
+    "price_eur": 729.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 27 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-205",
+    "name": "Tolvane Pad 23",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 139.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-206",
+    "name": "Ostrel Stride 89",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "yes"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-207",
+    "name": "Pelagic Snap 45",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 1029.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1/2.3 in sensor and 4K video."
+  },
+  {
+    "id": "P-208",
+    "name": "Tolvane Beat 73",
+    "brand": "Tolvane",
+    "category": "speaker",
+    "price_eur": 279.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "28 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 28 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-209",
+    "name": "Ostrel Vertex 59",
+    "brand": "Ostrel",
+    "category": "laptop",
+    "price_eur": 2289.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 12-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-210",
+    "name": "Verdane Nova 91",
+    "brand": "Verdane",
+    "category": "phone",
+    "price_eur": 389.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "48 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-211",
+    "name": "Pelagic Tempo 51",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 139.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "40 h"
+    },
+    "description": "Everyday wireless over-ear headphones with a clear, balanced sound and 40 h of battery life."
+  },
+  {
+    "id": "P-212",
+    "name": "Sonavo Prism 58",
+    "brand": "Sonavo",
+    "category": "monitor",
+    "price_eur": 139.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-213",
+    "name": "Tolvane Pad 64",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 719.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 10 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-214",
+    "name": "Norvik Tempo 24",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 629.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-215",
+    "name": "Sonavo Trail 60",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 1919.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K video."
+  },
+  {
+    "id": "P-216",
+    "name": "Halcyra Beat 96",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 669.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-217",
+    "name": "Halcyra Vertex 43",
+    "brand": "Halcyra",
+    "category": "laptop",
+    "price_eur": 1149.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-218",
+    "name": "Halcyra Glint 63",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 1419.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "512 GB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 512 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-219",
+    "name": "Kestrel Wave 73",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "8 h"
+    },
+    "description": "Capable wireless in-ear headphones with active noise cancelling and 8 h of battery life."
+  },
+  {
+    "id": "P-220",
+    "name": "Auralis Vista 53",
+    "brand": "Auralis",
+    "category": "monitor",
+    "price_eur": 559.0,
+    "in_stock": false,
+    "specs": {
+      "size": "27 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 27 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-221",
+    "name": "Tolvane Glide 34",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 879.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Capable 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-222",
+    "name": "Tolvane Beacon 49",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 49.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-223",
+    "name": "Pelagic Trail 43",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 2409.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-224",
+    "name": "Ostrel Roam 86",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 89.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "24 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget pocket speaker, 24 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-225",
+    "name": "Halcyra Edge 18",
+    "brand": "Halcyra",
+    "category": "laptop",
+    "price_eur": 2619.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-226",
+    "name": "Norvik Quest 10",
+    "brand": "Norvik",
+    "category": "phone",
+    "price_eur": 189.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-227",
+    "name": "Kestrel Calm 87",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 89.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "45 h"
+    },
+    "description": "Budget wireless on-ear headphones with a clear, balanced sound and 45 h of battery life."
+  },
+  {
+    "id": "P-228",
+    "name": "Norvik Horizon 76",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 109.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-229",
+    "name": "Halcyra Page 37",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 679.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-230",
+    "name": "Zephra Orbit 6",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 359.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "10 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 10 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-231",
+    "name": "Auralis Trail 4",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 1699.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a 1 in sensor and 4K 60 video."
+  },
+  {
+    "id": "P-232",
+    "name": "Halcyra Boom 2",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 499.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-233",
+    "name": "Auralis Atlas 8",
+    "brand": "Auralis",
+    "category": "laptop",
+    "price_eur": 819.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "16 GB",
+      "storage": "256 GB",
+      "screen": "13 in"
+    },
+    "description": "Budget 13 inch laptop with a 4-core processor, 16 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-234",
+    "name": "Auralis Ember 42",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 689.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-235",
+    "name": "Quillon Aria 22",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 349.0,
+    "in_stock": false,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "6 h"
+    },
+    "description": "Premium wireless in-ear headphones with active noise cancelling and 6 h of battery life."
+  },
+  {
+    "id": "P-236",
+    "name": "Lumino Horizon 71",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 239.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-237",
+    "name": "Quillon Tab 91",
+    "brand": "Quillon",
+    "category": "tablet",
+    "price_eur": 1479.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-238",
+    "name": "Kestrel Tempo 95",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 639.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-239",
+    "name": "Sonavo Aperture 37",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 2909.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-240",
+    "name": "Tolvane Echo 27",
+    "brand": "Tolvane",
+    "category": "speaker",
+    "price_eur": 139.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "11 h",
+      "waterproof": "no"
+    },
+    "description": "Budget portable speaker, 11 h of battery life."
+  },
+  {
+    "id": "P-241",
+    "name": "Tolvane Atlas 17",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-242",
+    "name": "Lumino Nova 1",
+    "brand": "Lumino",
+    "category": "phone",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-243",
+    "name": "Quillon Drift 5",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 19.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "23 h"
+    },
+    "description": "Budget wireless on-ear headphones with a clear, balanced sound and 23 h of battery life."
+  },
+  {
+    "id": "P-244",
+    "name": "Kestrel Vista 58",
+    "brand": "Kestrel",
+    "category": "monitor",
+    "price_eur": 309.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Budget 24 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-245",
+    "name": "Pelagic Pad 21",
+    "brand": "Pelagic",
+    "category": "tablet",
+    "price_eur": 779.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-246",
+    "name": "Norvik Tick 74",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 99.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-247",
+    "name": "Pelagic Frame 87",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 1469.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a APS-C sensor and 4K 60 video, waterproof without a case."
+  },
+  {
+    "id": "P-248",
+    "name": "Verdane Cube 77",
+    "brand": "Verdane",
+    "category": "speaker",
+    "price_eur": 509.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-249",
+    "name": "Sonavo Ridge 40",
+    "brand": "Sonavo",
+    "category": "laptop",
+    "price_eur": 889.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Budget 13 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-250",
+    "name": "Auralis Ember 8",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 749.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-251",
+    "name": "Norvik Echo 4",
+    "brand": "Norvik",
+    "category": "headphones",
+    "price_eur": 359.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "24 h"
+    },
+    "description": "Premium wireless over-ear headphones with active noise cancelling and 24 h of battery life."
+  },
+  {
+    "id": "P-252",
+    "name": "Norvik Pane 28",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 1419.0,
+    "in_stock": false,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-253",
+    "name": "Norvik Tab 30",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 1269.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-254",
+    "name": "Halcyra Stride 50",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 399.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-255",
+    "name": "Pelagic Lens 65",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 1069.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1/2.3 in sensor and 4K video."
+  },
+  {
+    "id": "P-256",
+    "name": "Zephra Cube 6",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 449.0,
+    "in_stock": false,
+    "specs": {
+      "type": "party",
+      "battery": "9 h",
+      "waterproof": "no"
+    },
+    "description": "Capable party speaker, 9 h of battery life."
+  },
+  {
+    "id": "P-257",
+    "name": "Sonavo Vertex 32",
+    "brand": "Sonavo",
+    "category": "laptop",
+    "price_eur": 829.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "13 in"
+    },
+    "description": "Budget 13 inch laptop with a 6-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-258",
+    "name": "Kestrel Ember 86",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 929.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "50 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-259",
+    "name": "Kestrel Muse 2",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 319.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "7 h"
+    },
+    "description": "Capable wireless in-ear headphones with active noise cancelling and 7 h of battery life."
+  },
+  {
+    "id": "P-260",
+    "name": "Pelagic Prism 26",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 1249.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-261",
+    "name": "Halcyra Slate 23",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 1169.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "512 GB",
+      "stylus": "no"
+    },
+    "description": "Premium 11 inch tablet for reading and video and 512 GB of storage."
+  },
+  {
+    "id": "P-262",
+    "name": "Ostrel Loop 24",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 789.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-263",
+    "name": "Quillon Trail 43",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 1989.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-264",
+    "name": "Ostrel Cube 98",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 359.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "13 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday party speaker, 13 h of battery life."
+  },
+  {
+    "id": "P-265",
+    "name": "Lumino Forge 2",
+    "brand": "Lumino",
+    "category": "laptop",
+    "price_eur": 1319.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "32 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 32 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-266",
+    "name": "Pelagic Spark 21",
+    "brand": "Pelagic",
+    "category": "phone",
+    "price_eur": 909.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.4 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-267",
+    "name": "Verdane Calm 1",
+    "brand": "Verdane",
+    "category": "headphones",
+    "price_eur": 409.0,
+    "in_stock": false,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "41 h"
+    },
+    "description": "Premium wireless over-ear headphones with a clear, balanced sound and 41 h of battery life."
+  },
+  {
+    "id": "P-268",
+    "name": "Zephra Vista 8",
+    "brand": "Zephra",
+    "category": "monitor",
+    "price_eur": 999.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-269",
+    "name": "Sonavo Note 85",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 329.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-270",
+    "name": "Tolvane Tick 44",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 579.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "2 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 2 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-271",
+    "name": "Halcyra Capture 97",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 709.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1 in sensor and 1080p video."
+  },
+  {
+    "id": "P-272",
+    "name": "Halcyra Roam 75",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 579.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-273",
+    "name": "Norvik Forge 66",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 2519.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-274",
+    "name": "Zephra Nova 38",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 1689.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-275",
+    "name": "Norvik Muse 51",
+    "brand": "Norvik",
+    "category": "headphones",
+    "price_eur": 59.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "38 h"
+    },
+    "description": "Budget wireless over-ear headphones with a clear, balanced sound and 38 h of battery life."
+  },
+  {
+    "id": "P-276",
+    "name": "Auralis Frame 56",
+    "brand": "Auralis",
+    "category": "monitor",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Everyday 24 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-277",
+    "name": "Norvik Glide 63",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 749.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 10 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-278",
+    "name": "Quillon Pace 26",
+    "brand": "Quillon",
+    "category": "smartwatch",
+    "price_eur": 59.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-279",
+    "name": "Tolvane Shot 95",
+    "brand": "Tolvane",
+    "category": "camera",
+    "price_eur": 2349.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-280",
+    "name": "Norvik Bar 48",
+    "brand": "Norvik",
+    "category": "speaker",
+    "price_eur": 389.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "23 h",
+      "waterproof": "no"
+    },
+    "description": "Capable party speaker, 23 h of battery life."
+  },
+  {
+    "id": "P-281",
+    "name": "Kestrel Edge 99",
+    "brand": "Kestrel",
+    "category": "laptop",
+    "price_eur": 329.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-282",
+    "name": "Kestrel Pebble 9",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 679.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-283",
+    "name": "Ostrel Drift 6",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 349.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "41 h"
+    },
+    "description": "Premium wireless over-ear headphones with active noise cancelling and 41 h of battery life."
+  },
+  {
+    "id": "P-284",
+    "name": "Ostrel Pane 23",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 539.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-285",
+    "name": "Tolvane Glide 92",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 409.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "yes"
+    },
+    "description": "Budget 10 inch tablet with stylus support and 64 GB of storage."
+  },
+  {
+    "id": "P-286",
+    "name": "Lumino Orbit 7",
+    "brand": "Lumino",
+    "category": "smartwatch",
+    "price_eur": 299.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "10 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 10 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-287",
+    "name": "Norvik Focus 20",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 1779.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-288",
+    "name": "Quillon Stage 19",
+    "brand": "Quillon",
+    "category": "speaker",
+    "price_eur": 39.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "18 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget pocket speaker, 18 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-289",
+    "name": "Norvik Slate 76",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 2219.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-290",
+    "name": "Ostrel Nova 57",
+    "brand": "Ostrel",
+    "category": "phone",
+    "price_eur": 1469.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.4 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-291",
+    "name": "Ostrel Echo 85",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 39.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "20 h"
+    },
+    "description": "Budget wireless on-ear headphones with a clear, balanced sound and 20 h of battery life."
+  },
+  {
+    "id": "P-292",
+    "name": "Quillon View 76",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 509.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Everyday 27 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-293",
+    "name": "Ostrel Page 12",
+    "brand": "Ostrel",
+    "category": "tablet",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "yes"
+    },
+    "description": "Budget 8 inch tablet with stylus support and 64 GB of storage."
+  },
+  {
+    "id": "P-294",
+    "name": "Ostrel Tempo 55",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 669.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-295",
+    "name": "Norvik Frame 98",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 1869.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-296",
+    "name": "Pelagic Bar 25",
+    "brand": "Pelagic",
+    "category": "speaker",
+    "price_eur": 129.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "16 h",
+      "waterproof": "no"
+    },
+    "description": "Budget portable speaker, 16 h of battery life."
+  },
+  {
+    "id": "P-297",
+    "name": "Norvik Forge 17",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1109.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-298",
+    "name": "Quillon Ember 75",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 1259.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-299",
+    "name": "Sonavo Tempo 10",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 299.0,
+    "in_stock": false,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "43 h"
+    },
+    "description": "Capable wireless on-ear headphones with active noise cancelling and 43 h of battery life."
+  },
+  {
+    "id": "P-300",
+    "name": "Norvik Pane 83",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 919.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 27 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-301",
+    "name": "Sonavo Page 91",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 589.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 10 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-302",
+    "name": "Halcyra Dial 38",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 679.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-303",
+    "name": "Zephra Lens 3",
+    "brand": "Zephra",
+    "category": "camera",
+    "price_eur": 1279.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-304",
+    "name": "Auralis Roam 55",
+    "brand": "Auralis",
+    "category": "speaker",
+    "price_eur": 519.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-305",
+    "name": "Ostrel Forge 72",
+    "brand": "Ostrel",
+    "category": "laptop",
+    "price_eur": 2489.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "15 in"
+    },
+    "description": "Premium 15 inch laptop with a 12-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-306",
+    "name": "Verdane Spark 6",
+    "brand": "Verdane",
+    "category": "phone",
+    "price_eur": 1379.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "50 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-307",
+    "name": "Tolvane Pulse 61",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 419.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "34 h"
+    },
+    "description": "Premium wireless over-ear headphones with active noise cancelling and 34 h of battery life."
+  },
+  {
+    "id": "P-308",
+    "name": "Halcyra View 39",
+    "brand": "Halcyra",
+    "category": "monitor",
+    "price_eur": 1489.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-309",
+    "name": "Zephra Page 7",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-310",
+    "name": "Ostrel Dial 76",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 699.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-311",
+    "name": "Norvik Trail 33",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 609.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-312",
+    "name": "Zephra Stage 21",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "15 h",
+      "waterproof": "yes"
+    },
+    "description": "Budget portable speaker, 15 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-313",
+    "name": "Quillon Edge 41",
+    "brand": "Quillon",
+    "category": "laptop",
+    "price_eur": 719.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "13 in"
+    },
+    "description": "Budget 13 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-314",
+    "name": "Quillon Quest 30",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 1119.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-315",
+    "name": "Zephra Wave 88",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "10 h"
+    },
+    "description": "Everyday wireless in-ear headphones with a clear, balanced sound and 10 h of battery life."
+  },
+  {
+    "id": "P-316",
+    "name": "Pelagic Vista 88",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 859.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Capable 27 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-317",
+    "name": "Halcyra Glide 57",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 829.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-318",
+    "name": "Kestrel Loop 90",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 459.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.8 inch display, 2 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-319",
+    "name": "Auralis Shot 9",
+    "brand": "Auralis",
+    "category": "camera",
+    "price_eur": 769.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1 in sensor and 4K video, waterproof without a case."
+  },
+  {
+    "id": "P-320",
+    "name": "Tolvane Boom 9",
+    "brand": "Tolvane",
+    "category": "speaker",
+    "price_eur": 569.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-321",
+    "name": "Tolvane Forge 65",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 2019.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-322",
+    "name": "Norvik Quest 91",
+    "brand": "Norvik",
+    "category": "phone",
+    "price_eur": 1319.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-323",
+    "name": "Verdane Aria 3",
+    "brand": "Verdane",
+    "category": "headphones",
+    "price_eur": 309.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "33 h"
+    },
+    "description": "Capable wireless on-ear headphones with active noise cancelling and 33 h of battery life."
+  },
+  {
+    "id": "P-324",
+    "name": "Ostrel Frame 93",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 1139.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "QHD",
+      "refresh": "165 Hz"
+    },
+    "description": "Capable 34 inch monitor with QHD resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-325",
+    "name": "Lumino Tab 2",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 899.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 10 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-326",
+    "name": "Quillon Orbit 90",
+    "brand": "Quillon",
+    "category": "smartwatch",
+    "price_eur": 729.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "no"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-327",
+    "name": "Kestrel Shot 64",
+    "brand": "Kestrel",
+    "category": "camera",
+    "price_eur": 1379.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K 60",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K 60 video, waterproof without a case."
+  },
+  {
+    "id": "P-328",
+    "name": "Zephra Stage 6",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 479.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-329",
+    "name": "Kestrel Vertex 6",
+    "brand": "Kestrel",
+    "category": "laptop",
+    "price_eur": 459.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-330",
+    "name": "Zephra Quest 73",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 319.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-331",
+    "name": "Quillon Hush 33",
+    "brand": "Quillon",
+    "category": "headphones",
+    "price_eur": 279.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "10 h"
+    },
+    "description": "Capable wireless in-ear headphones with a clear, balanced sound and 10 h of battery life."
+  },
+  {
+    "id": "P-332",
+    "name": "Quillon Pane 38",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 1339.0,
+    "in_stock": false,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-333",
+    "name": "Auralis Glide 43",
+    "brand": "Auralis",
+    "category": "tablet",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-334",
+    "name": "Zephra Stride 37",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 149.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-335",
+    "name": "Pelagic Snap 7",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 1119.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1/2.3 in sensor and 4K video."
+  },
+  {
+    "id": "P-336",
+    "name": "Quillon Roam 81",
+    "brand": "Quillon",
+    "category": "speaker",
+    "price_eur": 399.0,
+    "in_stock": false,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-337",
+    "name": "Norvik Ridge 70",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 2679.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-338",
+    "name": "Kestrel Flux 36",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 6.1 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-339",
+    "name": "Halcyra Calm 40",
+    "brand": "Halcyra",
+    "category": "headphones",
+    "price_eur": 239.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "38 h"
+    },
+    "description": "Capable wireless on-ear headphones with a clear, balanced sound and 38 h of battery life."
+  },
+  {
+    "id": "P-340",
+    "name": "Verdane Horizon 88",
+    "brand": "Verdane",
+    "category": "monitor",
+    "price_eur": 399.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-341",
+    "name": "Halcyra Glide 37",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 459.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-342",
+    "name": "Sonavo Tick 17",
+    "brand": "Sonavo",
+    "category": "smartwatch",
+    "price_eur": 489.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-343",
+    "name": "Sonavo Snap 10",
+    "brand": "Sonavo",
+    "category": "camera",
+    "price_eur": 1759.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a 1 in sensor and 4K 60 video."
+  },
+  {
+    "id": "P-344",
+    "name": "Zephra Echo 98",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 549.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-345",
+    "name": "Pelagic Studio 7",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 2139.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "64 GB",
+      "storage": "1 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 64 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-346",
+    "name": "Zephra Zenith 3",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 849.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.4 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-347",
+    "name": "Pelagic Muse 97",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 419.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "5 h"
+    },
+    "description": "Premium wireless in-ear headphones with a clear, balanced sound and 5 h of battery life."
+  },
+  {
+    "id": "P-348",
+    "name": "Pelagic Arc 18",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 739.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-349",
+    "name": "Lumino Glide 2",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 179.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "yes"
+    },
+    "description": "Budget 8 inch tablet with stylus support and 64 GB of storage."
+  },
+  {
+    "id": "P-350",
+    "name": "Lumino Loop 8",
+    "brand": "Lumino",
+    "category": "smartwatch",
+    "price_eur": 649.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "no"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-351",
+    "name": "Quillon Aperture 88",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 409.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-352",
+    "name": "Lumino Stage 57",
+    "brand": "Lumino",
+    "category": "speaker",
+    "price_eur": 49.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "20 h",
+      "waterproof": "no"
+    },
+    "description": "Budget pocket speaker, 20 h of battery life."
+  },
+  {
+    "id": "P-353",
+    "name": "Norvik Studio 20",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1649.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 8-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-354",
+    "name": "Auralis Ember 45",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 1489.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "512 GB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 512 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-355",
+    "name": "Auralis Calm 83",
+    "brand": "Auralis",
+    "category": "headphones",
+    "price_eur": 59.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "35 h"
+    },
+    "description": "Budget wireless over-ear headphones with active noise cancelling and 35 h of battery life."
+  },
+  {
+    "id": "P-356",
+    "name": "Lumino Frame 36",
+    "brand": "Lumino",
+    "category": "monitor",
+    "price_eur": 789.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-357",
+    "name": "Tolvane Canvas 19",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 1359.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "no"
+    },
+    "description": "Premium 13 inch tablet for reading and video and 512 GB of storage."
+  },
+  {
+    "id": "P-358",
+    "name": "Tolvane Beacon 98",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "yes"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 10 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-359",
+    "name": "Halcyra Lens 7",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 2749.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-360",
+    "name": "Sonavo Bar 35",
+    "brand": "Sonavo",
+    "category": "speaker",
+    "price_eur": 369.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "25 h",
+      "waterproof": "no"
+    },
+    "description": "Capable party speaker, 25 h of battery life."
+  },
+  {
+    "id": "P-361",
+    "name": "Ostrel Ridge 38",
+    "brand": "Ostrel",
+    "category": "laptop",
+    "price_eur": 989.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 4-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-362",
+    "name": "Quillon Flux 4",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 349.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "128 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 128 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-363",
+    "name": "Sonavo Muse 41",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 209.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "43 h"
+    },
+    "description": "Everyday wireless on-ear headphones with active noise cancelling and 43 h of battery life."
+  },
+  {
+    "id": "P-364",
+    "name": "Ostrel Pane 21",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-365",
+    "name": "Tolvane Glide 63",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 549.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-366",
+    "name": "Kestrel Tick 56",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 149.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "yes"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-367",
+    "name": "Ostrel Lens 72",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 1549.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-368",
+    "name": "Halcyra Beat 97",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 529.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-369",
+    "name": "Quillon Slate 27",
+    "brand": "Quillon",
+    "category": "laptop",
+    "price_eur": 1469.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-370",
+    "name": "Auralis Quest 31",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 1179.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "256 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.7 inch screen, 256 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-371",
+    "name": "Sonavo Echo 59",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "25 h"
+    },
+    "description": "Capable wireless over-ear headphones with active noise cancelling and 25 h of battery life."
+  },
+  {
+    "id": "P-372",
+    "name": "Pelagic Frame 62",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 769.0,
+    "in_stock": false,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 27 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-373",
+    "name": "Sonavo Tab 41",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 1439.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-374",
+    "name": "Lumino Loop 51",
+    "brand": "Lumino",
+    "category": "smartwatch",
+    "price_eur": 579.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-375",
+    "name": "Quillon Frame 40",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 489.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video, waterproof without a case."
+  },
+  {
+    "id": "P-376",
+    "name": "Kestrel Bar 47",
+    "brand": "Kestrel",
+    "category": "speaker",
+    "price_eur": 629.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-377",
+    "name": "Norvik Orbit 5",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1749.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "512 GB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-378",
+    "name": "Norvik Quest 99",
+    "brand": "Norvik",
+    "category": "phone",
+    "price_eur": 1399.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.4 inch screen, 512 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-379",
+    "name": "Pelagic Wave 70",
+    "brand": "Pelagic",
+    "category": "headphones",
+    "price_eur": 189.0,
+    "in_stock": false,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "8 h"
+    },
+    "description": "Everyday wireless in-ear headphones with active noise cancelling and 8 h of battery life."
+  },
+  {
+    "id": "P-380",
+    "name": "Ostrel Frame 43",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 569.0,
+    "in_stock": false,
+    "specs": {
+      "size": "24 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-381",
+    "name": "Verdane Note 26",
+    "brand": "Verdane",
+    "category": "tablet",
+    "price_eur": 599.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-382",
+    "name": "Norvik Pace 61",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 739.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-383",
+    "name": "Ostrel Shot 17",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 949.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-384",
+    "name": "Tolvane Hum 6",
+    "brand": "Tolvane",
+    "category": "speaker",
+    "price_eur": 589.0,
+    "in_stock": false,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-385",
+    "name": "Norvik Slate 36",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1029.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "8 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 8 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-386",
+    "name": "Tolvane Quest 89",
+    "brand": "Tolvane",
+    "category": "phone",
+    "price_eur": 799.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "256 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 256 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-387",
+    "name": "Tolvane Wave 49",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 139.0,
+    "in_stock": false,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "5 h"
+    },
+    "description": "Everyday wireless in-ear headphones with active noise cancelling and 5 h of battery life."
+  },
+  {
+    "id": "P-388",
+    "name": "Halcyra Pane 29",
+    "brand": "Halcyra",
+    "category": "monitor",
+    "price_eur": 829.0,
+    "in_stock": true,
+    "specs": {
+      "size": "32 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 32 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-389",
+    "name": "Kestrel Note 31",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 1329.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-390",
+    "name": "Norvik Orbit 19",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 459.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.8 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-391",
+    "name": "Norvik Aperture 72",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 909.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video."
+  },
+  {
+    "id": "P-392",
+    "name": "Zephra Bar 73",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 29.0,
+    "in_stock": true,
+    "specs": {
+      "type": "pocket",
+      "battery": "9 h",
+      "waterproof": "no"
+    },
+    "description": "Budget pocket speaker, 9 h of battery life."
+  },
+  {
+    "id": "P-393",
+    "name": "Quillon Orbit 63",
+    "brand": "Quillon",
+    "category": "laptop",
+    "price_eur": 569.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "13 in"
+    },
+    "description": "Budget 13 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-394",
+    "name": "Kestrel Glint 62",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 1029.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 256 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-395",
+    "name": "Tolvane Wave 33",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 69.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "8 h"
+    },
+    "description": "Budget wireless in-ear headphones with a clear, balanced sound and 8 h of battery life."
+  },
+  {
+    "id": "P-396",
+    "name": "Halcyra View 37",
+    "brand": "Halcyra",
+    "category": "monitor",
+    "price_eur": 889.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "QHD",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 27 inch monitor with QHD resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-397",
+    "name": "Zephra Pad 34",
+    "brand": "Zephra",
+    "category": "tablet",
+    "price_eur": 619.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-398",
+    "name": "Halcyra Loop 68",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 709.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-399",
+    "name": "Tolvane Frame 31",
+    "brand": "Tolvane",
+    "category": "camera",
+    "price_eur": 2959.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-400",
+    "name": "Halcyra Hum 57",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 539.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-401",
+    "name": "Zephra Ridge 92",
+    "brand": "Zephra",
+    "category": "laptop",
+    "price_eur": 2089.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "2 TB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-402",
+    "name": "Tolvane Spark 1",
+    "brand": "Tolvane",
+    "category": "phone",
+    "price_eur": 1239.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "108 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 256 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-403",
+    "name": "Zephra Pulse 57",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 79.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "active",
+      "battery": "41 h"
+    },
+    "description": "Budget wireless on-ear headphones with active noise cancelling and 41 h of battery life."
+  },
+  {
+    "id": "P-404",
+    "name": "Kestrel View 96",
+    "brand": "Kestrel",
+    "category": "monitor",
+    "price_eur": 659.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "full HD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 27 inch monitor with full HD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-405",
+    "name": "Pelagic Sketch 28",
+    "brand": "Pelagic",
+    "category": "tablet",
+    "price_eur": 1459.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-406",
+    "name": "Pelagic Pace 70",
+    "brand": "Pelagic",
+    "category": "smartwatch",
+    "price_eur": 419.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-407",
+    "name": "Halcyra Shot 12",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 239.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-408",
+    "name": "Halcyra Boom 13",
+    "brand": "Halcyra",
+    "category": "speaker",
+    "price_eur": 349.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "26 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday party speaker, 26 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-409",
+    "name": "Norvik Orbit 16",
+    "brand": "Norvik",
+    "category": "laptop",
+    "price_eur": 1509.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "screen": "14 in"
+    },
+    "description": "Everyday 14 inch laptop with a 6-core processor, 16 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-410",
+    "name": "Auralis Nova 61",
+    "brand": "Auralis",
+    "category": "phone",
+    "price_eur": 1649.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-411",
+    "name": "Tolvane Tempo 48",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 449.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "9 h"
+    },
+    "description": "Premium wireless in-ear headphones with active noise cancelling and 9 h of battery life."
+  },
+  {
+    "id": "P-412",
+    "name": "Ostrel Arc 59",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 169.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-413",
+    "name": "Norvik Slate 41",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 1429.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-414",
+    "name": "Norvik Loop 59",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 219.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 10 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-415",
+    "name": "Norvik Aperture 51",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 2789.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-416",
+    "name": "Auralis Cube 10",
+    "brand": "Auralis",
+    "category": "speaker",
+    "price_eur": 249.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "12 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 12 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-417",
+    "name": "Lumino Vertex 38",
+    "brand": "Lumino",
+    "category": "laptop",
+    "price_eur": 1559.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "32 GB",
+      "storage": "512 GB",
+      "screen": "14 in"
+    },
+    "description": "Everyday 14 inch laptop with a 6-core processor, 32 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-418",
+    "name": "Verdane Nova 51",
+    "brand": "Verdane",
+    "category": "phone",
+    "price_eur": 1589.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-419",
+    "name": "Verdane Muse 12",
+    "brand": "Verdane",
+    "category": "headphones",
+    "price_eur": 109.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "44 h"
+    },
+    "description": "Budget wireless over-ear headphones with a clear, balanced sound and 44 h of battery life."
+  },
+  {
+    "id": "P-420",
+    "name": "Quillon Lumen 28",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 279.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-421",
+    "name": "Lumino Glide 79",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 10 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-422",
+    "name": "Pelagic Tempo 9",
+    "brand": "Pelagic",
+    "category": "smartwatch",
+    "price_eur": 749.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-423",
+    "name": "Verdane Snap 99",
+    "brand": "Verdane",
+    "category": "camera",
+    "price_eur": 2259.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-424",
+    "name": "Kestrel Stage 50",
+    "brand": "Kestrel",
+    "category": "speaker",
+    "price_eur": 339.0,
+    "in_stock": true,
+    "specs": {
+      "type": "party",
+      "battery": "25 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday party speaker, 25 h of battery life."
+  },
+  {
+    "id": "P-425",
+    "name": "Tolvane Forge 32",
+    "brand": "Tolvane",
+    "category": "laptop",
+    "price_eur": 2789.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "12-core",
+      "ram": "64 GB",
+      "storage": "2 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 12-core processor, 64 GB of memory and 2 TB of storage."
+  },
+  {
+    "id": "P-426",
+    "name": "Pelagic Ember 57",
+    "brand": "Pelagic",
+    "category": "phone",
+    "price_eur": 409.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "64 GB",
+      "camera": "48 MP"
+    },
+    "description": "Budget phone with a 6.1 inch screen, 64 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-427",
+    "name": "Ostrel Calm 48",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 69.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "8 h"
+    },
+    "description": "Budget wireless in-ear headphones with a clear, balanced sound and 8 h of battery life."
+  },
+  {
+    "id": "P-428",
+    "name": "Verdane Frame 80",
+    "brand": "Verdane",
+    "category": "monitor",
+    "price_eur": 1399.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-429",
+    "name": "Quillon Tab 87",
+    "brand": "Quillon",
+    "category": "tablet",
+    "price_eur": 1109.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-430",
+    "name": "Kestrel Tempo 2",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 439.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-431",
+    "name": "Halcyra Lens 48",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 2049.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 6K video."
+  },
+  {
+    "id": "P-432",
+    "name": "Ostrel Echo 82",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 429.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-433",
+    "name": "Ostrel Studio 98",
+    "brand": "Ostrel",
+    "category": "laptop",
+    "price_eur": 1769.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "32 GB",
+      "storage": "512 GB",
+      "screen": "15 in"
+    },
+    "description": "Capable 15 inch laptop with a 8-core processor, 32 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-434",
+    "name": "Halcyra Spark 61",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 1519.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "512 GB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 512 GB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-435",
+    "name": "Zephra Tempo 82",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 339.0,
+    "in_stock": false,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "active",
+      "battery": "22 h"
+    },
+    "description": "Capable wireless over-ear headphones with active noise cancelling and 22 h of battery life."
+  },
+  {
+    "id": "P-436",
+    "name": "Pelagic Arc 73",
+    "brand": "Pelagic",
+    "category": "monitor",
+    "price_eur": 189.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-437",
+    "name": "Norvik Sketch 22",
+    "brand": "Norvik",
+    "category": "tablet",
+    "price_eur": 919.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "10 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 10 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-438",
+    "name": "Auralis Tempo 81",
+    "brand": "Auralis",
+    "category": "smartwatch",
+    "price_eur": 79.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "14 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 14 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-439",
+    "name": "Quillon Aperture 10",
+    "brand": "Quillon",
+    "category": "camera",
+    "price_eur": 2219.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 6K video."
+  },
+  {
+    "id": "P-440",
+    "name": "Sonavo Bar 71",
+    "brand": "Sonavo",
+    "category": "speaker",
+    "price_eur": 189.0,
+    "in_stock": false,
+    "specs": {
+      "type": "portable",
+      "battery": "29 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday portable speaker, 29 h of battery life."
+  },
+  {
+    "id": "P-441",
+    "name": "Pelagic Forge 66",
+    "brand": "Pelagic",
+    "category": "laptop",
+    "price_eur": 1169.0,
+    "in_stock": false,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "8 GB",
+      "storage": "512 GB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 8 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-442",
+    "name": "Tolvane Nova 74",
+    "brand": "Tolvane",
+    "category": "phone",
+    "price_eur": 1079.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "256 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 256 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-443",
+    "name": "Halcyra Aria 6",
+    "brand": "Halcyra",
+    "category": "headphones",
+    "price_eur": 149.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "45 h"
+    },
+    "description": "Everyday wireless over-ear headphones with a clear, balanced sound and 45 h of battery life."
+  },
+  {
+    "id": "P-444",
+    "name": "Ostrel Arc 34",
+    "brand": "Ostrel",
+    "category": "monitor",
+    "price_eur": 599.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "QHD",
+      "refresh": "60 Hz"
+    },
+    "description": "Everyday 24 inch monitor with QHD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-445",
+    "name": "Lumino Slate 6",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 1079.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-446",
+    "name": "Halcyra Orbit 93",
+    "brand": "Halcyra",
+    "category": "smartwatch",
+    "price_eur": 609.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.8 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Premium smartwatch with a 1.8 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-447",
+    "name": "Norvik Frame 30",
+    "brand": "Norvik",
+    "category": "camera",
+    "price_eur": 2039.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "full frame",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a full frame sensor and 4K 60 video."
+  },
+  {
+    "id": "P-448",
+    "name": "Lumino Cube 6",
+    "brand": "Lumino",
+    "category": "speaker",
+    "price_eur": 689.0,
+    "in_stock": true,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-449",
+    "name": "Lumino Edge 43",
+    "brand": "Lumino",
+    "category": "laptop",
+    "price_eur": 1669.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "32 GB",
+      "storage": "1 TB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 6-core processor, 32 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-450",
+    "name": "Tolvane Zenith 50",
+    "brand": "Tolvane",
+    "category": "phone",
+    "price_eur": 219.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-451",
+    "name": "Zephra Calm 15",
+    "brand": "Zephra",
+    "category": "headphones",
+    "price_eur": 399.0,
+    "in_stock": true,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "none",
+      "battery": "8 h"
+    },
+    "description": "Premium wireless in-ear headphones with a clear, balanced sound and 8 h of battery life."
+  },
+  {
+    "id": "P-452",
+    "name": "Quillon Pane 25",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 119.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-453",
+    "name": "Tolvane Note 98",
+    "brand": "Tolvane",
+    "category": "tablet",
+    "price_eur": 509.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Everyday 10 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-454",
+    "name": "Verdane Tick 65",
+    "brand": "Verdane",
+    "category": "smartwatch",
+    "price_eur": 259.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-455",
+    "name": "Ostrel Trail 40",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 979.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Everyday camera with a 1 in sensor and 1080p video."
+  },
+  {
+    "id": "P-456",
+    "name": "Ostrel Echo 92",
+    "brand": "Ostrel",
+    "category": "speaker",
+    "price_eur": 459.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Capable bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-457",
+    "name": "Lumino Orbit 47",
+    "brand": "Lumino",
+    "category": "laptop",
+    "price_eur": 1409.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "16 GB",
+      "storage": "1 TB",
+      "screen": "13 in"
+    },
+    "description": "Everyday 13 inch laptop with a 6-core processor, 16 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-458",
+    "name": "Quillon Zenith 59",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 729.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.1 in",
+      "storage": "128 GB",
+      "camera": "48 MP"
+    },
+    "description": "Everyday phone with a 6.1 inch screen, 128 GB of storage and a 48 MP camera."
+  },
+  {
+    "id": "P-459",
+    "name": "Sonavo Wave 43",
+    "brand": "Sonavo",
+    "category": "headphones",
+    "price_eur": 99.0,
+    "in_stock": true,
+    "specs": {
+      "type": "over-ear",
+      "noise_cancelling": "none",
+      "battery": "32 h"
+    },
+    "description": "Budget wireless over-ear headphones with a clear, balanced sound and 32 h of battery life."
+  },
+  {
+    "id": "P-460",
+    "name": "Norvik Horizon 23",
+    "brand": "Norvik",
+    "category": "monitor",
+    "price_eur": 1369.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-461",
+    "name": "Sonavo Slate 37",
+    "brand": "Sonavo",
+    "category": "tablet",
+    "price_eur": 1379.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "13 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 13 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-462",
+    "name": "Norvik Tempo 66",
+    "brand": "Norvik",
+    "category": "smartwatch",
+    "price_eur": 589.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "1 day",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 1 day of battery life and built-in GPS."
+  },
+  {
+    "id": "P-463",
+    "name": "Halcyra Frame 12",
+    "brand": "Halcyra",
+    "category": "camera",
+    "price_eur": 1589.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-464",
+    "name": "Pelagic Echo 41",
+    "brand": "Pelagic",
+    "category": "speaker",
+    "price_eur": 599.0,
+    "in_stock": true,
+    "specs": {
+      "type": "bookshelf",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium bookshelf speaker, mains powered."
+  },
+  {
+    "id": "P-465",
+    "name": "Ostrel Edge 85",
+    "brand": "Ostrel",
+    "category": "laptop",
+    "price_eur": 1919.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "6-core",
+      "ram": "32 GB",
+      "storage": "512 GB",
+      "screen": "14 in"
+    },
+    "description": "Capable 14 inch laptop with a 6-core processor, 32 GB of memory and 512 GB of storage."
+  },
+  {
+    "id": "P-466",
+    "name": "Quillon Spark 74",
+    "brand": "Quillon",
+    "category": "phone",
+    "price_eur": 189.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-467",
+    "name": "Ostrel Pulse 13",
+    "brand": "Ostrel",
+    "category": "headphones",
+    "price_eur": 259.0,
+    "in_stock": false,
+    "specs": {
+      "type": "in-ear",
+      "noise_cancelling": "active",
+      "battery": "6 h"
+    },
+    "description": "Capable wireless in-ear headphones with active noise cancelling and 6 h of battery life."
+  },
+  {
+    "id": "P-468",
+    "name": "Verdane Arc 48",
+    "brand": "Verdane",
+    "category": "monitor",
+    "price_eur": 379.0,
+    "in_stock": true,
+    "specs": {
+      "size": "22 in",
+      "resolution": "full HD",
+      "refresh": "60 Hz"
+    },
+    "description": "Budget 22 inch monitor with full HD resolution and a 60 Hz refresh rate."
+  },
+  {
+    "id": "P-469",
+    "name": "Kestrel Glide 47",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 699.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "no"
+    },
+    "description": "Everyday 10 inch tablet for reading and video and 128 GB of storage."
+  },
+  {
+    "id": "P-470",
+    "name": "Zephra Loop 77",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 469.0,
+    "in_stock": false,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-471",
+    "name": "Zephra Trail 43",
+    "brand": "Zephra",
+    "category": "camera",
+    "price_eur": 1159.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1 in",
+      "video": "4K",
+      "waterproof": "yes"
+    },
+    "description": "Everyday camera with a 1 in sensor and 4K video, waterproof without a case."
+  },
+  {
+    "id": "P-472",
+    "name": "Verdane Bar 44",
+    "brand": "Verdane",
+    "category": "speaker",
+    "price_eur": 149.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "17 h",
+      "waterproof": "no"
+    },
+    "description": "Budget portable speaker, 17 h of battery life."
+  },
+  {
+    "id": "P-473",
+    "name": "Halcyra Atlas 77",
+    "brand": "Halcyra",
+    "category": "laptop",
+    "price_eur": 749.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "4-core",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "screen": "11 in"
+    },
+    "description": "Budget 11 inch laptop with a 4-core processor, 8 GB of memory and 256 GB of storage."
+  },
+  {
+    "id": "P-474",
+    "name": "Kestrel Ember 69",
+    "brand": "Kestrel",
+    "category": "phone",
+    "price_eur": 1799.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.7 in",
+      "storage": "1 TB",
+      "camera": "108 MP"
+    },
+    "description": "Premium phone with a 6.7 inch screen, 1 TB of storage and a 108 MP camera."
+  },
+  {
+    "id": "P-475",
+    "name": "Kestrel Drift 6",
+    "brand": "Kestrel",
+    "category": "headphones",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "38 h"
+    },
+    "description": "Everyday wireless on-ear headphones with a clear, balanced sound and 38 h of battery life."
+  },
+  {
+    "id": "P-476",
+    "name": "Quillon Horizon 47",
+    "brand": "Quillon",
+    "category": "monitor",
+    "price_eur": 1269.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-477",
+    "name": "Kestrel Glide 59",
+    "brand": "Kestrel",
+    "category": "tablet",
+    "price_eur": 809.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "10 in",
+      "storage": "128 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 10 inch tablet with stylus support and 128 GB of storage."
+  },
+  {
+    "id": "P-478",
+    "name": "Kestrel Dial 65",
+    "brand": "Kestrel",
+    "category": "smartwatch",
+    "price_eur": 319.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "no"
+    },
+    "description": "Everyday smartwatch with a 1.2 inch display, 10 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-479",
+    "name": "Pelagic Lens 4",
+    "brand": "Pelagic",
+    "category": "camera",
+    "price_eur": 1849.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "APS-C",
+      "video": "4K 60",
+      "waterproof": "no"
+    },
+    "description": "Capable camera with a APS-C sensor and 4K 60 video."
+  },
+  {
+    "id": "P-480",
+    "name": "Tolvane Bar 82",
+    "brand": "Tolvane",
+    "category": "speaker",
+    "price_eur": 209.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "8 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday portable speaker, 8 h of battery life."
+  },
+  {
+    "id": "P-481",
+    "name": "Sonavo Slate 42",
+    "brand": "Sonavo",
+    "category": "laptop",
+    "price_eur": 2349.0,
+    "in_stock": true,
+    "specs": {
+      "cpu": "8-core",
+      "ram": "64 GB",
+      "storage": "1 TB",
+      "screen": "16 in"
+    },
+    "description": "Premium 16 inch laptop with a 8-core processor, 64 GB of memory and 1 TB of storage."
+  },
+  {
+    "id": "P-482",
+    "name": "Halcyra Spark 3",
+    "brand": "Halcyra",
+    "category": "phone",
+    "price_eur": 1149.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "6.4 in",
+      "storage": "512 GB",
+      "camera": "50 MP"
+    },
+    "description": "Capable phone with a 6.4 inch screen, 512 GB of storage and a 50 MP camera."
+  },
+  {
+    "id": "P-483",
+    "name": "Tolvane Aria 37",
+    "brand": "Tolvane",
+    "category": "headphones",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "type": "on-ear",
+      "noise_cancelling": "none",
+      "battery": "36 h"
+    },
+    "description": "Everyday wireless on-ear headphones with a clear, balanced sound and 36 h of battery life."
+  },
+  {
+    "id": "P-484",
+    "name": "Zephra View 58",
+    "brand": "Zephra",
+    "category": "monitor",
+    "price_eur": 679.0,
+    "in_stock": true,
+    "specs": {
+      "size": "24 in",
+      "resolution": "QHD",
+      "refresh": "75 Hz"
+    },
+    "description": "Everyday 24 inch monitor with QHD resolution and a 75 Hz refresh rate."
+  },
+  {
+    "id": "P-485",
+    "name": "Halcyra Note 23",
+    "brand": "Halcyra",
+    "category": "tablet",
+    "price_eur": 1039.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "256 GB",
+      "stylus": "yes"
+    },
+    "description": "Capable 11 inch tablet with stylus support and 256 GB of storage."
+  },
+  {
+    "id": "P-486",
+    "name": "Tolvane Dial 38",
+    "brand": "Tolvane",
+    "category": "smartwatch",
+    "price_eur": 559.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "2 days",
+      "gps": "yes"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 2 days of battery life and built-in GPS."
+  },
+  {
+    "id": "P-487",
+    "name": "Kestrel Focus 19",
+    "brand": "Kestrel",
+    "category": "camera",
+    "price_eur": 439.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "yes"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video, waterproof without a case."
+  },
+  {
+    "id": "P-488",
+    "name": "Zephra Cube 3",
+    "brand": "Zephra",
+    "category": "speaker",
+    "price_eur": 629.0,
+    "in_stock": false,
+    "specs": {
+      "type": "soundbar",
+      "battery": "mains",
+      "waterproof": "no"
+    },
+    "description": "Premium soundbar speaker, mains powered."
+  },
+  {
+    "id": "P-489",
+    "name": "Zephra Zenith 63",
+    "brand": "Zephra",
+    "category": "phone",
+    "price_eur": 129.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "5.8 in",
+      "storage": "64 GB",
+      "camera": "12 MP"
+    },
+    "description": "Budget phone with a 5.8 inch screen, 64 GB of storage and a 12 MP camera."
+  },
+  {
+    "id": "P-490",
+    "name": "Verdane Vista 21",
+    "brand": "Verdane",
+    "category": "monitor",
+    "price_eur": 1319.0,
+    "in_stock": true,
+    "specs": {
+      "size": "34 in",
+      "resolution": "4K",
+      "refresh": "165 Hz"
+    },
+    "description": "Premium 34 inch monitor with 4K resolution and a 165 Hz refresh rate."
+  },
+  {
+    "id": "P-491",
+    "name": "Lumino Slate 4",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 1219.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "11 in",
+      "storage": "512 GB",
+      "stylus": "yes"
+    },
+    "description": "Premium 11 inch tablet with stylus support and 512 GB of storage."
+  },
+  {
+    "id": "P-492",
+    "name": "Ostrel Dial 9",
+    "brand": "Ostrel",
+    "category": "smartwatch",
+    "price_eur": 419.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.4 in",
+      "battery": "5 days",
+      "gps": "no"
+    },
+    "description": "Capable smartwatch with a 1.4 inch display, 5 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-493",
+    "name": "Ostrel Shot 43",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 2639.0,
+    "in_stock": false,
+    "specs": {
+      "sensor": "full frame",
+      "video": "6K",
+      "waterproof": "no"
+    },
+    "description": "Premium camera with a full frame sensor and 6K video."
+  },
+  {
+    "id": "P-494",
+    "name": "Kestrel Beat 35",
+    "brand": "Kestrel",
+    "category": "speaker",
+    "price_eur": 299.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "14 h",
+      "waterproof": "no"
+    },
+    "description": "Everyday portable speaker, 14 h of battery life."
+  },
+  {
+    "id": "P-495",
+    "name": "Halcyra Arc 10",
+    "brand": "Halcyra",
+    "category": "monitor",
+    "price_eur": 1049.0,
+    "in_stock": true,
+    "specs": {
+      "size": "27 in",
+      "resolution": "4K",
+      "refresh": "144 Hz"
+    },
+    "description": "Capable 27 inch monitor with 4K resolution and a 144 Hz refresh rate."
+  },
+  {
+    "id": "P-496",
+    "name": "Lumino Tab 9",
+    "brand": "Lumino",
+    "category": "tablet",
+    "price_eur": 289.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "8 in",
+      "storage": "64 GB",
+      "stylus": "no"
+    },
+    "description": "Budget 8 inch tablet for reading and video and 64 GB of storage."
+  },
+  {
+    "id": "P-497",
+    "name": "Zephra Loop 53",
+    "brand": "Zephra",
+    "category": "smartwatch",
+    "price_eur": 199.0,
+    "in_stock": true,
+    "specs": {
+      "screen": "1.2 in",
+      "battery": "10 days",
+      "gps": "no"
+    },
+    "description": "Budget smartwatch with a 1.2 inch display, 10 days of battery life and heart-rate tracking."
+  },
+  {
+    "id": "P-498",
+    "name": "Ostrel Aperture 79",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 309.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
+  },
+  {
+    "id": "P-499",
+    "name": "Pelagic Echo 53",
+    "brand": "Pelagic",
+    "category": "speaker",
+    "price_eur": 189.0,
+    "in_stock": true,
+    "specs": {
+      "type": "portable",
+      "battery": "13 h",
+      "waterproof": "yes"
+    },
+    "description": "Everyday portable speaker, 13 h of battery life, waterproof for the pool and the beach."
+  },
+  {
+    "id": "P-500",
+    "name": "Ostrel Aperture 18",
+    "brand": "Ostrel",
+    "category": "camera",
+    "price_eur": 369.0,
+    "in_stock": true,
+    "specs": {
+      "sensor": "1/2.3 in",
+      "video": "1080p",
+      "waterproof": "no"
+    },
+    "description": "Budget camera with a 1/2.3 in sensor and 1080p video."
   }
 ]
