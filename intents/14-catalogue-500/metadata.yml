@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14"
 auto_round:
-auto_stopped:
+auto_stopped: waiting for 13 to merge
 follows_up:
 links:
   - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth
