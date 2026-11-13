@@ -3,11 +3,180 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: 7f4a05313038cda2ec761ed28f4ae3cc0367b3b6
-round: 1
+reviewed-commit: 28aa68c1138c56c2f79d91ba295bf651d26cd8ce
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed (path table: `src/advisor/tracing.py` by meaning;
+`review_tier: reviewed`).
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 16` →
+"sample-due auto: nth attested auto change = 5, every 3, sampled: no".
+
+Scope: the rework 6eb1645 and 28aa68c (`auto_round: 2`). The branch was
+rebased onto `main` (1687047) before this round, which brought in §13's
+merged code; `git range-diff` and a normalised patch comparison show the
+§16 `src`/`tests` patches unchanged by the rebase. 699 tests = 624 on
+`main` + 70 (round 1) + 5 (rework).
+
+## Round-1 findings: resolution
+| Round 1 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| HIGH | M30 undefined TPR could come out trusted | fixed | `test_no_owner_pass_means_undefined_tpr_and_not_trusted` (`tests/test_judge.py:268`); M30, M30b KILLED |
+| MEDIUM | few-shot scope not enforced | fixed | `judging.py:133-137` `InputError`; `test_an_out_of_scope_few_shot_case_exits_2_before_any_call`; FS KILLED |
+| MEDIUM | G12 partial Langfuse config | fixed | `test_a_partial_langfuse_configuration_writes_the_file_only`; G12 KILLED |
+| LOW | M15 `parse_ref` empty parts | fixed | `#c`, `f#` in `test_duplicates_and_bad_refs_are_errors`; M15, M15a, M15b KILLED |
+| LOW | stale texts (CLAUDE.md, two tracing.py docstrings) | fixed | all three mention `judge` and the score writes; more of the same class remains (below) |
+| worth a look | M10 slot order | taken, partly proved | one `re.sub` pass at `judge.py:94-96`; M10a KILLED, M10b SURVIVED (below) |
+| worth a look | `prompt_sha256` per run | taken | README states it |
+| worth a look | verdict without `reason` | taken | `judge.py:123-126` → `JudgeError`; consistent with B4 ("anything else is a judge error") and AC3; R1-R3 KILLED |
+| worth a look | `CLAUDE.md` prompt path | taken | `src/advisor/evals/prompts/*.md` |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass |
+| 2 | Type check | FAIL on the owed live check only (the owner's) |
+| 3 | Behaviour against the spec | pass (B6 scope enforced; B4 reason rule) |
+| 4 | Tests prove the behaviour | findings (1): M10b |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (624 + 75 = 699) |
+| 7 | Documentation | findings (1): stale docstrings |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 16, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/16-llm-judge/review.md → ## Live check, then set live_checked: <date> in intents/16-llm-judge/metadata.yml.
+  note:  16 file(s), 1998 line(s) changed outside intents/.
+```
+FAIL only on the owed live check.
+
+## Findings
+- **LOW** `tests/test_judge.py:109-112`: M10b (chained replace,
+  conversation first, at `judge.py:96`) survives; the comment at
+  `judge.py:95` claims a slot-like string inside the conversation is never
+  replaced, but no test puts `[[examples]]` in a conversation. **Needs
+  rework:** add `[[examples]]` to the conversation in
+  `test_a_slot_inside_a_conversation_is_not_filled_again` and assert the
+  text appears exactly once, unchanged.
+- **LOW** stale docstrings still naming only `queue` and `import`:
+  `src/advisor/evals/analysis.py:5-7`, `:9-12` (Langfuse-error exit codes;
+  `judge` exits 2 too), `:65`, and `src/advisor/evals/annotate.py:3` (the
+  protocol now has the judge-score methods). **Needs rework:** name
+  `judge` and the judge score in those four places.
+- **LOW** (worth a look) `judging.py:41`: `LANGFUSE_ENV` is a third copy of
+  the variable names with no test against `tracing.REQUIRED_ENV`; reuse
+  `analysis._LANGFUSE_ENV` or add it to `tests/test_boundaries.py`.
+- **LOW** (worth a look) `judge.py:124-126`: an empty or whitespace
+  `reason` is still a verdict.
+- **LOW** (worth a look) `plan.md:156`: the Progress entry cites the
+  pre-rebase hashes.
+- **Coordinator, sequencing.** Needs decision: the live check's step 7
+  commits `evals/judge/split.json` (with the new held-out labels),
+  `validation.md` and the judgements to the branch, and ship refuses files
+  changed after the reviewed commit, so they must be reviewed. Round 3 is
+  the last `/auto` round. Either round 3 now reviews only the two LOW
+  fixes and the live-check files later need a review by hand, or the
+  owner does the live check first and round 3 reviews the LOW fixes and
+  the live-check files together.
+
+**Mutants** (one change each, full suite, backup and restore by copy):
+
+| Id | Target | Result | Killed by |
+| --- | --- | --- | --- |
+| M30 / M30b | `judge.py:239-241` | KILLED | test_no_owner_pass_means_undefined_tpr_and_not_trusted |
+| G12 | `judging.py:258` | KILLED | test_a_partial_langfuse_configuration_writes_the_file_only |
+| M15 / M15a / M15b | `judge.py:154` | KILLED | test_duplicates_and_bad_refs_are_errors |
+| FS | `judging.py:133` | KILLED | test_an_out_of_scope_few_shot_case_exits_2_before_any_call |
+| M10a | `judge.py:96` examples first | KILLED | test_a_slot_inside_an_example_is_not_filled_either |
+| **M10b** | `judge.py:96` conversation first | **SURVIVED** | (finding) |
+| M10c | regex only `[[examples]]` | KILLED | many test_analysis_judge tests |
+| M10d | conversation stripped | SURVIVED, equivalent in effect | – |
+| R1 / R2 / R3 | `judge.py:124-126` | KILLED | test_anything_else_is_a_judge_error, test_valid_verdicts |
+
+## Not checked
+- Real Haiku output (how often a reply lacks `reason`, now an ERROR);
+  `system=""`, `tools=[]` with Anthropic.
+- The Langfuse batch score `POST`, upsert on `id`, server-side
+  `config_id` validation, §10's `import` ignoring judge scores live.
+- `validation.md` (not produced; 9 held out, 6 pass / 3 fail).
+- `judge` over a few-shot example's own report; non-`ModelError` client
+  exceptions; an empty `reason`.
+- Round 1's 66 killed mutants not re-run (code unchanged across the
+  rebase); §13's code brought in by the rebase (reviewed under §13).
+
+## Live check
+- owed: rule 1 (`src/advisor/tracing.py`) and rule 3 (paid model output;
+  the Langfuse batch-score endpoint and upsert). Spec AC7, AC8.
+- steps:
+  1. In `C:/Users/eric/src/product-advice-agent-wt/16-llm-judge`: `.env`
+     with `ANTHROPIC_API_KEY` and the three `LANGFUSE_*`; Langfuse up; pass
+     `--runs-dir ../product-advice-agent/evals/runs` (or copy
+     `20261113T072503Z-ollama.json` and `20261113T070516Z-anthropic.json`
+     into the worktree's `evals/runs/`).
+  2. Label more in-scope conversations: `uv run advisor-eval` (Langfuse
+     on); `uv run advisor-analysis queue evals/runs/<report>.json --scenario
+     no-match`, then `--scenario budget-too-low`; label in Langfuse; `uv run
+     advisor-analysis import …`; until `held_out` in `evals/judge/split.json`
+     holds ≥30 conversations with ≥10 fails.
+  3. `uv run advisor-analysis judge evals/runs/<traced report>.json`.
+  4. The same command again.
+  5. `uv run advisor-analysis import evals/runs/<that report>.json`.
+  6. `uv run advisor-analysis judge-validate`.
+  7. Commit `evals/judge/split.json`, `evals/judge/validation.md`,
+     `evals/judgements/<report>.jsonl` before the final review round.
+- you should see: step 3, one `PASS|FAIL|ERROR <case>: <reason>` line per
+  no-match / budget-too-low case (a reply without `reason` shows as an
+  ERROR saying the JSON has no string reason; note how many), `wrote N
+  verdicts …`, `judge-no-fit: K scored, k no trace`, no key printed; in
+  Langfuse one BOOLEAN `judge-no-fit` score per judged trace (source API,
+  reason as comment), in no queue, and one `judge-no-fit` config. Step 4:
+  still one score per trace. Step 5: no label from a judge score. Step 6:
+  the table, both rates `0.xx (a/b)`, errors, model, prompt hash, ≥30
+  held out, trusted or not with the reason, every disagreement. A
+  score-batch 4xx (`Langfuse score-write failed: …`, keys as `***`) or a
+  high ERROR rate is a defect.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/16-llm-judge` at 28aa68c; `git status --short` clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; "All
+  checks passed!"; "158 files already formatted"; mypy "Success: no issues
+  found in 29 source files"; "699 passed". Matches the reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "16 file(s), 1998 line(s)". Matches.
+- **Coordinator, re-run:** M30 KILLED by
+  test_no_owner_pass_means_undefined_tpr_and_not_trusted; G12 KILLED by
+  test_a_partial_langfuse_configuration_writes_the_file_only; M15 KILLED by
+  test_duplicates_and_bad_refs_are_errors; FS KILLED by
+  test_an_out_of_scope_few_shot_case_exits_2_before_any_call ("1 failed,
+  698 passed" each); M10b SURVIVED ("699 passed"). Matches the reviewer
+  and the implementer.
+
+**Reviewer, verified:** verify, check:intent, the rebase (range-diff and
+patch comparison), the 624 base on `main`, the rework diff in full, the
+intent folder edits, 14 mutants, B4/AC3 against the spec and the prompt.
+
+**Taken on trust:** round 1's 66 kills on unchanged code; Anthropic
+accepting `system=""`; the Langfuse server upserting on score `id`.
+
+# Round 1 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 7f4a05313038cda2ec761ed28f4ae3cc0367b3b6
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, by the path table (`src/advisor/tracing.py`, by meaning)
 and `review_tier: reviewed`; the HIGH finding would raise it anyway.
@@ -23,7 +192,7 @@ bodies in a new `judging.py` (`judge.py` stays pure, `langfuse` stays in
 `--judgements-dir` with the repo paths as defaults; B7's minimums count
 conversations with a verdict (stricter than the spec's wording).
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (divergences above) |
@@ -36,7 +205,7 @@ conversations with a verdict (stricter than the spec's wording).
 | 8 | Guardrails and hygiene | pass (fake keys only; redaction proven) |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -45,7 +214,7 @@ type-check: PASS (intent 16, feature)
   note:  16 file(s), 1935 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **HIGH** `src/advisor/evals/judge.py:236-237`: M30 survives. Without the
   "true-positive rate is undefined" reason, a held-out set with ≥30 owner
   fails and no owner pass comes out **trusted**. **Needs rework:** add to
@@ -100,7 +269,7 @@ jsonl appended (G13); validate inversions (G15-G17); dispatch (A01-A02);
 tracing score fields, name, `queue_id`, data type, source, config, batch
 size, rejected>0, `_call` and redaction (T01-T16).
 
-## Not checked
+### Not checked
 - Real Haiku output on the prompt; `system=""` and `tools=[]` with
   Anthropic (the same call shape as `generate`/`taxonomy`).
 - Whether self-hosted Langfuse accepts the SDK 5.2.0 batch score `POST`
@@ -112,7 +281,7 @@ size, rejected>0, `_call` and redaction (T01-T16).
 - `judge` over the report a few-shot example came from (the judge sees its
   own example); non-`ModelError` exceptions from a client.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/tracing.py`) and rule 3 (paid model output;
   the Langfuse batch-score endpoint and upsert). Spec AC7, AC8.
 - steps:
@@ -145,7 +314,7 @@ size, rejected>0, `_call` and redaction (T01-T16).
   disagreement. A score-batch 4xx shows as `Langfuse score-write failed:
   …` with `***` for keys, and is a defect.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/16-llm-judge` at 7f4a053; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; "All
