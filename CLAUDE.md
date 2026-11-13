@@ -108,7 +108,7 @@ npm run sessions -- --log 30    # the raw event tail
   `.git/product-advice-agent-sessions.jsonl`, written by the hooks in
   `.claude/settings.json` on start, prompt, turn end, notification and end.
   That file is never committed, and no agent writes to it by hand. It holds
-  **no prompt text**: a prompt is logged by its length only. Events are
+  **no prompt text**: a prompt is logged by its length, plus `skill` and `skillId` when it starts with one of this repo's slash commands (`/spec 17` logs `spec`, 17) and nothing else of it. Events are
   filed under the session's project directory, so a session that `cd`s into
   another worktree still shows as itself. A permission prompt or question
   shows as `needs you`. Claude Code's idle "waiting for your input"

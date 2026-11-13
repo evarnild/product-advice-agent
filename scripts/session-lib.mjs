@@ -140,15 +140,19 @@ export function sessionState(event) {
  * directory (`CLAUDE_PROJECT_DIR`), not wherever the session happens to have
  * `cd`'d — a coordinator running `npm run verify` inside another worktree
  * must not show up as that worktree's session. Prompts are logged by length
- * only: the log should show that a session is working, never what was typed.
+ * only, plus (§19) the name of a repo skill the prompt starts with and its
+ * first integer argument: the log should show that a session is working and
+ * on what, never what was typed. `skills` is the list of names under
+ * `.claude/skills/`; with none, no prompt is ever recognised.
  */
-export function eventRecordFrom(input, env = {}, fallbackCwd = '.') {
+export function eventRecordFrom(input, env = {}, fallbackCwd = '.', skills = []) {
   if (!input || typeof input !== 'object' || typeof input.hook_event_name !== 'string') return null;
   const event = input.hook_event_name;
   const fields = { event, session: input.session_id };
   if (event === 'UserPromptSubmit') {
     fields.promptChars = typeof input.prompt === 'string' ? input.prompt.length : 0;
     fields.detail = `${fields.promptChars} chars`;
+    Object.assign(fields, skillOf(input.prompt, skills));
   } else if (event === 'Notification') {
     if (input.notification_type) fields.kind = String(input.notification_type);
     fields.detail = clip(input.message);
@@ -161,6 +165,21 @@ export function eventRecordFrom(input, env = {}, fallbackCwd = '.') {
   }
   const dir = env.CLAUDE_PROJECT_DIR || (typeof input.cwd === 'string' && input.cwd) || fallbackCwd;
   return { dir, fields };
+}
+
+/**
+ * `{skill, skillId?}` when the prompt, trimmed, starts with `/<name>` for a
+ * `<name>` in `skills`; `skillId` is the first integer argument. Nothing else
+ * of the prompt is returned. `{}` for anything else, including non-strings.
+ */
+export function skillOf(prompt, skills = []) {
+  if (typeof prompt !== 'string' || !Array.isArray(skills)) return {};
+  const m = /^\/([A-Za-z0-9][\w-]*)(?:\s+(.*))?$/s.exec(prompt.trim());
+  if (!m || !skills.includes(m[1])) return {};
+  const out = { skill: m[1] };
+  const id = /(?:^|\s)#?§?(\d{1,6})(?=\s|$)/.exec(m[2] ?? '');
+  if (id) out.skillId = Number(id[1]);
+  return out;
 }
 
 /** "4m", "2h", "3d" — enough to tell a stuck session from a busy one. */
