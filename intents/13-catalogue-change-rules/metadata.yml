@@ -11,7 +11,7 @@ plan_approved: 2026-11-13 by-agent    # auto: owner "accept 13 /auto 13" (auto_a
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 13 /auto 13"
-auto_round: 1
+auto_round: 2
 auto_stopped:
 follows_up:
 links:
