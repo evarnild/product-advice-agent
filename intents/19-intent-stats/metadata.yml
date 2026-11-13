@@ -10,9 +10,9 @@ spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized:
+auto_authorized: 2026-11-13 by-agent    # owner: "/auto 19"
 auto_round:
-auto_stopped:
+auto_stopped: too many sessions
 follows_up:
 links:
   - intents/18-intent-dependencies    blocked time between intents is part of the wait picture
