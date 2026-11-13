@@ -7,7 +7,7 @@ title: Label eval runs in Langfuse annotation queues as an alternative to the cu
 review_tier: reviewed    # touches src/advisor/tracing.py (Reviewed by meaning: what is sent to Langfuse)
 intent_accepted: 2026-11-11 by-agent    # owner: "accept 10"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes" to the spec stop
-plan_approved:
+plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 10" (auto_authorized 2026-11-13)
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 10"
