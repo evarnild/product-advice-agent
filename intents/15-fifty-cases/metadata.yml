@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 15 and /auto 15"
 auto_round:
-auto_stopped:
+auto_stopped: waiting for 14 to merge
 follows_up:
 links:
   - intents/8-offline-evals    the case format and code checks
