@@ -311,3 +311,21 @@ def test_markdown_says_trusted_without_a_reason():
     )
     assert "**Verdict: trusted.**" in text
     assert "## Skipped" not in text
+
+
+def test_the_committed_split_is_valid_against_the_committed_labels():
+    import json
+    from pathlib import Path
+
+    from advisor.evals.labels import parse_labels
+
+    root = Path(__file__).resolve().parent.parent
+    value = json.loads((root / "evals" / "judge" / "split.json").read_text(encoding="utf-8"))
+    by_ref = {}
+    for ref in (*value["few_shot"], *value["held_out"]):
+        file, case_id = judge.parse_ref(ref)
+        labels = parse_labels((root / "evals" / "labels" / file).read_text(encoding="utf-8"))
+        by_ref[ref] = labels[case_id].label
+        assert case_id.startswith(("gen-no-match-", "gen-budget-too-low-")), ref  # in scope
+    split = parse_split(value, by_ref)
+    assert 0 < len(split.few_shot) <= 8

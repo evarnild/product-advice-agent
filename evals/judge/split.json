@@ -1,0 +1,23 @@
+{
+  "few_shot": [
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-1",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-2",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-8",
+    "20261113T070516Z-anthropic.jsonl#gen-budget-too-low-1",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-4",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-5",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-9",
+    "20261113T072503Z-ollama.jsonl#gen-no-match-1"
+  ],
+  "held_out": [
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-3",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-11",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-6",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-7",
+    "20261113T072503Z-ollama.jsonl#gen-budget-too-low-10",
+    "20261113T070516Z-anthropic.jsonl#gen-budget-too-low-2",
+    "20261113T070516Z-anthropic.jsonl#gen-budget-too-low-3",
+    "20261113T070516Z-anthropic.jsonl#gen-budget-too-low-4",
+    "20261113T070516Z-anthropic.jsonl#gen-budget-too-low-5"
+  ]
+}
