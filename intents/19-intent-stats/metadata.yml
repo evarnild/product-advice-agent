@@ -6,13 +6,13 @@ status: accepted
 title: Time, tokens and owner wait per intent and phase
 review_tier: reviewed    # likely changes the session hook (scripts/session-event.mjs, .claude/settings.json) and /ship
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 19" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 19", then "run it anyway" (fourth run)
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/18-intent-dependencies    blocked time between intents is part of the wait picture
