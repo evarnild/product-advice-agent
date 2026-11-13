@@ -155,3 +155,10 @@ def test_bad_dimensions_name_line_case_and_field(dims):
     with pytest.raises(CaseFileError) as e:
         parse_cases(line(dimensions=dims), CATALOGUE)
     assert "line 1, case 'c1': field 'dimensions'" in str(e.value)
+
+
+def test_committed_cases_are_consistent_with_the_catalogue():
+    from advisor.evals.cases import catalogue_problems
+
+    problems = catalogue_problems(load_committed(), CATALOGUE)
+    assert problems == [], "\n".join(problems)

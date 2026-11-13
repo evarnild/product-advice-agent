@@ -451,3 +451,18 @@ def test_counts_missing_files_exit_2(tmp_path):
         ["counts", str(report), "--labels", str(labels), "--taxonomy", str(tmp_path / "none")],
     ):
         assert run(argv)[0] == 2
+
+
+def test_counts_and_view_accept_a_report_without_catalogue_sha256(tmp_path):
+    # §13 B6: old reports carry no catalogue hash and stay readable.
+    assert "catalogue_sha256" not in COUNT_REPORT and "catalogue_sha256" not in REPORT
+    report, labels, tax_path = counts_files(tmp_path)
+    code, _, err, _ = run(
+        ["counts", str(report), "--labels", str(labels), "--taxonomy", str(tax_path)]
+    )
+    assert code == 0, err
+    code, _, err, _ = run(
+        ["view", str(write_report(tmp_path)), "--labels", str(tmp_path / "l.jsonl")],
+        serve=lambda app, host, port: None,
+    )
+    assert code == 0, err

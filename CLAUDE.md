@@ -171,6 +171,9 @@ deterministic checks) are pure and core code (in `CORE_CODE`); `run.py` is the I
 clock, stdout, the JSON report in `evals/runs/`) with its own recording
 tracer. It loads `advisor.tracing` only when the three `LANGFUSE_*` variables are set (it then traces each case, tagged `eval`), and imports no provider SDK. Cases are
 data in `evals/cases.jsonl`.
+`cases.catalogue_problems` checks the cases against the catalogue (a test in
+`verify` runs it on the committed file; rules in `docs/decisions/0003-catalogue-changes.md`),
+and the run report records `catalogue_sha256` beside the cases and prompt hashes.
 
 **Error analysis** (`advisor-analysis`, §9 and §10, same package). Pure: `coverage.py`
 (the question grid and the catalogue check), `labels.py`, `taxonomy.py`,
