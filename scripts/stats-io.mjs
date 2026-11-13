@@ -6,7 +6,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { eventLogPath, git, mainCheckout } from './session-io.mjs';
 import { parseEvents, parseWorktreeList } from './session-lib.mjs';
-import { computeStats, parseCommitLog, usageLines } from './stats-lib.mjs';
+import { computeStats, parseCommitLog, statsMarkdown, usageLines } from './stats-lib.mjs';
 
 /** Claude Code names a project folder after the path, every non-alphanumeric character becoming `-`. */
 export const projectSlug = (path) => String(path).replace(/[^A-Za-z0-9]/g, '-');
@@ -91,11 +91,27 @@ export function statsCutover(root) {
  * all when null). Throws on a git failure; unreadable transcripts and log
  * lines are skipped and counted, never thrown.
  */
-export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscriptRoot(), only = null, now = Date.now() } = {}) {
+export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscriptRoot(), only = null, now = Date.now(), extraCommits = [] } = {}) {
   const root = mainCheckout(cwd);
-  const commits = parseCommitLog(git(root, 'log', '--branches', '--format=%H %ct %s'));
+  const commits = [...parseCommitLog(git(root, 'log', '--branches', '--format=%H %ct %s')), ...extraCommits];
   const logFile = eventLogPath(root);
   const events = existsSync(logFile) ? parseEvents(readText(logFile)) : [];
   const { coordinators, agents } = existsSync(transcripts) ? readTranscripts(transcripts, checkoutPaths(root, events)) : { coordinators: [], agents: [] };
   return computeStats({ commits, events, coordinators, agents, now, cutover: statsCutover(root), only });
+}
+
+/** The `generated-by` stamp of a committed stats.md. */
+export const STATS_STAMP = 'product-advice-agent/ship@0.2.0';
+
+/**
+ * The `stats.md` text for intent `id` as `/ship` commits it (B9): collected
+ * at `now`, with the merge commit that is about to be made counted as the
+ * end of the ship phase. Throws when collection fails; the caller decides
+ * that a failure never blocks a ship.
+ */
+export function renderStatsFile(root, id, mergedHash, { collect = collectStats, now = Date.now() } = {}) {
+  const stats = collect({ cwd: root, only: [Number(id)], now, extraCommits: [{ hash: `pending-${id}`, ts: now, subject: `§${id}: merged (${mergedHash}); status done` }] });
+  const it = stats.intents.find((i) => i.id === Number(id));
+  if (!it) throw new Error(`no commits found for §${id}`);
+  return statsMarkdown(it, STATS_STAMP);
 }

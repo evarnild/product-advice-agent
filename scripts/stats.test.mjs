@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after as afterAll, before as beforeAll, describe, it } from 'node:test';
 import { expect } from './expect.mjs';
-import { projectSlug } from './stats-io.mjs';
+import { collectStats, projectSlug, renderStatsFile } from './stats-io.mjs';
 import { parseStatsArgs } from './stats-lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -140,5 +140,18 @@ describe('npm run stats', () => {
     expect(parseStatsArgs(['3', '§4', '--json'], 'd')).toEqual({ ids: [3, 4], all: false, json: true, transcripts: 'd' });
     expect(parseStatsArgs(['--all', '--transcripts', 'x'], 'd')).toMatchObject({ all: true, transcripts: 'x' });
     expect(() => parseStatsArgs(['--transcripts'], 'd')).toThrow();
+  });
+});
+
+describe('renderStatsFile (B9)', () => {
+  it('renders the stamped file, counting the pending merge as the end of the ship phase', () => {
+    const md = renderStatsFile(repo, 7, 'abc1234', { now: Date.parse('2026-11-01T12:30:00Z') });
+    expect(md).toContain('# §7 stats');
+    expect(md).toContain('generated-by: product-advice-agent/ship@');
+    expect(md).not.toContain(SENTINEL);
+  });
+
+  it('throws when collection throws, so the caller can carry on', () => {
+    expect(() => renderStatsFile(repo, 7, 'abc1234', { collect: () => { throw new Error('boom'); } })).toThrow('boom');
   });
 });

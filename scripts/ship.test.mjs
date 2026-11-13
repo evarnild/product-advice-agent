@@ -32,7 +32,7 @@ const git = (cwd, ...args) => execFileSync('git', args, { cwd, env: GIT_ENV, enc
 const ship = (args, verify = VERIFY_OK, opts = {}) =>
   spawnSync(process.execPath, [SHIP, ...args], {
     cwd: opts.cwd ?? repo,
-    env: { ...GIT_ENV, SDLC_SHIP_VERIFY: verify },
+    env: { ...GIT_ENV, SDLC_SHIP_VERIFY: verify, SDLC_STATS_TRANSCRIPTS: join(sandbox, 'no-transcripts') },
     encoding: 'utf8',
   });
 const out = (r) => `${r.stdout}\n${r.stderr}`;
@@ -149,6 +149,12 @@ describe('npm run ship', { timeout: 90_000 }, () => {
     expect(meta.replace(/\r\n/g, '')).not.toMatch(/[\r\n]/); // every line ending stayed CRLF
     expect(git(repo, 'status', '--porcelain')).toBe('');
     expect(git(repo, 'log', '-1', '--format=%B')).toContain(TRAILER);
+    // §19 B9: the bookkeeping commit holds stats.md next to metadata.yml, stamped, numbers and ids only
+    expect(git(repo, 'show', '--name-only', '--format=', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/11-t11/metadata.yml', 'intents/11-t11/stats.md']);
+    const stats = read('intents', '11-t11', 'stats.md');
+    expect(stats).toMatch(/^<!-- generated-by: product-advice-agent\/ship@[\d.]+ -->/);
+    expect(stats).toContain('# §11 stats');
+    expect(r.stdout).toContain('intents/11-t11/stats.md written');
     const events = readFileSync(join(repo, '.git', 'product-advice-agent-sessions.jsonl'), 'utf8').split(/\r?\n/);
     expect(events.some((l) => l.includes('"event":"shipped"') && l.includes('"id":"11"'))).toBe(true);
     // the order of the report is the order of the steps
@@ -372,7 +378,7 @@ describe('npm run ship: preconditions, wiring and refusals', { timeout: 90_000 }
       const r = ship(['32']);
       expect(r.status, out(r)).toBe(0);
       expect(git(repo, 'status', '--porcelain').split(/\r?\n/).sort()).toEqual(['?? staged.txt', 'M README.md']);
-      expect(git(repo, 'diff', '--name-only', 'HEAD~1', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/32-t32/metadata.yml']);
+      expect(git(repo, 'diff', '--name-only', 'HEAD~1', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/32-t32/metadata.yml', 'intents/32-t32/stats.md']);
       const merge = git(repo, 'log', '-1', '--merges', '--format=%H', 'main');
       const merged = git(repo, 'diff', '--name-only', `${merge}^1`, merge).split(/\r?\n/);
       expect(merged).not.toContain('staged.txt');
@@ -533,6 +539,18 @@ describe('npm run ship: failures after the merge', { timeout: 90_000 }, () => {
     expect(branchExists(w.branch)).toBe(true);
   });
 
+  it('still ships, without stats.md and with a line saying why, when the stats cannot be written (B9)', () => {
+    // a directory where stats.md would go: writing it fails
+    const w = makeIntent(52, { file: 'intents/52-t52/stats.md/keep' });
+    const r = ship(['52']);
+    expect(r.status, out(r)).toBe(0);
+    expect(r.stdout).toMatch(/stats\.md NOT written \(stats never block a ship\)/);
+    expect(git(repo, 'show', '--name-only', '--format=', 'HEAD')).toBe('intents/52-t52/metadata.yml');
+    expect(read('intents', '52-t52', 'metadata.yml')).toContain('status: done');
+    expect(branchExists(w.branch)).toBe(false);
+    expect(git(repo, 'status', '--porcelain')).toBe('');
+  });
+
   it('puts the file back and unstages it when the bookkeeping commit is rejected, then resumes', () => {
     makeIntent(41);
     writeFileSync(
@@ -645,7 +663,7 @@ describe('npm run ship: leftovers and what a commit may hold', { timeout: 90_000
     try {
       const r = ship(['48'], stageDuringVerify);
       expect(r.status, out(r)).toBe(0);
-      expect(git(repo, 'diff', '--name-only', 'HEAD~1', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/48-t48/metadata.yml']);
+      expect(git(repo, 'diff', '--name-only', 'HEAD~1', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/48-t48/metadata.yml', 'intents/48-t48/stats.md']);
       expect(git(repo, 'status', '--porcelain')).toBe('A  other.txt');
     } finally {
       try {
