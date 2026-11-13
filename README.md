@@ -257,6 +257,16 @@ fix the case in the same branch. A catalogue change also owes an
 `advisor-eval` run; each report records `catalogue_sha256`. Old reports and
 labels are not redone.
 
+The catalogue has 500 products (63 in laptop, phone, headphones and monitor,
+62 in the other four). P-001 to P-032 are hand-written; the rest come from a
+seeded generator, `src/advisor/catalogue_build.py` (pure, not used at run
+time). `uv run python -m advisor.catalogue_build` rewrites
+`src/advisor/data/catalogue.json` from its first 32 products, and
+`uv run python -m advisor.catalogue_build --check` exits 1 if the file differs
+from a rebuild (a test checks the same on every `verify`). To change the
+generated part, change the module and rerun it, then fix any case the
+consistency test names.
+
 ## Check
 
 ```

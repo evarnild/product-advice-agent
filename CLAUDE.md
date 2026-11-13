@@ -153,6 +153,9 @@ Langfuse stack in `infra/langfuse/`.
 - `catalogue.py`: `Product`, `load_catalogue` (validates, names product and
   field), `search_products` (AND of filters, price-then-id order, limit
   clamped to 1..10, keywords case-insensitive, a hyphen counts as a space). Data: `data/catalogue.json`, synthetic.
+  `catalogue_build.py` is the seeded generator behind the 500 products (the first 32
+  are hand-written); pure, not imported at runtime; `python -m advisor.catalogue_build`
+  rewrites the file, `--check` compares (a test pins the file to a rebuild).
 - `agent.py`: `run_agent` (the tool loop, at most 5 model turns, error tool
   results for bad calls, fixed fallback answer) and `answer_question` (input
   guardrail, agent, output guardrail, one trace). Pure orchestration over a
