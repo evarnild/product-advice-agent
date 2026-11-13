@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 18
+slug: intent-dependencies
+type: feature
+status: accepted
+title: Record which intents must merge before another can be built
+review_tier:
+intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/15-fifty-cases    its auto_stopped holds a dependency as free text; backfilled here
+  - intents/17-evals-every-change    its auto_stopped names 13 but not 15 or 14; backfilled here
