@@ -19,3 +19,5 @@ links:
   - intents/13-catalogue-change-rules    catalogue changes owe an eval run
   - intents/15-fifty-cases    the set an owed run uses
   - intents/16-llm-judge    its verdicts join the comparison once it exists
+blocked_by:
+  - 13    reads catalogue_sha256 from run reports (spec, Assumptions)

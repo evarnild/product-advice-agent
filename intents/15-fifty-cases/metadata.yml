@@ -19,3 +19,6 @@ links:
   - intents/9-error-analysis    the generated questions and dimensions
   - intents/13-catalogue-change-rules    its consistency test checks the 50
   - intents/14-catalogue-500    the catalogue the 50 are written against
+blocked_by:
+  - 13    its consistency check is extended (spec B4)
+  - 14    the 50 cases are written against the 500-product catalogue
