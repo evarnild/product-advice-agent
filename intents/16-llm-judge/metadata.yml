@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 16 /auto 16"
 auto_round:
-auto_stopped:
+auto_stopped: spec questions
 follows_up:
 links:
   - intents/9-error-analysis    the labels, critiques and taxonomy it is built from
