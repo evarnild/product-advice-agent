@@ -173,7 +173,7 @@ def test_analysis_langfuse_variables_match_the_tracing_module():
     assert tuple(_LANGFUSE_ENV) == tuple(REQUIRED_ENV)
 
 
-def test_counts_and_taxonomy_load_neither_tracing_nor_langfuse(tmp_path):
+def test_view_counts_and_taxonomy_load_neither_tracing_nor_langfuse(tmp_path):
     # A fresh interpreter runs `counts` and `taxonomy` (no fail to draft: exits 2 early).
     code = (
         "import io, json, sys\n"
@@ -193,7 +193,9 @@ def test_counts_and_taxonomy_load_neither_tracing_nor_langfuse(tmp_path):
         "rc = main(['counts', str(report), '--labels', str(labels), '--taxonomy', str(tax)],\n"
         "          env={}, out=io.StringIO(), err=io.StringIO())\n"
         "rc2 = main(['taxonomy', str(labels)], env={}, out=io.StringIO(), err=io.StringIO())\n"
-        "assert (rc, rc2) == (0, 2), (rc, rc2)\n"
+        "rc3 = main(['view', str(report), '--labels', str(labels)], env={},\n"
+        "           out=io.StringIO(), err=io.StringIO(), serve=lambda app, host, port: None)\n"
+        "assert (rc, rc2, rc3) == (0, 2, 0), (rc, rc2, rc3)\n"
         "bad = sorted(m for m in sys.modules\n"
         "             if m.split('.')[0] in ('langfuse', 'opentelemetry')\n"
         "             or m == 'advisor.tracing')\n"

@@ -53,6 +53,8 @@ def ids(cases):
 def test_stamp_is_the_started_time_in_utc_as_run_py_formats_it():
     assert report_stamp(REPORT) == "20261112T103005Z"
     assert report_stamp({"started": "2026-11-12T10:30:05+00:00"}) == "20261112T103005Z"
+    # a time without an offset is read as UTC
+    assert report_stamp({"started": "2026-11-12T10:30:05"}) == "20261112T103005Z"
 
 
 @pytest.mark.parametrize("bad", [{}, {"started": 5}, {"started": "yesterday"}])

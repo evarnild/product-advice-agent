@@ -257,3 +257,25 @@ Divergences from the plan:
 - Tests that exercise `import` change the working directory to a temp dir, so
   a default `evals/labels/` path can never reach the repository.
 - Nothing was run against a live Langfuse; the live check (AC9) is owed.
+
+### 2026-11-13: rework after review round 1
+
+Commit: the one following `fcd5471` (subject "§10: rework after review round 1").
+Tests: 608 passed (607 before). `npm run verify` green.
+
+Fixed every "Needs rework:" finding, tests and docs only (no behaviour change):
+- `make_annotations(ENV)` redaction: `test_make_annotations_redacts_both_keys_from_an_sdk_error`.
+- Exact messages of the B6 and B7 conflicts in `test_tracing_annotations.py`.
+- `test_boundaries.py`: the subprocess test also runs `view` (with a no-op `serve`).
+- `test_a_bad_status_is_a_usage_error` uses a real report and asserts no fake call and no "No case".
+- `report_stamp` of a time without an offset.
+- CLAUDE.md Commands line; README exit-2 list; `analysis.py` module docstring.
+
+Mutants run on the rework (restored by copy; all killed):
+T30 `LangfuseAnnotations(client.api)` without secrets: `test_tracing_annotations.py::test_make_annotations_redacts_both_keys_from_an_sdk_error`.
+T6 no `except AnnotationError: raise`: `test_tracing_annotations.py::test_a_pass_config_of_another_type_only_is_a_conflict_naming_the_type`.
+Q15 `import advisor.tracing` in the `view` branch: `test_boundaries.py::test_view_counts_and_taxonomy_load_neither_tracing_nor_langfuse`.
+Q13 no `choices=STATUSES`: `test_analysis_queue.py::test_a_bad_status_is_a_usage_error`.
+N2 naive `started` not read as UTC: `test_analysis_annotate.py::test_stamp_is_the_started_time_in_utc_as_run_py_formats_it`.
+
+Left alone as instructed: the "Worth a look" LOWs.

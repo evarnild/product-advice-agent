@@ -28,7 +28,7 @@ npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
-uv run advisor-analysis generate|view|taxonomy|counts  # error analysis on top of the evals (README.md; generate and taxonomy call a model)
+uv run advisor-analysis generate|view|taxonomy|counts|queue|import  # error analysis on top of the evals (README.md; generate and taxonomy call a model; queue and import need the three LANGFUSE_* variables)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
 ```
 

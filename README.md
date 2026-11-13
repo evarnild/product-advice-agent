@@ -237,8 +237,10 @@ uv run advisor-analysis counts evals/runs/<report>.json
   (the traces are found at once). If an import misses some, run it again
   later.
 - `taxonomy` and `counts` read the imported file unchanged.
-- Exit 2: a missing variable, a conflicting config or queue, a Langfuse
-  error (`Langfuse <step> failed: ...`).
+- Exit 2: a missing `LANGFUSE_*` variable, filters that match no case, a
+  queue that does not exist (`import`), a conflicting config or queue, an
+  unreadable report or labels file, a Langfuse error
+  (`Langfuse <step> failed: ...`).
 
 No model grades an answer: you label every conversation. Reports stay local
 (`evals/runs/`); questions, labels and the taxonomy are committed.

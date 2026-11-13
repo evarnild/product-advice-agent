@@ -57,7 +57,10 @@ def test_a_pass_config_of_another_type_only_is_a_conflict_naming_the_type():
     with pytest.raises(AnnotationError) as caught:
         annotations(api).ensure_score_config()
     assert caught.value.step == "config"
-    assert "NUMERIC" in caught.value.message and "pass" in caught.value.message
+    assert str(caught.value) == (
+        "Langfuse config failed: a score config named 'pass' exists with data type "
+        "NUMERIC, not BOOLEAN; rename or archive it in Langfuse"
+    )
     assert api.called("score_configs.create") == []
 
 
@@ -86,7 +89,10 @@ def test_an_existing_queue_without_the_pass_config_is_a_conflict():
     with pytest.raises(AnnotationError) as caught:
         annotations(api).ensure_queue("advisor-eval S1", "cfg")
     assert caught.value.step == "queue"
-    assert "advisor-eval S1" in caught.value.message
+    assert str(caught.value) == (
+        "Langfuse queue failed: queue 'advisor-eval S1' exists without the 'pass' "
+        "score config; pick another name with --queue"
+    )
     assert api.called("annotation_queues.create_queue") == []
 
 
@@ -271,6 +277,22 @@ def test_make_annotations_builds_one_client_with_the_values_and_uses_its_api(mon
             "host": "http://langfuse.test:3000",
         }
     ]
+
+
+def test_make_annotations_redacts_both_keys_from_an_sdk_error(monkeypatch):
+    api = FakeApi(scores=[[]])
+    api.error_on["scores.get_many"] = RuntimeError("401 sk-test for pk-test")
+
+    class Client:
+        def __init__(self, **kw):
+            self.api = api
+
+    monkeypatch.setattr(tracing, "Langfuse", Client)
+    with pytest.raises(AnnotationError) as caught:
+        make_annotations(ENV).annotation_scores("q")
+    text = str(caught.value)
+    assert "sk-test" not in text and "pk-test" not in text
+    assert text == "Langfuse scores failed: RuntimeError: 401 *** for ***"
 
 
 def test_a_client_that_cannot_be_built_is_a_config_error_without_the_key(monkeypatch):

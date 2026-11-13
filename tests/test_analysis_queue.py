@@ -152,9 +152,11 @@ def test_filters_choose_the_cases_to_queue(tmp_path, flags, expected):
     assert [t for _, t in fake.added] == expected
 
 
-def test_a_bad_status_is_a_usage_error():
-    code, _, _, factory = run(["queue", "r.json", "--status", "MAYBE"])
-    assert code == 2 and factory.envs == []
+def test_a_bad_status_is_a_usage_error(tmp_path):
+    fake = FakeAnnotations(ALL_TRACES)
+    code, _, err, factory = run(["queue", str(report_file(tmp_path)), "--status", "MAYBE"], fake)
+    assert code == 2 and factory.envs == [] and fake.calls == [] and fake.added == []
+    assert "No case" not in err
 
 
 def test_traces_already_queued_are_skipped_and_counted(tmp_path):

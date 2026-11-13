@@ -6,7 +6,9 @@ FastHTML code) is imported only by the `view` subcommand. `queue` and `import` r
 Langfuse through `annotate.Annotations`; `advisor.tracing` is imported only when one runs.
 
 Exit codes: 0 done, 1 the work could not be done (model unreachable, nothing
-kept, a draft that does not validate), 2 bad arguments or files.
+kept, a draft that does not validate), 2 bad arguments or files, and for `queue` and
+`import` also a missing `LANGFUSE_*` variable, filters that match no case, a queue
+that does not exist or conflicts, and a Langfuse error.
 """
 
 from __future__ import annotations
