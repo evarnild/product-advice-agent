@@ -141,7 +141,7 @@ def _loads_none_of(modules: str, banned: tuple[str, ...]) -> subprocess.Complete
 
 
 def test_pure_analysis_modules_load_no_web_framework_and_no_sdk():
-    pure = "cases,coverage,labels,taxonomy,counts,report,modeljson,generate,annotate"
+    pure = "cases,coverage,labels,taxonomy,counts,report,modeljson,generate,annotate,judge"
     modules = ",".join(f"advisor.evals.{m}" for m in pure.split(","))
     result = _loads_none_of(modules, _WEB + _SDKS)
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
