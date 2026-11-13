@@ -2,14 +2,14 @@
 id: 9
 slug: error-analysis
 type: feature
-status: in-review
+status: done
 title: Error analysis on top of the eval suite: synthetic questions by dimension, a trace viewer and pass/fail labels with critiques
 review_tier:
 intent_accepted: 2026-11-11 by-agent    # owner: "go with a custom viewer, accept intent 9"
 spec_accepted: 2026-11-11 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-11 by-agent    # auto: owner "/auto 9" (auto_authorized 2026-11-11)
 live_checked: 2026-11-13 by-agent    # owner: "live check ok"
-merged:
+merged: 976df11    # 2026-11-13, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-12 by-agent    # owner: "/auto 9" (diff read after round 3)
 auto_round: 3
 auto_stopped: ready for /ship
