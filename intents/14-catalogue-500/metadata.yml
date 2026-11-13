@@ -6,13 +6,13 @@ status: accepted
 title: Grow the catalogue to 500 products
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 14"
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 14" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth
