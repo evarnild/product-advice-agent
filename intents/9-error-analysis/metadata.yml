@@ -12,7 +12,7 @@ live_checked: 2026-11-13 by-agent    # owner: "live check ok"
 merged:
 auto_authorized: 2026-11-12 by-agent    # owner: "/auto 9" (diff read after round 3)
 auto_round: 3
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/8-offline-evals    builds on its question set, runner and checks
