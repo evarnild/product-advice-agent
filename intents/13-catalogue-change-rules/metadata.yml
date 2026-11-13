@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 13
+slug: catalogue-change-rules
+type: feature
+status: draft
+title: Catalogue changes cannot silently break the eval set
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/8-offline-evals    the cases and run report it guards
+  - intents/9-error-analysis    the labels and coverage that depend on the catalogue
+  - intents/14-catalogue-500    the first big catalogue change it checks
