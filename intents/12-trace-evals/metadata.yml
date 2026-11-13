@@ -11,8 +11,8 @@ plan_approved: 2026-11-12 by-agent    # auto: owner "/auto 12" (auto_authorized 
 live_checked: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
-auto_round: 2
-auto_stopped: escalate, owner reads the diff
+auto_round: 3
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    reverses its B11 (no Langfuse during evals)
