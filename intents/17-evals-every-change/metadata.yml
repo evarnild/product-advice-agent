@@ -6,13 +6,13 @@ status: accepted
 title: Run the evals on every change that can move the answers
 review_tier: reviewed    # likely edits REVIEW-POLICY.md and the kit's enforcement (scripts/ship-lib.mjs or check:intent)
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 17 and /auto 17"
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 16 and 17" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 17 and /auto 17"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    the runner and report it requires
