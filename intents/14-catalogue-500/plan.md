@@ -118,9 +118,9 @@ this line is the implementer's to edit. -->
 
 ### 2026-11-13: subtasks 1-7
 
-Commits: fcb8d7e (generator tests, red), ddb12ef (generator and `--check`
-command), 14a45c3 (500-product file, WIP: dependent tests still red),
-851f706 (five cases), 70db0d2 (pinned tests), 57c884d (README, CLAUDE.md),
+Commits: f56d7bb (generator tests, red), 06af3a1 (generator and `--check`
+command), acbd3c4 (500-product file, WIP: dependent tests still red),
+c181170 (five cases), 74f9cfe (pinned tests), 2569766 (README, CLAUDE.md),
 plus the finish commit (status, this entry).
 
 Shipped: `src/advisor/catalogue_build.py` (seed 14, seeded `random.Random`
@@ -155,3 +155,23 @@ Divergences: the generator is not in `CORE_CODE` (not in the plan), so
 `check:intent` does not treat it as core. Commit 14a45c3 is red on its own
 (the plan's order has the file before the tests); the later commits are green.
 The `generate` prompt now lists 77 out-of-stock products (as the plan noted).
+
+### 2026-11-13: review round 1 rework
+
+Commits: see `git log` for the "§14: rework round 1" commit. Fixed F1, F2,
+F3, F6 and, small enough, F4 and F7; no case or catalogue data changed.
+- F1: `FIRST_32_SHA256` (sha256 of main's 32 with sorted keys, checked
+  against `git show main:...`: 7b19c278...f21f4) pins P-001..P-032; a P-006
+  description edit now fails (checked).
+- F2: B5's bands and B4's key tuples are literals in the test, not imported.
+  The camera 99-2999 mutant still passed (no price reaches the band edge),
+  so per-category totals of the generated prices are pinned too; camera
+  99-2999 and laptop 249-3499, each regenerated, now fail (checked).
+- F3: `main(argv, path=DATA_PATH)`; tests on tmp copies: `--check` 0 unedited,
+  1 after an edit, writes nothing; a rewrite equals
+  `json.dumps(built, indent=2, ensure_ascii=False)`. "--check never differs"
+  (M12) and indent 4 (M13) now fail (checked).
+- F4: every printed spec value must appear in the description.
+- F6: the hashes above are the branch's current ones.
+- F7: CLAUDE.md says the generator is not in CORE_CODE and `main` is I/O.
+Tests: 653 -> 658. F5 is left to the owner's live check.

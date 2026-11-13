@@ -289,10 +289,13 @@ def build_products(existing: Sequence[dict[str, Any]], seed: int) -> list[dict[s
     return result
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+DATA_PATH = Path(__file__).parent / "data" / "catalogue.json"
+
+
+def main(argv: Sequence[str] | None = None, path: Path = DATA_PATH) -> int:
+    """The command (I/O): rewrite `path` from its first 32 products, or `--check` it."""
     args = list(sys.argv[1:] if argv is None else argv)
     check = "--check" in args
-    path = Path(__file__).parent / "data" / "catalogue.json"
     current = json.loads(path.read_text(encoding="utf-8"))
     built = build_products(current[:HAND_WRITTEN], SEED)
     if check:
