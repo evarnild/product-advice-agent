@@ -128,3 +128,47 @@ describe('check:intent and live checks, end to end', { timeout: 60_000 }, () => 
     }
   });
 });
+
+describe('check:intent and blocked_by, end to end', { timeout: 60_000 }, () => {
+  const blockedMeta = (items) => `${metadata('2026-11-09')}blocked_by:\n${items.map((i) => `  - ${i}`).join('\n')}\n`;
+  const mainIntent = (merged) => {
+    git('checkout', '-q', 'main');
+    mkdirSync(join(repo, 'intents', '96-blocker'), { recursive: true });
+    writeFileSync(join(repo, 'intents', '96-blocker', 'metadata.yml'), `id: 96\nslug: blocker\nstatus: ${merged ? 'done' : 'accepted'}\nmerged: ${merged}\n`);
+    git('add', '.');
+    git('commit', '-q', '-m', `§96 ${merged || 'open'}`);
+  };
+  const onBranch = (items) => {
+    git('checkout', '-q', BRANCH);
+    write('metadata.yml', blockedMeta(items));
+    git('commit', '-q', '-am', '§97 blocked_by');
+    git('checkout', '-q', 'main');
+  };
+
+  it('FAILs on an open blocker, PASSes once main has merged:, FAILs on an unknown id', () => {
+    mainIntent('');
+    onBranch(['96    needs it']);
+    const open = check(BRANCH);
+    expect(open.status, open.stdout).toBe(1);
+    expect(open.stdout).toContain('§97 is blocked by §96, which is not merged into main (needs it).');
+
+    mainIntent('abc1234');
+    const cleared = check(BRANCH);
+    expect(cleared.status, cleared.stdout).toBe(0);
+
+    onBranch(['95    nobody']);
+    const unknown = check(BRANCH);
+    expect(unknown.status, unknown.stdout).toBe(1);
+    expect(unknown.stdout).toContain('blocked_by names §95, which is on no branch.');
+  });
+
+  it("ignores a merged: on the blocker's own branch", () => {
+    git('checkout', '-q', '-b', 'feat/96-blocker', 'main');
+    writeFileSync(join(repo, 'intents', '96-blocker', 'metadata.yml'), 'id: 96\nslug: blocker\nstatus: done\nmerged: zzz9999\n');
+    git('commit', '-q', '-am', 'branch says merged');
+    git('checkout', '-q', 'main');
+    mainIntent('');
+    onBranch(['96    needs it']);
+    expect(check(BRANCH).status).toBe(1);
+  });
+});

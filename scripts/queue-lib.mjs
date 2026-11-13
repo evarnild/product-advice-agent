@@ -2,7 +2,7 @@
 // each intent's metadata.yml instead of hand-kept in a file. Kept free
 // of git/fs calls so it can be unit-tested; see queue-lib.test.mjs. The git
 // half is queue.mjs.
-import { findCycles, openChain, parseBlockers } from './blockers-lib.mjs';
+import { findCycles, isMerged, openChain, parseBlockers } from './blockers-lib.mjs';
 import { autoSummary, gateSummary } from './session-lib.mjs';
 
 /** Status → the group it is listed under. Anything else lands in `other`. */
@@ -70,7 +70,7 @@ export function groupIntents(entries) {
 export function blockerReport(entries, knownIds = []) {
   const known = new Set([...entries.map((e) => String(Number(e.id))), ...knownIds.map((i) => String(Number(i)))]);
   const merged = new Set(
-    entries.filter((e) => e.mainMerged ?? (e.source === 'main' && !!e.metadata.merged)).map((e) => String(Number(e.id))),
+    entries.filter((e) => e.mainMerged ?? (e.source === 'main' && isMerged(e.metadata))).map((e) => String(Number(e.id))),
   );
   const isOpen = (id) => known.has(id) && !merged.has(id);
   const graph = {};

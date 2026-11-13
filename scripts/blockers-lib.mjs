@@ -29,6 +29,11 @@ export function parseBlockers(metadata, selfId = null) {
   return { items, problems };
 }
 
+/** True when metadata carries a non-empty `merged:` (an empty value parses to `[]`, which is not merged). */
+export function isMerged(meta) {
+  return typeof meta?.merged === 'string' && meta.merged.trim() !== '';
+}
+
 /**
  * 'cleared' when main's metadata for `id` has a non-empty `merged:`; 'open'
  * when main has the intent without it, or only a branch has it; 'unknown' when
@@ -38,7 +43,7 @@ export function parseBlockers(metadata, selfId = null) {
  */
 export function blockerState(id, mainMetaOf, exists = () => false) {
   const meta = mainMetaOf(id);
-  if (meta) return meta.merged ? 'cleared' : 'open';
+  if (meta) return isMerged(meta) ? 'cleared' : 'open';
   return exists(id) ? 'open' : 'unknown';
 }
 

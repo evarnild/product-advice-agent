@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import { parseGate, parseMetadata } from './intent-check-lib.mjs';
-import { blockerState, findCycles, openChain, parseBlockers } from './blockers-lib.mjs';
+import { blockerState, findCycles, isMerged, openChain, parseBlockers } from './blockers-lib.mjs';
 import { expect } from './expect.mjs';
 
 describe('parseBlockers', () => {
@@ -38,6 +38,11 @@ describe('parseBlockers', () => {
 describe('blockerState', () => {
   const metas = { 13: { merged: 'abc1234' }, 14: { merged: '' } };
   const of = (id) => metas[id] ?? null;
+  it('an empty merged: line parsed from text is open', () => {
+    expect(isMerged(parseMetadata('id: 14\nmerged:\n'))).toBe(false);
+    expect(blockerState('14', () => parseMetadata('id: 14\nmerged:\n'))).toBe('open');
+    expect(blockerState('14', () => parseMetadata('merged: abc1234\n'))).toBe('cleared');
+  });
   it('main merged is cleared; main empty is open', () => {
     expect(blockerState('13', of)).toBe('cleared');
     expect(blockerState('14', of)).toBe('open');

@@ -13,6 +13,7 @@
 // main). `--json` prints the groups as data. The pure half is queue-lib.mjs.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { isMerged } from './blockers-lib.mjs';
 import { parseMetadata } from './intent-check-lib.mjs';
 import { formatQueue, nextId, pickSource, queueData } from './queue-lib.mjs';
 import { git, readIntentMetadataFromBranch } from './session-io.mjs';
@@ -71,7 +72,7 @@ function collectEntries() {
     const picked = pickSource(mainMeta, found?.metadata ?? null, merged);
     if (!picked) continue;
     if (conflict) picked.source = 'branch conflict';
-    entries.push({ id, ...picked, mainMerged: !!mainMeta?.merged, mergeRank: picked.metadata.status === 'done' ? rankOf(picked.metadata.merged) : null });
+    entries.push({ id, ...picked, mainMerged: isMerged(mainMeta), mergeRank: picked.metadata.status === 'done' ? rankOf(picked.metadata.merged) : null });
   }
   return entries;
 }

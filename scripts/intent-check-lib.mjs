@@ -2,6 +2,7 @@
 // Kept free of git/fs calls so it can be unit-tested; see
 // intent-check-lib.test.mjs. The rules it encodes are written down for
 // humans in intents/README.md — change both together.
+import { parseBlockers } from './blockers-lib.mjs';
 
 /** Branch prefix → intent type. */
 export const PREFIX_TO_TYPE = {
@@ -179,7 +180,7 @@ const isSource = (p) => !isIntentArtefact(p) && !p.startsWith('docs/') && !p.end
  *   errors block the change; routes say the declared type does not fit what
  *   arrived (the change should take the fuller path); notes are informational.
  */
-export function checkChange({ branch, metadata, intentDir, intentFiles, diff, review = null }) {
+export function checkChange({ branch, metadata, intentDir, intentFiles, diff, review = null, blockers = [] }) {
   const errors = [];
   const routes = [];
   const notes = [];
@@ -229,9 +230,24 @@ export function checkChange({ branch, metadata, intentDir, intentFiles, diff, re
   }
 
   checkAuto(metadata, intentDir, errors);
+  checkBlockers({ metadata, intentDir, id, blockers }, errors);
   checkLiveCheck({ review, metadata, intentDir }, errors);
   checkShape(declared, diff, routes, notes);
   return { errors, routes, notes, type: declared, id };
+}
+
+/**
+ * `blocked_by` (intents/README.md): a broken record, or a direct blocker that
+ * main has not merged, fails the branch. `blockers` is `[{id, reason, state}]`
+ * with state 'open' | 'cleared' | 'unknown', read from main by the caller;
+ * this stays pure. Metadata without the field adds nothing.
+ */
+function checkBlockers({ metadata, intentDir, id, blockers }, errors) {
+  for (const p of parseBlockers(metadata, id).problems) errors.push(`${intentDir}/metadata.yml: ${p}`);
+  for (const b of blockers) {
+    if (b.state === 'open') errors.push(`§${id} is blocked by §${b.id}, which is not merged into main${b.reason ? ` (${b.reason})` : ''}.`);
+    else if (b.state === 'unknown') errors.push(`${intentDir}/metadata.yml: blocked_by names §${b.id}, which is on no branch.`);
+  }
 }
 
 /** A malformed auto field is an error; a gate's own grammar is untouched. */
