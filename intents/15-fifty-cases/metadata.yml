@@ -6,13 +6,13 @@ status: accepted
 title: A committed set of 50 real-looking eval questions with expected behaviour
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 15 and /auto 15"
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 15" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 15 and /auto 15"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    the case format and code checks
