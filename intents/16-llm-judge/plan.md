@@ -168,3 +168,18 @@ Divergences from the plan:
 - B7 minimums (30 conversations, 10 fails) count conversations with a verdict (judge errors excluded), and a zero-owner-fail table is "not trusted".
 - Extra options `--labels-dir`, `--runs-dir`, `--judgements-dir` (defaults are the repo paths) so tests need no chdir.
 - The few-shot examples need their run reports in `evals/runs/` (local, not committed); without one, `judge` exits 2 naming it. `judge-validate` skips a held-out conversation whose report is missing.
+
+### 2026-11-13: review round 1 rework
+
+Commits: this round's single rework commit (hash in `git log`; subject "§16: review round 1 rework"). Tests: 678 before, 683 after (kit 255 unchanged).
+
+Fixes, tests first:
+- HIGH (M30): `test_no_owner_pass_means_undefined_tpr_and_not_trusted` (0 owner passes, 30 owner fails: not trusted, "undefined" among the reasons).
+- MEDIUM: `_examples` raises `InputError` (exit 2, before any call) for an out-of-scope few-shot case; test `test_an_out_of_scope_few_shot_case_exits_2_before_any_call`.
+- MEDIUM (G12): `test_a_partial_langfuse_configuration_writes_the_file_only` (two of three variables: exit 0, "Langfuse is not configured", annotations factory never called).
+- LOW (M15): `#c` and `f#` added to `test_duplicates_and_bad_refs_are_errors`.
+- LOW stale text: CLAUDE.md (analysis imports `advisor.tracing` for `queue`, `import` and `judge`), the `LangfuseAnnotations` and `make_annotations` docstrings.
+
+Optional items taken: M10 (both slots filled in one `re.sub` pass, with a test); a verdict without a string `reason` is now a judge error (B4: "anything else"), the old `{"pass": true}` case moved to the error tests; the per-run `prompt_sha256` reading is in the README; CLAUDE.md prompt path is `src/advisor/evals/prompts/`.
+
+Mutation checks by backup and restore: M30 (TPR-undefined reason removed), G12 (`all` to `any`) and M15 (`parse_ref` accepting `#c`/`f#`) each fail a test now.

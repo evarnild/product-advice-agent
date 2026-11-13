@@ -112,6 +112,13 @@ def test_a_slot_inside_a_conversation_is_not_filled_again():
     assert prompt.count("what is [[conversation]]?") == 1
 
 
+def test_a_slot_inside_an_example_is_not_filled_either():
+    ex = Example("f#a", "fail", "", "an example that says [[conversation]] and [[examples]]")
+    prompt = build_prompt(TEMPLATE, "THE CONVERSATION", [ex])
+    assert prompt.count("THE CONVERSATION") == 1
+    assert "an example that says [[conversation]] and [[examples]]" in prompt
+
+
 def test_the_shipped_template_has_both_slots():
     template = judge.PROMPT_PATH.read_text(encoding="utf-8")
     assert template.count("[[examples]]") == 1
@@ -132,7 +139,6 @@ def test_the_shipped_template_has_both_slots():
             'Here you go:\n```json\n{"pass": true, "reason": " ok "}\n```\nDone.',
             Verdict(True, "ok"),
         ),
-        ('{"pass": true}', Verdict(True, "")),
     ],
 )
 def test_valid_verdicts(text, expected):
@@ -145,6 +151,8 @@ def test_valid_verdicts(text, expected):
         '{"pass": "yes", "reason": "r"}',
         '{"pass": 1, "reason": "r"}',
         '{"reason": "no pass key"}',
+        '{"pass": true}',  # B4: a verdict has a reason
+        '{"pass": false, "reason": 3}',
         "I think it passes.",
         "",
         "[true]",
@@ -192,6 +200,10 @@ def test_duplicates_and_bad_refs_are_errors():
         parse_split({"few_shot": ["f#a", "f#a"], "held_out": []})
     with pytest.raises(SplitError, match="labels file"):
         parse_split({"few_shot": ["nohash"], "held_out": []})
+    with pytest.raises(SplitError, match="labels file"):
+        parse_split({"few_shot": ["#c"], "held_out": []})
+    with pytest.raises(SplitError, match="labels file"):
+        parse_split({"few_shot": ["f#"], "held_out": []})
     with pytest.raises(SplitError):
         parse_split({"few_shot": [], "held_out": "x"})
     with pytest.raises(SplitError):
@@ -251,6 +263,13 @@ def test_not_trusted_just_below_each_boundary():
     assert not nine.trusted and any("9 owner fails" in r for r in nine.reasons)
     # and the same table with 30 / 10 is trusted
     assert agreement(pairs(pp=20, pf=0, fp=0, ff=10)).trusted
+
+
+def test_no_owner_pass_means_undefined_tpr_and_not_trusted():
+    a = agreement(pairs(pp=0, pf=0, fp=0, ff=30))
+    assert a.tpr is None
+    assert a.trusted is False
+    assert any("undefined" in r for r in a.reasons)
 
 
 def test_no_owner_fail_means_undefined_and_not_trusted():

@@ -192,8 +192,9 @@ def _redact(text: str, secrets: Sequence[str]) -> str:
 class LangfuseAnnotations:
     """`Annotations` over `Langfuse(...).api` (SDK 5.2.0).
 
-    It creates a score config, a queue and queue items, and reads queues,
-    items, scores and observations. It never updates or deletes anything. Every
+    It creates score configs, a queue and queue items, and reads queues,
+    items, scores and observations. It writes the `judge-no-fit` scores (§16;
+    a rerun replaces a score by its id) and never deletes anything. Every
     SDK failure becomes an `AnnotationError` naming the step; `secrets` are
     removed from its message.
     """
@@ -399,7 +400,7 @@ class LangfuseAnnotations:
 
 
 def make_annotations(env: Mapping[str, str]) -> LangfuseAnnotations:
-    """The Langfuse side of `queue` and `import`; raises `AnnotationError` if not configured."""
+    """The Langfuse side of `queue`, `import`, `judge`; raises `AnnotationError` if unconfigured."""
     missing = [k for k in REQUIRED_ENV if not env.get(k)]
     if missing:
         raise AnnotationError("config", f"missing {', '.join(missing)}")

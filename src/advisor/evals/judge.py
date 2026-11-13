@@ -8,6 +8,7 @@ combination of `no_product_available` and `irrelevant_alternatives`).
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -90,9 +91,9 @@ def examples_block(examples: Sequence[Example]) -> str:
 def build_prompt(template: str | None, text: str, examples: Sequence[Example]) -> str:
     """B3/B6: the template with exactly `examples` and the conversation to judge."""
     base = PROMPT_PATH.read_text(encoding="utf-8") if template is None else template
-    # The examples go in first: a slot-like string inside a conversation is then
-    # never replaced.
-    return base.replace("[[examples]]", examples_block(examples)).replace("[[conversation]]", text)
+    filled = {"[[examples]]": examples_block(examples), "[[conversation]]": text}
+    # One pass: a slot-like string inside an example or the conversation is never replaced.
+    return re.sub(r"\[\[(?:examples|conversation)\]\]", lambda m: filled[m.group(0)], base)
 
 
 # --- The verdict ------------------------------------------------------------
@@ -120,7 +121,9 @@ def parse_verdict(text: str) -> Verdict | JudgeError:
     if not isinstance(passed, bool):
         return JudgeError("the JSON has no boolean 'pass'")
     reason = value.get("reason")
-    return Verdict(passed, reason.strip() if isinstance(reason, str) else "")
+    if not isinstance(reason, str):
+        return JudgeError("the JSON has no string 'reason'")
+    return Verdict(passed, reason.strip())
 
 
 def score_id(stamp: str, case_id: str) -> str:

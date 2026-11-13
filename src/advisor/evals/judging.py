@@ -130,6 +130,11 @@ def _examples(split: jg.Split, by_ref: Mapping[str, Label], paths: Paths) -> lis
                 f"few-shot example {ref} needs case '{case_id}' in "
                 f"{paths.runs_dir / (Path(file).stem + '.json')} (its tool calls)"
             )
+        if not jg.in_scope(case):  # B6: only in-scope conversations are used
+            raise InputError(
+                f"few-shot example {ref} is not in scope "
+                "(its scenario is not no-match or budget-too-low)"
+            )
         label = by_ref[ref]
         examples.append(jg.Example(ref, label.label, label.critique, _text_of(label, case)))
     return examples

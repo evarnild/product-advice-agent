@@ -263,3 +263,28 @@ def test_a_report_without_a_started_time_cannot_be_scored(tmp_path):
     )
     assert code == 2
     assert "no 'started' time" in err
+
+
+def test_a_partial_langfuse_configuration_writes_the_file_only(tmp_path):
+    w = write_world(tmp_path)
+    partial = {**ENV, "LANGFUSE_HOST": "http://langfuse.invalid", "LANGFUSE_PUBLIC_KEY": "pk"}
+    fake = FakeAnnotations([trace("t-f1", "f1")])
+    code, out, err, _ = run(
+        judge_argv(w), env=partial, client=RoutedClient(ANSWERS), annotations=fake
+    )
+    assert code == 0, err
+    assert "Langfuse is not configured" in out
+    assert fake.envs == [] and fake.calls == [] and fake.written == []
+
+
+def test_an_out_of_scope_few_shot_case_exits_2_before_any_call(tmp_path):
+    split = {
+        "few_shot": [f"{LABELS_FILE}#f1", f"{LABELS_FILE}#x1"],  # x1 is exact-match
+        "held_out": [f"{LABELS_FILE}#h1"],
+    }
+    w = write_world(tmp_path, split=split)
+    client = RoutedClient(ANSWERS)
+    code, out, err, _ = run(judge_argv(w), client=client)
+    assert code == 2
+    assert "few-shot example" in err and "x1" in err and "not in scope" in err
+    assert client.prompts == []

@@ -189,10 +189,10 @@ label building; SDK-free), `generate.py` (prompt and filter
 over a `ModelClient` it is given), and `dimensions` in `cases.py`. I/O:
 `analysis.py` (the subcommands `generate`, `view`, `taxonomy`, `counts`,
 `queue` and `import`, files, clock, exit codes; it imports `advisor.tracing`
-only inside `queue` and `import`) and `view.py`,
+only inside `queue`, `import` and `judge`) and `view.py`,
 the local FastHTML label viewer, the only module that imports `fasthtml`,
 `starlette` or `uvicorn` (`tests/test_boundaries.py`); it binds 127.0.0.1
-only. The prompts for `generate` and `taxonomy` are `evals/prompts/*.md`.
+only. The prompts for `generate` and `taxonomy` are `src/advisor/evals/prompts/*.md`.
 `run.py` also records turns, tool results and guardrail checks per case.
 Committed data: `evals/generated.jsonl`, `evals/labels/*.jsonl`,
 `evals/taxonomy.json` (format in README.md "Error analysis").
