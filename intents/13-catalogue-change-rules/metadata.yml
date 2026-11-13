@@ -2,14 +2,14 @@
 id: 13
 slug: catalogue-change-rules
 type: feature
-status: in-review
+status: done
 title: Catalogue changes cannot silently break the eval set
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 13 /auto 13"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 13" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "accept 13 /auto 13" (auto_authorized 2026-11-13)
 live_checked:
-merged:
+merged: aee9f2c    # 2026-11-13, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 13" (after the escalate stop: diff read)
 auto_round: 2
 auto_stopped: ready for /ship
