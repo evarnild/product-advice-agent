@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TextIO
 
-from advisor.agent import answer_question, search_tool
+from advisor.agent import SYSTEM_PROMPT_PATH, Tool, answer_question, search_tool
 from advisor.catalogue import CatalogueError, load_catalogue
 from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
 from advisor.evals.cases import Case, CaseFileError, parse_cases
@@ -38,21 +38,44 @@ DEFAULT_REPORT_DIR = Path("evals") / "runs"
 
 
 class RecordingTracer:
-    """A `Tracer` that keeps the arguments of every tool call and nothing else."""
+    """A `Tracer` that keeps what a run did: tool arguments, model turns, guardrail checks.
+
+    `searches` holds the `search_products` arguments (what the scorers read);
+    `turns` and `guardrails` are kept for the report (§9 B5).
+    """
 
     def __init__(self) -> None:
         self.searches: list[dict[str, object]] = []
+        self.turns: list[dict[str, Any]] = []
+        self.guardrails: list[dict[str, Any]] = []
+        # Every tool call the agent reports, in call order (unknown tools and bad
+        # arguments included); `results` come from the `_recording_tool` wrapper.
+        self.tools: list[dict[str, Any]] = []
+        self._pending_results: list[dict[str, Any]] | None = None
+
+    def offer_results(self, results: list[dict[str, Any]]) -> None:
+        """The products a tool just returned; the agent's next `tool()` report claims them."""
+        self._pending_results = results
 
     def begin(self, question: str) -> None:
         pass
 
     def check(self, stage: str, allowed: bool, reason: str) -> None:
-        pass
+        self.guardrails.append({"stage": stage, "allowed": allowed, "reason": reason})
 
     def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
-        pass
+        self.turns.append({"text": text, "tools": list(tool_names)})
 
     def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
+        results, self._pending_results = self._pending_results, None
+        self.tools.append(
+            {
+                "name": name,
+                "arguments": dict(arguments),
+                "results": [] if error or results is None else results,
+                "error": error,
+            }
+        )
         if name == "search_products":
             self.searches.append(dict(arguments))
 
@@ -61,6 +84,22 @@ class RecordingTracer:
 
     def fail(self, error: str) -> None:
         pass
+
+
+def _recording_tool(tool: Tool, tracer: RecordingTracer) -> Tool:
+    """`tool` with the same behaviour, handing its results to `tracer` (§9 B6).
+
+    It returns exactly what the tool returned and re-raises what it raised, so
+    the agent cannot tell the difference. The call itself is recorded by the
+    tracer's `tool()`, which the agent also calls for tools it never runs.
+    """
+
+    def run(args: dict[str, Any]) -> list[dict[str, Any]]:
+        results = tool.run(args)
+        tracer.offer_results(results)
+        return results
+
+    return Tool(tool.spec, run)
 
 
 def _utc_now() -> datetime:
@@ -168,7 +207,7 @@ def main(
         checks: list[Check] = []
         error: str | None = None
         try:
-            answer = answer_question(case.question, client, [tool], tracer)
+            answer = answer_question(case.question, client, [_recording_tool(tool, tracer)], tracer)
             checks = score(case, answer, tracer.searches, catalogue)
         except (ModelUnreachableError, ModelNotAvailableError) as e:
             if args.debug:
@@ -184,7 +223,7 @@ def main(
             if args.debug:
                 traceback.print_exc(file=err)
             error = f"unexpected {type(e).__name__}"
-        results.append(_record(case, answer, tracer.searches, checks, error, now() - began))
+        results.append(_record(case, answer, tracer.searches, checks, error, now() - began, tracer))
         if error is not None:
             print(_result_line("ERROR", case.id, error), file=out)
         else:
@@ -199,6 +238,7 @@ def main(
         "provider": settings.provider,
         "model": settings.model,
         "cases_sha256": hashlib.sha256(raw).hexdigest(),
+        "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT_PATH.read_bytes()).hexdigest(),
         "started": started.isoformat(),
         "cases": results,
         "totals": {
@@ -226,12 +266,13 @@ def _record(
     checks: list[Check],
     error: str | None,
     duration: Any,
+    tracer: RecordingTracer | None = None,
 ) -> dict[str, Any]:
     if error is not None:
         status = "ERROR"
     else:
         status = "PASS" if all(c.ok for c in checks) else "FAIL"
-    return {
+    record: dict[str, Any] = {
         "id": case.id,
         "question": case.question,
         "status": status,
@@ -241,6 +282,12 @@ def _record(
         "checks": [{"name": c.name, "ok": c.ok, "reason": c.reason} for c in checks],
         "duration_s": round(duration.total_seconds(), 3),
     }
+    if case.dimensions is not None:
+        record["dimensions"] = dict(case.dimensions)
+    record["turns"] = tracer.turns if tracer is not None else []
+    record["tools"] = tracer.tools if tracer is not None else []
+    record["guardrails"] = tracer.guardrails if tracer is not None else []
+    return record
 
 
 if __name__ == "__main__":

@@ -299,3 +299,129 @@ Mutation focus for the review:
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-11 — implementation (all 11 subtasks)
+
+Commits (on `feat/9-error-analysis`, after `c806886`): `8e5ea0a` dimensions (1),
+`2f2707c` grid and coverage (2), `00caf0d` recording (3), `13f99dc` generator (4),
+`56c9211` labels (5), `8b70983` dependency and viewer (6), `3d2bda8` taxonomy (7),
+`ee0b1b8` counts (8), `2e075ec` the command (9), `526be10` boundaries and docs
+(10, 11), `a7f4c26` an extra test from mutant M6, and the final commit for
+status and this entry.
+
+What shipped:
+- `cases.py` `dimensions` (B1); `coverage.py`, `generate.py`, `modeljson.py`,
+  `labels.py`, `report.py`, `taxonomy.py`, `counts.py` (pure); `analysis.py`
+  (the `advisor-analysis` command) and `view.py` (the FastHTML viewer, the
+  only module that imports `fasthtml`, `starlette` and `uvicorn`);
+  `run.py` now records turns, tool results, guardrails, dimensions and
+  `prompt_sha256` (B5, B6); prompts in `src/advisor/evals/prompts/`;
+  README, CLAUDE.md and `.gitignore` updated.
+- Tests: pytest 281 before, 464 after (kit tests 255, unchanged by this
+  change). New files: `test_analysis_{coverage,generate,labels,view,taxonomy,counts,cli}.py`,
+  additions to `test_evals_cases.py`, `test_evals_run.py`,
+  `test_boundaries.py`, `test_no_network.py`. §8's existing tests are
+  unedited (only imports at the top of `test_evals_run.py` grew).
+- New dependency: `python-fasthtml==0.14.14`, because the owner chose a
+  custom FastHTML viewer for labelling (spec, owner answers). `uv.lock`: 17
+  packages added, none removed or changed: beautifulsoup4, click, fastcore,
+  httptools, itsdangerous, oauthlib, python-dateutil, python-fasthtml,
+  python-multipart, pyyaml, soupsieve, starlette, tzdata, uvicorn, uvloop,
+  watchfiles, websockets. `httpx`, `anthropic` and `langfuse` did not move.
+  `uv lock --check` passes. (`httpx2`, which the plan expected, is already
+  in the environment through another dependency and did not change.)
+
+Mutants (each one change, restored by copy; the killing test is the first
+failure under `pytest -x`):
+- coverage: exact-match `>=1`->`>=2` and several-matches `>=2`->`>=1` and
+  no-match `==0`->`<=1` (the three `test_*_threshold` tests in
+  `test_analysis_coverage.py`); budget `n!=0`->`n>1` and `<1`->`<0` (budget
+  test); spelling `n<1`->`n<0` (needs-a-match test); out-of-stock inverted;
+  sample size ceil->floor (`test_generate_count_is_respected`).
+- spelling-differs verbatim made case-sensitive on the keyword (M6)
+  SURVIVED at first; added
+  `test_spelling_differs_compares_a_capitalised_keyword_case_insensitively`,
+  which kills it.
+- last-line-wins (reversed iteration): `test_last_line_per_case_wins`.
+- fail-needs-critique: rule swapped in `check_label` (killed by
+  `test_view_labels_default_to_evals_labels_by_report_stem` first; the
+  `check_label` tests also cover it); viewer check removed:
+  `test_fail_without_a_critique_is_refused_and_writes_nothing`.
+- agreement cells: misses swapped, both-pass changed, ERROR not apart,
+  unlabelled not apart: `test_counts_prints_the_tables_and_writes_them_with_out`
+  and `test_each_agreement_cell_has_its_own_case`.
+- bind address: viewer `LOCAL_HOST` and analysis `LOCAL_HOST` set to
+  `0.0.0.0`: `test_serve_binds_to_loopback_only` and
+  `test_view_serves_on_loopback_and_the_default_port`.
+- filter AND: label arm, status arm, dimension arm: the
+  `test_*_filter*_alone` tests in `test_analysis_view.py`.
+- taxonomy: mapped pass accepted, unmapped fail accepted, duplicate id
+  accepted: `test_taxonomy_writes_the_draft_and_sends_the_critiques`,
+  `test_a_failed_case_mapped_to_an_empty_list_is_not_mapped`,
+  `test_a_duplicate_mode_id_is_an_error`.
+
+Divergences from the plan:
+- **Version pin 0.14.14, not 0.14.22.** 0.14.22 is one day old; 0.14.14
+  (2026-10-20) is the latest release at least two weeks old on 2026-11-11.
+- **`tests/conftest.py` socket guard.** On Windows every asyncio event loop,
+  and so Starlette's `TestClient`, builds its self-pipe with
+  `socket._fallback_socketpair`, which connects two sockets over loopback;
+  the guard blocked it, so the plan's "TestClient, no socket" could not run.
+  The guard now lets a connect through only when it is called from
+  `_fallback_socketpair` to 127.0.0.1 or ::1. Every other connect stays
+  blocked; `test_no_network.py` proves both. The reviewer should look at
+  this change.
+- **mypy:** FastHTML ships no types, so `pyproject.toml` has a
+  `[[tool.mypy.overrides]]` with `ignore_missing_imports` for `fasthtml.*`.
+  The viewer wraps the route decorators in a typed `_route` helper.
+- **`dimensions` and `Case`:** `Case.dimensions` is `None` without the field.
+- **Extra pure modules** not named in the plan: `report.py` (report parsing,
+  shared by the viewer and `counts`) and `modeljson.py` (lenient JSON
+  extraction, shared by the generator and the taxonomy).
+- **`advisor-analysis counts` also checks** that `taxonomy.labels` names the
+  same file as the labels it reads (B14's last sentence), exit 2.
+- `spelling-differs` also requires at least one probe keyword (the spec
+  says "none of the probe's keywords verbatim", which is vacuous with none).
+- `generate` considers at most two candidates per cell; a cell that returns
+  fewer counts the missing ones as dropped ("missing from the model
+  answer"). A first call that finds the model unreachable or missing exits 1;
+  a later failed call is only counted as dropped.
+- `p` saves a pass and stays on the page; `Enter` in the critique box saves
+  and moves on (B10 names only `Enter` as moving).
+- `CORE_CODE` is not changed (the plan's assumption).
+
+### 2026-11-11 — Rework round 1
+
+Commits: `43bd508` (the four findings and their tests) and the commit of this
+entry. Tests: pytest 464 -> 472; kit tests unchanged (255).
+
+- **HIGH, unknown tool calls.** `RecordingTracer.tool` now records every
+  call, in call order (unknown tools, bad arguments and successes), as
+  `tools`. The `_recording_tool` wrapper no longer owns the list: it hands
+  the products a tool returned to the tracer (`offer_results`), and the
+  agent's next `tool()` report claims them, so `results` still come from the
+  wrapper (B6). `_turns` in the viewer is unchanged; it is right once the
+  list is complete. New tests: `test_an_unknown_tool_call_is_recorded_in_order_with_error_true`
+  (failed on the old `run.py`), and
+  `test_each_tool_call_renders_under_its_own_turn` (calls in two turns).
+- **MEDIUM, `.sesskey`.** `FastHTML(..., secret_key=secrets.token_hex(32))`;
+  `.sesskey` removed from git and added to `.gitignore`;
+  `test_make_app_writes_no_file_in_the_working_directory` (failed before).
+- **MEDIUM, BLOCKED guardrail.** `test_a_blocked_guardrail_shows_as_blocked_with_its_reason`.
+- **MEDIUM, socket guard.** `tests/conftest.py` compares `co_filename` with
+  `socket.__file__`. Four tests in `test_no_network.py`, each failing one
+  condition (compiled with `compile(src, filename, "exec")`); the
+  `websocket.py` one failed on the old `endswith` check.
+- **LOW (Origin and Host checks): not done.** The viewer does not know its
+  port inside `make_app`, and the test client's host is `testserver`, so a
+  correct check needs more plumbing than a small change; left for the owner
+  to decide.
+- Mutants, re-run (full pytest, restore by copy): V12 killed by
+  `test_each_tool_call_renders_under_its_own_turn`; V13 by
+  `test_a_blocked_guardrail_shows_as_blocked_with_its_reason`; C1 by
+  `test_another_function_in_the_socket_module_file_is_blocked`; C2 by
+  `test_the_right_function_name_in_another_file_is_blocked`; C3 by
+  `test_the_socketpair_function_in_the_socket_file_may_not_leave_loopback`;
+  dropping the tracer's tool record (R5) and not offering results (R6) by
+  `test_the_report_keeps_turns_tools_with_results_and_guardrails`; removing
+  `secret_key` (S1) by the no-file test.

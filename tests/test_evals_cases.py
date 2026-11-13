@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from advisor.catalogue import CATEGORIES, load_catalogue
-from advisor.evals.cases import CaseFileError, parse_cases
+from advisor.evals.cases import FEATURES, SCENARIOS, CaseFileError, parse_cases
 
 COMMITTED = Path(__file__).parent.parent / "evals" / "cases.jsonl"
 CATALOGUE = load_catalogue()
@@ -85,3 +85,73 @@ def test_bad_files_name_the_case_and_field(text, needles):
         parse_cases(text, CATALOGUE)
     for needle in needles:
         assert needle in str(e.value)
+
+
+# --- §9 B1: dimensions ---------------------------------------------------
+
+GOOD_DIMS = {"feature": "laptop", "scenario": "exact-match", "persona": "a student"}
+
+
+def test_a_case_without_dimensions_has_none():
+    (case,) = parse_cases(line(), CATALOGUE)
+    assert case.dimensions is None
+
+
+def test_valid_dimensions_are_kept():
+    (case,) = parse_cases(line(dimensions=GOOD_DIMS), CATALOGUE)
+    assert case.dimensions == GOOD_DIMS
+
+
+@pytest.mark.parametrize("scenario", SCENARIOS)
+def test_each_scenario_is_accepted(scenario):
+    dims = {**GOOD_DIMS, "scenario": scenario}
+    (case,) = parse_cases(line(dimensions=dims), CATALOGUE)
+    assert case.dimensions["scenario"] == scenario
+
+
+def test_scenarios_are_the_seven_of_the_spec():
+    assert set(SCENARIOS) == {
+        "exact-match",
+        "several-matches",
+        "no-match",
+        "budget-too-low",
+        "out-of-stock",
+        "off-topic",
+        "spelling-differs",
+    }
+
+
+@pytest.mark.parametrize("feature", [*CATEGORIES, "off-topic"])
+def test_each_category_and_off_topic_is_a_feature(feature):
+    dims = {**GOOD_DIMS, "feature": feature}
+    (case,) = parse_cases(line(dimensions=dims), CATALOGUE)
+    assert case.dimensions["feature"] == feature
+    assert set(FEATURES) == {*CATEGORIES, "off-topic"}
+
+
+@pytest.mark.parametrize("missing", ["feature", "scenario", "persona"])
+def test_each_missing_key_is_an_error(missing):
+    dims = {k: v for k, v in GOOD_DIMS.items() if k != missing}
+    with pytest.raises(CaseFileError) as e:
+        parse_cases(line(dimensions=dims), CATALOGUE)
+    assert "line 1, case 'c1': field 'dimensions'" in str(e.value)
+    assert missing in str(e.value)
+
+
+@pytest.mark.parametrize(
+    "dims",
+    [
+        {**GOOD_DIMS, "colour": "red"},
+        {**GOOD_DIMS, "feature": "toaster"},
+        {**GOOD_DIMS, "scenario": "weird"},
+        {**GOOD_DIMS, "persona": ""},
+        {**GOOD_DIMS, "persona": "  "},
+        {**GOOD_DIMS, "persona": 3},
+        "laptop",
+        [],
+    ],
+)
+def test_bad_dimensions_name_line_case_and_field(dims):
+    with pytest.raises(CaseFileError) as e:
+        parse_cases(line(dimensions=dims), CATALOGUE)
+    assert "line 1, case 'c1': field 'dimensions'" in str(e.value)

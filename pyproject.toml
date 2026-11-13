@@ -8,11 +8,13 @@ dependencies = [
     "langfuse",
     "python-dotenv",
     "httpx",
+    "python-fasthtml==0.14.14",
 ]
 
 [project.scripts]
 advisor = "advisor.cli:main"
 advisor-eval = "advisor.evals.run:main"
+advisor-analysis = "advisor.evals.analysis:main"
 
 [dependency-groups]
 dev = [
@@ -39,6 +41,11 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.mypy]
 files = ["src/advisor"]
 strict = true
+
+[[tool.mypy.overrides]]
+# FastHTML ships no type information (§9); only the viewer module imports it.
+module = ["fasthtml", "fasthtml.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

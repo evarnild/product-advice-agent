@@ -22,3 +22,5 @@ infra/langfuse/.env
 
 # Eval run reports (local only)
 evals/runs/
+evals/taxonomy.draft.json
+.sesskey

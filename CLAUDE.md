@@ -28,6 +28,7 @@ npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
+uv run advisor-analysis generate|view|taxonomy|counts  # error analysis on top of the evals (README.md; generate and taxonomy call a model)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
 ```
 
@@ -170,6 +171,18 @@ deterministic checks) are pure and core code (in `CORE_CODE`); `run.py` is the I
 clock, stdout, the JSON report in `evals/runs/`) with its own recording
 tracer. It imports neither `advisor.tracing` nor a provider SDK. Cases are
 data in `evals/cases.jsonl`.
+
+**Error analysis** (`advisor-analysis`, §9, same package). Pure: `coverage.py`
+(the question grid and the catalogue check), `labels.py`, `taxonomy.py`,
+`counts.py`, `report.py`, `modeljson.py`, `generate.py` (prompt and filter
+over a `ModelClient` it is given), and `dimensions` in `cases.py`. I/O:
+`analysis.py` (the four subcommands, files, clock, exit codes) and `view.py`,
+the local FastHTML label viewer, the only module that imports `fasthtml`,
+`starlette` or `uvicorn` (`tests/test_boundaries.py`); it binds 127.0.0.1
+only. The prompts for `generate` and `taxonomy` are `evals/prompts/*.md`.
+`run.py` also records turns, tool results and guardrail checks per case.
+Committed data: `evals/generated.jsonl`, `evals/labels/*.jsonl`,
+`evals/taxonomy.json` (format in README.md "Error analysis").
 
 **Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
 protocol and the no-op, SDK-free and without I/O, so the pure modules
