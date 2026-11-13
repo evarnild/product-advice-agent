@@ -28,7 +28,7 @@ npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
-uv run advisor-analysis generate|view|taxonomy|counts|queue|import  # error analysis on top of the evals (README.md; generate and taxonomy call a model; queue and import need the three LANGFUSE_* variables)
+uv run advisor-analysis generate|view|taxonomy|counts|queue|import|judge|judge-validate  # error analysis on top of the evals (README.md; generate, taxonomy, judge and judge-validate call a model; queue and import need the three LANGFUSE_* variables)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
 uv run advisor-analysis owes-run|baseline|compare  # does a change owe an eval run; the committed baseline; flips against it (no model; README.md "Eval runs")
 ```
@@ -184,7 +184,7 @@ and the run report records `catalogue_sha256` beside the cases and prompt hashes
 **Error analysis** (`advisor-analysis`, §9 and §10, same package). Pure: `coverage.py`
 (the question grid and the catalogue check), `labels.py`, `taxonomy.py`,
 `counts.py`, `report.py`, `modeljson.py`, `annotate.py` (§10: the `Annotations`
-protocol for Langfuse annotation queues, case selection, trace matching and
+protocol for Langfuse annotation queues and the judge score, case selection, trace matching and
 label building; SDK-free), `generate.py` (prompt and filter
 over a `ModelClient` it is given), and `dimensions` in `cases.py`. I/O:
 `analysis.py` (the subcommands `generate`, `view`, `taxonomy`, `counts`,
@@ -211,6 +211,16 @@ Langfuse tracer, `SafeTracer`, `make_tracer`, and `LangfuseAnnotations` /
 `make_annotations`, the only code that calls Langfuse's queue, score-config,
 score and observation APIs; a tool observation carries the rows the tool returned; it re-exports `Tracer` and
 `NoopTracer` from `tracer.py`), `prompts/system.md` (the shipped prompt).
+
+**LLM judge** (§16, `advisor-analysis judge` / `judge-validate`): `evals/judge.py`
+is pure (scope, conversation text, prompt, verdict parsing, split rules,
+agreement maths, `validation.md`; not in `CORE_CODE`, tested like core) and
+`evals/judging.py` is its I/O (files, the Anthropic-only `ModelClient`, the
+key check, `Annotations`). The score `judge-no-fit` is written by
+`LangfuseAnnotations.write_scores` in `tracing.py` with a deterministic id,
+never in a queue and never named `pass`. Committed data: `evals/judge/split.json`,
+`evals/judge/validation.md`, `evals/judgements/*.jsonl`. The prompt is
+`src/advisor/evals/prompts/judge-no-fit.md`.
 
 **Conventions worth knowing before editing**
 

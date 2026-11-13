@@ -263,8 +263,56 @@ uv run advisor-analysis counts evals/runs/<report>.json
   unreadable report or labels file, a Langfuse error
   (`Langfuse <step> failed: ...`).
 
-No model grades an answer: you label every conversation. Reports stay local
-(`evals/runs/`); questions, labels and the taxonomy are committed.
+No model grades an answer in the code checks, and `queue` and `import` write
+no score: you label every conversation. Reports stay local (`evals/runs/`);
+questions, labels and the taxonomy are committed. The optional LLM judge
+below is advisory.
+
+### An LLM judge for one failure mode
+
+One judge, for "an honest answer when nothing fits" (the
+`no_product_available` and `irrelevant_alternatives` modes together). It
+judges the cases whose scenario is `no-match` or `budget-too-low`, from the
+question, the searches with the products they returned, and the answer (it
+never reads the catalogue). It always uses Anthropic (`claude-haiku-5-5`;
+`--model` changes the model, not the provider) and needs `ANTHROPIC_API_KEY`;
+it is a paid call, one per in-scope case (cents for a 50-case run). The
+prompt is `src/advisor/evals/prompts/judge-no-fit.md`, filled with your
+labelled conversations and critiques as few-shot examples.
+
+```
+uv run advisor-analysis judge evals/runs/<report>.json
+uv run advisor-analysis judge-validate
+```
+
+- `evals/judge/split.json` (edited by hand, committed) lists labelled
+  conversations as `<labels file>#<case id>`: at most 8 `few_shot` (both
+  labels among them) and the `held_out` ones the judge is tested on. A
+  conversation is never in both. The few-shot examples take their tool calls
+  from the run report `evals/runs/<labels file name>.json`.
+- **judge** prints `PASS|FAIL|ERROR <case>: <reason>` and a total, and
+  writes `evals/judgements/<report name>.jsonl` (`case_id`, `pass`, `reason`,
+  `model`, `prompt_sha256`, `judged_at`; a model failure or an answer that is
+  not the JSON verdict is an `ERROR`, never a pass or fail). With the three
+  `LANGFUSE_*` variables set, it also writes a boolean score
+  `judge-no-fit` on each judged case's trace, the reason as the comment
+  (`N scored, k no trace`). The score has a fixed id per run and case, so
+  running it again replaces the scores instead of duplicating them. It is
+  never put in an annotation queue and is not named `pass`, so `import` does
+  not take it for your label. Without Langfuse it says only the file was
+  written. It edits no label file.
+- **judge-validate** judges the held-out conversations, compares with your
+  labels and writes `evals/judge/validation.md`: the owner x judge table, the
+  true-positive rate (your pass, judge pass / your pass), the true-negative
+  rate (your fail, judge fail / your fail), judge errors, the model, the
+  prompt hash and every disagreement with both reasons. The judge is
+  **trusted** only when both rates are at least 0.8 over at least 30 held-out
+  conversations with at least 10 of your fails; otherwise it is **not
+  trusted** and its verdicts are advisory. To grow the held-out set, label
+  more conversations (viewer or queue) and add them to `held_out`.
+- Exit 2: no `ANTHROPIC_API_KEY`, no in-scope case, a split or labels file
+  that does not validate, a few-shot example without its report, a Langfuse
+  error.
 
 ### Changing the catalogue
 
