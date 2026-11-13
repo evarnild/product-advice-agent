@@ -123,7 +123,7 @@ def test_descriptions_name_the_category_and_the_features():
     for p in NEW:
         s, d = p["specs"], p["description"].lower()
         assert p["category"] in d, p["id"]
-        assert d.endswith(".") and d.count(".") == 1
+        assert d.endswith(".") and ". " not in d
         if p["category"] == "headphones":
             assert _has(p, "active noise cancelling") == (s["noise_cancelling"] == "active")
             assert "noise" not in d or s["noise_cancelling"] == "active"
