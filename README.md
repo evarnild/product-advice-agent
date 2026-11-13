@@ -86,7 +86,9 @@ docker compose -f infra/langfuse/docker-compose.yml up -d
 Open http://localhost:3000, create an account, an organisation and a
 project, create API keys, and put `LANGFUSE_HOST=http://localhost:3000`
 and the two keys in the root `.env`. Each run then appears as one trace
-(input check, model calls with token usage, tool calls, output check).
+(input check, model calls with token usage, tool calls, output check). A
+tool call shows the products the tool returned (up to 10 rows, the same
+rows the model received) next to `result_count`.
 All ports are bound to 127.0.0.1. The stack is Langfuse v4 with every image
 pinned to an exact version. `docker compose ... down -v` removes the stored
 traces. The compose file needs `infra/langfuse/.env` to exist; to only
@@ -128,7 +130,8 @@ set (cents per run). It reads the same environment and `.env` as `advisor`.
 When `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all
 set, each case is also one Langfuse trace (the same spans as an `advisor`
 run), tagged `eval`, `provider:<name>`, `model:<name>`, `run:<stamp>` and
-`case:<id>`. The stamp is the run's start, as in the report's filename
+`case:<id>`, and, for a case with dimensions, `feature:<v>`,
+`scenario:<v>` and `persona:<v>`. The stamp is the run's start, as in the report's filename
 `evals/runs/<stamp>-<provider>.json`. In the Langfuse UI, filter on tag `eval`,
 then on `run:<stamp>` from the report's filename. Tracing never changes the
 scores, output or report (apart from `duration_s`); with Langfuse down, a run
@@ -201,6 +204,41 @@ uv run advisor-analysis counts evals/runs/<report>.json        # the tables
 6. **counts** prints failed conversations per mode, per mode and dimension,
    and where the automatic status and your label disagree (`--out` also
    writes them to a file). It reports; it changes no check.
+
+### Labelling in Langfuse instead of the viewer
+
+The same labels can be made in a Langfuse annotation queue (needs the three
+`LANGFUSE_*` variables, in the environment or `.env`). Neither command
+writes a score, or changes or deletes anything in Langfuse.
+
+```
+uv run advisor-eval --cases evals/generated.jsonl      # Langfuse on: traces carry tool results and dimension tags
+uv run advisor-analysis queue evals/runs/<report>.json [--scenario out-of-stock] [--status FAIL]
+# label in Langfuse: Human Annotation > the queue "advisor-eval <stamp>"
+uv run advisor-analysis import evals/runs/<report>.json
+uv run advisor-analysis counts evals/runs/<report>.json
+```
+
+- **queue** makes a boolean score config `pass` (once) and a queue named
+  `advisor-eval <stamp>` (`--queue` to name it), then adds the run's traces
+  as items, found by their `eval` and `run:<stamp>` tags. `--feature`,
+  `--scenario`, `--persona` (exact values) and `--status PASS|FAIL|ERROR`
+  choose cases (all must match). It skips traces already in the queue, so
+  running it again is safe, and prints `added / already queued / no trace`.
+- In the queue, score each trace `pass` true or false. Put the critique in
+  the comment of the score; a fail needs one.
+- **import** reads the queue's annotation scores and appends label lines
+  (the format above) to `evals/labels/<report name>.jsonl` (`--labels`). The
+  latest score per trace wins; true is `pass`, false is `fail`, the comment
+  is the critique. A fail without a comment is not written; its case id is
+  printed. It appends only a changed label, so a second import writes
+  nothing. Viewer and Langfuse labels share the file; the last line wins.
+- Langfuse can take a few minutes to serve a fresh score through its API
+  (the traces are found at once). If an import misses some, run it again
+  later.
+- `taxonomy` and `counts` read the imported file unchanged.
+- Exit 2: a missing variable, a conflicting config or queue, a Langfuse
+  error (`Langfuse <step> failed: ...`).
 
 No model grades an answer: you label every conversation. Reports stay local
 (`evals/runs/`); questions, labels and the taxonomy are committed.
