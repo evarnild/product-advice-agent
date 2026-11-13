@@ -12,7 +12,7 @@ live_checked: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
 auto_round: 3
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/8-offline-evals    reverses its B11 (no Langfuse during evals)
