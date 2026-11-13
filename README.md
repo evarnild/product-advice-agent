@@ -43,7 +43,8 @@ line to get the local default.**
 
 Tracing is on only when `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and
 `LANGFUSE_SECRET_KEY` are all set. Every trace is tagged `provider:<name>`
-and `model:<name>`.
+and `model:<name>`. Traces from `advisor-eval` also carry `eval`, `run:<stamp>`
+and `case:<id>` (see "Evaluating answers").
 
 If the run cannot reach Ollama it prints `Ollama is not reachable at <url>.
 Start Ollama (the Ollama app, or "ollama serve") and try again.` If the model
@@ -123,8 +124,15 @@ The suite asks each question in `evals/cases.jsonl` once, through the same
 agent as `advisor`, and scores the answer with fixed checks. There is no
 judge model. **A run uses a real model**: the local one by default (slow on
 CPU, minutes for the 15 cases), or Anthropic when `ADVISOR_MODEL_PROVIDER` is
-set (cents per run). It reads the same environment and `.env` as `advisor`
-and does not trace to Langfuse.
+set (cents per run). It reads the same environment and `.env` as `advisor`.
+When `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all
+set, each case is also one Langfuse trace (the same spans as an `advisor`
+run), tagged `eval`, `provider:<name>`, `model:<name>`, `run:<stamp>` and
+`case:<id>`. The stamp is the run's start, as in the report's filename
+`evals/runs/<stamp>-<provider>.json`. In the Langfuse UI, filter on tag `eval`,
+then on `run:<stamp>` from the report's filename. Tracing never changes the
+scores, output or report (apart from `duration_s`); with Langfuse down, a run
+takes up to 5 s longer per case.
 
 Each case prints `PASS`, `FAIL` (with the failing reasons) or `ERROR` (the
 model call failed), then a total. A report with the answers, search calls and

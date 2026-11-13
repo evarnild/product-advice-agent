@@ -187,3 +187,50 @@ with and returns a `FakeTracer`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-12 — build (subtasks 1-3)
+
+Commits: e81c4d3 (tracer seam, fan-out, tag tests), 516328f (boundary
+tests), 7fc7a56 (docs), plus the Progress/status commit that follows.
+
+Shipped: `_LANGFUSE_ENV`, `_default_tracer_factory` (lazy `make_tracer`),
+`_FanOutTracer` (recording first, secondary guarded), `tracer_factory`
+parameter on `main`, per-case tags `eval`, `provider:`, `model:`,
+`run:<stamp>`, `case:<id>` with the stamp taken from the existing `started`
+(no new `now()` call). `tracing.py`, `agent.py`, `cli.py` untouched;
+`test_eval_runner_loads_no_sdk` unedited. Docs: README (two places),
+CLAUDE.md "Offline evals", run.py docstring, §8 spec B11 one line.
+
+Tests: pytest 481 -> 491 (10 added: 8 in `tests/test_evals_run.py`, 2 in
+`tests/test_boundaries.py`). Each Tests-table row was mutation-checked and
+killed.
+
+Divergences: line numbers in "Verified against the codebase" drifted
+(e.g. `RecordingTracer` now at run.py:40 as planned, `main` settings at
+:172 became :189 after the added code); no behavioural drift. Nothing
+else diverged.
+
+### 2026-11-12 — rework after review round 1 (tests only)
+
+Commit: the one following 6eca700 (see `git log`). `run.py` and the other
+source files are unchanged.
+
+- Raising-tracer test: its script now starts with `HP_OK`, so a tool call is
+  made, and the test asserts the case's tool was exercised.
+- Same-calls test: now asserts the full call tuples (begin question;
+  generation model, usage, text, tool names; tool name, arguments,
+  result_count, error; finish answer; fail `RuntimeError: x`; check
+  stage/allowed/reason) for a passing, an unknown-tool and a raising case.
+- New `test_the_tracer_factory_gets_the_dotenv_merged_environment`
+  (`main(env=None)`, a `.env` in `tmp_path`, `chdir`, env vars deleted).
+
+Tests: pytest 491 -> 492 (one added; two rewritten).
+
+Mutants (full pytest, restore by copy, tree clean after), all KILLED:
+T-tool (no try/except around `secondary.tool`) by
+`test_a_raising_tracer_changes_nothing`; A-begin, A-gen text, A-gen model,
+A-gen usage, A-gen tool names, A-tool result_count, A-tool error, A-finish,
+A-fail by `test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer`;
+W01 (`tracer_factory(env, tags)`) by
+`test_the_tracer_factory_gets_the_dotenv_merged_environment`.
+A-check was not mutated (skeleton reason is always empty).

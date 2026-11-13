@@ -2,17 +2,17 @@
 id: 12
 slug: trace-evals
 type: feature
-status: accepted
+status: in-review
 title: Trace eval runs to Langfuse, tagged as evals
 review_tier: reviewed    # changes what is sent to Langfuse (by meaning, as for §10); likely touches src/advisor/tracing.py
 intent_accepted: 2026-11-12 by-agent    # owner: "accept 12"
 spec_accepted: 2026-11-12 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-12 by-agent    # auto: owner "/auto 12" (auto_authorized 2026-11-12)
-live_checked:
+live_checked: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
 merged:
-auto_authorized: 2026-11-12 by-agent    # owner: "/auto 12"
-auto_round:
-auto_stopped: build waits for the round 3 review of 9
+auto_authorized: 2026-11-13 by-agent    # owner: "diff read and live checked, /auto 12"
+auto_round: 3
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/8-offline-evals    reverses its B11 (no Langfuse during evals)
