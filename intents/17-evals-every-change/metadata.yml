@@ -2,10 +2,10 @@
 id: 17
 slug: evals-every-change
 type: feature
-status: draft
+status: accepted
 title: Run the evals on every change that can move the answers
 review_tier: reviewed    # likely edits REVIEW-POLICY.md and the kit's enforcement (scripts/ship-lib.mjs or check:intent)
-intent_accepted:
+intent_accepted: 2026-11-13 by-agent    # owner: "accept 17 and /auto 17"
 spec_accepted:
 plan_approved:
 live_checked:
