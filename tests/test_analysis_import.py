@@ -12,6 +12,13 @@ from advisor.evals.labels import label_line, parse_labels
 from tests.fake_langfuse_api import T0
 from tests.test_analysis_queue import LANGFUSE_ENV, STAMP, report_file, trace
 
+
+@pytest.fixture(autouse=True)
+def _in_tmp(tmp_path, monkeypatch):
+    # The default labels path is relative to the working directory.
+    monkeypatch.chdir(tmp_path)
+
+
 TRACES = [trace("ta", "a"), trace("tb", "b"), trace("tc", "c"), trace("td", "d")]
 
 

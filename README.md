@@ -214,7 +214,7 @@ writes a score, or changes or deletes anything in Langfuse.
 ```
 uv run advisor-eval --cases evals/generated.jsonl      # Langfuse on: traces carry tool results and dimension tags
 uv run advisor-analysis queue evals/runs/<report>.json [--scenario out-of-stock] [--status FAIL]
-# label in Langfuse: Human Annotation > the queue "advisor-eval <stamp>"
+# label in the Langfuse UI: open the annotation queue "advisor-eval <stamp>"
 uv run advisor-analysis import evals/runs/<report>.json
 uv run advisor-analysis counts evals/runs/<report>.json
 ```

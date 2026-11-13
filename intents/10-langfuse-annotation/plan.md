@@ -192,3 +192,68 @@ sockets.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: implementation (all six subtasks)
+
+Commits: `d85477d` (1, tool results), `73537c2` (2, dimension tags),
+`f700453` (3, `annotate.py`), `e144869` (4, `LangfuseAnnotations`),
+`ed847c4` (5, `queue` and `import`, boundary tests), `62268b2` (6, docs), plus
+the final commit with this entry, the `in-review` status and a test-isolation
+fixture.
+
+Shipped: B1-B19 as specified. `Tracer.tool(name, arguments, results, error)`
+everywhere; the Langfuse tool observation carries `{"result_count", "results"}`
+(cap 10); eval traces carry the three dimension tags; new SDK-free
+`src/advisor/evals/annotate.py`; `LangfuseAnnotations` and `make_annotations`
+in `tracing.py`; `queue` and `import` in `analysis.py` with an injectable
+`annotations_factory` (lazy `advisor.tracing` import); README and CLAUDE.md.
+
+Tests: 607 passed at the end (496 after subtask 1; new files
+`tests/test_analysis_annotate.py`, `test_analysis_queue.py`,
+`test_analysis_import.py`, `test_tracing_annotations.py`,
+`tests/fake_langfuse_api.py`). `npm run verify` green.
+
+Mutants run on behavioural lines (each restored by copy; full suite, `-x`):
+M1 agent passes `[]` on success: `test_agent.py::test_tracer_sees_generations_and_tools_in_order`.
+M2 no cap of 10: `test_tracing.py::test_tool_output_is_cut_to_ten_rows_but_counts_all`.
+M3 `result_count` constant: `test_tracing.py::test_langfuse_tracer_with_real_sdk_and_in_memory_exporter`.
+M4 dimension tag order: `test_evals_run.py::test_dimensions_become_three_more_tags_in_order`.
+M5 earliest trace wins: `test_analysis_annotate.py::test_a_repeated_case_tag_takes_the_latest_start_and_counts_the_repeat`.
+M6 earliest score wins: `test_analysis_annotate.py::test_the_latest_score_per_trace_wins_whatever_the_order`.
+M7 filter "any of": `test_tracing_annotations.py::test_run_traces_filters_on_tags_root_and_follows_the_cursor`.
+M8 first named config accepted: `test_tracing_annotations.py::test_the_boolean_pass_config_is_reused_not_a_numeric_one_listed_first`.
+M9 queued traces re-added: `test_analysis_annotate.py::test_plan_separates_new_queued_and_without_trace`.
+M10 critique ignored in the unchanged test: `test_analysis_annotate.py::test_a_different_label_or_critique_is_appended`.
+M11 no env check: `test_analysis_import.py::test_a_missing_variable_exits_2_without_calling_langfuse`.
+M12 fail without critique written: `test_analysis_annotate.py::test_a_fail_without_a_comment_is_not_written_but_listed`.
+M13 outside-run scores not skipped: `test_analysis_annotate.py::test_scores_on_traces_outside_the_run_are_counted_and_skipped`.
+M14 score source not ANNOTATION: `test_tracing_annotations.py::test_annotation_scores_ask_for_the_queue_and_follow_the_cursor`.
+M15 queue without config accepted: `test_tracing_annotations.py::test_an_existing_queue_without_the_pass_config_is_a_conflict`.
+M16 secrets not redacted: `test_tracing_annotations.py::test_a_secret_in_an_sdk_error_is_redacted`.
+M17 error path hands rows to the tracer: `test_agent.py::test_tracer_gets_an_empty_list_on_every_error_path`.
+M18 filters OR instead of AND: `test_analysis_annotate.py::test_filters_combine_with_and`.
+M19 no newline repair before an append: `test_analysis_import.py::test_a_file_without_a_final_newline_gets_one_before_the_append`.
+M20 stamp not converted to UTC: `test_analysis_annotate.py::test_stamp_is_the_started_time_in_utc_as_run_py_formats_it`.
+All 20 killed.
+
+Divergences from the plan:
+- `Annotations` has `find_queue(name)` (import must not create a queue) and
+  `annotation_scores(queue_id)` without `config_id` (the SDK filter is by
+  score name, not config).
+- The observations call uses `fields="core,basic,trace_context"`, not
+  `"basic,trace_context"`: the trace id and start time are in `core`, and the
+  SDK says unspecified fields default to `core` and `basic`.
+- `offer_results` and `_recording_tool` were removed; their two direct tests
+  were replaced by one `RecordingTracer` test (the report tests pass
+  unedited apart from tracer signatures in fakes).
+- Fake-SDK tests are in `tests/test_tracing_annotations.py` (plan: `test_tracing.py`),
+  sharing `tests/fake_langfuse_api.py`.
+- `LangfuseAnnotations` removes the secret and public key from SDK error text
+  (not in the plan; it backs AC7's "no key in the output").
+- `queue` with filters that match no case exits 2 before touching Langfuse
+  (no empty queue is created); the spec does not cover it.
+- `plan_additions` and `ImportResult` helpers in `annotate.py` carry the
+  queue plan and the import counts (pure, tested).
+- Tests that exercise `import` change the working directory to a temp dir, so
+  a default `evals/labels/` path can never reach the repository.
+- Nothing was run against a live Langfuse; the live check (AC9) is owed.
