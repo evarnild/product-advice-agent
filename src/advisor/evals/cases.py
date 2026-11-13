@@ -176,7 +176,8 @@ def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> l
             return False
         if "min_price" in search and p.price_eur < search["min_price"]:
             return False
-        if "in_stock_only" in search and bool(p.in_stock) != search["in_stock_only"]:
+        # false means no stock filter, as in search_products, not "out of stock only".
+        if search.get("in_stock_only") and not p.in_stock:
             return False
         if "keywords_any" in search:
             # Interpretation: any-of, as score._call_satisfies reads it, not the

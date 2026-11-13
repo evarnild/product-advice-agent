@@ -45,6 +45,16 @@ def test_in_stock_only():
     assert catalogue_problems([loose], cat) == []
 
 
+def test_in_stock_only_false_does_not_filter_on_stock():
+    # false means "no stock filter", not "out of stock only" (spec B2).
+    cat = [prod("P-001", 100), prod("P-002", 200, in_stock=False)]
+    kept = case(expect_ids=("P-001",), expect_search={"in_stock_only": False})
+    assert catalogue_problems([kept], cat) == []
+    out = case(forbid_ids=("P-002",), expect_search={"in_stock_only": False})
+    (p,) = catalogue_problems([out], cat)
+    assert "P-002" in p and "forbidden but matched" in p
+
+
 def test_keywords_any_matches_any_word_case_and_hyphen_insensitively():
     cat = [prod("P-001", 100, name="Noise Cancelling Buds", desc="Great")]
     c = case(expect_ids=("P-001",), expect_search={"keywords_any": ["zzz", "NOISE-cancelling"]})
@@ -68,6 +78,16 @@ def test_rank_ten_of_eleven_is_fine_eleven_of_eleven_is_not():
     bad = case(expect_ids=("P-011",), expect_search={"category": "laptop"})
     (p,) = catalogue_problems([bad], cat)
     assert "c1" in p and "P-011" in p and "11 of 11" in p
+
+
+def test_order_is_by_price_not_by_id():
+    # P-001 is the dearest, P-011 the cheapest: id order and price order disagree.
+    cat = [prod(f"P-{n:03d}", 100 - n) for n in range(1, 12)]
+    dearest = case(expect_ids=("P-001",), expect_search={"category": "laptop"})
+    (p,) = catalogue_problems([dearest], cat)
+    assert "P-001" in p and "11 of 11" in p
+    cheapest = case(expect_ids=("P-011",), expect_search={"category": "laptop"})
+    assert catalogue_problems([cheapest], cat) == []
 
 
 def test_ties_are_broken_by_id():

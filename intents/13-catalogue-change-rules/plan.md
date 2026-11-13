@@ -143,3 +143,17 @@ Divergences: `cases.py` imports the private `_norm` and `MAX_LIMIT` from
 copy. The README section is a `###` under "Evaluating answers" (placed after
 the error-analysis text, before "Check"). Subtasks 1 and 2 were run as one
 verify cycle, committed separately.
+
+### 2026-11-13 — review round 1 rework
+
+Commit: see the `§13: rework` commit after 338baf8. Tests 622 -> 624.
+
+- `in_stock_only: false` no longer filters (it was read as "out of stock
+  only"); the condition is now `search.get("in_stock_only") and not
+  p.in_stock`, as spec B2 and `search_products` read it. New test
+  `test_in_stock_only_false_does_not_filter_on_stock`.
+- New `test_order_is_by_price_not_by_id` (id order and price order disagree)
+  pins price-then-id ordering. Mutation-checked by copy and restore: ordering
+  by id only, and the old `!=` stock form, each fail exactly one new test.
+- The optional LOW (hash the catalogue bytes once) is left: `load_catalogue`
+  takes a path, so sharing the bytes would change its signature.
