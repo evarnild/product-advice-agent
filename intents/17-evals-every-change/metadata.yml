@@ -10,9 +10,9 @@ spec_accepted: 2026-11-13 by-agent    # owner: "yes to 16 and 17" to the spec st
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "accept 17 and /auto 17"
+auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14 /auto 17"
 auto_round:
-auto_stopped: waiting for 13 to merge
+auto_stopped: too many sessions
 follows_up:
 links:
   - intents/8-offline-evals    the runner and report it requires
