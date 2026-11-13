@@ -2,7 +2,7 @@
 id: 18
 slug: intent-dependencies
 type: feature
-status: accepted
+status: in-review
 title: Record which intents must merge before another can be built
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
