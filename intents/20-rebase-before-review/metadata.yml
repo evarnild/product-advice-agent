@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 20
+slug: rebase-before-review
+type: feature
+status: accepted
+title: Rebase a branch that is behind main before each review round
+review_tier:
+intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/18-intent-dependencies    a branch built on an unmerged blocker (spawn --base) rebases onto main once the blocker merges
+  - intents/19-intent-stats    measures the extra rounds this should remove
