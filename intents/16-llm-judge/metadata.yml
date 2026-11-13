@@ -6,13 +6,13 @@ status: accepted
 title: An LLM judge for one failure mode, validated against the owner's labels
 review_tier: reviewed    # writes scores to Langfuse through src/advisor/tracing.py (Reviewed by meaning)
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 16 /auto 16"
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 16 and 17" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 16 /auto 16"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/9-error-analysis    the labels, critiques and taxonomy it is built from
