@@ -111,3 +111,29 @@ Re-read on `main` at `3d04fd5` (§13 merged).
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13 - subtasks 1-4, 6 built; 5 left to the coordinator
+
+Commits: 7af1cc0 (baseline.py), 240c9a1 (commands), 280a2ba (policy),
+98f6106 (skills), 84ec629 (README, CLAUDE.md). Tests 624 -> 664 (+40:
+30 in `tests/test_evals_baseline.py` incl. the policy-list == `EVAL_PATHS`
+test, 10 in `tests/test_analysis_baseline_cli.py` with a temp git repo for
+`owes-run`). No model call, no new dependency.
+
+Divergences: the eval-run check is a paragraph under pass 3 in
+`REVIEW-POLICY.md` and the review skill, not a tenth pass, so "nine passes"
+stays true in the reviewer agent and skill. `baseline.py` is not added to
+`CORE_CODE` (the spec says no kit change). `owes-run` prints "owed: the diff
+touches" plus the paths, or "not owed (no listed path changed)".
+
+Subtask 5 (first baseline, B9) is NOT done: the implementer cannot run a
+model, and `evals/baseline.json` does not exist. Coordinator commands, in the
+worktree at the branch head (Ollama running, qwen3:8b pulled):
+
+    uv run advisor-eval
+    cp evals/runs/<stamp>-ollama.json <main checkout>/evals/runs/
+    uv run advisor-analysis baseline evals/runs/<stamp>-ollama.json
+    uv run advisor-analysis compare evals/runs/<stamp>-ollama.json   # same report: no flips, no warnings
+
+The owner reads the report, then the coordinator commits `evals/baseline.json`
+on the branch before the review round (`§17: first eval baseline from <report>`).
