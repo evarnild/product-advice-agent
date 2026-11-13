@@ -515,3 +515,22 @@ export function statsJson(stats) {
 export function statsMarkdown(it, stamp) {
   return `<!-- generated-by: ${stamp} -->\n# §${it.id} stats\n\nDerived totals only (no prompt or response text). Regenerate live with \`npm run stats -- ${it.id}\`.\n\n\`\`\`text\n${formatIntent(it)}\n\`\`\`\n`;
 }
+
+// ---- arguments ----
+
+/** `{ids, all, json, transcripts}` from argv, or throws a usage message. */
+export function parseStatsArgs(argv, defaultTranscripts) {
+  const opts = { ids: [], all: false, json: false, transcripts: defaultTranscripts };
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i];
+    if (a === '--all') opts.all = true;
+    else if (a === '--json') opts.json = true;
+    else if (a === '--transcripts') {
+      if (!argv[i + 1]) throw new Error('--transcripts needs a directory');
+      opts.transcripts = argv[(i += 1)];
+    } else if (/^§?\d+$/.test(a)) opts.ids.push(Number(a.replace('§', '')));
+    else throw new Error(`unknown argument: ${a}`);
+  }
+  if (!opts.all && !opts.ids.length) throw new Error('give an intent id or --all');
+  return opts;
+}
