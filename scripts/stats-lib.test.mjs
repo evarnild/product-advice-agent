@@ -16,6 +16,7 @@ import {
   parseCommitLog,
   phaseAt,
   sessionTurns,
+  spread,
   statsJson,
   statsMarkdown,
   usageLines,
@@ -212,6 +213,21 @@ describe('attributeTurn (B4)', () => {
   });
 });
 
+describe('spread', () => {
+  const ph = [{ name: 'a', start: 0, end: 10 }, { name: 'b', start: 10, end: 20 }];
+  it('divides a gap over the phases it overlaps, by length', () => {
+    expect(spread(ph, 5, 15)).toEqual([['a', 0.5], ['b', 0.5]]);
+    expect(spread(ph, 2, 6)).toEqual([['a', 1]]);
+    expect(spread(ph, 8, 20)).toEqual([['a', 2 / 12], ['b', 10 / 12]]);
+  });
+  it('gives time outside every phase to the nearest one, and a zero-length gap to the phase it falls in', () => {
+    expect(spread(ph, 15, 30)).toEqual([['b', 1]]);
+    expect(spread(ph, -10, 5)).toEqual([['a', 1]]);
+    expect(spread(ph, 12, 12)).toEqual([['b', 1]]);
+    expect(spread([], 1, 5)).toEqual([['unphased', 1]]);
+  });
+});
+
 describe('owner wait (B6)', () => {
   it('caps a gap at 2 h with the excess as idle, to the boundary', () => {
     expect(capWait(3 * H)).toEqual({ wait: 2 * H, idle: 1 * H });
@@ -326,9 +342,11 @@ describe('computeStats', () => {
       ev(1.5, 'Stop'),
       ev(2.5, 'UserPromptSubmit', { skillId: 7 }), // 1 h in-session wait
       ev(3, 'Stop'),
-      ev(9, 'UserPromptSubmit'), // 6 h gap, 4 h of it an agent running: 2 h net, no idle
+      ev(4.5, 'UserPromptSubmit', { skillId: 7 }), // 1.5 h gap, 1 h of it an agent running: 0.5 h
+      ev(5, 'Stop'),
+      ev(10, 'UserPromptSubmit', { skillId: 7 }), // 5 h gap, no agent: 2 h counted, 3 h idle
     ];
-    const agentSpan = [asst('x1', iso(3.1), 'opus', [1, 1, 1, 1]), asst('x2', iso(7.1), 'opus', [1, 1, 1, 1])].join('\n');
+    const agentSpan = [asst('x1', iso(3.1), 'opus', [1, 1, 1, 1]), asst('x2', iso(4.1), 'opus', [1, 1, 1, 1])].join('\n');
     const s = computeStats({
       commits,
       events,
@@ -342,8 +360,23 @@ describe('computeStats', () => {
     expect(phaseOf(i7, 'intent').gateWaitMs).toBe(0.5 * H);
     expect(spec.gateWaitMs).toBe(2 * H);
     expect(spec.idleMs).toBe(1.5 * H);
-    // in-session: 1 h (1.5 -> 2.5) and 6 h - 4 h agent = 2 h (3 -> 9): both in spec by start time
-    expect(spec.sessionWaitMs).toBe(3 * H);
+    // in-session: 1 h (1.5 -> 2.5) and 1.5 h - 1 h agent = 0.5 h (3 -> 4.5), both in spec
+    expect(spec.sessionWaitMs).toBe(1.5 * H);
+    // 5 h (5 -> 10) in the ship phase: 2 h counted, 3 h idle; agent time is not wait
+    const ship = phaseOf(i7, 'ship');
+    expect(ship.sessionWaitMs).toBe(2 * H);
+    expect(ship.idleMs).toBe(3 * H);
+  });
+
+  it('splits a wait that straddles a milestone over the phases it touches', () => {
+    const commits = log([0, '§7: intent accepted'], [1, '§7: spec drafted'], [3, '§7: spec accepted'], [4, '§7: plan drafted'], [6, '§7: plan approved'], [9, '§7: merged (abc1234)']);
+    // the owner answers the plan after 2 h; a stop at 2.5 h inside the spec/plan boundary is not a gate here
+    const events = [ev(2, 'UserPromptSubmit', { skillId: 7 }), ev(2.1, 'Stop'), ev(3.5, 'UserPromptSubmit', { skillId: 7 })];
+    const i7 = find(computeStats({ commits, events, coordinators: [], agents: [], now: at(20) }), 7);
+    // 2.1 -> 3.5 is 1.4 h: 0.9 h in spec (to 3), 0.5 h in plan (from 3)
+    expect(Math.round(phaseOf(i7, 'spec').sessionWaitMs / 1000)).toBe(Math.round(0.9 * H / 1000));
+    expect(Math.round(phaseOf(i7, 'plan').sessionWaitMs / 1000)).toBe(Math.round(0.5 * H / 1000));
+    expect(Math.round(i7.totals.sessionWaitMs / 1000)).toBe(Math.round(1.4 * H / 1000));
   });
 
   it('marks partial the intents merged before the cutover', () => {

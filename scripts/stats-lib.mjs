@@ -256,6 +256,24 @@ const unionMs = (spans) => {
 };
 const overlapMs = (from, to, spans) => unionMs(spans).reduce((n, [a, b]) => n + Math.max(0, Math.min(to, b) - Math.max(from, a)), 0);
 
+/**
+ * How a gap `[from, to]` divides over an intent's phases: `[[name, share]]`,
+ * the shares (summing to 1) being each phase's part of the gap's length, so a
+ * wait that straddles a milestone is not all booked to the phase it began in.
+ * A gap inside no phase, or of no length, goes whole to the clamped phase at `from`.
+ */
+export function spread(phases, from, to) {
+  const len = to - from;
+  const parts = len > 0 ? phases.map((p) => [p.name, Math.max(0, Math.min(to, p.end) - Math.max(from, p.start))]).filter(([, ms]) => ms > 0) : [];
+  const covered = parts.reduce((s, [, ms]) => s + ms, 0);
+  if (!covered) return [[phaseAt(phases, from) ?? UNPHASED, 1]];
+  const out = parts.map(([name, ms]) => [name, ms / len]);
+  // time outside every phase (before the first or after the last) goes to the nearest one, so the shares sum to 1
+  const rest = 1 - covered / len;
+  if (rest > 1e-12) out[from < phases[0].start ? 0 : out.length - 1][1] += rest;
+  return out;
+}
+
 /** Splits one gap, after taking agent time out of it, into counted wait and idle (B6). */
 export function capWait(gapMs, agentMs = 0, cap = WAIT_CAP_MS) {
   const net = Math.max(0, gapMs - agentMs);
@@ -362,9 +380,11 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     const mine = agentSpans.filter((s) => s.id === id).map((s) => s.span);
     for (const g of gateGaps(cs)) {
       const { wait, idle } = capWait(g.to - g.from, overlapMs(g.from, g.to, mine));
-      const p = phase(id, phaseAt(spans, g.from) ?? UNPHASED);
-      p.gateWaitMs += wait;
-      p.idleMs += idle;
+      for (const [name, share] of spread(spans, g.from, g.to)) {
+        const p = phase(id, name);
+        p.gateWaitMs += wait * share;
+        p.idleMs += idle * share;
+      }
     }
   }
   for (const g of gaps) {
@@ -372,9 +392,11 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     if (a.kind !== 'intent') continue;
     const running = agentSpans.filter((s) => s.session === g.session).map((s) => s.span);
     const { wait, idle } = capWait(g.to - g.from, overlapMs(g.from, g.to, running));
-    const p = phase(a.id, phaseAt(getIntent(a.id).spans, g.from) ?? UNPHASED);
-    p.sessionWaitMs += wait;
-    p.idleMs += idle;
+    for (const [name, share] of spread(getIntent(a.id).spans, g.from, g.to)) {
+      const p = phase(a.id, name);
+      p.sessionWaitMs += wait * share;
+      p.idleMs += idle * share;
+    }
   }
 
   const wanted = only ? new Set(only) : null;
