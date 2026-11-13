@@ -141,7 +141,7 @@ def _loads_none_of(modules: str, banned: tuple[str, ...]) -> subprocess.Complete
 
 
 def test_pure_analysis_modules_load_no_web_framework_and_no_sdk():
-    pure = "cases,coverage,labels,taxonomy,counts,report,modeljson,generate"
+    pure = "cases,coverage,labels,taxonomy,counts,report,modeljson,generate,annotate"
     modules = ",".join(f"advisor.evals.{m}" for m in pure.split(","))
     result = _loads_none_of(modules, _WEB + _SDKS)
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
@@ -156,3 +156,51 @@ def test_the_checker_catches_a_banned_import():
     # Guards the guard: a module that does load the framework is reported.
     result = _loads_none_of("advisor.evals.view", _WEB)
     assert result.returncode == 1
+
+
+# --- §10: annotation queues -------------------------------------------------
+
+
+def test_annotate_is_sdk_free_and_does_not_load_tracing():
+    result = _loads_none_of("advisor.evals.annotate", _WEB + _SDKS + ("advisor.tracing",))
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_analysis_langfuse_variables_match_the_tracing_module():
+    from advisor.evals.analysis import _LANGFUSE_ENV
+    from advisor.tracing import REQUIRED_ENV
+
+    assert tuple(_LANGFUSE_ENV) == tuple(REQUIRED_ENV)
+
+
+def test_counts_and_taxonomy_load_neither_tracing_nor_langfuse(tmp_path):
+    # A fresh interpreter runs `counts` and `taxonomy` (no fail to draft: exits 2 early).
+    code = (
+        "import io, json, sys\n"
+        "from pathlib import Path\n"
+        "from advisor.evals.analysis import main\n"
+        "tmp = Path(sys.argv[1])\n"
+        "case = {'id': 'a', 'question': 'q', 'answer': 'a', 'status': 'PASS'}\n"
+        "report = tmp / 'run.json'\n"
+        "report.write_text(json.dumps({'cases': [case]}), encoding='utf-8')\n"
+        "label = {'case_id': 'a', 'label': 'pass', 'critique': '', 'labelled_at': 't',\n"
+        "         'question': 'q', 'answer': 'a'}\n"
+        "labels = tmp / 'l.jsonl'\n"
+        "labels.write_text(json.dumps(label) + '\\n', encoding='utf-8')\n"
+        "tax = tmp / 'tax.json'\n"
+        "tax_doc = {'labels': str(labels), 'modes': [], 'mapping': {}}\n"
+        "tax.write_text(json.dumps(tax_doc), encoding='utf-8')\n"
+        "rc = main(['counts', str(report), '--labels', str(labels), '--taxonomy', str(tax)],\n"
+        "          env={}, out=io.StringIO(), err=io.StringIO())\n"
+        "rc2 = main(['taxonomy', str(labels)], env={}, out=io.StringIO(), err=io.StringIO())\n"
+        "assert (rc, rc2) == (0, 2), (rc, rc2)\n"
+        "bad = sorted(m for m in sys.modules\n"
+        "             if m.split('.')[0] in ('langfuse', 'opentelemetry')\n"
+        "             or m == 'advisor.tracing')\n"
+        "print(bad)\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(tmp_path)], capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
