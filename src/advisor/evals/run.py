@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, TextIO
 
 from advisor.agent import SYSTEM_PROMPT_PATH, answer_question, search_tool
-from advisor.catalogue import CatalogueError, load_catalogue
+from advisor.catalogue import DEFAULT_CATALOGUE_PATH, CatalogueError, load_catalogue
 from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
 from advisor.evals.cases import Case, CaseFileError, parse_cases
 from advisor.evals.score import Check, score
@@ -308,6 +308,9 @@ def main(
         "provider": settings.provider,
         "model": settings.model,
         "cases_sha256": hashlib.sha256(raw).hexdigest(),
+        # The catalogue file load_catalogue() read above (the default path; there is
+        # no catalogue option). Bytes, so a whitespace-only edit changes it (§13 B6).
+        "catalogue_sha256": hashlib.sha256(DEFAULT_CATALOGUE_PATH.read_bytes()).hexdigest(),
         "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT_PATH.read_bytes()).hexdigest(),
         "started": started.isoformat(),
         "cases": results,

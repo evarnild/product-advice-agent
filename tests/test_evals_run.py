@@ -700,3 +700,18 @@ def test_default_factory_calls_make_tracer_with_env_and_tags_when_configured(mon
     env = {k: "x" for k in runner._LANGFUSE_ENV}
     assert runner._default_tracer_factory(env, ["eval", "case:a"]) is sentinel
     assert got == [(env, ["eval", "case:a"])]
+
+
+def test_report_records_the_sha256_of_the_catalogue_file_it_loaded(tmp_path):
+    from advisor.catalogue import DEFAULT_CATALOGUE_PATH
+
+    code, _, _, _ = run(tmp_path, HP_OK + LAP_OK + OFF_OK)
+    assert code == 0
+    report = report_of(tmp_path)
+    assert (
+        report["catalogue_sha256"]
+        == hashlib.sha256(DEFAULT_CATALOGUE_PATH.read_bytes()).hexdigest()
+    )
+    assert len(report["catalogue_sha256"]) == 64
+    assert report["catalogue_sha256"] != report["cases_sha256"]
+    assert report["catalogue_sha256"] != report["prompt_sha256"]
