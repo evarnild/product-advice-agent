@@ -88,6 +88,7 @@ the build step, then round 1.
 
 | `auto_stopped` | Resume |
 | --- | --- |
+| blocked by N, blocked_by record broken | once every blocker is cleared (merged on `main`) or the record is fixed, step 4: spawn; **no new round** |
 | spec questions, spec drafted | step 2: the owner's answers or yes, then step 3 |
 | plan found the spec incomplete, plan.md exists unapproved | step 3 again, only after the owner has settled it; never approve a plan this run did not draft |
 | decision needed, spec or plan amendment needed | give the implementer the owner's answer (a new `product-advice-agent-implementer` if it cannot be resumed), wait, then **a new round** `auto_round` + 1 (step 5, item 1) |
@@ -142,6 +143,16 @@ experiment.
    /build-plan)` and `§<id>: plan approved (auto: owner "/auto <id>")`.
 
 ## 4. Build
+
+**Blockers first.** Read `blocked_by` in the intent's `metadata.yml` (items
+`<id>    <reason>`; `npm run queue` shows the open ones as `blocked by §n`). A
+blocker is cleared only when `main`'s `metadata.yml` for it has a non-empty
+`merged:`. If any direct blocker is open, **stop** before spawning with
+`auto_stopped: blocked by <n>` (the lowest open direct id) and report every
+open blocker with its reason. Spec and plan went ahead; only building waits.
+Do not improvise a "waiting for N to merge" stop. A broken record (an id on no
+branch, the intent's own id) is also a stop: `auto_stopped: blocked_by record
+broken`.
 
 Run `/spawn <id>` (its steps 1 to 5): check the load, `npm run spawn --
 <id>`, then launch `product-advice-agent-implementer` with `run_in_background: true` in

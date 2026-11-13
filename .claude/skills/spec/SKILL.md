@@ -66,6 +66,9 @@ Assumptions.
 
 ## 6. Report
 
+If the spec found a hard prerequisite (this intent cannot be built correctly
+until another is merged), add it to `blocked_by:` in `metadata.yml` as
+`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here.
 Name the folder, the weak points, and the next step: "accept by setting
 `spec_accepted: <date>` in metadata.yml, or say yes". After that comes
 `/build-plan <id>`.

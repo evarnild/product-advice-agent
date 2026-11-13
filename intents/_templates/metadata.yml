@@ -19,3 +19,8 @@ auto_stopped:            # /auto only: why it stopped, written without ` #`; cle
 follows_up:              # fix only: id of the intent whose change caused this defect, if known
 links:
   # - intents/1-stack-and-skeleton    related intent
+# Hard prerequisites only: "cannot be built correctly until that intent is
+# merged". One per line, `<id>    <reason>`. Not a gate: any agent drafting the
+# intent, spec or plan may write it. Related work stays in links.
+blocked_by:
+  # - 13    its test checks the growth
