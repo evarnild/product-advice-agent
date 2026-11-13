@@ -6,13 +6,13 @@ status: accepted
 title: Catalogue changes cannot silently break the eval set
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 13 /auto 13"
-spec_accepted:
+spec_accepted: 2026-11-13 by-agent    # owner: "yes to 13" to the spec stop
 plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 13 /auto 13"
 auto_round:
-auto_stopped: spec drafted, waiting for spec_accepted
+auto_stopped:
 follows_up:
 links:
   - intents/8-offline-evals    the cases and run report it guards
