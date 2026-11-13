@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 14
+slug: catalogue-500
+type: feature
+status: draft
+title: Grow the catalogue to 500 products
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth
+  - intents/8-offline-evals    cases whose correct answer may change
+  - intents/9-error-analysis    coverage probes that count catalogue matches
