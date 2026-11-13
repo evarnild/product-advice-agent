@@ -34,15 +34,15 @@ def q(question, **probe):
 
 
 GOOD_HP = reply(
-    q("Any headphones for 59 euros or less?", category="headphones", max_price=59),
-    q("Cheap headphones under sixty?", category="headphones", max_price=59),
+    q("Any headphones for 19 euros or less?", category="headphones", max_price=19),
+    q("Cheap headphones under twenty?", category="headphones", max_price=19),
 )
 
 
 def test_the_prompt_gives_the_cell_the_categories_with_prices_and_the_out_of_stock_products():
     prompt = build_prompt(("laptop", "out-of-stock", GIFT), CAT)
     assert "laptop" in prompt and "out-of-stock" in prompt and GIFT in prompt
-    assert "- headphones: 6 products, 59.0 to 249.0" in prompt
+    assert "- headphones: 63 products, 19.0 to 449.0" in prompt
     for pid in ("P-004", "P-010", "P-017", "P-024", "P-032"):
         assert f"- {pid}, " in prompt
     assert "Sonavo Quiet Pro" in prompt
@@ -64,13 +64,13 @@ def test_a_valid_candidate_is_kept_and_an_invalid_one_dropped_with_its_reason():
     client = ScriptedModelClient(
         [
             reply(
-                q("Headphones up to 59?", category="headphones", max_price=59),
-                q("Headphones up to 58?", category="headphones", max_price=58),
+                q("Headphones up to 19?", category="headphones", max_price=19),
+                q("Headphones up to 18?", category="headphones", max_price=18),
             )
         ]
     )
     result = generate([HP], client, CAT)
-    assert [c.question for c in result.kept] == ["Headphones up to 59?"]
+    assert [c.question for c in result.kept] == ["Headphones up to 19?"]
     stats = result.stats["exact-match"]
     assert (stats.asked, stats.kept, stats.dropped) == (2, 1, ["the probe matches no product"])
 
@@ -98,11 +98,11 @@ def test_a_malformed_candidate_and_a_malformed_probe_are_dropped():
 
 
 def test_missing_candidates_and_extra_candidates():
-    one = reply(q("Headphones up to 59?", category="headphones", max_price=59))
+    one = reply(q("Headphones up to 19?", category="headphones", max_price=19))
     result = generate([HP], ScriptedModelClient([one]), CAT)
     assert result.stats["exact-match"].dropped == ["missing from the model answer"]
     three = reply(
-        *[q(f"Headphones up to 59 v{i}?", category="headphones", max_price=59) for i in range(3)]
+        *[q(f"Headphones up to 19 v{i}?", category="headphones", max_price=19) for i in range(3)]
     )
     result = generate([HP], ScriptedModelClient([three]), CAT)
     assert len(result.kept) == 2  # two a cell, the third is not considered
@@ -110,8 +110,8 @@ def test_missing_candidates_and_extra_candidates():
 
 def test_a_repeated_question_is_dropped():
     same = reply(
-        q("Headphones up to 59?", category="headphones", max_price=59),
-        q("headphones UP TO 59?", category="headphones", max_price=59),
+        q("Headphones up to 19?", category="headphones", max_price=19),
+        q("headphones UP TO 19?", category="headphones", max_price=19),
     )
     result = generate([HP], ScriptedModelClient([same]), CAT)
     assert len(result.kept) == 1
@@ -182,7 +182,7 @@ def test_cases_have_unique_ids_dimensions_and_the_probe_in_the_note():
         "scenario": "exact-match",
         "persona": STUDENT,
     }
-    assert lines[0]["note"] == 'probe: {"category": "headphones", "max_price": 59}'
+    assert lines[0]["note"] == 'probe: {"category": "headphones", "max_price": 19}'
     assert lines[6]["note"] == 'probe: {"product_id": "P-004"}'
 
 
@@ -205,8 +205,8 @@ def test_the_summary_has_a_line_per_scenario_with_reasons():
     client = ScriptedModelClient(
         [
             reply(
-                q("Up to 59?", category="headphones", max_price=59),
-                q("Up to 58?", category="headphones", max_price=58),
+                q("Up to 19?", category="headphones", max_price=19),
+                q("Up to 18?", category="headphones", max_price=18),
             )
         ]
     )

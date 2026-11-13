@@ -42,7 +42,7 @@ def _p(pid, price, name="Thing", brand="Acme", category="laptop", in_stock=True,
 
 def test_committed_catalogue_loads():
     products = load_catalogue(DEFAULT_CATALOGUE_PATH)
-    assert 25 <= len(products) <= 40
+    assert len(products) == 500
     assert {p.category for p in products} <= set(CATEGORIES)
     assert len({p.id for p in products}) == len(products)
 
@@ -209,9 +209,14 @@ def test_spaced_keyword_matches_hyphenated_text():
 
 def test_committed_catalogue_noise_cancelling_headphones_under_200():
     found = search_products(
-        load_catalogue(), category="headphones", max_price=200, keywords=["noise-cancelling"]
+        load_catalogue(),
+        category="headphones",
+        max_price=200,
+        keywords=["noise-cancelling"],
+        limit=10,
     )
-    assert ids(found) == ["P-005", "P-004", "P-001"]
+    # §14: 63 headphones; the hand-written P-005, P-004 and P-001 among the matches.
+    assert ids(found) == ["P-123", "P-355", "P-403", "P-005", "P-387", "P-004", "P-001", "P-379"]
 
 
 def test_hyphen_only_keyword_is_ignored():

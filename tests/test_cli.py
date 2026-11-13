@@ -14,7 +14,13 @@ ENV = {"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "placeholder-
 def script():
     return ScriptedModelClient(
         [
-            ModelTurn(tool_calls=(ToolCall("c", "search_products", {"category": "headphones"}),)),
+            ModelTurn(
+                tool_calls=(
+                    ToolCall(
+                        "c", "search_products", {"category": "headphones", "keywords": ["Calm 300"]}
+                    ),
+                )
+            ),
             ModelTurn(text="Try the Auralis Calm 300 (P-001).", usage=Usage(1, 1), model="m"),
         ]
     )

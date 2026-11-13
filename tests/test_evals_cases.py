@@ -59,8 +59,8 @@ def test_blank_lines_are_ignored_and_defaults_apply():
     ("text", "needles"),
     [
         (line(colour="red"), ["case 'c1'", "'colour'"]),
-        (line(expect_ids=["P-099"]), ["case 'c1'", "'expect_ids'", "P-099"]),
-        (line(forbid_ids=["P-098"]), ["case 'c1'", "'forbid_ids'", "P-098"]),
+        (line(expect_ids=["P-999"]), ["case 'c1'", "'expect_ids'", "P-999"]),
+        (line(forbid_ids=["P-998"]), ["case 'c1'", "'forbid_ids'", "P-998"]),
         (line(must_decline=True, expect_ids=["P-001"]), ["case 'c1'", "'expect_ids'"]),
         (line(expect_search={"colour": "red"}), ["case 'c1'", "'expect_search'", "colour"]),
         (line() + "\n" + line(), ["line 2", "case 'c1'", "'id'", "duplicate"]),
