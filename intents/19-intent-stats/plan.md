@@ -121,3 +121,40 @@ Re-read on `main` at `5dabf91`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: subtasks 1 to 6
+
+Commits: a9095ec (hook skill/skillId, B1), 6c79966 (pure stats core), 5e72fe8
+(`npm run stats`, I/O, fixtures), 4522a54 (`/ship` writes `stats.md`, B9),
+5a90d3c (skills name agents, `/grid` reads `stats.md`, CLAUDE.md), 3f0e376
+(a wait straddling a milestone is split over the phases it touches), plus this
+Progress commit.
+
+Shipped: `eventRecordFrom` logs `skill`/`skillId` for a prompt starting with a
+repo skill name (names read by `session-event.mjs` from `.claude/skills/`);
+`scripts/stats-lib.mjs` (pure), `stats-io.mjs`, `stats.mjs` and the `stats`
+script; `/ship` adds `intents/<id>/stats.md` to the bookkeeping commit and,
+on any failure, writes nothing and says so; `/spawn`, `/auto`, `/review` name
+agents `§<id> implement|rework|review`; `/grid` Measures reads `stats.md`.
+
+Tests: kit tests 255 before, 309 after (hook and skill parsing, stats-lib,
+stats end to end on synthetic fixtures with a sentinel prompt string, ship
+with `stats.md` and with a stats failure). `npm run verify` green.
+
+Real run (`npm run stats -- --all`, terminal only): total 176h of elapsed
+(per-intent wall-clock, overlapping), gate wait 17h40m, in-session wait 13h56m,
+idle 80h43m, tokens in 5.9k, out 2.7M, cache read 397M, cache write 9.8M
+(all sources, including shared and unattributed); skipped lines: 0.
+
+Divergences from the plan:
+- A coordinator turn in a worktree session with no skill goes to that
+  worktree's intent id before the commits rule (a fact in the log, not a guess).
+- A `Stop` restarts an in-session wait that a permission prompt began, since the
+  log cannot say when the prompt was answered inside the turn.
+- A dependency stop (`auto stopped: waiting for N to merge`) is not gate wait.
+- A wait that crosses a milestone is divided over the phases by length.
+- Transcript assistant lines repeat per content block; a message counts once
+  by its `message.id`.
+- The ship test seam is a real failure (a directory where `stats.md` goes) and
+  `renderStatsFile(…, {collect})` for a throwing collector, not an env switch.
+- `stats-io.mjs` was added (collection shared by `stats.mjs` and `ship.mjs`).

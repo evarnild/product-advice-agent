@@ -2,7 +2,7 @@
 id: 19
 slug: intent-stats
 type: feature
-status: accepted
+status: in-review
 title: Time, tokens and owner wait per intent and phase
 review_tier: reviewed    # likely changes the session hook (scripts/session-event.mjs, .claude/settings.json) and /ship
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
