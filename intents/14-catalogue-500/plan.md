@@ -115,3 +115,43 @@ Re-read on `main` at `3d04fd5` (§13 merged).
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: subtasks 1-7
+
+Commits: fcb8d7e (generator tests, red), ddb12ef (generator and `--check`
+command), 14a45c3 (500-product file, WIP: dependent tests still red),
+851f706 (five cases), 70db0d2 (pinned tests), 57c884d (README, CLAUDE.md),
+plus the finish commit (status, this entry).
+
+Shipped: `src/advisor/catalogue_build.py` (seed 14, seeded `random.Random`
+only, no set or dict iteration over unordered sources); the committed
+catalogue is its exact output, P-001..P-032 unchanged (checked against
+`HEAD:catalogue.json` before the rewrite). Counts: laptop 63, phone 63,
+headphones 63, monitor 63, tablet 62, smartwatch 62, camera 62, speaker 62.
+Out of stock: 77 of 500 (15.4%); 72 of the 468 new (15.4%). New brands
+(invented): Quillon, Verdane, Halcyra, Ostrel. Tests: 624 -> 653 pytest
+(29 new in `tests/test_catalogue_build.py`); kit tests unchanged.
+
+Changed cases (id and question kept; only `expect_search` keywords and `note`):
+- video-editing-laptop: P-008 ranked 38 of 63; added keywords_any
+  ["video editing", "video"] (P-008 ranks 1).
+- gaming-monitor: P-019 ranked 17 of 63; added keywords_any ["gaming"] (rank 1).
+- drawing-tablet: P-022 ranked 17 of 19 under 500; added keywords_any
+  ["stylus", "drawing"].
+- gps-watch: P-025 ranked 14 of 19 under 250; added keywords_any ["gps"] (rank 4 of 5).
+- tv-sound: P-031 ranked 21 of 62; added keywords_any ["tv", "soundbar"] (rank 1).
+Each note starts its new sentence with "§14:".
+
+Tests updated (B10): `test_analysis_coverage.py` and `test_analysis_generate.py`
+(headphone price thresholds 59/58/79 -> 19/18/29, the prompt line is now
+"63 products, 19.0 to 449.0"; the out-of-stock ids P-004..P-032 are still
+listed, now among 77), `test_catalogue.py` (size, the noise-cancelling
+headphones list), `test_cli.py` (the search now names "Calm 300", since the
+default 5 cheapest headphones no longer include P-001), `test_evals_run.py`
+(cheapest headphone under 200 is P-243), and the "unknown id" fixtures
+P-099/P-098 -> P-999/P-998 in three files (P-099 now exists).
+
+Divergences: the generator is not in `CORE_CODE` (not in the plan), so
+`check:intent` does not treat it as core. Commit 14a45c3 is red on its own
+(the plan's order has the file before the tests); the later commits are green.
+The `generate` prompt now lists 77 out-of-stock products (as the plan noted).
