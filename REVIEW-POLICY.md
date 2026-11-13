@@ -110,6 +110,51 @@ a hook in a real session) and record that you did, before the merge.
 - **Enforced.** `npm run check:intent` fails while the current review says
   `owed` and `live_checked:` holds no date.
 
+## Eval runs
+
+Some changes can move what the agent answers or how a case is scored. They
+owe a run of the offline evals (`uv run advisor-eval`), so a regression
+shows up in the review and not afterwards.
+
+- **When one is owed.** A change owes an eval run when its diff touches
+  any of these paths (a trailing `/` means everything under it):
+  - `src/advisor/prompts/`
+  - `src/advisor/agent.py`
+  - `src/advisor/models/`
+  - `src/advisor/guardrails.py`
+  - `src/advisor/catalogue.py`
+  - `src/advisor/data/`
+  - `src/advisor/config.py`
+  - `src/advisor/evals/cases.py`
+  - `src/advisor/evals/score.py`
+  - `evals/cases.jsonl`
+
+  Otherwise none is owed. `uv run advisor-analysis owes-run --base main`
+  answers it from git (the list is `EVAL_PATHS` in
+  `src/advisor/evals/baseline.py`; a test keeps the two equal).
+- **A missing run is a finding.** A review of a change that owes a run and
+  names no run report, or names one not made on the reviewed commit's
+  content, has a HIGH finding "Needs rework: make the eval run". The
+  content is read through the report's `prompt_sha256`, `cases_sha256` and
+  `catalogue_sha256`, which must match the branch's files; the run itself
+  is made in the worktree at the reviewed commit.
+- **Who runs it.** The coordinator, on the local model (Ollama), in an
+  `/auto` round or a `/review` it runs; a paid run only when the owner
+  asks for one in the conversation. The report is copied to the main
+  checkout's `evals/runs/` (gitignored) so it outlives the worktree.
+- **Regressions are reported, never blocking.** The review compares the
+  run with the committed `evals/baseline.json`
+  (`advisor-analysis compare <report>`) and lists every case that flipped
+  and the change in pass rate. A case that went from PASS to FAIL or ERROR
+  is a "Needs decision: accept the regressions or rework" finding: the
+  owner decides, no threshold blocks, and nothing in `ship` or
+  `check:intent` enforces the rule.
+- **The baseline moves after the merge.** After `/ship` for a change whose
+  review names a run, the coordinator writes `evals/baseline.json` from
+  that report (`advisor-analysis baseline <report>`) and commits it on
+  `main`. It cannot be committed on the branch: `ship` refuses files
+  changed after the reviewed commit.
+
 ## Merging
 
 An agent merges into `main`, pushes, deletes a branch or removes a worktree
@@ -153,7 +198,9 @@ Each pass reports `pass`, `findings`, or `not run` with the reason.
    `ROUTE` needs a stated reason or a re-declared type.
 3. **Behaviour against the spec.** Every acceptance criterion in `spec.md`
    (features), or the reproduction in `intent.md` (fixes), is met. Check it
-   in the code and tests, not in the implementer's summary.
+   in the code and tests, not in the implementer's summary. Also check the
+   eval run (see "Eval runs"): when the diff owes one, the report names a
+   run made on the reviewed content, and its regressions are listed.
 4. **Tests prove the behaviour, not only pass.** Enumerate mutations from
    the diff, one per changed behavioural line. Revert each one, run the full
    suite, and confirm that something fails. Guard the harness by asserting
@@ -226,6 +273,11 @@ live-check: owed | not-needed
 - steps: <command> → <input or fixture> → <what to do>
 - you should see: <the observable result>
 <!-- or, when not needed: "not needed — <why>" -->
+
+## Eval run
+- <"not owed (no listed path)", or: the run report's name, provider and
+  model, the comparison with the baseline (pass rates, regressed, fixed,
+  added, removed, warnings) and the coordinator's reading>
 
 ## Verified myself vs. taken on trust
 - <which commands actually ran, with results>

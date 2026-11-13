@@ -124,3 +124,20 @@ def test_identical_run_has_no_flips():
     r = rep([("a", "PASS"), ("b", "FAIL")])
     c = compare(r, baseline_from(r, "r.json"))
     assert not (c.regressed or c.fixed or c.added or c.removed or c.warnings)
+
+
+def test_policy_path_list_equals_eval_paths():
+    import re
+    from pathlib import Path
+
+    policy = (Path(__file__).resolve().parents[1] / "REVIEW-POLICY.md").read_text(encoding="utf-8")
+    section = policy.split("## Eval runs", 1)[1].split("\n## ", 1)[0]
+    listed = re.findall(r"^  - `([^`]+)`\s*$", section, flags=re.MULTILINE)
+    assert tuple(listed) == EVAL_PATHS
+
+
+def test_report_format_has_eval_run_after_live_check():
+    from pathlib import Path
+
+    policy = (Path(__file__).resolve().parents[1] / "REVIEW-POLICY.md").read_text(encoding="utf-8")
+    assert policy.index("\n## Live check\n") < policy.index("\n## Eval run\n")
