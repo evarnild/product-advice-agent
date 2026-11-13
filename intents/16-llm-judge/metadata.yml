@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 16
+slug: llm-judge
+type: feature
+status: draft
+title: An LLM judge for one failure mode, validated against the owner's labels
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/9-error-analysis    the labels, critiques and taxonomy it is built from
+  - intents/10-langfuse-annotation    the queue used to label up to 30 cases
+  - intents/15-fifty-cases    the set it runs on
+  - intents/8-offline-evals    the code checks it sits next to
