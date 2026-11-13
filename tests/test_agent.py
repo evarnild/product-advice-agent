@@ -164,7 +164,12 @@ def test_tracer_sees_generations_and_tools_in_order():
     assert tracer.kinds == ["generation", "tool", "generation"]
     assert tracer.events[0][1:3] == ("fake-1", Usage(5, 2))
     assert tracer.events[0][4] == ["search_products"]
-    assert tracer.events[1][1:] == ("search_products", {"category": "phone"}, 2, False)
+    assert tracer.events[1][1:] == (
+        "search_products",
+        {"category": "phone"},
+        search_tool(CAT).run({"category": "phone"}),
+        False,
+    )
     assert tracer.events[2][3] == "ans"
 
 
@@ -266,3 +271,46 @@ def test_unparsable_ollama_arguments_get_an_error_result_and_the_run_goes_on():
     assert tool_result.is_error
     assert "unknown argument(s): _unparsable_arguments" in tool_result.content
     assert result.answer == "Sorry, try again."
+
+
+def _tool_events(tracer):
+    return [e for e in tracer.events if e[0] == "tool"]
+
+
+def test_tracer_gets_the_rows_the_model_got():
+    fake = ScriptedModelClient([call({"category": "phone", "max_price": 80}), final("ok")])
+    tracer = RecordingTracer()
+    run_agent("q", fake, [search_tool(CAT)], tracer)
+    (event,) = _tool_events(tracer)
+    (res,) = tool_results_sent(fake.requests[1])
+    assert event[3] == json.loads(res.content)
+    assert [r["id"] for r in event[3]] == ["P-002"]
+    assert res.content == json.dumps(event[3])
+    assert event[4] is False
+
+
+def test_tracer_gets_an_empty_list_on_every_error_path():
+    def boom(args):
+        raise RuntimeError("bug")
+
+    from advisor.models.base import ToolSpec
+
+    bad = Tool(ToolSpec("broken", "x", {}), boom)
+    script = [
+        ModelTurn(
+            tool_calls=(
+                ToolCall("a", "no_such_tool", {}),
+                ToolCall("b", "search_products", {"category": "toaster"}),
+                ToolCall("c", "broken", {}),
+            ),
+            usage=Usage(1, 1),
+            model="fake-1",
+        ),
+        final("done"),
+    ]
+    tracer = RecordingTracer()
+    run_agent("q", ScriptedModelClient(script), [search_tool(CAT), bad], tracer)
+    events = _tool_events(tracer)
+    assert [e[1] for e in events] == ["no_such_tool", "search_products", "broken"]
+    assert [e[3] for e in events] == [[], [], []]
+    assert all(e[4] is True for e in events)

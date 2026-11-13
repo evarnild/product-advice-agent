@@ -24,6 +24,7 @@ FLUSH_TIMEOUT_SECONDS = 5.0
 # No cost is attached to a generation: Langfuse prices one only when its model
 # name matches a price definition, and a local model's name does not.
 TRACE_TAGS_ATTRIBUTE = "langfuse.trace.tags"
+MAX_TRACED_RESULTS = 10
 REQUIRED_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
 log = logging.getLogger("advisor.tracing")
 
@@ -68,12 +69,16 @@ class LangfuseTracer:
             output={"text": text, "tool_calls": tool_names},
         )
 
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
+    def tool(
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
+        # The rows are what the model received, so a reviewer judges on what it
+        # knew (§10 I1). The cap is the search tool's own limit; it guards a future tool.
         self._child(
             name=name,
             as_type="tool",
             input=arguments,
-            output={"result_count": result_count},
+            output={"result_count": len(results), "results": results[:MAX_TRACED_RESULTS]},
             level="ERROR" if error else "DEFAULT",
         )
 
@@ -115,8 +120,10 @@ class SafeTracer:
     def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
         self._guard("generation", model, usage, text, tool_names)
 
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
-        self._guard("tool", name, arguments, result_count, error)
+    def tool(
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
+        self._guard("tool", name, arguments, results, error)
 
     def finish(self, answer: str) -> None:
         self._guard("finish", answer)
