@@ -3,11 +3,165 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: cfd48a3754a6cde43e2d799ff7489dc5eaafaaa5
-round: 2
+reviewed-commit: bbf31032123d77dfda022220875144abd16cf6f3
+round: 3
 sampled: no
 run: auto
-live-check: owed
+live-check: recorded (2026-11-13)
+
+Tier: Reviewed, set by input 2 (`review_tier: reviewed` in `metadata.yml`).
+The reviewer proposed `attest`; the coordinator keeps `escalate`, as in
+round 2, because the tier is Reviewed and the owner reads the diff. That
+reading has happened on this very content: the owner's "diff read and live
+checked, /auto 12" (commit a147734) came after being pointed at `git diff
+main..HEAD` on the rebased branch, whose src, tests and docs are
+byte-identical to round 2's cfd48a3 (below). No new finding; nothing needs
+rework or a decision.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 12` →
+"sample-due auto: nth attested auto change = 5, every 3, sampled: no".
+
+Why this round: §9 merged into `main` (976df11, then 342e311 and ac54a61)
+and the coordinator rebased §12 onto `main` on the owner's request ("push
+and rebase 12"). Round 2's reviewed-commit cfd48a3 is no longer an ancestor,
+so a new round is needed (`REVIEW-POLICY.md` → "Merging"). Since the
+rebase: a147734 (auto_authorized), d88ca4e (live_checked, owner's words),
+bbf3103 (auto_round 3), all `metadata.yml` only.
+
+## Rebase check
+`git range-diff 1f45cd7..cfd48a3 main..8a17514` (8a17514 is the rebased
+"§12: auto round 2"): old commits 1–9 (the intent, spec, plan, gate and stop
+commits) show `<`. They are on `main` as a9a9cfb…65afb91, and `git diff
+36f1ba2 main -- intents/12-trace-evals/{intent,spec,plan,metadata}` is
+empty. Old commits 10–19 (294a7ea…cfd48a3) all map `=` to c6050c9…8a17514.
+No `!` entries.
+
+`git diff main..HEAD -- <p>` equals `git diff 1f45cd7..cfd48a3 -- <p>` for
+`src`, `tests`, `README.md`, `CLAUDE.md` and `intents/8-offline-evals`.
+
+## §12 against what §9 shipped
+`git diff --stat 1f45cd7 main` touches only `evals/labels/*.jsonl`,
+`evals/taxonomy.json`, `intents/12-trace-evals/*` (identical to the branch's
+copies) and `intents/9-error-analysis/metadata.yml`. Nothing in `src/` or
+`tests/`: `run.py`, the `RecordingTracer`, `tracing.py`,
+`tests/test_evals_run.py` and `tests/test_boundaries.py` are the code §12
+was reviewed against.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (content unchanged since round 2; only metadata since) |
+| 2 | Type check | PASS |
+| 3 | Behaviour against the spec | pass (code byte-identical to cfd48a3; lazy `_default_tracer_factory`, `_FanOutTracer` guarding the secondary per method, tags `eval`/`provider:`/`model:`/`run:<stamp>`/`case:<id>`, `full_env` to the factory) |
+| 4 | Tests prove the behaviour | pass (every must-kill mutant killed; A-check and A-check-allowed equivalent with the pass-through guardrails) |
+| 5 | Conventions | pass (scripted fake client, in-test tracer factory, conftest socket guard) |
+| 6 | Numbers in prose | pass (492 matches the Progress "491 → 492") |
+| 7 | Documentation | pass (README.md, CLAUDE.md byte-identical to round 2) |
+| 8 | Guardrails and hygiene | pass (placeholders only; no dependency; nothing pushed for the branch) |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 12, feature)
+  note:  5 file(s), 392 line(s) changed outside intents/.
+```
+The count is now against `main` without §9's change (round 2: 30 files,
+4639 lines, which included §9).
+
+## Findings
+No new findings; nothing needs rework or a decision. Carried (worth a look,
+none blocking):
+- **LOW** `src/advisor/evals/run.py:290`: `tracer_factory(full_env, tags)`
+  runs outside the case `try` and the fan-out guard, so a raising factory
+  ends the run. The default cannot realistically raise. Minimal fix if
+  wanted: wrap it and fall back to `NoopTracer()`.
+- **LOW** (behaviour): `advisor-eval` configures no logging, unlike
+  `cli._configure_logging`; with Langfuse down, OpenTelemetry's "Failed to
+  export span batch" may reach stderr. B6 covers stdout only. The owner's
+  live check passed.
+- **Nits:** `CLAUDE.md:172` is one long line; the plan's
+  `test_the_recording_tracer_still_feeds_scores_and_report` shipped as
+  `test_the_recording_tracer_feeds_the_report_when_traced`; the `.env` test
+  is sensitive to an invalid `ADVISOR_OLLAMA_URL` in the caller's shell.
+
+**Mutants** (`run.py` at bbf3103; backup by copy, one CRLF-aware
+replacement asserted once, full pytest, restore by copy; `git status
+--short` empty after):
+
+| Mutant | Line | Result | Killing test |
+| --- | --- | --- | --- |
+| T-tool: unguarded `secondary.tool` | 143-146 | KILLED | test_a_raising_tracer_changes_nothing |
+| T-begin: unguarded `secondary.begin` | 122-125 | KILLED | test_a_raising_tracer_changes_nothing |
+| A-begin `begin("")` | 123 | KILLED | test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer |
+| A-tool error `False` | 144 | KILLED | same |
+| W01 `tracer_factory(env, tags)` | 290 | KILLED | test_the_tracer_factory_gets_the_dotenv_merged_environment |
+| Tag-eval `"evals"` | 284 | KILLED | test_each_case_gets_a_tracer_with_eval_run_and_case_tags |
+| Tag-case `case:{case.question}` | 288 | KILLED | same |
+| Gate-any `all(` → `any(` | 53 | KILLED | test_default_factory_is_noop_without_all_three_variables |
+| A-check reason `""` | 130 | survived (equivalent) | – |
+| A-check-allowed `True` | 130 | survived (equivalent) | – |
+
+Both survivors are equivalent while `guardrails.check_input`/`check_output`
+always allow with an empty reason (`src/advisor/guardrails.py:23-28`). If a
+later intent lets the guardrails block, the same-calls test should cover a
+blocked case.
+
+## Not checked
+- Langfuse itself and any real model run (no live systems in a review); the
+  owner's live check covers them.
+- `tests/test_boundaries.py` mutants this round: byte-identical to round 2,
+  where they were covered.
+- Whether `evals/taxonomy.json` or §9's labels interact with §12: data that
+  `run.py` does not read.
+
+## Live check
+Recorded: `live_checked: 2026-11-13 by-agent`, on the owner's words "diff
+read and live checked, /auto 12" (d88ca4e). The rebase changed none of
+§12's code, docs or tests, so round 2's steps apply unchanged and the
+recorded check covers this commit.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/12-trace-evals` at bbf3103; `git status --short` empty before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; ruff
+  "All checks passed!"; "117 files already formatted"; mypy "Success: no
+  issues found in 26 source files"; pytest "492 passed". Matches the
+  reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → "type-check: PASS
+  (intent 12, feature)", "5 file(s), 392 line(s)". Matches.
+- **Coordinator, re-run:** mutants with my own harness (backup by copy,
+  replacement asserted once, CRLF-aware, full pytest, restore by copy):
+  T-tool KILLED by test_a_raising_tracer_changes_nothing; A-begin and
+  A-tool error KILLED by
+  test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer; W01
+  KILLED by test_the_tracer_factory_gets_the_dotenv_merged_environment;
+  each "1 failed, 491 passed". A-check and A-check-allowed SURVIVED ("492
+  passed"). Matches the reviewer.
+- **Coordinator, re-run:** the rebase claim: `git patch-id --stable` of
+  `git diff main..HEAD` equals that of `git diff 1f45cd7..cfd48a3` for
+  `src`, `tests`, `README.md`, `CLAUDE.md`, `intents/8-offline-evals`; the
+  range-diff has no `!` entry. Matches.
+
+**Reviewer, verified:** HEAD, branch and worktree state; the range-diff and
+the mapping of the dropped commits to `main`; per-path diffs; `main`'s delta
+from 1f45cd7 (no src or tests); verify; check:intent; the sampling line; the
+10 mutants above; the restore; `bbf3103..HEAD` empty; no upstream.
+
+**Taken on trust:** the owner's diff reading and live check, known from
+their words recorded in `metadata.yml` and d88ca4e.
+
+# Round 2 (history)
+
+- verdict: escalate
+- tier: reviewed
+- reviewed-commit: cfd48a3754a6cde43e2d799ff7489dc5eaafaaa5
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, set by input 2 (`review_tier: reviewed` in `metadata.yml`).
 Input 1 alone gives Attested (the round-2 delta is tests and `intents/`);
@@ -27,7 +181,7 @@ b88caf0 (`tests/test_evals_run.py` +122/−45, and a Progress entry appended to
 `plan.md`), 6eca700 (review) and cfd48a3 (metadata). `src/advisor/evals/run.py`
 and every other source file are unchanged since round 1.
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round 1 | Finding | Resolution | Evidence |
 | --- | --- | --- | --- |
 | HIGH | `try/except` around `self._secondary.tool(...)` unproven (T-tool) | fixed | `test_a_raising_tracer_changes_nothing` (`tests/test_evals_run.py:645`) scripts `HP_OK + [ModelError("boom")] + OFF_OK`, asserts the tool ran (`:657`), still compares with an untraced run; T-tool KILLED |
@@ -37,7 +191,7 @@ and every other source file are unchanged since round 1.
 | LOW | `advisor-eval` configures no logging; OTel warnings may reach stderr | open, carried | Worth a look during the live check |
 | Nits | `CLAUDE.md:172` unwrapped; planned test name differs | open, carried | – |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (tests plus a Progress entry below the marker; exactly what round 1 asked) |
@@ -50,7 +204,7 @@ and every other source file are unchanged since round 1.
 | 8 | Guardrails and hygiene | pass (placeholders only: `pk-dotenv`, `sk-dotenv`, `http://langfuse.invalid`; no dependency) |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -62,7 +216,7 @@ type-check: FAIL (intent 12, feature)
 Exit 1, only on the owed live check. The count is against `main` and
 includes §9's unmerged change; +34 lines since round 1 is the test delta.
 
-## Findings
+### Findings
 No new findings; nothing needs rework or a decision. Carried:
 - **LOW** `src/advisor/evals/run.py:290`: `tracer_factory(full_env, tags)`
   runs outside the case `try` and the fan-out guard, so a raising factory
@@ -108,7 +262,7 @@ O-begin are equivalent and unchanged; round 1's other kills (M01-M07,
 G01-G08, W02-W05, S-*, the other T-*) were not re-run: their code and tests
 are unchanged.
 
-## Not checked
+### Not checked
 - **The real Langfuse round trip:** traces arriving, the tags, the `eval`
   filter (the live check, rule 3).
 - **The real cost of a down Langfuse:** the 5 s bound read from the code,
@@ -118,7 +272,7 @@ are unchanged.
 - **mypy and ruff on mutants:** only pytest decided the kills.
 - **Round-1 mutants on unchanged code and tests:** not re-run.
 
-## Live check
+### Live check
 Owed by rule 3 (the real Langfuse path); rule 1 does not apply
 (`tracing.py`, `cli.py`, `models/`, `prompts/`, `infra/` unchanged). In
 Windows PowerShell, in `C:\Users\eric\src\product-advice-agent-wt\12-trace-evals`:
@@ -151,7 +305,7 @@ with case tags matching the report; the ordinary advisor trace without
 `eval`; with Langfuse down, unchanged stdout and exit code with a bounded
 delay.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/12-trace-evals` at cfd48a3; `git status --short` empty before and after):
 - **Coordinator, re-run:** `npm run verify` → exit 0; ruff "All checks
