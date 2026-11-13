@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "accept 17 and /auto 17"
 auto_round:
-auto_stopped: spec questions
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
 links:
   - intents/8-offline-evals    the runner and report it requires
