@@ -7,7 +7,7 @@ reviewed-commit: bbf31032123d77dfda022220875144abd16cf6f3
 round: 3
 sampled: no
 run: auto
-live-check: recorded (2026-11-13)
+live-check: owed
 
 Tier: Reviewed, set by input 2 (`review_tier: reviewed` in `metadata.yml`).
 The reviewer proposed `attest`; the coordinator keeps `escalate`, as in
