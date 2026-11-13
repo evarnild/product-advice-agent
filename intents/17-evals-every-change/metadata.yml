@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 17
+slug: evals-every-change
+type: feature
+status: draft
+title: Run the evals on every change that can move the answers
+review_tier: reviewed    # likely edits REVIEW-POLICY.md and the kit's enforcement (scripts/ship-lib.mjs or check:intent)
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/8-offline-evals    the runner and report it requires
+  - intents/13-catalogue-change-rules    catalogue changes owe an eval run
+  - intents/15-fifty-cases    the set an owed run uses
+  - intents/16-llm-judge    its verdicts join the comparison once it exists
