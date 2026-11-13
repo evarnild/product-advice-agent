@@ -1,13 +1,114 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §13 review — Catalogue changes cannot silently break the eval set
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 8914cc1d590e87d92365e3ea455e79bb8f44ab11
-round: 1
+reviewed-commit: d822fa763aa96de6b92f2f3bae163a43f6563f29
+round: 2
 sampled: no
 run: auto
 live-check: not-needed
+
+Tier: Reviewed, set in round 1 by input 3 (two HIGH findings) and never
+lowered; the path table alone gives Attested and `review_tier` is empty.
+The reviewer's verdict is `escalate`: no finding needs rework, and the
+Reviewed tier needs the owner's diff read.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 13` →
+"sample-due auto: nth attested auto change = 5, every 3, sampled: no".
+
+Scope: `git diff 338baf8..HEAD`: 525794c (rework: `cases.py:180`, two
+tests, a Progress entry) and d822fa7 (`auto_round: 2`). `review.md`,
+`spec.md`, `intent.md` untouched; `plan.md` only below Progress.
+
+## Round-1 findings: resolution
+| Round 1 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| HIGH | `cases.py:179` `in_stock_only: false` read as "out of stock only" | fixed | `cases.py:180` `if search.get("in_stock_only") and not p.in_stock:` (spec B2; `catalogue.py:138`); `test_in_stock_only_false_does_not_filter_on_stock` covers both halves; R1 (old `!=` form) KILLED |
+| HIGH | price-then-id order not proven | fixed | `test_order_is_by_price_not_by_id` (11 products, P-001 dearest); R2 (`key=lambda p: p.id`) KILLED |
+| LOW | `run.py:313` catalogue read twice | carried, worth a look | sharing the bytes needs a new `load_catalogue` signature; the reads differ only if the file changes mid-run |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (exactly the two fixes) |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass |
+| 4 | Tests prove the behaviour | pass (9 of 9 mutants killed) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (624 = 622 + 2) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 13, feature)
+  note:  9 file(s), 254 line(s) changed outside intents/.
+```
+
+## Findings
+No new finding. Carried: **LOW** (worth a look) `src/advisor/evals/run.py:313`,
+`catalogue_sha256` hashes a second read of `DEFAULT_CATALOGUE_PATH`.
+
+**Mutants** (`cases.py`; one change each, full suite, backup and restore by copy):
+
+| # | Line | Mutation | Result | Killed by |
+| --- | --- | --- | --- | --- |
+| R1 | :180 | back to `bool(p.in_stock) != search["in_stock_only"]` | KILLED | test_in_stock_only_false_does_not_filter_on_stock |
+| R2 | :190 | `key=lambda p: p.id` | KILLED | test_order_is_by_price_not_by_id |
+| R3 | :180 | key present means filter | KILLED | test_in_stock_only_false_does_not_filter_on_stock |
+| R4 | :180 | `not` dropped | KILLED | test_in_stock_only |
+| R5 | :180 | `if False:` | KILLED | test_in_stock_only |
+| R6 | :180 | `if not p.in_stock:` | KILLED | test_in_stock_only, test_in_stock_only_false_does_not_filter_on_stock |
+| R7 | :190 | `p.price_eur` only | KILLED | test_ties_are_broken_by_id |
+| R8 | :190 | `(-p.price_eur, p.id)` | KILLED | three ranking tests |
+| R9 | :190 | `(p.id, p.price_eur)` | KILLED | test_order_is_by_price_not_by_id |
+
+## Not checked
+- Round 1's 26 code mutants on lines the rework did not touch (not re-run).
+- A real `advisor-eval` run writing `catalogue_sha256`; `view` over HTTP.
+- Whether the branch merges cleanly into current `main` (only
+  `intents/**` commits on `main` since its base).
+- ADR 0003's adjustment/feature line on a real catalogue edit (§14).
+
+## Live check
+Not needed: the round-2 diff touches `cases.py` (pure) and tests; no
+rule-1 path, no `.claude/settings.json`.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/13-catalogue-change-rules` at d822fa7; `git status --short` clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; "All
+  checks passed!"; "136 files already formatted"; mypy "Success: no issues
+  found in 27 source files"; "624 passed". Matches the reviewer and the
+  implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "9 file(s), 254
+  line(s)". Matches.
+- **Coordinator, re-run:** R1 KILLED by
+  test_in_stock_only_false_does_not_filter_on_stock, R2 KILLED by
+  test_order_is_by_price_not_by_id ("1 failed, 623 passed" each). Matches
+  the reviewer and the implementer.
+
+**Reviewer, verified:** verify, check:intent, the round-2 diff in full, 9
+mutants, the sampling line; nothing pushed.
+
+**Taken on trust:** round 1's results for untouched lines; the 622
+baseline.
+
+# Round 1 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 8914cc1d590e87d92365e3ea455e79bb8f44ab11
+- round: 1
+- sampled: no
+- run: auto
+- live-check: not-needed
 
 Tier: the path table gives Attested (`src/advisor/evals/cases.py`,
 `run.py`, tests, docs); `review_tier` is empty; this run's two HIGH
@@ -16,7 +117,7 @@ findings raise it to **Reviewed** (input 3).
 Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 13` →
 "sample-due auto: nth attested auto change = 5, every 3, sampled: no".
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (subtasks 1–5, no unplanned scope; plan.md only appended below Progress) |
@@ -29,7 +130,7 @@ Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 13` →
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -38,7 +139,7 @@ type-check: PASS (intent 13, feature)
   note:  9 file(s), 233 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **HIGH** `src/advisor/evals/cases.py:179`: `in_stock_only: false` is
   read as "out of stock only" (`bool(p.in_stock) != search["in_stock_only"]`).
   Spec B2: "in stock when `in_stock_only` is true"; `search_products(in_stock_only=False)`
@@ -86,7 +187,7 @@ restore by copy):
 | M24 / M25 / M26 | hash of prompt / cases bytes / key omitted (run.py:313) | KILLED (test_report_records_the_sha256_of_the_catalogue_file_it_loaded) |
 | AC3 | data: `student-laptop` expect P-009 → P-001 | KILLED ("case 'student-laptop': P-001 is not matched by expect_search") |
 
-## Not checked
+### Not checked
 - A real `advisor-eval` run writing `catalogue_sha256` (only the
   fake-client run covers it; the field does not depend on the model).
 - `advisor-analysis view` serving a report without the field over HTTP
@@ -96,11 +197,11 @@ restore by copy):
 - Whether the branch (based on 17f5e32) merges cleanly into current
   `main` (every later commit touches `intents/**` only).
 
-## Live check
+### Live check
 Not needed: no rule-1 path, no `.claude/settings.json`; the one runtime
 change (`catalogue_sha256`) is proven in-process with the fake client.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/13-catalogue-change-rules` at 8914cc1; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; "All
