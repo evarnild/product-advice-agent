@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from advisor.catalogue import CATEGORIES, Product
+from advisor.catalogue import CATEGORIES, MAX_LIMIT, Product, _norm
 
 # The `search_products` argument names a case may constrain (spec B9).
 SEARCH_CONSTRAINTS = ("category", "max_price", "min_price", "in_stock_only", "keywords_any")
@@ -164,3 +164,57 @@ def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
     if not cases:
         raise CaseFileError("the case file has no cases")
     return cases
+
+
+def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> list[Product]:
+    """Products satisfying every constraint in `search`, in search order (price, then id)."""
+
+    def ok(p: Product) -> bool:
+        if "category" in search and p.category != search["category"]:
+            return False
+        if "max_price" in search and p.price_eur > search["max_price"]:
+            return False
+        if "min_price" in search and p.price_eur < search["min_price"]:
+            return False
+        if "in_stock_only" in search and bool(p.in_stock) != search["in_stock_only"]:
+            return False
+        if "keywords_any" in search:
+            # Interpretation: any-of, as score._call_satisfies reads it, not the
+            # all-of of search_products(keywords=...): the check asks what a
+            # search that satisfies the case's expect_search could show.
+            haystack = _norm(f"{p.name} {p.brand} {p.description}")
+            if not any(_norm(w) in haystack for w in search["keywords_any"]):
+                return False
+        return True
+
+    return sorted((p for p in catalogue if ok(p)), key=lambda p: (p.price_eur, p.id))
+
+
+def catalogue_problems(cases: Sequence[Case], catalogue: Sequence[Product]) -> list[str]:
+    """One message per broken expectation: the case id, the product id and why.
+
+    Empty means the cases are consistent with the catalogue (§13 B1-B4). Only
+    cases with `expect_search` are checked (B4); the rest are skipped.
+    """
+    problems: list[str] = []
+    for case in cases:
+        if not case.expect_search:
+            continue
+        expected = _expected_results(case.expect_search, catalogue)
+        ranks = {p.id: n for n, p in enumerate(expected, start=1)}
+        for pid in case.expect_ids:
+            if pid not in ranks:
+                problems.append(f"case '{case.id}': {pid} is not matched by expect_search")
+            # Interpretation: "returned" means within MAX_LIMIT (10), not the
+            # tool's default limit of 5: the model may ask for up to 10.
+            elif ranks[pid] > MAX_LIMIT:
+                problems.append(
+                    f"case '{case.id}': {pid} is ranked {ranks[pid]} of {len(expected)}, "
+                    f"beyond the {MAX_LIMIT} a search can return"
+                )
+        for pid in case.forbid_ids:
+            if pid in ranks:
+                problems.append(
+                    f"case '{case.id}': {pid} is forbidden but matched by expect_search"
+                )
+    return problems
