@@ -7,7 +7,7 @@ safety wrapper and `make_tracer` live in `advisor.tracing`.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from advisor.models.base import Usage
 
@@ -26,8 +26,10 @@ class Tracer(Protocol):
     ) -> None: ...
 
     def tool(
-        self, name: str, arguments: dict[str, object], result_count: int, error: bool
-    ) -> None: ...
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
+        """A tool call: the rows the tool returned (empty on an error call)."""
+        ...
 
     def finish(self, answer: str) -> None:
         """Close the trace with the answer and flush with a bounded wait."""
@@ -48,7 +50,9 @@ class NoopTracer:
     def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
         pass
 
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
+    def tool(
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
         pass
 
     def finish(self, answer: str) -> None:

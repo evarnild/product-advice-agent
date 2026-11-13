@@ -134,17 +134,17 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
 def _execute(call: ToolCall, tools: dict[str, Tool], tracer: Tracer) -> ToolResult:
     tool = tools.get(call.name)
     if tool is None:
-        tracer.tool(call.name, call.arguments, 0, True)
+        tracer.tool(call.name, call.arguments, [], True)
         return ToolResult(call.id, f"error: unknown tool '{call.name}'", True)
     try:
         results = tool.run(call.arguments)
     except ToolError as e:
-        tracer.tool(call.name, call.arguments, 0, True)
+        tracer.tool(call.name, call.arguments, [], True)
         return ToolResult(call.id, f"error: {e}", True)
     except Exception as e:  # a tool bug must not end the run; the model gets told
-        tracer.tool(call.name, call.arguments, 0, True)
+        tracer.tool(call.name, call.arguments, [], True)
         return ToolResult(call.id, f"error: tool failed ({type(e).__name__})", True)
-    tracer.tool(call.name, call.arguments, len(results), False)
+    tracer.tool(call.name, call.arguments, results, False)
     return ToolResult(call.id, json.dumps(results), False)
 
 

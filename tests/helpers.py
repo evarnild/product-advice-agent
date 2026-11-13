@@ -18,8 +18,8 @@ class RecordingTracer:
     def generation(self, model: str, usage: Usage, text, tool_names):
         self.events.append(("generation", model, usage, text, list(tool_names)))
 
-    def tool(self, name, arguments, result_count, error):
-        self.events.append(("tool", name, arguments, result_count, error))
+    def tool(self, name, arguments, results, error):
+        self.events.append(("tool", name, arguments, results, error))
 
     def finish(self, answer):
         self.events.append(("finish", answer))

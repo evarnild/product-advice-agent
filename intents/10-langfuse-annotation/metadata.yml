@@ -2,17 +2,17 @@
 id: 10
 slug: langfuse-annotation
 type: feature
-status: accepted
+status: in-review
 title: Label eval runs in Langfuse annotation queues as an alternative to the custom viewer
 review_tier: reviewed    # touches src/advisor/tracing.py (Reviewed by meaning: what is sent to Langfuse)
 intent_accepted: 2026-11-11 by-agent    # owner: "accept 10"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 10" (auto_authorized 2026-11-13)
-live_checked:
+live_checked: 2026-11-13 by-agent    # owner: "live checked 10"
 merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "/auto 10"
-auto_round:
-auto_stopped:
+auto_authorized: 2026-11-13 by-agent    # owner: "/auto 10" (after the escalate stop: diff read)
+auto_round: 2
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/9-error-analysis    the labels, taxonomy and counts this feeds

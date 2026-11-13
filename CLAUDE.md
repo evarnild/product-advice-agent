@@ -28,7 +28,7 @@ npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
-uv run advisor-analysis generate|view|taxonomy|counts  # error analysis on top of the evals (README.md; generate and taxonomy call a model)
+uv run advisor-analysis generate|view|taxonomy|counts|queue|import  # error analysis on top of the evals (README.md; generate and taxonomy call a model; queue and import need the three LANGFUSE_* variables)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
 ```
 
@@ -172,11 +172,15 @@ clock, stdout, the JSON report in `evals/runs/`) with its own recording
 tracer. It loads `advisor.tracing` only when the three `LANGFUSE_*` variables are set (it then traces each case, tagged `eval`), and imports no provider SDK. Cases are
 data in `evals/cases.jsonl`.
 
-**Error analysis** (`advisor-analysis`, §9, same package). Pure: `coverage.py`
+**Error analysis** (`advisor-analysis`, §9 and §10, same package). Pure: `coverage.py`
 (the question grid and the catalogue check), `labels.py`, `taxonomy.py`,
-`counts.py`, `report.py`, `modeljson.py`, `generate.py` (prompt and filter
+`counts.py`, `report.py`, `modeljson.py`, `annotate.py` (§10: the `Annotations`
+protocol for Langfuse annotation queues, case selection, trace matching and
+label building; SDK-free), `generate.py` (prompt and filter
 over a `ModelClient` it is given), and `dimensions` in `cases.py`. I/O:
-`analysis.py` (the four subcommands, files, clock, exit codes) and `view.py`,
+`analysis.py` (the subcommands `generate`, `view`, `taxonomy`, `counts`,
+`queue` and `import`, files, clock, exit codes; it imports `advisor.tracing`
+only inside `queue` and `import`) and `view.py`,
 the local FastHTML label viewer, the only module that imports `fasthtml`,
 `starlette` or `uvicorn` (`tests/test_boundaries.py`); it binds 127.0.0.1
 only. The prompts for `generate` and `taxonomy` are `evals/prompts/*.md`.
@@ -190,7 +194,9 @@ import it.
 
 **I/O and wiring** (not core; the live check covers them): `cli.py` (entry
 point, exit codes), `config.py` (environment and `.env`), `tracing.py` (the
-Langfuse tracer, `SafeTracer`, `make_tracer`; it re-exports `Tracer` and
+Langfuse tracer, `SafeTracer`, `make_tracer`, and `LangfuseAnnotations` /
+`make_annotations`, the only code that calls Langfuse's queue, score-config,
+score and observation APIs; a tool observation carries the rows the tool returned; it re-exports `Tracer` and
 `NoopTracer` from `tracer.py`), `prompts/system.md` (the shipped prompt).
 
 **Conventions worth knowing before editing**

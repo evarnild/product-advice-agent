@@ -3,11 +3,9 @@ import io
 import json
 from datetime import UTC, datetime, timedelta
 
-import pytest
-
-from advisor.agent import SYSTEM_PROMPT_PATH, ToolError, search_tool
+from advisor.agent import SYSTEM_PROMPT_PATH, search_tool
 from advisor.catalogue import load_catalogue
-from advisor.evals.run import RecordingTracer, _recording_tool, main
+from advisor.evals.run import RecordingTracer, main
 from advisor.models.base import (
     ModelError,
     ModelNotAvailableError,
@@ -406,25 +404,13 @@ def test_a_case_that_errors_keeps_what_was_recorded_before(tmp_path):
     assert len(first["turns"]) == 1
 
 
-def test_the_wrapped_tool_returns_exactly_what_the_tool_returns():
-    tool = search_tool(load_catalogue())
+def test_recording_tracer_keeps_the_rows_of_a_call_and_nothing_for_an_error():
     tracer = RecordingTracer()
-    wrapped = _recording_tool(tool, tracer)
-    args = {"category": "laptop", "max_price": 700}
-    assert wrapped.spec is tool.spec
-    assert wrapped.run(dict(args)) == tool.run(dict(args))
-    tracer.tool("search_products", args, 1, False)  # the agent reports after the run
-    assert tracer.tools[0]["results"] == tool.run(dict(args))
-
-
-def test_the_wrapped_tool_reraises_what_the_tool_raises():
-    tool = search_tool(load_catalogue())
-    tracer = RecordingTracer()
-    wrapped = _recording_tool(tool, tracer)
-    with pytest.raises(ToolError):
-        wrapped.run({"colour": "red"})
-    tracer.tool("search_products", {"colour": "red"}, 0, True)
-    assert tracer.tools[0]["error"] is True and tracer.tools[0]["results"] == []
+    rows = search_tool(load_catalogue()).run({"category": "laptop", "max_price": 700})
+    tracer.tool("search_products", {"category": "laptop"}, rows, False)
+    tracer.tool("search_products", {"colour": "red"}, [], True)
+    assert tracer.tools[0]["results"] == rows and rows
+    assert tracer.tools[1]["error"] is True and tracer.tools[1]["results"] == []
 
 
 def test_an_unknown_tool_call_is_recorded_in_order_with_error_true(tmp_path):
@@ -452,8 +438,8 @@ def test_recording_tracer_keeps_searches_turns_and_guardrails():
     t = RecordingTracer()
     t.check("input", False, "why")
     t.generation("m", Usage(), "hi", ["a", "b"])
-    t.tool("search_products", {"category": "laptop"}, 1, False)
-    t.tool("other", {"x": 1}, 0, True)
+    t.tool("search_products", {"category": "laptop"}, [{"id": "P-1"}], False)
+    t.tool("other", {"x": 1}, [], True)
     assert t.guardrails == [{"stage": "input", "allowed": False, "reason": "why"}]
     assert t.turns == [{"text": "hi", "tools": ["a", "b"]}]
     assert t.searches == [{"category": "laptop"}]
@@ -489,8 +475,8 @@ class FakeTracer:
     def generation(self, model, usage, text, tool_names):
         self._record("generation", model, usage, text, list(tool_names))
 
-    def tool(self, name, arguments, result_count, error):
-        self._record("tool", name, arguments, result_count, error)
+    def tool(self, name, arguments, results, error):
+        self._record("tool", name, arguments, results, error)
 
     def finish(self, answer):
         self._record("finish", answer)
@@ -521,6 +507,23 @@ def test_each_case_gets_a_tracer_with_eval_run_and_case_tags(tmp_path):
         for cid in ("hp", "lap", "off")
     ]
     assert all(env["LANGFUSE_HOST"] == "http://langfuse.invalid" for env, _ in tf.calls)
+
+
+def test_dimensions_become_three_more_tags_in_order(tmp_path):
+    tf = TracerFactory()
+    run(tmp_path, HP_OK + LAP_OK + OFF_OK, cases=DIM_CASES, env=LANGFUSE_ENV, tracer_factory=tf)
+    base = ["eval", "provider:ollama", "model:test-model", f"run:{STAMP}"]
+    assert [tags for _, tags in tf.calls] == [
+        [
+            *base,
+            "case:hp",
+            "feature:headphones",
+            "scenario:several-matches",
+            "persona:a gift buyer",
+        ],
+        [*base, "case:lap"],
+        [*base, "case:off"],
+    ]
 
 
 def test_trace_tags_follow_the_provider_and_model_flags(tmp_path):
@@ -582,7 +585,7 @@ def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path)
         ("begin", "headphones under 200?"),
         ("check", "input", True, ""),
         ("generation", "m-one", u1, "looking", ["search_products"]),
-        ("tool", "search_products", search_args, len(hp_tool["results"]), False),
+        ("tool", "search_products", search_args, hp_tool["results"], False),
         ("generation", "m-two", u2, "Try the Auralis Calm 300 (P-001) at 189 euros.", []),
         ("check", "output", True, ""),
         ("finish", report[0]["answer"]),
@@ -592,7 +595,7 @@ def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path)
         ("begin", "a laptop?"),
         ("check", "input", True, ""),
         ("generation", "m-3", u3, None, ["no_such_tool"]),
-        ("tool", "no_such_tool", {"x": 1}, 0, True),
+        ("tool", "no_such_tool", {"x": 1}, [], True),
         ("generation", "m-3", u3, "Sorry, I could not look that up.", []),
         ("check", "output", True, ""),
         ("finish", report[1]["answer"]),

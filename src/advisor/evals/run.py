@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TextIO
 
-from advisor.agent import SYSTEM_PROMPT_PATH, Tool, answer_question, search_tool
+from advisor.agent import SYSTEM_PROMPT_PATH, answer_question, search_tool
 from advisor.catalogue import CatalogueError, load_catalogue
 from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
 from advisor.evals.cases import Case, CaseFileError, parse_cases
@@ -69,13 +69,8 @@ class RecordingTracer:
         self.turns: list[dict[str, Any]] = []
         self.guardrails: list[dict[str, Any]] = []
         # Every tool call the agent reports, in call order (unknown tools and bad
-        # arguments included); `results` come from the `_recording_tool` wrapper.
+        # arguments included), with the rows the tool returned (empty on an error).
         self.tools: list[dict[str, Any]] = []
-        self._pending_results: list[dict[str, Any]] | None = None
-
-    def offer_results(self, results: list[dict[str, Any]]) -> None:
-        """The products a tool just returned; the agent's next `tool()` report claims them."""
-        self._pending_results = results
 
     def begin(self, question: str) -> None:
         pass
@@ -86,13 +81,14 @@ class RecordingTracer:
     def generation(self, model: str, usage: Usage, text: str | None, tool_names: list[str]) -> None:
         self.turns.append({"text": text, "tools": list(tool_names)})
 
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
-        results, self._pending_results = self._pending_results, None
+    def tool(
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
         self.tools.append(
             {
                 "name": name,
                 "arguments": dict(arguments),
-                "results": [] if error or results is None else results,
+                "results": [] if error else results,
                 "error": error,
             }
         )
@@ -138,10 +134,12 @@ class _FanOutTracer:
         except Exception:
             pass
 
-    def tool(self, name: str, arguments: dict[str, object], result_count: int, error: bool) -> None:
-        self._primary.tool(name, arguments, result_count, error)
+    def tool(
+        self, name: str, arguments: dict[str, object], results: list[dict[str, Any]], error: bool
+    ) -> None:
+        self._primary.tool(name, arguments, results, error)
         try:
-            self._secondary.tool(name, arguments, result_count, error)
+            self._secondary.tool(name, arguments, results, error)
         except Exception:
             pass
 
@@ -158,22 +156,6 @@ class _FanOutTracer:
             self._secondary.fail(error)
         except Exception:
             pass
-
-
-def _recording_tool(tool: Tool, tracer: RecordingTracer) -> Tool:
-    """`tool` with the same behaviour, handing its results to `tracer` (§9 B6).
-
-    It returns exactly what the tool returned and re-raises what it raised, so
-    the agent cannot tell the difference. The call itself is recorded by the
-    tracer's `tool()`, which the agent also calls for tools it never runs.
-    """
-
-    def run(args: dict[str, Any]) -> list[dict[str, Any]]:
-        results = tool.run(args)
-        tracer.offer_results(results)
-        return results
-
-    return Tool(tool.spec, run)
 
 
 def _utc_now() -> datetime:
@@ -287,12 +269,15 @@ def main(
             f"run:{stamp}",
             f"case:{case.id}",
         ]
+        # §10 B4: the §9 dimensions, so the Tracing table filters on them.
+        if case.dimensions is not None:
+            tags += [f"{k}:{case.dimensions[k]}" for k in ("feature", "scenario", "persona")]
         traced = _FanOutTracer(tracer, tracer_factory(full_env, tags))
         answer = ""
         checks: list[Check] = []
         error: str | None = None
         try:
-            answer = answer_question(case.question, client, [_recording_tool(tool, tracer)], traced)
+            answer = answer_question(case.question, client, [tool], traced)
             checks = score(case, answer, tracer.searches, catalogue)
         except (ModelUnreachableError, ModelNotAvailableError) as e:
             if args.debug:

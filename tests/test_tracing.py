@@ -16,6 +16,16 @@ from advisor.tracing import LangfuseTracer, NoopTracer, SafeTracer, make_tracer
 from tests.helpers import RaisingTracer, RecordingTracer
 
 CAT = [Product("P-001", "Alpha Phone", "Acme", "phone", 100.0, True, {}, "d")]
+ROW = {
+    "id": "P-001",
+    "name": "Alpha Phone",
+    "brand": "Acme",
+    "category": "phone",
+    "price_eur": 100.0,
+    "in_stock": True,
+    "specs": {},
+    "description": "d",
+}
 FULL_ENV = {
     "LANGFUSE_PUBLIC_KEY": "pk-test",
     "LANGFUSE_SECRET_KEY": "sk-test",
@@ -42,7 +52,7 @@ def test_one_run_records_expected_observations_in_order():
     assert tracer.kinds == ["begin", "check", "generation", "tool", "generation", "check", "finish"]
     assert tracer.events[0] == ("begin", "which phone?")
     assert tracer.events[2][1:3] == ("m-1", Usage(10, 4))
-    assert tracer.events[3][1:] == ("search_products", {"category": "phone"}, 1, False)
+    assert tracer.events[3][1:] == ("search_products", {"category": "phone"}, [ROW], False)
     assert tracer.events[-1] == ("finish", "Buy P-001.")
     assert tracer.kinds.count("begin") == 1 and tracer.kinds.count("finish") == 1
 
@@ -152,7 +162,7 @@ def test_langfuse_tracer_with_real_sdk_and_in_memory_exporter():
     search = by_name["search_products"]
     assert _attr(search, "type") == "tool"
     assert _json_attr(search, "input") == {"category": "phone"}
-    assert _json_attr(search, "output") == {"result_count": 1}
+    assert _json_attr(search, "output") == {"result_count": 1, "results": [ROW]}
     assert _attr(search, "level") == "DEFAULT"
     assert _attr(by_name["no_such_tool"], "level") == "ERROR"
 
@@ -248,7 +258,7 @@ def test_safe_tracer_forwards_every_call_with_its_arguments():
     assert inner.kinds == ["begin", "check", "generation", "tool", "generation", "check", "finish"]
     assert inner.events == direct.events
     assert inner.events[0] == ("begin", "which phone?")
-    assert inner.events[3][1:] == ("search_products", {"category": "phone"}, 1, False)
+    assert inner.events[3][1:] == ("search_products", {"category": "phone"}, [ROW], False)
 
 
 def test_safe_tracer_forwards_fail():
@@ -317,3 +327,32 @@ def test_make_tracer_passes_tags_to_the_langfuse_tracer(monkeypatch):
     tracer = make_tracer(FULL_ENV, ["provider:ollama"])
     assert isinstance(tracer, SafeTracer)
     assert tracer._inner._tags == ["provider:ollama"]
+
+
+def _tool_output(results, error=False):
+    exporter, tracer = _real_tracer()
+    tracer.begin("q")
+    tracer.tool("search_products", {"category": "phone"}, results, error)
+    tracer.finish("a")
+    (span,) = [s for s in exporter.get_finished_spans() if s.name == "search_products"]
+    return _json_attr(span, "output"), _attr(span, "level")
+
+
+def test_tool_output_carries_the_rows_the_tool_returned():
+    rows = [ROW, {**ROW, "id": "P-002"}]
+    output, level = _tool_output(rows)
+    assert output == {"result_count": 2, "results": rows}
+    assert level == "DEFAULT"
+
+
+def test_tool_output_is_cut_to_ten_rows_but_counts_all():
+    rows = [{**ROW, "id": f"P-{i:03d}"} for i in range(12)]
+    output, _ = _tool_output(rows)
+    assert output["result_count"] == 12
+    assert [r["id"] for r in output["results"]] == [f"P-{i:03d}" for i in range(10)]
+
+
+def test_tool_output_of_an_error_call_is_empty_with_level_error():
+    output, level = _tool_output([], error=True)
+    assert output == {"result_count": 0, "results": []}
+    assert level == "ERROR"
