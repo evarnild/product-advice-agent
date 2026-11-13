@@ -1,0 +1,18 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 19
+slug: intent-stats
+type: feature
+status: accepted
+title: Time, tokens and owner wait per intent and phase
+review_tier: reviewed    # likely changes the session hook (scripts/session-event.mjs, .claude/settings.json) and /ship
+intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/18-intent-dependencies    blocked time between intents is part of the wait picture
