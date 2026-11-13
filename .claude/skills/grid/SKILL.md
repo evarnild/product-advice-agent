@@ -58,6 +58,10 @@ its real level. Building that infrastructure is a legitimate move.
 ## 3. Outcome beside progress
 
 Copy the scan's outcome block into the grid's measures table, with the date.
+Add the effort measures from the committed `intents/*/stats.md` files (§19,
+written by `/ship`): the median elapsed time, owner wait (gate and in-session,
+with idle apart) and tokens per shipped intent. Intents shipped before those
+files existed have none; say so rather than estimating them.
 The strategy's rules:
 - never report throughput without the revert rate beside it;
 - if levels climbed for two quarters with no movement in the outcome, say

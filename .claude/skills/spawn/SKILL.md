@@ -45,7 +45,11 @@ You are the **coordinator** (the main checkout). This skill wraps
      `isolation: "worktree"`). The brief carries the worktree path, branch,
      port and intent folder, and says the branch already exists and is
      checked out there (so skip the agent's "branch from main" step), to use
-     absolute paths there and to leave the main checkout alone. Report that it was launched, with path,
+     absolute paths there and to leave the main checkout alone. Give the
+     `Agent` call a description beginning `§<id> implement` (`§<id> rework`
+     when relaunched with findings): `npm run stats` attributes the agent's
+     tokens and time by that prefix, and an agent without it is unattributed.
+     Report that it was launched, with path,
      branch, port and gates. Don't poll; you are notified when it ends.
    - **Missing:** don't launch. Report the path, branch, port and gates, say
      which gate is missing, and give the hand-over: `cd "<path>" && claude`,
