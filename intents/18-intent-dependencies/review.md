@@ -1,13 +1,135 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §18 review — Intent dependencies
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 3068ab6dd572524e2c3cb312652050271226f16e
-round: 2
+reviewed-commit: 6199bba1d45ae84218fdb73dd7a7d80b33ed7627
+round: 3
 sampled: no
 run: auto
 live-check: not-needed
+
+Tier: Reviewed, by the path table (`scripts/intent-check-lib.mjs`,
+`scripts/check-intent.mjs`, `.claude/skills/**`). Verdict escalate: no
+finding needs rework or a decision; the owner reads the diff because of
+the tier.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 18` →
+"sample-due auto: nth attested auto change = 5, every 3, sampled: no".
+
+Rebase: the branch was rebased onto main 1255175 (the merge-base is main).
+`git diff main...HEAD --name-only` contains no `intents/21-*` file.
+`git diff 3068ab6 e08b7b7` (round 2's reviewed commit against its rebased
+review commit, with `intents/21-*` excluded) touches only §18's review.md.
+The code round 2 reviewed is unchanged.
+
+## Resolution of round 2
+| # | Finding | Resolution |
+| --- | --- | --- |
+| F9 MEDIUM | `queue.mjs:96` `--json` branch-only blocker (M27b) | resolved: `queue.test.mjs:189-191` parses `--json`; `blocked_by_open` is `[73]` and no problem says "on no branch". M27b is KILLED by "F3: a blocker that exists only on a branch is open, not an unknown id" |
+| F10 LOW | lexical ordering (N10, N07) | resolved: blockers-lib.test "orders ids numerically, not lexically" (direct `['13','9']` → `['9','13']`, further `['100','12']` → `['12','100']`) kills N10-direct and N10-further; spawn-intent.test "names the lowest open blocker numerically across id widths" (blockers 13 and 9 → §9) kills N07 |
+| F11 LOW | N08, which unknown blocker is named | unchanged by design; N08 still survives; the spec does not fix which one is named |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (round-3 diff `e08b7b7..HEAD`: three test files, plus plan.md below `## Progress` (line 125) and `auto_round: 3`; spec.md and intent.md unchanged) |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass (no source change since round 2; openChain probed directly gives `{"direct":["9","13"],"further":["12","100"]}`) |
+| 4 | Tests prove the behaviour | pass: 10 mutants, 9 killed, 1 survived (N08, accepted in round 2) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (Progress "Kit tests 296 -> 298" reproduces; "9 and 13; 12 and 100" match the tests) |
+| 7 | Documentation | pass (no doc change in round 3; round 2's check stands) |
+| 8 | Guardrails and hygiene | pass (tests only, no dependency, no secrets) |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 18, feature)
+  note:  19 file(s), 696 line(s) changed outside intents/.
+```
+
+## Findings
+- **F11 LOW** (worth a look, carried over) `scripts/spawn-intent.mjs:119`:
+  N08 survives. No test covers which of several unknown blockers spawn
+  names, and the spec does not fix it. No rework required.
+
+No other findings.
+
+**Mutants** (each run against the full kit suite `node --test scripts/*.test.mjs`;
+backed up and restored by copy; `git diff --quiet` confirmed each mutant applied and was then restored):
+
+| Mutant | Target | Result | Killing test |
+| --- | --- | --- | --- |
+| M27b | `scripts/queue.mjs:96` `queueData(collectEntries(), {})` | KILLED (fail 1) | queue.test "F3: a blocker that exists only on a branch is open, not an unknown id" |
+| N07 | `scripts/spawn-intent.mjs:117` lexical sort `(a.id < b.id ? -1 : 1)` | KILLED (fail 1) | spawn-intent.test "names the lowest open blocker numerically across id widths" |
+| N10-direct | `scripts/blockers-lib.mjs:60` direct `.sort()` | KILLED (fail 1) | blockers-lib.test "orders ids numerically, not lexically" |
+| N10-further | `scripts/blockers-lib.mjs:67` further `.sort()` | KILLED (fail 1) | blockers-lib.test "orders ids numerically, not lexically" |
+| N12 (new) | `scripts/blockers-lib.mjs:67` further sorted descending | KILLED (fail 3) | blockers-lib.test "follows chains, each id once", "lists each id once and in ascending order…", "orders ids numerically…" |
+| N08 | `scripts/spawn-intent.mjs:119` `blockers.find(unknown)` | SURVIVED (fail 0) | none (F11, accepted) |
+| M26 (regression) | `scripts/queue.mjs` `isMerged(picked.metadata)` | KILLED (fail 1) | queue.test "B3: a merged: on the blocker branch copy does not clear it; main decides" |
+| M41 (regression) | `scripts/session-io.mjs` mainMetaOf prefers branch metadata | KILLED (fail 1) | spawn-intent.test "B3: a merged: on the blocker branch copy does not clear it" |
+| M45 (regression) | `scripts/spawn-intent.mjs:120` `if (false) fail(` | KILLED (fail 1) | spawn-intent.test "refuses a non-digit id and the intents own id as a broken record" |
+| N05 (regression) | `scripts/spawn-intent.mjs:117` `blockers.find(open)` | KILLED (fail 2) | spawn-intent.test "names the lowest open blocker" and "…numerically across id widths" |
+
+The round-3 diff changes no source lines, only tests. Its new assertions
+each kill at least one mutant above, so they are not vacuous. The tests
+prove the behaviour; they do not merely pass.
+
+## Not checked
+- A real `/auto` run reaching step 4 on a blocked intent (B8 is prose).
+- `npm run queue -- --json` on the live repo with a branch-only blocker
+  (proven in a temp repo by queue.test only).
+- Rebasing feat/14 and feat/17 onto a main with this change merged.
+- Mutants on lines round 3 did not touch, beyond the regression sample
+  (round 1 killed 36 at 2574039; round 2 killed 18 at 3068ab6).
+
+## Live check
+not needed: no rule-1 path, no `.claude/settings.json`, and no Not-checked
+item that only a live run can show.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/18-intent-dependencies` at 6199bba; `git status --short` clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 298 tests, 0 fail; "All
+  checks passed!"; "152 files already formatted"; mypy "Success: no issues
+  found in 27 source files"; "624 passed". Matches the reviewer and the
+  implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "19 file(s), 696
+  line(s)". Matches.
+- **Coordinator, re-run:** N08 SURVIVED (fail 0); M27b, N07, N10-direct,
+  N10-further each KILLED (fail 1). Matches the reviewer and the
+  implementer.
+
+**Reviewer, verified** (in `C:/Users/eric/src/product-advice-agent-wt/18-intent-dependencies` at 6199bba; `git status --short` clean before and after):
+- `npm run verify` → exit 0; kit "tests 298 / pass 298 / fail 0"; ruff
+  "All checks passed!"; "152 files already formatted"; mypy "Success: no
+  issues found in 27 source files"; "624 passed". Matches the
+  implementer's 298 and 624.
+- `npm run check:intent` → exit 0, PASS, "19 file(s), 696 line(s)".
+- The 10 mutants above, one at a time, each against the full kit suite.
+- The round-3 diff `e08b7b7..HEAD`, read in full: rework commit 3041c48
+  touches only the three test files (+14 lines).
+- Rebase: merge-base = main = 1255175; no `intents/21-*` in
+  `main...HEAD`; `3068ab6` vs `e08b7b7` differs only in §18 review.md.
+- Sampling via `sdlc:scan` (above).
+- Nothing pushed: main is at 1255175 and `git ls-remote origin 'refs/heads/feat/18*'` returns nothing.
+
+**Taken on trust:** none of the claims; each was re-run. Round 2's
+documentation pass (pass 7) is carried over because round 3 changes no docs.
+# Round 2 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 3068ab6dd572524e2c3cb312652050271226f16e
+- round: 2
+- sampled: no
+- run: auto
+- live-check: not-needed
 
 Tier: Reviewed, by the path table (`scripts/intent-check-lib.mjs`,
 `scripts/check-intent.mjs`, `.claude/skills/**`).
@@ -18,7 +140,7 @@ Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 18` →
 Every fix is mechanical; no "Needs decision:" finding. Without F9 and F10
 the verdict would be escalate (Reviewed tier).
 
-## Resolution of round 1
+### Resolution of round 1
 | # | Finding | Resolution |
 | --- | --- | --- |
 | F1 HIGH | B3 unproven at queue and spawn | resolved: M26 killed by queue.test "B3: a merged: on the blocker branch copy does not clear it; main decides"; M41 by spawn-intent.test "B3: …" |
@@ -30,7 +152,7 @@ the verdict would be escalate (Reviewed tier).
 | F7 LOW | auto skill broken-record list | resolved: `.claude/skills/auto/SKILL.md:154` names the non-digit id |
 | F8 LOW | CLAUDE.md, sdlc.md stop lists | out of scope, a follow-up adjustment |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (round-2 diff `255379d..HEAD`: spec.md, intent.md unchanged; plan.md only below Progress) |
@@ -43,7 +165,7 @@ the verdict would be escalate (Reviewed tier).
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -52,7 +174,7 @@ type-check: PASS (intent 18, feature)
   note:  19 file(s), 682 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **F9 MEDIUM** `scripts/queue.mjs:96` (round-1 F3, residual): B5's `--json`
   `blocked_by_open` for a branch-only blocker is unproven at the seam; M27b
   (`queueData(collectEntries(), {})`) survives, giving `blocked_by_open: []`
@@ -77,18 +199,18 @@ SURVIVED M27b (`queue.mjs:96`), N07 (`spawn-intent.mjs:117`), N08
 (`spawn-intent.mjs:119`), N10 (`blockers-lib.mjs:60`). The rework must kill
 M27b, N07 and N10; N08 may stay.
 
-## Not checked
+### Not checked
 - A real `/auto` run reaching step 4 on a blocked intent (B8 is prose).
 - `npm run queue -- --json` on the live repo with a branch-only blocker.
 - Rebasing feat/14 and feat/17 onto a main with this change merged.
 - Mutants on lines the round-2 diff did not touch (round 1 killed 36 at
   2574039).
 
-## Live check
+### Live check
 not needed: no rule-1 path, no `.claude/settings.json`, and no Not-checked
 item that only a live run can show.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/18-intent-dependencies` at 3068ab6; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 296 tests, 0 fail; "All
