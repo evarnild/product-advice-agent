@@ -139,3 +139,8 @@ Divergences: (1) an empty `merged:` parses to `[]`, so "merged" is tested with a
 
 Commits: 46f9cd2 (tests and the code for F4 and F6), 0d6b429 (test ordering), plus the commit of this entry.
 F1: spawn and queue temp-repo tests where the blocker branch says `merged: x` and main does not. F2: spawn tests for a non-digit id and the intent's own id. F3: branch-only blocker tests in check-intent, spawn and queue. F4: `parseBlockers` returns `notes`; `checkChange` pushes them into its notes. F5: the two Progress sentences above corrected. F6: spawn names the lowest open blocker; openChain order and duplicate tests; `013` normalisation test. F7: `/auto` step 4 broken-record list names the non-digit id. Mutants killed (restored by copy): M26, M41, M45, M42, M38, M39, M27, M04, M10, M12, and the F4 note drops in both libs. Kit tests 286 -> 296.
+
+### 2026-11-15: review round 2 rework
+
+Commits: the "round 2 rework" test commit (json branch-only blocker, numeric ordering) and the commit of this entry.
+F9: queue F3 test also reads `--json` (`blocked_by_open` is `[73]`, no "on no branch" problem). F10: openChain and spawn ordering tests use ids of different widths (9 and 13; 12 and 100). Mutants killed: M27b, N10 (direct and further lexical sort), N07 (spawn lexical sort). F11: no change. Kit tests 296 -> 298.
