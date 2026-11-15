@@ -12,14 +12,18 @@ describe('parseBlockers', () => {
         { id: '14', reason: 'the cases need it' },
       ],
       problems: [],
+      notes: [],
     });
   });
-  it('accepts an item without a reason', () => {
-    expect(parseBlockers(parseMetadata('blocked_by:\n  - 13\n'), '15')).toEqual({ items: [{ id: '13', reason: '' }], problems: [] });
+  it('accepts an item without a reason, with a note', () => {
+    expect(parseBlockers(parseMetadata('blocked_by:\n  - 13\n'), '15')).toEqual({ items: [{ id: '13', reason: '' }], problems: [], notes: ['blocked_by item "13": no reason given.'] });
+  });
+  it('normalises 013 to 13', () => {
+    expect(parseBlockers(parseMetadata('blocked_by:\n  - 013    r\n'), '15').items).toEqual([{ id: '13', reason: 'r' }]);
   });
   it('no field or empty means no blockers', () => {
-    expect(parseBlockers(parseMetadata('id: 1\n'), '1')).toEqual({ items: [], problems: [] });
-    expect(parseBlockers(parseMetadata('blocked_by:\n'), '1')).toEqual({ items: [], problems: [] });
+    expect(parseBlockers(parseMetadata('id: 1\n'), '1')).toEqual({ items: [], problems: [], notes: [] });
+    expect(parseBlockers(parseMetadata('blocked_by:\n'), '1')).toEqual({ items: [], problems: [], notes: [] });
   });
   it('names a non-digit id and a self id as problems', () => {
     const r = parseBlockers(parseMetadata('blocked_by:\n  - x    why\n  - 18    me\n  - 13    ok\n'), '18');
@@ -62,6 +66,10 @@ describe('openChain', () => {
   it('drops cleared links', () => {
     expect(openChain('17', graph, (id) => id !== '14')).toEqual({ direct: ['15'], further: ['13'] });
     expect(openChain('17', graph, (id) => id !== '15')).toEqual({ direct: [], further: [] });
+  });
+  it('lists each id once and in ascending order whatever the item order', () => {
+    const g = { 20: ['9', '3', '9'], 9: ['5', '4'], 3: ['4', '5'], 5: [], 4: [] };
+    expect(openChain('20', g, () => true)).toEqual({ direct: ['3', '9'], further: ['4', '5'] });
   });
   it('terminates on a cycle', () => {
     expect(openChain('17', { 17: ['15'], 15: ['17'] }, () => true)).toEqual({ direct: ['15'], further: [] });

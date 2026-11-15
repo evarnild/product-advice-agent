@@ -114,9 +114,9 @@ function worktreeFor(root, id) {
 /** Refuses (before anything is created) while a direct blocker is open or the blocked_by record is broken. */
 function refuseIfBlocked(root, metadata) {
   const { blockers, problems } = readBlockers(root, id, metadata);
-  const open = blockers.find((b) => b.state === 'open');
+  const open = blockers.filter((b) => b.state === 'open').sort((a, b) => Number(a.id) - Number(b.id))[0];
   if (open) fail(`§${id} is blocked by §${open.id} (${open.reason || 'no reason given'}), not merged into main. Ship §${open.id} first.`);
-  const unknown = blockers.find((b) => b.state === 'unknown');
+  const unknown = blockers.filter((b) => b.state === 'unknown').sort((a, b) => Number(a.id) - Number(b.id))[0];
   if (unknown) fail(`§${id} has a broken blocked_by record: §${unknown.id} is on no branch. Fix blocked_by in its metadata.yml.`);
   if (problems.length) fail(`§${id} has a broken blocked_by record: ${problems[0]}`);
 }

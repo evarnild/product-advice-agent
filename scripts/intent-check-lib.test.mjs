@@ -481,6 +481,11 @@ describe('checkChange and blocked_by', () => {
       'intents/27-drift-log/metadata.yml: blocked_by names §99, which is on no branch.',
     ]);
   });
+  it('notes an item without a reason, without failing', () => {
+    const r = checkChange(withBlocked(['13'], [{ id: '13', reason: '', state: 'cleared' }]));
+    expect(r.errors).toEqual([]);
+    expect(r.notes).toContain('intents/27-drift-log/metadata.yml: blocked_by item "13": no reason given.');
+  });
   it('passes with cleared blockers, with none, and without the field', () => {
     expect(checkChange(withBlocked(['13    r'], [{ id: '13', reason: 'r', state: 'cleared' }])).errors).toEqual([]);
     expect(checkChange(withBlocked([], [])).errors).toEqual([]);

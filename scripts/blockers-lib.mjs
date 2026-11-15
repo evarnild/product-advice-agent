@@ -5,7 +5,7 @@
 
 /**
  * Reads `blocked_by` from parsed metadata. Each item is `<id>    <reason>`.
- * Returns `{ items: [{id, reason}], problems: string[] }`: a non-digit id or
+ * Returns `{ items: [{id, reason}], problems: string[], notes: string[] }`: a non-digit id or
  * the intent's own id is a problem (and not an item); a missing reason keeps
  * the item valid (reason is '').
  */
@@ -14,6 +14,7 @@ export function parseBlockers(metadata, selfId = null) {
   const list = Array.isArray(raw) ? raw : [];
   const items = [];
   const problems = [];
+  const notes = [];
   for (const entry of list) {
     const m = /^(\S+)(?:\s+(.*\S))?\s*$/.exec(String(entry));
     if (!m) continue;
@@ -24,9 +25,10 @@ export function parseBlockers(metadata, selfId = null) {
       problems.push(`blocked_by item "${entry}": an intent cannot block itself.`);
     } else {
       items.push({ id: String(Number(id)), reason });
+      if (!reason) notes.push(`blocked_by item "${entry}": no reason given.`);
     }
   }
-  return { items, problems };
+  return { items, problems, notes };
 }
 
 /** True when metadata carries a non-empty `merged:` (an empty value parses to `[]`, which is not merged). */

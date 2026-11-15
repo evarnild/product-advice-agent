@@ -151,7 +151,7 @@ blocker is cleared only when `main`'s `metadata.yml` for it has a non-empty
 `auto_stopped: blocked by <n>` (the lowest open direct id) and report every
 open blocker with its reason. Spec and plan went ahead; only building waits.
 Do not improvise a "waiting for N to merge" stop. A broken record (an id on no
-branch, the intent's own id) is also a stop: `auto_stopped: blocked_by record
+branch, a non-digit id, the intent's own id) is also a stop: `auto_stopped: blocked_by record
 broken`.
 
 Run `/spawn <id>` (its steps 1 to 5): check the load, `npm run spawn --

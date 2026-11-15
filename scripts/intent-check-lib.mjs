@@ -230,7 +230,7 @@ export function checkChange({ branch, metadata, intentDir, intentFiles, diff, re
   }
 
   checkAuto(metadata, intentDir, errors);
-  checkBlockers({ metadata, intentDir, id, blockers }, errors);
+  checkBlockers({ metadata, intentDir, id, blockers }, errors, notes);
   checkLiveCheck({ review, metadata, intentDir }, errors);
   checkShape(declared, diff, routes, notes);
   return { errors, routes, notes, type: declared, id };
@@ -242,8 +242,10 @@ export function checkChange({ branch, metadata, intentDir, intentFiles, diff, re
  * with state 'open' | 'cleared' | 'unknown', read from main by the caller;
  * this stays pure. Metadata without the field adds nothing.
  */
-function checkBlockers({ metadata, intentDir, id, blockers }, errors) {
-  for (const p of parseBlockers(metadata, id).problems) errors.push(`${intentDir}/metadata.yml: ${p}`);
+function checkBlockers({ metadata, intentDir, id, blockers }, errors, notes) {
+  const parsed = parseBlockers(metadata, id);
+  for (const p of parsed.problems) errors.push(`${intentDir}/metadata.yml: ${p}`);
+  for (const n of parsed.notes) notes.push(`${intentDir}/metadata.yml: ${n}`);
   for (const b of blockers) {
     if (b.state === 'open') errors.push(`§${id} is blocked by §${b.id}, which is not merged into main${b.reason ? ` (${b.reason})` : ''}.`);
     else if (b.state === 'unknown') errors.push(`${intentDir}/metadata.yml: blocked_by names §${b.id}, which is on no branch.`);
