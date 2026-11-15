@@ -68,7 +68,7 @@ describe('openChain', () => {
     expect(openChain('17', graph, (id) => id !== '15')).toEqual({ direct: [], further: [] });
   });
   it('lists each id once and in ascending order whatever the item order', () => {
-    const g = { 20: ['9', '3', '9'], 9: ['5', '4'], 3: ['4', '5'], 5: [], 4: [] };
+    const g = { 20: ['9', '3', '9'], 9: ['5', '4'], 3: ['5', '4'], 5: [], 4: [] };
     expect(openChain('20', g, () => true)).toEqual({ direct: ['3', '9'], further: ['4', '5'] });
   });
   it('terminates on a cycle', () => {
