@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 21
+slug: clickhouse-low-memory
+type: adjustment
+status: draft
+title: ClickHouse low-memory config for the local Langfuse
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+blocked_by:
+links:
+  - intents/4-langfuse-v4    the compose file this tunes
