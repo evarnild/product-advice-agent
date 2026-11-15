@@ -71,6 +71,10 @@ describe('openChain', () => {
     const g = { 20: ['9', '3', '9'], 9: ['5', '4'], 3: ['5', '4'], 5: [], 4: [] };
     expect(openChain('20', g, () => true)).toEqual({ direct: ['3', '9'], further: ['4', '5'] });
   });
+  it('orders ids numerically, not lexically', () => {
+    const g = { 20: ['13', '9'], 13: ['100', '12'], 9: [], 100: [], 12: [] };
+    expect(openChain('20', g, () => true)).toEqual({ direct: ['9', '13'], further: ['12', '100'] });
+  });
   it('terminates on a cycle', () => {
     expect(openChain('17', { 17: ['15'], 15: ['17'] }, () => true)).toEqual({ direct: ['15'], further: [] });
   });

@@ -317,6 +317,13 @@ describe('npm run spawn and blocked_by', { timeout: 60_000 }, () => {
     refused(82, 'multi', '§82 is blocked by §83 (first)');
   });
 
+  it('names the lowest open blocker numerically across id widths', () => {
+    commitOnMain(13, 'wide', 'merged:\n');
+    commitOnMain(9, 'narrow', 'merged:\n');
+    commitOnMain(75, 'widths', 'blocked_by:\n  - 13    wide one\n  - 9    narrow one\n');
+    refused(75, 'widths', '§75 is blocked by §9 (narrow one)');
+  });
+
   it('refuses a non-digit id and the intents own id as a broken record', () => {
     commitOnMain(77, 'nondigit', 'blocked_by:\n  - x    why\n');
     refused(77, 'nondigit', 'broken blocked_by record');

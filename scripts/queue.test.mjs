@@ -186,5 +186,8 @@ describe('npm run queue and blocked_by (git seams)', { timeout: 60_000 }, () => 
     const out = queue().stdout;
     expect(lineOf(out, 72)).toContain('blocked by §73');
     expect(out).not.toContain('on no branch');
+    const data = JSON.parse(queue('--json').stdout);
+    expect(data.inFlight.find((e) => e.id === 72).blocked_by_open).toEqual([73]);
+    expect(data.problems.filter((p) => p.includes('on no branch'))).toEqual([]);
   });
 });
