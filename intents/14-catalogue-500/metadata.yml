@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14 /auto 17", then "run both anyway"
 auto_round: 2
-auto_stopped:
+auto_stopped: escalate, owner reads the diff
 follows_up:
 links:
   - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth
