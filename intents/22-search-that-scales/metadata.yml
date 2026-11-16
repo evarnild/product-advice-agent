@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 22
+slug: search-that-scales
+type: feature
+status: draft
+title: Product search that still finds the right product in 500
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+blocked_by:
+  - 14    measured on the 500-product catalogue
+links:
+  - intents/14-catalogue-500    its live check found the regression (F5)
+  - intents/15-fifty-cases    cites_a_match is the eval-side complement
