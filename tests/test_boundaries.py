@@ -206,3 +206,10 @@ def test_view_counts_and_taxonomy_load_neither_tracing_nor_langfuse(tmp_path):
         [sys.executable, "-c", code, str(tmp_path)], capture_output=True, text=True
     )
     assert result.returncode == 0, result.stdout[:500] + result.stderr[-500:]
+
+
+def test_judging_langfuse_variables_match_the_tracing_module():
+    from advisor.evals.judging import LANGFUSE_ENV
+    from advisor.tracing import REQUIRED_ENV
+
+    assert tuple(LANGFUSE_ENV) == tuple(REQUIRED_ENV)

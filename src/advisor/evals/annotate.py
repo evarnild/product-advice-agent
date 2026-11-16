@@ -1,9 +1,10 @@
 """Langfuse annotation queues, SDK-free (§10 B19).
 
-The `Annotations` protocol is what the `queue` and `import` subcommands need
-from Langfuse; `advisor.tracing.LangfuseAnnotations` implements it with the
-SDK. Everything here is pure: choosing the cases of a report, matching run
-traces to cases, and turning annotation scores into §9 label lines.
+The `Annotations` protocol is what the `queue`, `import` and `judge` subcommands need
+from Langfuse (queues, labels, and the judge score config and batch writes);
+`advisor.tracing.LangfuseAnnotations` implements it with the SDK. Everything here is
+pure: choosing the cases of a report, matching run traces to cases, and turning
+annotation scores into §9 label lines.
 """
 
 from __future__ import annotations

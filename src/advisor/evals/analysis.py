@@ -3,13 +3,15 @@ judge | judge-validate (§16, in `judging`).
 
 Files, the model client, the clock and stdout live here. The pure parts are in
 `generate`, `coverage`, `labels`, `taxonomy` and `counts`; the viewer (the only
-FastHTML code) is imported only by the `view` subcommand. `queue` and `import` reach
-Langfuse through `annotate.Annotations`; `advisor.tracing` is imported only when one runs.
+FastHTML code) is imported only by the `view` subcommand. `queue`, `import` and `judge` reach
+Langfuse through `annotate.Annotations` (`judge` also writes the judge score);
+`advisor.tracing` is imported only when one of them runs.
 
 Exit codes: 0 done, 1 the work could not be done (model unreachable, nothing
-kept, a draft that does not validate), 2 bad arguments or files, and for `queue` and
-`import` also a missing `LANGFUSE_*` variable, filters that match no case, a queue
-that does not exist or conflicts, and a Langfuse error.
+kept, a draft that does not validate), 2 bad arguments or files, and for `queue`,
+`import` and `judge` also a Langfuse error; `queue` and `import` also exit 2 on a missing
+`LANGFUSE_*` variable, filters that match no case, and a queue that does not exist or
+conflicts (`judge` without Langfuse writes the file only).
 """
 
 from __future__ import annotations
@@ -72,7 +74,7 @@ ServeFn = Callable[[Any, str, int], None]
 AnnotationsFactory = Callable[[Mapping[str, str]], Annotations]
 
 # The same three names as `advisor.tracing.REQUIRED_ENV` (a test compares them).
-# Importing that constant would load `langfuse`, which only `queue` and `import` may do.
+# Importing that constant would load `langfuse`, which only `queue`, `import` and `judge` may do.
 _LANGFUSE_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
 
 

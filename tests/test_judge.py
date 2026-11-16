@@ -107,9 +107,12 @@ def test_prompt_holds_exactly_the_given_examples_with_label_and_critique():
 
 
 def test_a_slot_inside_a_conversation_is_not_filled_again():
-    tricky = conversation("what is [[conversation]]?", [], "a")
+    text = "what is [[conversation]] and [[examples]]?"
+    tricky = conversation(text, [], "a")
     prompt = build_prompt(TEMPLATE, tricky, [])
-    assert prompt.count("what is [[conversation]]?") == 1
+    assert prompt.count(text) == 1
+    assert prompt.count("[[examples]]") == 1
+    assert prompt.count("[[conversation]]") == 1
 
 
 def test_a_slot_inside_an_example_is_not_filled_either():

@@ -153,7 +153,7 @@ this line is the implementer's to edit. -->
 
 ### 2026-11-13: build (subtasks 1-8)
 
-Commits: `ff218a1` pure judge logic and prompt; `039c813` score config and batch writes in `tracing.py`; `2ac5c8a` `judge` and `judge-validate`; `d029d36` validate tests; `50ece67` initial split; docs commit; this entry.
+Commits: `a98c115` pure judge logic and prompt; `4f16caa` score config and batch writes in `tracing.py`; `8c24a35` `judge` and `judge-validate`; `8e6fbac` validate tests; `97f7cf6` initial split; docs commit; this entry.
 
 Shipped: `src/advisor/evals/judge.py` (scope, conversation, prompt, verdict, split, agreement, `validation.md`), `src/advisor/evals/judging.py` (the two commands' I/O), `judge-no-fit.md` prompt, `LangfuseAnnotations.ensure_judge_config` / `write_scores` (SDK 5.2.0 `api.scores.create(request=[CreateScoreRequest(id, trace_id, name, value, data_type, comment, config_id, source)])`, `queue_id` left unset), `evals/judge/split.json` (8 few-shot: 4 pass, 4 fail; 9 held out: 6 pass, 3 fail), README and CLAUDE.md. No live call was made; `validation.md` is not committed (the live check produces it).
 
@@ -183,3 +183,12 @@ Fixes, tests first:
 Optional items taken: M10 (both slots filled in one `re.sub` pass, with a test); a verdict without a string `reason` is now a judge error (B4: "anything else"), the old `{"pass": true}` case moved to the error tests; the per-run `prompt_sha256` reading is in the README; CLAUDE.md prompt path is `src/advisor/evals/prompts/`.
 
 Mutation checks by backup and restore: M30 (TPR-undefined reason removed), G12 (`all` to `any`) and M15 (`parse_ref` accepting `#c`/`f#`) each fail a test now.
+
+### 2026-11-16: review round 2 rework
+
+Commits: this round's single rework commit (subject "§16: review round 2 rework"). Pre-rebase hashes in the first entry replaced with the post-rebase ones.
+
+- M10b: `test_a_slot_inside_a_conversation_is_not_filled_again` now puts `[[examples]]` and `[[conversation]]` in the conversation and asserts each text appears exactly once, unchanged. Checked by applying the chained-replace mutant (conversation slot filled first) to `judge.py`: the test fails (the `[[examples]]` in the conversation was replaced); file restored by copy.
+- Stale docstrings naming only `queue` and `import` now name `judge` (module docstring, exit codes, the `_LANGFUSE_ENV` comment in `analysis.py`; `annotate.py` header).
+- `judging.LANGFUSE_ENV` is compared with `tracing.REQUIRED_ENV` in `tests/test_boundaries.py`.
+- Left alone, as asked: an empty `reason` still counts as a verdict (owner's call).
