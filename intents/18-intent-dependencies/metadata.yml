@@ -2,14 +2,14 @@
 id: 18
 slug: intent-dependencies
 type: feature
-status: in-review
+status: done
 title: Record which intents must merge before another can be built
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 18" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 18" (auto_authorized 2026-11-13)
 live_checked:
-merged:
+merged: b1f364e    # 2026-11-16, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-16 by-agent    # owner: "/auto 18" (diff read)
 auto_round: 3
 auto_stopped: ready for /ship
