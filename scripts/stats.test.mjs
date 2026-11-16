@@ -151,7 +151,56 @@ describe('renderStatsFile (B9)', () => {
     expect(md).not.toContain(SENTINEL);
   });
 
+  it('gives an intent without a merged commit a ship phase ending at the pending merge (I5)', () => {
+    const md = renderStatsFile(repo, 8, 'abc1234', { now: Date.parse('2026-11-01T15:00:00Z') });
+    expect(md).toMatch(/^ {2}ship\s+2h00m/m); // §8 drafted 13:00, the pending merge at 15:00
+    expect(collectStats({ cwd: repo, transcripts, only: [8], now: Date.parse('2026-11-01T15:00:00Z') }).intents[0].phases.at(-1).open).toBe(true);
+  });
+
   it('throws when collection throws, so the caller can carry on', () => {
     expect(() => renderStatsFile(repo, 7, 'abc1234', { collect: () => { throw new Error('boom'); } })).toThrow('boom');
+  });
+});
+
+describe('author time and the stats cutover (F4, I4)', () => {
+  let box;
+  let r2;
+  const commitDates = (iso, committerIso, subject, file = 'f.txt') => {
+    writeFileSync(join(r2, file), `${subject}
+`);
+    git(r2, 'add', '.');
+    execFileSync('git', ['commit', '-q', '-m', subject], { cwd: r2, env: { ...GIT_ENV, GIT_AUTHOR_DATE: iso, GIT_COMMITTER_DATE: committerIso } });
+  };
+  const REBASED = '2026-11-05T00:00:00Z'; // what a rebase does: every committer time becomes the same
+  beforeAll(() => {
+    box = realpathSync(mkdtempSync(join(tmpdir(), 'sdlc-stats2-')));
+    r2 = join(box, 'repo');
+    mkdirSync(join(r2, 'scripts'), { recursive: true });
+    git(r2, 'init', '-q', '-b', 'main');
+    git(r2, 'config', 'core.autocrlf', 'false');
+    commitDates('2026-11-01T07:00:00Z', REBASED, 'init');
+    commitDates('2026-11-01T08:00:00Z', REBASED, '§1: intent drafted and accepted (owner: "yes")');
+    commitDates('2026-11-01T09:00:00Z', REBASED, '§1: merged (abc1234); status done');
+    commitDates('2026-11-01T10:00:00Z', REBASED, 'add stats', 'scripts/stats-lib.mjs'); // author time: the cutover
+    commitDates('2026-11-01T11:00:00Z', REBASED, '§2: intent drafted and accepted (owner: "yes")');
+    commitDates('2026-11-01T12:00:00Z', REBASED, '§2: plan approved (auto)');
+    commitDates('2026-11-01T14:00:00Z', REBASED, '§2: in-review, progress entry');
+    commitDates('2026-11-01T15:00:00Z', REBASED, '§2: merged (def5678); status done');
+  });
+  afterAll(() => {
+    rmSync(box, { recursive: true, force: true });
+  });
+  const stats = (...args) => JSON.parse(spawnSync(process.execPath, [STATS, ...args, '--json', '--transcripts', join(box, 'none')], { cwd: r2, env: GIT_ENV, encoding: 'utf8' }).stdout);
+
+  it('keeps distinct phases for a rebased intent: author times differ while committer times are equal (F4)', () => {
+    const it2 = stats('2').intents[0];
+    const ms = Object.fromEntries(it2.phases.map((p) => [p.name, p.elapsedMs / 3600000]));
+    expect(ms).toMatchObject({ intent: 0, plan: 1, build: 2, ship: 1 });
+  });
+
+  it('marks partial only the intent merged before stats-lib.mjs arrived on main, by author time (I4, F4)', () => {
+    const j = stats('--all');
+    expect(j.intents.find((i) => i.id === 1).partial).toBe(true);
+    expect(j.intents.find((i) => i.id === 2).partial).toBe(false);
   });
 });

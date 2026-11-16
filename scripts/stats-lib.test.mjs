@@ -52,7 +52,7 @@ const FULL = (id) =>
 const span = (m) => Object.fromEntries(m.phases.map((p) => [p.name, (p.end - p.start) / H]));
 
 describe('parseCommitLog', () => {
-  it('reads hash, committer time and subject, dropping junk', () => {
+  it('reads hash, author time and subject, dropping junk', () => {
     const out = parseCommitLog('abcdef1 1700000000 §3: plan approved (x)\nnot a line\n\n1234567 1700000100 Merge §3: t');
     expect(out).toEqual([
       { hash: 'abcdef1', ts: 1700000000000, subject: '§3: plan approved (x)' },
@@ -96,6 +96,13 @@ describe('milestones (B3, B5)', () => {
   it('ends build at the first auto round when there is no in-review commit', () => {
     const cs = csOf(3, log([0, '§3: intent accepted'], [2, '§3: auto round 1'], [4, '§3: review round 1 (x)'], [5, '§3: merged (abc1234)']));
     expect(span(milestones(cs, 3)).build).toBe(2);
+  });
+
+  it('ends build at the first of several auto rounds, the later ones being rework', () => {
+    const cs = csOf(3, log([0, '§3: intent accepted'], [2, '§3: auto round 1'], [4, '§3: auto round 2'], [6, '§3: review round 1 (x)'], [7, '§3: merged (abc1234)']));
+    const m = milestones(cs, 3);
+    expect(m.phases.map((p) => p.name)).toEqual(['intent', 'build', 'review', 'ship']);
+    expect(span(m).build).toBe(2);
   });
 
   it('gives an unmerged intent an open phase up to now', () => {
@@ -194,6 +201,11 @@ describe('sessionTurns', () => {
     expect(b.gaps.map((g) => [g.from, g.to])).toEqual([[at(0.5), at(3)]]);
   });
 
+  it('opens no gap at an idle prompt on its own', () => {
+    const { gaps } = sessionTurns([ev(0, 'UserPromptSubmit'), ev(1, 'Notification', { kind: 'idle_prompt' }), ev(3, 'UserPromptSubmit')]);
+    expect(gaps).toEqual([]);
+  });
+
   it('drops events it cannot place', () => {
     expect(sessionTurns([null, {}, { ts: 'x', session: 's', event: 'Stop' }, { ts: iso(0), event: 'Stop' }]).turns).toEqual([]);
   });
@@ -256,6 +268,22 @@ describe('owner wait (B6)', () => {
       ),
     );
     expect(gateGaps(cs).map((g) => [(g.from - T0) / H, (g.to - T0) / H])).toEqual([[0, 1], [2, 6], [8, 9]]);
+  });
+  const gapsOf = (...pairs) => gateGaps(csOf(9, log(...pairs))).map((g) => [(g.from - T0) / H, (g.to - T0) / H]);
+  it('ends an escalate stop at the resumed run', () => {
+    expect(gapsOf([1, '§9: auto stopped: escalate, owner reads the diff'], [5, '§9: auto run resumed'])).toEqual([[1, 5]]);
+  });
+  it('ends a live-check stop at the commit recording the answer, in any wording (F1, F3)', () => {
+    expect(gapsOf([1, '§9: auto stopped: live check owed'], [4, '§9: live check recorded (owner: "ok")'])).toEqual([[1, 4]]);
+    expect(gapsOf([1, '§9: auto stopped: live check owed'], [3, '§9: live check passed (owner: ok)'])).toEqual([[1, 3]]);
+  });
+  it('counts a blocked ship dry-run and ready-for-ship (until merged) as owner wait (F3)', () => {
+    expect(gapsOf([1, '§9: auto stopped: ship dry-run blocked, changes after the reviewed commit'], [2, '§9: auto run resumed'])).toEqual([[1, 2]]);
+    expect(gapsOf([1, '§9: auto stopped: ready for /ship'], [6, '§9: merged (abc1234); status done'])).toEqual([[1, 6]]);
+  });
+  it('does not count a dependency stop (F3)', () => {
+    expect(gapsOf([1, '§9: auto stopped: blocked by 14'], [5, '§9: auto run resumed'])).toEqual([]);
+    expect(gapsOf([1, '§9: auto stopped: waiting for 14 to merge'], [5, '§9: auto run resumed'])).toEqual([]);
   });
   it('counts no gate for "drafted and accepted"', () => {
     expect(gateGaps(csOf(9, log([0, '§9: intent drafted and accepted (owner: "yes")'], [1, '§9: spec drafted'], [2, '§9: spec accepted'])))).toHaveLength(1);
@@ -377,6 +405,41 @@ describe('computeStats', () => {
     expect(Math.round(phaseOf(i7, 'spec').sessionWaitMs / 1000)).toBe(Math.round(0.9 * H / 1000));
     expect(Math.round(phaseOf(i7, 'plan').sessionWaitMs / 1000)).toBe(Math.round(0.5 * H / 1000));
     expect(Math.round(i7.totals.sessionWaitMs / 1000)).toBe(Math.round(1.4 * H / 1000));
+  });
+
+  it('leaves agent time of the intent out of a gate wait, and another intent agent in (S2c)', () => {
+    const commits = log([0, '§7: intent accepted'], [2, '§7: auto stopped: spec questions'], [4, '§7: auto run resumed'], [9, '§7: merged (abc1234)']);
+    const agentFor = (desc, h) => ({ file: 'a.jsonl', session: 's1', description: desc, usage: usageLines([asst(`m${n++}`, iso(h), 'opus', [1, 1, 1, 1]), asst(`m${n++}`, iso(h + 1), 'opus', [1, 1, 1, 1])].join(String.fromCharCode(10))) });
+    const wait = (agents) => {
+      const i7 = computeStats({ commits, events: [], coordinators: [], agents, now: at(20) }).intents.find((i) => i.id === 7);
+      return i7.totals.gateWaitMs;
+    };
+    expect(wait([])).toBe(2 * H);
+    expect(wait([agentFor('§7 implement', 2.5)])).toBe(1 * H);
+    expect(wait([agentFor('§8 implement', 2.5)])).toBe(2 * H);
+  });
+
+  describe('waits count only inside the intent life (F2)', () => {
+    const life = () => log([2, '§7: intent drafted (owner: x)'], [3, '§7: intent accepted'], [4, '§7: auto stopped: ready for /ship'], [6, '§7: merged (abc1234); status done']);
+    const run = (events, commits = life(), now = at(100)) => computeStats({ commits, events, coordinators: [], agents: [], now }).intents.find((i) => i.id === 7);
+    it('books no in-session wait from before the first commit or after the merge', () => {
+      const before = [ev(0, 'UserPromptSubmit', { skillId: 7 }), ev(0.5, 'Stop'), ev(1.5, 'UserPromptSubmit', { skillId: 7 })];
+      expect(run(before).totals.sessionWaitMs).toBe(0);
+      const after = [ev(7, 'UserPromptSubmit', { skillId: 7 }), ev(7.5, 'Stop'), ev(30, 'UserPromptSubmit', { skillId: 7 })]; // overnight
+      const r = run(after);
+      expect(r.totals.sessionWaitMs).toBe(0);
+      expect(r.totals.idleMs).toBe(0);
+    });
+    it('cuts a wait that straddles the merge at the merge, and one that straddles the start at the start', () => {
+      expect(run([ev(5, 'UserPromptSubmit', { skillId: 7 }), ev(5, 'Stop'), ev(30, 'UserPromptSubmit', { skillId: 7 })]).totals.sessionWaitMs).toBe(1 * H);
+      expect(run([ev(1, 'UserPromptSubmit', { skillId: 7 }), ev(1, 'Stop'), ev(2.5, 'UserPromptSubmit', { skillId: 7 })]).totals.sessionWaitMs).toBe(0.5 * H);
+    });
+    it('clips a gate wait that runs on past the merge, and lets an unmerged intent wait up to now', () => {
+      const c = log([0, '§7: intent accepted'], [1, '§7: auto stopped: ready for /ship'], [20, '§7: merged (abc1234)']);
+      expect(run([], c, at(30)).totals.gateWaitMs).toBe(2 * H);
+      const open = log([0, '§7: intent accepted'], [1, '§7: auto stopped: decision needed'], [3, '§7: auto run resumed']);
+      expect(run([ev(4, 'UserPromptSubmit', { skillId: 7 }), ev(4, 'Stop'), ev(9, 'UserPromptSubmit', { skillId: 7 })], open, at(6)).totals.sessionWaitMs).toBe(2 * H);
+    });
   });
 
   it('marks partial the intents merged before the cutover', () => {

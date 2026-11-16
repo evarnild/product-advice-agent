@@ -1,4 +1,5 @@
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -197,6 +198,9 @@ describe('eventRecordFrom', () => {
       expect(logged('/auto 13')).toMatchObject({ skill: 'auto', skillId: 13 });
       expect(logged('  \n /review  ')).toMatchObject({ skill: 'review' });
       expect(logged('/review')).not.toHaveProperty('skillId');
+      // a number inside a branch name or path is not an id argument
+      expect(logged('/review feat/19-x')).toMatchObject({ skill: 'review' });
+      expect(logged('/review feat/19-x')).not.toHaveProperty('skillId');
       expect(logged(`/spec 5 ${SENTINEL} 9`)).toMatchObject({ skill: 'spec', skillId: 5 });
     });
 
@@ -452,6 +456,26 @@ describe('session-event.mjs (the hook process)', () => {
       expect(r.status).toBe(0);
       expect(r.stdout).toBe('');
       expect(r.stderr).toBe('');
+    }
+  });
+
+  const HOOK_SENTINEL = 'SENTINEL-PROMPT-TEXT-7f3a';
+  it('reads the repo skill list from .claude/skills and logs skill and skillId, printing nothing (B1 wiring)', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'sdlc-hook-')));
+    try {
+      execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
+      execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '--allow-empty', '-m', 'init'], { cwd: dir });
+      mkdirSync(join(dir, '.claude', 'skills', 'spec'), { recursive: true });
+      const stdin = JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: 's-hook', cwd: dir, prompt: `/spec 17 ${HOOK_SENTINEL}` });
+      const r = spawnSync(process.execPath, [join(dirname(fileURLToPath(import.meta.url)), 'session-event.mjs')], { input: stdin, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+      expect(r.status).toBe(0);
+      expect(r.stdout).toBe('');
+      expect(r.stderr).toBe('');
+      const text = readFileSync(join(dir, '.git', 'product-advice-agent-sessions.jsonl'), 'utf8');
+      expect(text).not.toContain(HOOK_SENTINEL);
+      expect(JSON.parse(text.trim().split(/\r?\n/).at(-1))).toMatchObject({ event: 'UserPromptSubmit', skill: 'spec', skillId: 17 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });
