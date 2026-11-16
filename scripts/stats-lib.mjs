@@ -19,7 +19,7 @@ const ZERO = () => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
 
 // ---- commits ------------------------------------------------------------------
 
-/** `git log --format="%H %ct %s"` text to `[{hash, ts (ms), subject}]`; unreadable lines are dropped. */
+/** `git log --format="%H %at %s"` (author time, which a rebase keeps) text to `[{hash, ts (ms), subject}]`; unreadable lines are dropped. */
 export function parseCommitLog(text) {
   const out = [];
   for (const line of String(text ?? '').split(/\r?\n/)) {
@@ -274,6 +274,18 @@ export function spread(phases, from, to) {
   return out;
 }
 
+/**
+ * A wait counts only inside the intent's life (F2): from its first commit to
+ * its `merged` commit, or to `now` while unmerged. Returns the gap cut to that
+ * span, or null when nothing of it is inside (or the intent has no commits).
+ */
+export function clipToLife(it, gap, now) {
+  if (it.startedAt === null) return null;
+  const from = Math.max(gap.from, it.startedAt);
+  const to = Math.min(gap.to, it.mergedAt ?? Math.max(now, it.startedAt));
+  return to > from ? { ...gap, from, to } : null;
+}
+
 /** Splits one gap, after taking agent time out of it, into counted wait and idle (B6). */
 export function capWait(gapMs, agentMs = 0, cap = WAIT_CAP_MS) {
   const net = Math.max(0, gapMs - agentMs);
@@ -281,8 +293,8 @@ export function capWait(gapMs, agentMs = 0, cap = WAIT_CAP_MS) {
 }
 
 const GATE_START = /^(?:(?:intent|spec|plan) drafted|auto stopped:)/i;
-const GATE_END = /^(?:intent accepted|spec accepted|plan approved|auto run resumed|auto run started)/i;
-const NOT_THE_OWNER = /waiting for §?\d+ to merge|blocked/i; // a dependency stop is not the owner's wait
+const GATE_END = /^(?:intent accepted|spec accepted|plan approved|auto run resumed|auto run started|live check|merged \()/i;
+const NOT_THE_OWNER = /^auto stopped:\s*(?:blocked by §?\d+|waiting for §?\d+ to merge)/i; // only a dependency stop is not the owner's wait (F3)
 
 /** Gate gaps of one intent from its commits: `[{from, to}]`. */
 export function gateGaps(cs) {
@@ -378,7 +390,9 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
   for (const [id, cs] of byIntent) {
     const spans = getIntent(id).spans;
     const mine = agentSpans.filter((s) => s.id === id).map((s) => s.span);
-    for (const g of gateGaps(cs)) {
+    for (const raw of gateGaps(cs)) {
+      const g = clipToLife(getIntent(id), raw, now);
+      if (!g) continue;
       const { wait, idle } = capWait(g.to - g.from, overlapMs(g.from, g.to, mine));
       for (const [name, share] of spread(spans, g.from, g.to)) {
         const p = phase(id, name);
@@ -387,9 +401,11 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
       }
     }
   }
-  for (const g of gaps) {
-    const a = attribution(g.who);
+  for (const raw of gaps) {
+    const a = attribution(raw.who);
     if (a.kind !== 'intent') continue;
+    const g = clipToLife(getIntent(a.id), raw, now);
+    if (!g) continue;
     const running = agentSpans.filter((s) => s.session === g.session).map((s) => s.span);
     const { wait, idle } = capWait(g.to - g.from, overlapMs(g.from, g.to, running));
     for (const [name, share] of spread(getIntent(a.id).spans, g.from, g.to)) {

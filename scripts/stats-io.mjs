@@ -78,7 +78,7 @@ export function readTranscripts(transcriptRoot, paths) {
 /** When stats-lib.mjs first reached main (ms), or null while it has not: intents merged before it are `partial`. */
 export function statsCutover(root) {
   try {
-    const out = git(root, 'log', 'main', '--diff-filter=A', '--format=%ct', '--', 'scripts/stats-lib.mjs');
+    const out = git(root, 'log', 'main', '--diff-filter=A', '--format=%at', '--', 'scripts/stats-lib.mjs');
     const last = out.split(/\r?\n/).filter(Boolean).at(-1);
     return last ? Number(last) * 1000 : null;
   } catch {
@@ -93,7 +93,7 @@ export function statsCutover(root) {
  */
 export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscriptRoot(), only = null, now = Date.now(), extraCommits = [] } = {}) {
   const root = mainCheckout(cwd);
-  const commits = [...parseCommitLog(git(root, 'log', '--branches', '--format=%H %ct %s')), ...extraCommits];
+  const commits = [...parseCommitLog(git(root, 'log', '--branches', '--format=%H %at %s')), ...extraCommits];
   const logFile = eventLogPath(root);
   const events = existsSync(logFile) ? parseEvents(readText(logFile)) : [];
   const { coordinators, agents } = existsSync(transcripts) ? readTranscripts(transcripts, checkoutPaths(root, events)) : { coordinators: [], agents: [] };
