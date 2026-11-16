@@ -4,7 +4,7 @@ slug: search-that-scales
 type: feature
 status: accepted
 title: Product search that still finds the right product in 500
-review_tier:
+review_tier: reviewed    # spec B7 changes src/advisor/prompts/system.md
 intent_accepted: 2026-11-16 by-agent    # owner: "accept 22"
 spec_accepted:
 plan_approved:
@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-16 by-agent    # owner: "/auto 22"
 auto_round:
-auto_stopped: too many sessions
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
 blocked_by:
   - 14    measured on the 500-product catalogue
