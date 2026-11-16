@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-16 by-agent    # owner: "/auto 19" (diff read)
 auto_round: 3
-auto_stopped: escalate, owner reads the diff
+auto_stopped: live check owed
 follows_up:
 links:
   - intents/18-intent-dependencies    blocked time between intents is part of the wait picture
