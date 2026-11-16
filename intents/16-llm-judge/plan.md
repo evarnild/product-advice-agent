@@ -192,3 +192,13 @@ Commits: this round's single rework commit (subject "§16: review round 2 rework
 - Stale docstrings naming only `queue` and `import` now name `judge` (module docstring, exit codes, the `_LANGFUSE_ENV` comment in `analysis.py`; `annotate.py` header).
 - `judging.LANGFUSE_ENV` is compared with `tracing.REQUIRED_ENV` in `tests/test_boundaries.py`.
 - Left alone, as asked: an empty `reason` still counts as a verdict (owner's call).
+
+### 2026-11-16: live-check amendment
+
+Owner: "accept 16 amendment". Commit: this entry's single commit (subject "§16: live-check amendment: widened judge prompt").
+
+Shipped: `judge-no-fit.md` rewritten to amended B3 (decide "nothing fits" / "something fits" from the results, the pass rule for each, then fail reasons (a) to (e) in either case, with both (b) examples; JSON format, slots and few-shot block unchanged). AC9: `test_the_shipped_template_states_each_rule_of_b3` (12 parametrised assertions). README text on scope updated; no module docstring said "by construction". AC2's test, the data (labels, split, validation, judgements) and `src/advisor/models/` untouched; no temperature change.
+
+Mutation checks (drop each rule from the template by backup and restore): each of the 9 rule lines and the (b) tablet, (b) smartwatch and (a) tail sentences fails its own assertion.
+
+No plan conflict found.

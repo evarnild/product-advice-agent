@@ -274,7 +274,10 @@ One judge, for "an honest answer when nothing fits" (the
 `no_product_available` and `irrelevant_alternatives` modes together). It
 judges the cases whose scenario is `no-match` or `budget-too-low`, from the
 question, the searches with the products they returned, and the answer (it
-never reads the catalogue). It always uses Anthropic (`claude-haiku-5-5`;
+never reads the catalogue). The question was written so that nothing fits, but
+the searches may still return a product that does: the judge reads the results
+to decide whether nothing fits or something fits, and grades each case by its
+own rule (the prompt lists the fail reasons). It always uses Anthropic (`claude-haiku-5-5`;
 `--model` changes the model, not the provider) and needs `ANTHROPIC_API_KEY`;
 it is a paid call, one per in-scope case (cents for a 50-case run). The
 prompt is `src/advisor/evals/prompts/judge-no-fit.md`, filled with your

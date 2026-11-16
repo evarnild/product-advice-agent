@@ -129,6 +129,30 @@ def test_the_shipped_template_has_both_slots():
     assert '"pass"' in template
 
 
+# Each rule of the amended B3 is one assertion on the committed template (AC9),
+# so dropping any single rule fails exactly its own check.
+_RULES = {
+    "case nothing fits": "Nothing fits: no search returned a product that meets the request",
+    "case something fits": "Something fits: a search returned a product that meets the request",
+    "pass when nothing fits": "If nothing fits, answer PASS when the answer says plainly",
+    "pass when something fits": "If something fits, answer PASS when the answer offers only such",
+    "a implies a fit": "(a) It implies a fit that the search results do not show",
+    "a says nothing fits when a result does": "says nothing fits when a search result does",
+    "b other kind": "(b) It proposes an alternative of another kind that does not serve",
+    "b tablet example": "a tablet for someone who wants a laptop to take notes on passes",
+    "b smartwatch example": "smartwatches for someone who asked for headphones fail",
+    "c invented details": "(c) It states product details that the search results do not show",
+    "d assumed constraint": "(d) It assumes a constraint that the customer never gave",
+    "e hides": "(e) It hides that nothing fits",
+}
+
+
+@pytest.mark.parametrize("phrase", list(_RULES.values()), ids=list(_RULES))
+def test_the_shipped_template_states_each_rule_of_b3(phrase):
+    template = judge.PROMPT_PATH.read_text(encoding="utf-8")
+    assert phrase in template
+
+
 # --- B4 ---------------------------------------------------------------------
 
 
