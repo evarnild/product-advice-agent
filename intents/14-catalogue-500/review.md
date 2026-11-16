@@ -280,3 +280,19 @@ from an extract; nothing pushed.
 
 **Taken on trust:** the four brands not being registered electronics
 brands; why the commit order put the file before the tests.
+
+## Live check result (2026-11-16, owner)
+
+- Before (`main`, catalogue d99139d3): `evals/runs/20261115T191619Z-ollama.json`
+  and `evals/runs/20261116T084116Z-ollama.json`, 11/15 each (main checkout).
+- After (this branch, catalogue c2e56cb2): `evals/runs/20261116T084828Z-ollama.json`
+  (worktree), 9/15.
+- New failures, both the F5 mechanism (cheapest-first search, default limit
+  5): `student-laptop` (the model's `{laptop, max_price 700}` returns
+  P-241, P-012, P-281, P-073, P-033; P-009 ranks 10th) and
+  `nc-headphones-under-200` (P-001 is not among the five cheapest
+  noise-cancelling headphones under 200). `sport-earbuds`, `video-editing-laptop`,
+  `tv-sound` and `out-of-stock-quiet-pro` fail before and after.
+- The owner accepts the regression as the catalogue's known cost (ADR
+  0003) and asks for a follow-up intent on search that scales to 500
+  products. `live_checked` recorded on the owner's words.
