@@ -65,7 +65,7 @@ Re-read on `main` at `5dabf91`.
    with the 2 h cap and idle (B6); `formatStats` / JSON (B8). Tests over
    fixtures (AC2–AC5 logic). Commit.
 3. **I/O** (`scripts/stats.mjs`, `package.json` `stats`): reads `git log`
-   (`--format=%H %ct %s` over `main` and local branches), the session log,
+   (`--format=%H %at %s`, author time per the 2026-11-16 spec amendment over `main` and local branches), the session log,
    and transcripts under `~/.claude/projects/` for the main checkout's and
    worktrees' slugs (root overridable by `--transcripts <dir>` for tests);
    `-- <id>`, `--all` (with `partial` for intents merged before this
