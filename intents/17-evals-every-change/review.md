@@ -3,13 +3,158 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: a54cf3f350c846edeefc3a468026a3215310266c
-round: 1
+reviewed-commit: 232900a03b8debb50c6280ef7298a409bc61c4c6
+round: 2
 sampled: no
 run: auto
 live-check: owed
 
+## Resolution of round 1
+
+| R1 finding | Resolution | Checked |
+| --- | --- | --- |
+| HIGH baseline.py:87 (M18 survived) | `test_compare_categories_rates_and_no_warnings` adds `("newfail","FAIL")` and asserts it is in `added` and not in `regressed` (tests/test_evals_baseline.py:96-111) | M18 killed (KeyError 'newfail'). The variant M18b, which uses `.get` with no KeyError, is killed by the assertion on `regressed` |
+| HIGH analysis.py:325 (M19 survived) | new `test_owes_run_ignores_changes_main_made_after_branching` (tests/test_analysis_baseline_cli.py:131) | M19 killed by that test |
+| MEDIUM hash-check procedure | auto/SKILL.md:246-251 and review/SKILL.md:80-84 name the three hash fields and the three files, at the reviewed commit; baseline warnings are called "expected differences, not this check" | resolved. REVIEW-POLICY.md:135-140 still says "must match the branch's files". That is consistent: `ship` refuses changes after the reviewed commit, so those files are the reviewed commit's. Not a finding |
+| MEDIUM noise and resume path (Needs decision) | owner: "Yes to the 17 recommendations". (a) REVIEW-POLICY.md:152-153, the `## Eval run` template (REVIEW-POLICY.md ~282), auto/SKILL.md:254, review/SKILL.md:84 and :121. (b) the stop is renamed `eval regressions, decision needed`, with a new row at auto/SKILL.md:96 | in place; two new gaps below |
+| MEDIUM live_checked recorded early | cleared in 59cfe99; the live check is owed again | metadata.yml `live_checked:` empty |
+| LOW `eval run failed` has no resume row or CLAUDE.md entry | row at auto/SKILL.md:97; CLAUDE.md:71 "an eval run that fails" | resolved |
+| LOW rename detection | `--no-renames` at analysis.py:325, plus `test_owes_run_owed_when_a_file_moves_out_of_a_listed_path` | M30 killed by that test |
+| LOW "Every case … is one finding" | auto/SKILL.md:252-254 "One or more cases … make one finding … listing each case" | resolved; matches B7 |
+| LOW stale Progress entry | new dated entry at plan.md:141-173, below the marker; the old entry is untouched | SHAs and counts correct (698→700, kit 298) |
+| LOW ship skill blank line | blank line added before the heading; trailing blank removed | resolved |
+
 ## Passes
+
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass. spec.md is unchanged against main (0 diff lines). plan.md changed only below the Progress marker. The stop name `eval regressions, decision needed` differs from B7's literal `(decision needed)`, but it is the owner's (b) and still contains the phrase |
+| 2 | Type check | expected FAIL, owed live check only (below) |
+| 3 | Behaviour against the spec | findings (2), both in the (a)/(b) skill text |
+| 4 | Tests prove the behaviour | pass. All three targeted mutants killed; the only changed production line is covered |
+| 5 | Conventions | pass. No model or network in the new tests: temp git repos only |
+| 6 | Numbers in prose | pass. Progress "kit 298, pytest 698 -> 700" reproduced |
+| 7 | Documentation | pass. CLAUDE.md stop list updated |
+| 8 | Guardrails and hygiene | pass. No secrets; the git argv is unchanged in shape, with no shell |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 17, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/17-evals-every-change/review.md → ## Live check, then set live_checked: <date> in intents/17-evals-every-change/metadata.yml.
+  note:  11 file(s), 699 line(s) changed outside intents/.
+exit: 1
+```
+
+The only error is the owed live check, which follows from the owner clearing `live_checked` (59cfe99). Clearing it is the owner's job; it is not a rework finding.
+
+## Findings
+
+- **MEDIUM** `.claude/skills/auto/SKILL.md:96`: the "eval regressions, decision needed" row never writes the round's `review.md` when the owner picks rework.
+  - **Why it happens:** step 6, the eval run, comes after the re-check and "before writing `review.md`" (auto/SKILL.md:234). Step 6.4 then stops, so round n has no `review.md` at the stop. The row's Accepted branch writes it. The Rework branch says only `as "decision needed" (a **new round**)`. The decision-needed row (:94) assumes the round's `review.md` already exists, because step 5.4 writes it before step 5.5 acts on a verdict.
+  - **Effect:** round n's report, and any "Needs rework:" findings from the reviewer in that round, never reach `review.md` or the implementer. Round n+1 then starts with a gap in the history.
+  - **Second gap:** unlike the "re-check mismatch" row (:95), this row does not say what to do when the reviewer's report is not in the conversation (a new session). In that case the Accepted branch cannot write `review.md` either.
+  - **Needs rework:** in that row, write round `auto_round`'s `review.md` on both branches: the regression finding with the owner's answer, and verdict `rework` on the Rework branch. Then go on as "decision needed". Add the re-check-mismatch clause: "If the reviewer's report is not in this conversation, redo the review as the same round, then the re-check and the eval compare." Step 5.4 ("every round writes `review.md`") and row :95 determine this fix.
+- **LOW** `.claude/skills/auto/SKILL.md:252-256`, `.claude/skills/review/SKILL.md:84`, `REVIEW-POLICY.md:152-153`: "re-run a case that flipped before calling it a regression" leaves several things open.
+  - **What is unclear:**
+    - It does not say how to re-run. `advisor-eval --only <id>` exists (run.py:170).
+    - It does not say which report the `## Eval run` section names after a re-run.
+    - It does not say what `/ship` writes as the baseline when the re-run disagrees with the full run.
+  - **Why it matters:** a re-run with `--only` does not compare cleanly. I trimmed 093332Z to the one case `waterproof-camera` and ran `compare` on it. It printed "this run: 1/1 passed", `fixed (1)` and `removed (14)`, listing every other case. A coordinator could misread that as 14 removals, or `/ship` could commit it as the baseline.
+  - **Smaller points:**
+    - In auto/SKILL.md the sentences run finding → re-run → stop. The re-run should come before the finding.
+    - In review/SKILL.md the sentence sits right after "A reviewer agent only checks…", which leaves it unclear who re-runs. Only the coordinator may call a model.
+  - **Needs decision:** which report counts after a re-run, both for `## Eval run` and for the baseline written at ship. One option: re-run with `--only <flipped ids>`, call it a regression only if it fails again, and keep naming the full run, which stays the baseline source. The fix chooses behaviour beyond the spec, so it is the owner's call.
+- **LOW, worth a look** `.claude/skills/auto/SKILL.md:94-96`: the new reason `eval regressions, decision needed` contains the earlier row's reason `decision needed` (:94). A coordinator that matches the reason by substring hits row :94 first, a new round, and skips the "accepted, no new round" path. A distinct name, such as `eval regressions`, would remove the ambiguity. Not blocking.
+
+## Mutants
+
+Each mutant changed one line and ran the full pytest suite (700). Kit tests were not re-run per mutant because no mutant touched `scripts/`. The harness checked that the diff was non-empty before running.
+
+| # | Target | Mutation | Result | Killing test |
+| --- | --- | --- | --- | --- |
+| M18 | baseline.py:87 | `i in old and old[i] == "PASS"` → `old.get(i, "PASS") == "PASS"` | killed (KeyError 'newfail') | test_evals_baseline::test_compare_categories_rates_and_no_warnings |
+| M18b | baseline.py:87 | as M18, with `old.get(i,"PASS")` in the tuple too (no KeyError) | killed (regressed list has an extra ('newfail','PASS','FAIL')) | same |
+| M19 | analysis.py:325 | `{base}...HEAD` → `{base}..HEAD` | killed | test_analysis_baseline_cli::test_owes_run_ignores_changes_main_made_after_branching |
+| M30 | analysis.py:325 | drop `"--no-renames"` | killed | test_analysis_baseline_cli::test_owes_run_owed_when_a_file_moves_out_of_a_listed_path |
+
+There are no survivors. analysis.py:325 is the only production line changed in round 2. M1–M17 and M20–M29 (round 1) target code unchanged since then and were not re-run. A rework of the findings above changes skill text only, so it is expected to kill no new mutant.
+
+**Do the tests prove the behaviour?** Yes, for the code. Both round-1 survivors and the rename gap are now proven: each fails for the intended reason and not only by accident (M18b confirms M18 does not die only on the KeyError). The (a)/(b) changes are skill and policy prose that no test exercises. Only the live check or a real `/auto` regression stop shows them.
+
+## Not checked
+
+- The `/auto` step 6 eval run, the regression stop and its two resume branches, the `eval run failed` resume, and the `/ship` baseline update, run end to end with a real Ollama model. Live check, rule 3.
+- M26, `baseline`'s write-error exit, which is still untested (carried from round 1).
+- Whether a re-run with `--only` is the intended re-run (LOW finding).
+
+## Live check
+
+- **owed:** rule 3. The skill procedures are only shown by a real model run (spec AC7: "live check owed").
+- **steps:**
+  1. With Ollama running and `qwen3:8b` pulled, in `C:/Users/eric/src/product-advice-agent-wt/17-evals-every-change`, run `uv run advisor-analysis owes-run --base main`.
+  2. In the same worktree, run `uv run advisor-analysis compare evals/runs/20261116T093026Z-ollama.json`, then `uv run advisor-analysis compare evals/runs/20261116T093332Z-ollama.json`.
+  3. In a scratch branch or worktree off this branch that changes one word of `src/advisor/prompts/system.md` and commits it, run `uv run advisor-analysis owes-run --base main`, then `uv run advisor-eval`, then `uv run advisor-analysis compare <new report>`. Compare the report's three `*_sha256` with `sha256sum evals/cases.jsonl src/advisor/prompts/system.md src/advisor/data/catalogue.json` there.
+  4. If step 3 shows a case under "regressed", re-run it with `uv run advisor-eval --only <id>` and `compare` that report.
+- **you should see:**
+  1. "not owed (no listed path changed)", exit 0.
+  2. First 8/15 against 8/15, with no flips and no warnings. Then 9/15 with `fixed (1): waterproof-camera: FAIL -> PASS`. Both exit 0.
+  3. "owed: the diff touches src/advisor/prompts/system.md", then a report in `evals/runs/`. `compare` prints both pass rates, any flips and a `prompt_sha256 differs` warning. The report's `prompt_sha256` equals the scratch file's sha256, not the baseline's.
+  4. 1/N passed with every other case under "removed". Decide whether this is the re-run you want the skills to describe (LOW finding). Then record `live_checked` if satisfied.
+
+## Eval run
+
+- not owed (no listed path): `uv run advisor-analysis owes-run --base main` at 232900a printed "not owed (no listed path changed)", exit 0. The changed paths are skills, CLAUDE.md, README.md, REVIEW-POLICY.md, `evals/baseline.json`, the intent folder, `src/advisor/evals/analysis.py`, `src/advisor/evals/baseline.py` and two tests. None of them is in the policy's list.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/17-evals-every-change` at 232900a; `git status --short` clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 298 tests, 0 fail; "All
+  checks passed!"; "160 files already formatted"; mypy "Success: no issues
+  found in 29 source files"; "700 passed". Matches the reviewer and the
+  implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "11 file(s), 699 line(s)". Matches.
+- **Coordinator, re-run:** M18 KILLED by `test_compare_categories_rates_and_no_warnings`;
+  M19 KILLED by `test_owes_run_ignores_changes_main_made_after_branching`;
+  M30 KILLED by `test_owes_run_owed_when_a_file_moves_out_of_a_listed_path`
+  (each "1 failed, 699 passed"). Matches the reviewer and the implementer.
+
+**Reviewer:**
+- **Verified myself:**
+  - `npm run verify` exit 0: kit 298 tests, 298 pass, 0 fail; ruff "All checks passed!"; "160 files already formatted"; mypy "Success: no issues found in 29 source files"; pytest "700 passed". This matches the implementer's claim.
+  - `npm run check:intent` exit 1. Its only error is the owed live check (output above).
+  - Four mutants (table above), each followed by `git status --short` clean.
+  - Diffs:
+    - Read the round-2 diff `0ce42a3..232900a` in full.
+    - `git diff main...HEAD -- spec.md` is empty.
+    - The plan.md diff is entirely below the Progress marker.
+    - metadata.yml: `live_checked` cleared and `auto_round: 2`.
+  - The hashes in `evals/baseline.json` equal the sha256 of the branch's `evals/cases.jsonl` (2b6210…), `system.md` (a22c1c…) and `catalogue.json` (c2e56c…).
+  - `compare` of 093026Z gives 8/15 with no flips; 093332Z gives 9/15 with `waterproof-camera` fixed. Both exit 0.
+  - A one-case trimmed copy of 093332Z, written in scratch (not committed), compares as 1/1 with 14 "removed".
+  - `sdlc:scan --sample-due auto --exclude 17` gives "sampled: no".
+  - Nothing was pushed (no origin ref); `main` is at b2e2815.
+- **Taken on trust:**
+  - That the owner's words "Yes to the 17 recommendations" cover (a) and (b) as written.
+  - Who made 093026Z and 093332Z, and at which commit. Their hashes match the content.
+```
+# Round 1 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: a54cf3f350c846edeefc3a468026a3215310266c
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
+
+### Passes
 
 | # | Pass | Result |
 | --- | --- | --- |
@@ -23,7 +168,7 @@ live-check: owed
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 
     > product-advice-agent@0.0.0 check:intent
     > node scripts/check-intent.mjs
@@ -32,7 +177,7 @@ live-check: owed
       note:  11 file(s), 639 line(s) changed outside intents/.
     exit: 0
 
-## Findings
+### Findings
 
 - **HIGH** `src/advisor/evals/baseline.py:87` — the `i in old` guard on "regressed" is not proven. Mutant M18 (`old.get(i, "PASS") == "PASS"`) survives the full suite. With it, a newly added case that FAILs would be reported as "regressed". That turns every new case in §15's set into a false "Needs decision" stop (B6, B7). The test fixtures only add a case that PASSes. Needs rework: in `test_compare_categories_rates_and_no_warnings`, add a case that is new and FAILs, and assert it is in `added` and not in `regressed`.
 - **HIGH** `src/advisor/evals/analysis.py:325` — the three-dot `f"{base}...HEAD"` is not proven. Mutant M19 (`..HEAD`) survives. With two dots, once `main` has moved past the branch point, `owes-run` would list `main`'s own changes as this branch's (B1: "its diff touches"). Every `make_repo` test leaves `main` at the branch point. Needs rework: add an `owes-run` test where `main` gains a commit touching a listed path after `work` branches, and assert "not owed".
@@ -45,7 +190,7 @@ live-check: owed
 - **LOW** `intents/17-evals-every-change/plan.md:117-130` (Progress) — the entry names commits 7af1cc0, 240c9a1, 280a2ba, 98f6106 and 84ec629. The branch has 1867933, abf268c, 6e4ef36, 1dcb66f and 358aef1 (it was rebased). It says "evals/baseline.json does not exist" and gives 624→664 tests. I counted 698 pytest and 298 kit tests at a54cf3f (§13/§14/§18 since landed), and subtask 5 has since been done in 03e6f33. Needs rework: append a dated Progress entry (below the marker) with the current SHAs, the baseline commit and the counts. Do not edit the old entry.
 - **LOW** `.claude/skills/ship/SKILL.md:67` — the new `## After a complete ship` heading follows a list item with no blank line, and the file ends with an extra blank line. Worth a look.
 
-## Mutants
+### Mutants
 
 Each mutant changed one line (M1 removed one list entry), and the full pytest suite ran (698 tests) for each. The kit suite was not re-run per mutant: no mutant touched `scripts/`.
 
@@ -85,13 +230,13 @@ For the rework round, the coordinator should re-run M18 (baseline.py:87) and M19
 
 **Do the tests prove the behaviour?** Mostly. 26 of 28 mutants that ran were killed. The policy-list test keeps `EVAL_PATHS` and the policy in step. The two survivors are real gaps: an added failing case is unguarded (M18), and so is a `main` that moved (M19).
 
-## Not checked
+### Not checked
 
 - The `/auto` step 6 eval-run procedure, the copy to the main checkout's `evals/runs/`, and the `/ship` baseline update, run end to end with a real Ollama model. These are skill text, and only a real coordinator run shows them (live check, rule 3).
 - `baseline`'s write-error exit 1 (M26 not run).
 - Whether 093026Z, and not 093332Z, was the right baseline to commit. The owner chose it; see the noise finding.
 
-## Live check
+### Live check
 
 - owed: rule 3. The Not-checked item is the skill procedures (`/auto` step 6 eval run, compare, the regression stop, `/ship` baseline update), which only a real model run shows. Spec AC7 also states "live check owed". Rule 1 does not apply (no listed runtime path).
 - steps:
@@ -103,11 +248,11 @@ For the rework round, the coordinator should re-run M18 (baseline.py:87) and M19
   2. 8/15 against 8/15 with no flips and no warnings, then 9/15 with `fixed (1): waterproof-camera: FAIL -> PASS`. Both exit 0.
   3. "owed: the diff touches src/advisor/prompts/system.md", a report in `evals/runs/`, and `compare` printing both pass rates, any flips, and a `prompt_sha256 differs` warning. Then confirm the existing `live_checked` covers this, or record it again (finding 5).
 
-## Eval run
+### Eval run
 
 - not owed (no listed path): `uv run advisor-analysis owes-run --base main` at a54cf3f printed "not owed (no listed path changed)". The diff touches `src/advisor/evals/analysis.py` and `baseline.py`, neither listed.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/17-evals-every-change` at a54cf3f; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 298 tests, 0 fail; "All
