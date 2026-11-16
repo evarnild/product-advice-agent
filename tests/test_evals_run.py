@@ -167,7 +167,7 @@ def test_later_unreachable_is_an_error_not_an_abort(tmp_path):
 
 
 def test_bad_case_file_exits_2_naming_case_and_field(tmp_path):
-    bad = [{"id": "x", "question": "q", "expect_ids": ["P-099"]}]
+    bad = [{"id": "x", "question": "q", "expect_ids": ["P-999"]}]
     code, out, err, factory = run(tmp_path, [], cases=bad)
     assert code == 2
     assert "case 'x'" in err and "'expect_ids'" in err
@@ -358,7 +358,7 @@ def test_the_report_keeps_turns_tools_with_results_and_guardrails(tmp_path):
     assert call["arguments"] == {"category": "headphones", "max_price": 200}
     expected = search_tool(load_catalogue()).run({"category": "headphones", "max_price": 200})
     assert call["results"] == expected
-    assert call["results"][0]["id"] == "P-006"  # the products the model saw, cheapest first
+    assert call["results"][0]["id"] == "P-243"  # the products the model saw, cheapest first
     assert call["error"] is False
     assert [g["stage"] for g in first["guardrails"]] == ["input", "output"]
     assert all(set(g) == {"stage", "allowed", "reason"} for g in first["guardrails"])
@@ -430,7 +430,7 @@ def test_an_unknown_tool_call_is_recorded_in_order_with_error_true(tmp_path):
     assert first["tools"][0]["arguments"] == {"id": "P-001"}
     assert first["tools"][0]["results"] == []
     assert first["tools"][1]["error"] is False
-    assert first["tools"][1]["results"][0]["id"] == "P-006"
+    assert first["tools"][1]["results"][0]["id"] == "P-243"
     assert [t["tools"] for t in first["turns"]] == [["get_product"], ["search_products"], []]
 
 

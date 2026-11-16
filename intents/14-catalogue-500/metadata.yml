@@ -2,17 +2,17 @@
 id: 14
 slug: catalogue-500
 type: feature
-status: accepted
+status: in-review
 title: Grow the catalogue to 500 products
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 14"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 14" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 14 /auto 17" (auto_authorized 2026-11-13)
-live_checked:
+live_checked: 2026-11-16 by-agent    # owner: "live checked 14, accept the regression but write a new follow up intent"
 merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "/auto 14 /auto 17", then "run both anyway"
-auto_round:
-auto_stopped:
+auto_authorized: 2026-11-15 by-agent    # owner: "diff from 14 read /auto 14"
+auto_round: 2
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/13-catalogue-change-rules    must merge first; its consistency test checks this growth

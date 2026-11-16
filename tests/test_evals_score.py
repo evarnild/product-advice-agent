@@ -95,7 +95,7 @@ GOOD = "The Auralis Calm 300 (P-001) costs 189 euros."
 def test_grounded():
     case = Case("c", "q")
     assert verdicts(case, GOOD)["grounded"]
-    assert not verdicts(case, GOOD + " Or P-099 at 10 euros.")["grounded"]
+    assert not verdicts(case, GOOD + " Or P-999 at 10 euros.")["grounded"]
 
 
 def test_prices():

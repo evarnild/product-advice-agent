@@ -26,38 +26,38 @@ def count(**kw):
 
 
 def test_fixture_facts():
-    # Headphones cost 59, 79, 129, 159, 189, 249 euros.
-    assert count(category="headphones", max_price=59) == 1
-    assert count(category="headphones", max_price=79) == 2
-    assert count(category="headphones", max_price=58) == 0
+    # The cheapest headphones cost 19, 29, 39, 49 and then 59 euros (§14: 63 headphones).
+    assert count(category="headphones", max_price=19) == 1
+    assert count(category="headphones", max_price=29) == 2
+    assert count(category="headphones", max_price=18) == 0
     assert count(category="laptop") >= 1
     assert count(category="headphones", keywords=["noise cancelling"]) >= 1
 
 
 # exact-match: 0 vs 1 result
 def test_exact_match_threshold():
-    assert not ok("exact-match", Probe(category="headphones", max_price=58))
-    assert ok("exact-match", Probe(category="headphones", max_price=59))
+    assert not ok("exact-match", Probe(category="headphones", max_price=18))
+    assert ok("exact-match", Probe(category="headphones", max_price=19))
 
 
 # several-matches: 1 vs 2 results
 def test_several_matches_threshold():
-    assert not ok("several-matches", Probe(category="headphones", max_price=59))
-    assert ok("several-matches", Probe(category="headphones", max_price=79))
+    assert not ok("several-matches", Probe(category="headphones", max_price=19))
+    assert ok("several-matches", Probe(category="headphones", max_price=29))
 
 
 # no-match: 0 vs 1 result
 def test_no_match_threshold():
-    assert ok("no-match", Probe(category="headphones", max_price=58))
-    assert not ok("no-match", Probe(category="headphones", max_price=59))
+    assert ok("no-match", Probe(category="headphones", max_price=18))
+    assert not ok("no-match", Probe(category="headphones", max_price=19))
 
 
 def test_budget_too_low_needs_zero_within_budget_and_some_without():
-    assert ok("budget-too-low", Probe(category="headphones", max_price=58))
+    assert ok("budget-too-low", Probe(category="headphones", max_price=18))
     # one product within the budget: dropped
-    assert not ok("budget-too-low", Probe(category="headphones", max_price=59))
+    assert not ok("budget-too-low", Probe(category="headphones", max_price=19))
     # nothing even without the budget: dropped
-    assert not ok("budget-too-low", Probe(category="headphones", max_price=58, keywords=("zzzz",)))
+    assert not ok("budget-too-low", Probe(category="headphones", max_price=18, keywords=("zzzz",)))
 
 
 def test_budget_too_low_without_a_max_price_is_dropped():
