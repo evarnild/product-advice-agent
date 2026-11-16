@@ -137,3 +137,37 @@ worktree at the branch head (Ollama running, qwen3:8b pulled):
 
 The owner reads the report, then the coordinator commits `evals/baseline.json`
 on the branch before the review round (`§17: first eval baseline from <report>`).
+
+### 2026-11-16 - rework after review round 1
+
+Commits now on the branch (the 2026-11-13 entry's SHAs are from before the
+rebase): 1867933, abf268c, 6e4ef36, 1dcb66f, 358aef1 (subtasks 1-4, 6),
+03e6f33 (subtask 5: `evals/baseline.json` from
+`20261116T093026Z-ollama.json`), then the review and gate commits, and this
+rework: a1efc36 and the format commit after it. Subtask 5 is done; the old
+entry's "does not exist" is superseded.
+
+Rework (review.md round 1): a new-and-failing case in the compare test (kills
+M18); `owes-run` tests for a moved `main` (M19) and for a file moved out of a
+listed path, with `--no-renames` on the `git diff`; the hash check in the auto
+and review skills now names the three files to hash, and says the baseline
+warnings are not that check; the "One or more cases ... one finding" wording;
+a resume row and a CLAUDE.md stop-list entry for `eval run failed`; blank
+line in the ship skill.
+
+Owner decisions ("Yes to the 17 recommendations"):
+- (a) Noise: one sentence in `REVIEW-POLICY.md` "Eval runs" and in the
+  `## Eval run` report guidance, mirrored in the auto and review skills: a
+  single run varies, re-run a flipped case before calling it a regression.
+- (b) Resume path: the regression stop is now
+  `auto_stopped: eval regressions, decision needed` (the smallest change that
+  a row can match), with a resume-table row: accepted means write that
+  round's `review.md` with no new round and go on from its verdict; a rework
+  choice behaves as "decision needed" (new round).
+
+Counts: kit 298 (unchanged), pytest 698 -> 700 (+2 owes-run tests; the
+compare test gained a case). Mutants: M18 killed by
+`test_compare_categories_rates_and_no_warnings`; M19 by
+`test_owes_run_ignores_changes_main_made_after_branching`; dropping
+`--no-renames` by `test_owes_run_owed_when_a_file_moves_out_of_a_listed_path`.
+`check:intent` fails only on the cleared `live_checked` gate (coordinator's).
