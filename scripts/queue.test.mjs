@@ -159,3 +159,35 @@ describe('npm run queue', { timeout: 60_000 }, () => {
     expect(r.stdout).toMatch(/§5 .*\[fix\] accepted .* branch conflict/);
   });
 });
+
+describe('npm run queue and blocked_by (git seams)', { timeout: 60_000 }, () => {
+  const lineOf = (text, id) => text.split('\n').find((l) => l.trim().startsWith(`§${id} `)) ?? '';
+
+  it('B3: a merged: on the blocker branch copy does not clear it; main decides', () => {
+    write('intents/70-up/metadata.yml', meta(70, 'up', 'accepted', 'merged:\n'));
+    write('intents/71-down/metadata.yml', meta(71, 'down', 'accepted', 'blocked_by:\n  - 70    needs it\n'));
+    commit('§70 and §71');
+    git('checkout', '-q', '-b', 'fix/70-up');
+    write('intents/70-up/metadata.yml', meta(70, 'up', 'in-review', 'merged: x\n'));
+    commit('§70 branch says merged');
+    git('checkout', '-q', 'main');
+    const out = queue().stdout;
+    expect(lineOf(out, 71)).toContain('blocked by §70');
+    expect(JSON.parse(queue('--json').stdout).inFlight.find((e) => e.id === 71).blocked_by_open).toEqual([70]);
+  });
+
+  it('F3: a blocker that exists only on a branch is open, not an unknown id', () => {
+    write('intents/72-waits/metadata.yml', meta(72, 'waits', 'accepted', 'blocked_by:\n  - 73    only on a branch\n'));
+    commit('§72');
+    git('checkout', '-q', '-b', 'feat/73-only');
+    write('intents/73-only/metadata.yml', meta(73, 'only', 'draft'));
+    commit('§73 on a branch');
+    git('checkout', '-q', 'main');
+    const out = queue().stdout;
+    expect(lineOf(out, 72)).toContain('blocked by §73');
+    expect(out).not.toContain('on no branch');
+    const data = JSON.parse(queue('--json').stdout);
+    expect(data.inFlight.find((e) => e.id === 72).blocked_by_open).toEqual([73]);
+    expect(data.problems.filter((p) => p.includes('on no branch'))).toEqual([]);
+  });
+});

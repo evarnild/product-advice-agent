@@ -12,7 +12,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { appendEvent, git, mainCheckout, readIntentMetadata, readIntentMetadataFromBranch } from './session-io.mjs';
+import { appendEvent, git, mainCheckout, readBlockers, readIntentMetadata, readIntentMetadataFromBranch } from './session-io.mjs';
 import { branchFor, parseWorktreeList, pathKey, portFor, sessionBrief, worktreePathFor } from './session-lib.mjs';
 import { parseBranch } from './intent-check-lib.mjs';
 
@@ -111,6 +111,16 @@ function worktreeFor(root, id) {
   );
 }
 
+/** Refuses (before anything is created) while a direct blocker is open or the blocked_by record is broken. */
+function refuseIfBlocked(root, metadata) {
+  const { blockers, problems } = readBlockers(root, id, metadata);
+  const open = blockers.filter((b) => b.state === 'open').sort((a, b) => Number(a.id) - Number(b.id))[0];
+  if (open) fail(`§${id} is blocked by §${open.id} (${open.reason || 'no reason given'}), not merged into main. Ship §${open.id} first.`);
+  const unknown = blockers.filter((b) => b.state === 'unknown').sort((a, b) => Number(a.id) - Number(b.id))[0];
+  if (unknown) fail(`§${id} has a broken blocked_by record: §${unknown.id} is on no branch. Fix blocked_by in its metadata.yml.`);
+  if (problems.length) fail(`§${id} has a broken blocked_by record: ${problems[0]}`);
+}
+
 function spawn() {
   const root = mainCheckout(process.cwd());
   const existing = worktreeFor(root, id);
@@ -118,6 +128,7 @@ function spawn() {
   const found = readIntentMetadata(root, id) ?? readIntentMetadataFromBranch(root, id);
   if (!found) fail(`no intents/${id}-*/metadata.yml in ${root} or on any local branch for §${id}. Draft it with /intent first.`);
   const { dir, metadata } = found;
+  refuseIfBlocked(root, metadata);
   const path = worktreePathFor(root, id, metadata.slug);
   if (existsSync(path)) fail(`${path} already exists. See npm run sessions.`);
   const branch = branchFor({ type: metadata.type, id, slug: metadata.slug });

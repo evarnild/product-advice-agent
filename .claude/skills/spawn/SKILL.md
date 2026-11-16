@@ -29,8 +29,11 @@ You are the **coordinator** (the main checkout). This skill wraps
    launched are still running, say so and ask before adding a fourth.
    Merges are serial and the owner reviews each one, so more sessions
    mostly add waiting.
-4. **Spawn.** `npm run spawn -- <id>` (add `--base <ref>` only when the intent
-   depends on an unmerged branch, and say so). If the intent folder was
+4. **Spawn.** `npm run spawn -- <id>`. The script refuses an intent with an
+   open `blocked_by` blocker (or a broken record) before creating anything;
+   relay its message and stop. There is no override: editing `blocked_by` is
+   the override. A dependency is never a reason for `--base`: add `--base
+   <ref>` only when the owner asks for a stacked branch, and say so. If the intent folder was
    uncommitted here, the script moves it into the worktree. Tell the owner
    that.
 5. **Launch or hand over.** Read the worktree's `metadata.yml`. The gate the

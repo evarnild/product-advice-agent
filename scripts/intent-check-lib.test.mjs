@@ -465,3 +465,30 @@ describe('auto fields', () => {
     expect(parseMetadata('auto_stopped: cut # here\n').auto_stopped).toBe('cut');
   });
 });
+
+describe('checkChange and blocked_by', () => {
+  const withBlocked = (items, blockers) => base({ metadata: meta({ blocked_by: items }), blockers });
+
+  it('fails on an open direct blocker, naming both intents', () => {
+    const r = checkChange(withBlocked(['13    needs the growth'], [{ id: '13', reason: 'needs the growth', state: 'open' }]));
+    expect(r.errors).toEqual(['§27 is blocked by §13, which is not merged into main (needs the growth).']);
+  });
+  it('fails on an unknown blocker and on a broken record', () => {
+    const r = checkChange(withBlocked(['99    x', 'x    y', '27    me'], [{ id: '99', reason: 'x', state: 'unknown' }]));
+    expect(r.errors).toEqual([
+      'intents/27-drift-log/metadata.yml: blocked_by item "x    y": "x" is not an intent id (digits).',
+      'intents/27-drift-log/metadata.yml: blocked_by item "27    me": an intent cannot block itself.',
+      'intents/27-drift-log/metadata.yml: blocked_by names §99, which is on no branch.',
+    ]);
+  });
+  it('notes an item without a reason, without failing', () => {
+    const r = checkChange(withBlocked(['13'], [{ id: '13', reason: '', state: 'cleared' }]));
+    expect(r.errors).toEqual([]);
+    expect(r.notes).toContain('intents/27-drift-log/metadata.yml: blocked_by item "13": no reason given.');
+  });
+  it('passes with cleared blockers, with none, and without the field', () => {
+    expect(checkChange(withBlocked(['13    r'], [{ id: '13', reason: 'r', state: 'cleared' }])).errors).toEqual([]);
+    expect(checkChange(withBlocked([], [])).errors).toEqual([]);
+    expect(checkChange(base()).errors).toEqual([]);
+  });
+});

@@ -66,5 +66,8 @@ here.
 
 ## 6. Report
 
+If the plan found a hard prerequisite (this intent cannot be built correctly
+until another is merged), add it to `blocked_by:` in `metadata.yml` as
+`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here.
 Name the folder, the weak points, and the next step: "approve by setting
 `plan_approved: <date>` in metadata.yml, or say yes".

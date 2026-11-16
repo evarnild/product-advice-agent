@@ -78,7 +78,11 @@ draft it", fill the gaps with your best reading and list each one under
      table's "by meaning" list (prompts, user-facing output,
      credentials, personal data). Otherwise leave it empty so that the path
      table decides;
-   - links;
+   - links: related work only;
+   - `blocked_by:` for each hard prerequisite, "cannot be built correctly
+     until that intent is merged", one per line as `<id>    <reason>` (ask
+     in the question round if the material hints at one). It is not a gate.
+     Mention in your report what you recorded;
    - for a fix, `follows_up: <id>` naming the intent whose change introduced
      the defect, when you can tell (check `git log -S` or `git blame` on the
      faulty line). That key, not `links:`, is how the scan counts follow-ups

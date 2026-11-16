@@ -249,3 +249,96 @@ describe('session-event hook', { timeout: 30_000 }, () => {
     }
   });
 });
+
+describe('npm run spawn and blocked_by', { timeout: 60_000 }, () => {
+  const meta = (id, slug, extra) => `id: ${id}\nslug: ${slug}\ntype: fix\nstatus: draft\n${extra}`;
+  const commitOnMain = (id, slug, extra) => {
+    const dir = join(repo, 'intents', `${id}-${slug}`);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'metadata.yml'), meta(id, slug, extra));
+    writeFileSync(join(dir, 'intent.md'), `# §${id}\n`);
+    git(repo, 'add', `intents/${id}-${slug}`);
+    git(repo, 'commit', '-q', '-m', `§${id} ${slug}`);
+  };
+
+  it('refuses an open blocker before creating a worktree or a branch, then spawns once main has merged:', () => {
+    commitOnMain(93, 'upstream', 'merged:\n');
+    commitOnMain(94, 'downstream', 'blocked_by:\n  - 93    needs the growth\n');
+    const r = run(SPAWN, ['94', '--no-install']);
+    expect(r.status, r.stdout).toBe(1);
+    expect(r.stderr).toContain('§94 is blocked by §93 (needs the growth), not merged into main. Ship §93 first.');
+    expect(existsSync(wt('94-downstream'))).toBe(false);
+    expect(git(repo, 'branch', '--list', 'fix/94-downstream')).toBe('');
+
+    commitOnMain(93, 'upstream', 'merged: abc1234\n');
+    const ok = run(SPAWN, ['94', '--no-install']);
+    expect(ok.status, ok.stderr).toBe(0);
+    expect(existsSync(wt('94-downstream'))).toBe(true);
+  });
+
+  it('refuses a broken record (an id that exists nowhere) and creates nothing', () => {
+    commitOnMain(88, 'broken', 'blocked_by:\n  - 87    nobody\n');
+    const r = run(SPAWN, ['88', '--no-install']);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('§88 has a broken blocked_by record: §87 is on no branch.');
+    expect(existsSync(wt('88-broken'))).toBe(false);
+    expect(git(repo, 'branch', '--list', 'fix/88-broken')).toBe('');
+  });
+
+  const branchWith = (name, id, slug, extra) => {
+    const tmp = join(sandbox, `tmp-${name.replace('/', '-')}`);
+    git(repo, 'worktree', 'add', '-q', '-b', name, tmp, 'main');
+    writeIntent(tmp, id, slug);
+    writeFileSync(join(tmp, 'intents', `${id}-${slug}`, 'metadata.yml'), meta(id, slug, extra));
+    git(tmp, 'add', 'intents');
+    git(tmp, 'commit', '-q', '-m', `§${id} on a branch`);
+    git(repo, 'worktree', 'remove', tmp);
+  };
+  const refused = (id, slug, text) => {
+    const r = run(SPAWN, [String(id), '--no-install']);
+    expect(r.status, r.stdout).toBe(1);
+    expect(r.stderr).toContain(text);
+    expect(existsSync(wt(`${id}-${slug}`))).toBe(false);
+    expect(git(repo, 'branch', '--list', `fix/${id}-${slug}`)).toBe('');
+    return r;
+  };
+
+  it('B3: a merged: on the blocker branch copy does not clear it', () => {
+    commitOnMain(81, 'up', 'merged:\n');
+    branchWith('fix/81-up-branch', 81, 'up', 'merged: x\n');
+    commitOnMain(80, 'down', 'blocked_by:\n  - 81    needs it\n');
+    refused(80, 'down', '§80 is blocked by §81 (needs it), not merged into main. Ship §81 first.');
+  });
+
+  it('names the lowest open blocker', () => {
+    commitOnMain(84, 'a', 'merged:\n');
+    commitOnMain(83, 'b', 'merged:\n');
+    commitOnMain(82, 'multi', 'blocked_by:\n  - 84    later\n  - 83    first\n');
+    refused(82, 'multi', '§82 is blocked by §83 (first)');
+  });
+
+  it('names the lowest open blocker numerically across id widths', () => {
+    commitOnMain(13, 'wide', 'merged:\n');
+    commitOnMain(9, 'narrow', 'merged:\n');
+    commitOnMain(75, 'widths', 'blocked_by:\n  - 13    wide one\n  - 9    narrow one\n');
+    refused(75, 'widths', '§75 is blocked by §9 (narrow one)');
+  });
+
+  it('refuses a non-digit id and the intents own id as a broken record', () => {
+    commitOnMain(77, 'nondigit', 'blocked_by:\n  - x    why\n');
+    refused(77, 'nondigit', 'broken blocked_by record');
+    commitOnMain(76, 'selfref', 'blocked_by:\n  - 76    me\n');
+    refused(76, 'selfref', 'broken blocked_by record');
+  });
+
+  it('a blocker that exists only on a branch is open, not unknown', () => {
+    branchWith('feat/78-only', 78, 'only', '');
+    commitOnMain(79, 'waits', 'blocked_by:\n  - 78    only on a branch\n');
+    const r = refused(79, 'waits', '§79 is blocked by §78');
+    expect(r.stderr).not.toContain('broken');
+  });
+
+  it('--remove is unaffected by blockers', () => {
+    expect(run(SPAWN, ['94', '--remove', '--unmerged']).status).toBe(0);
+  });
+});
