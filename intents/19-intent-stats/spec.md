@@ -18,6 +18,22 @@ Written against `main` at `157bd42`.
 - **Backfill:** "Best effort, marked partial" for §1–§18; no `stats.md`
   for them.
 
+## Owner's decisions (review round 1, 2026-11-16)
+
+The owner answered round 1's three "Needs decision" findings with "Yes to
+the 19 recommendations". They amend B3 and B6 as marked there:
+
+- **F2, waits clipped to the intent's lifetime:** gate and in-session
+  waits count only inside the intent's span, from its first commit to its
+  `merged` commit (or now, if unmerged); time outside is not booked to it.
+- **F3, which stops count:** only dependency stops are not the owner's
+  wait (`auto stopped: blocked by <n>`, and the older `waiting for N to
+  merge`); every other `auto stopped:` counts, including `ready for /ship`
+  until `merged`. Older live-check wordings (`live check passed` and the
+  like) end a gate wait, as `live check recorded` does.
+- **F4, author time:** phases and the stats cutover use author time
+  (`%at`), which a rebase keeps, instead of committer time.
+
 ## Sources that apply
 
 | Source | What it settles |
@@ -51,7 +67,7 @@ Written against `main` at `157bd42`.
 **Phases**
 
 - **B3.** An intent's phases are the spans between its milestone commits
-  (on `main` and its branch, by committer time): **intent** (drafted →
+  (on `main` and its branch, by author time, amended 2026-11-16): **intent** (drafted →
   accepted), **spec** (→ spec accepted), **plan** (→ plan approved),
   **build** (→ first `auto round` or `in-review`), **review** (→ the last
   `review round` before the ship, rework included), **live check**
@@ -72,8 +88,9 @@ Written against `main` at `157bd42`.
   each count their own wall-clock (time is not shared out).
 - **B6.** **Owner wait**, two kinds, each gap capped at 2 h with the excess
   reported as **idle**:
-  - **gate wait:** from an `auto stopped:` or `… drafted` commit of the
-    intent to the next commit that records the owner's answer (a gate, an
+  - **gate wait** (amended 2026-11-16, see the owner's decisions above:
+    dependency stops excluded, clipped to the intent's span): from an
+    `auto stopped:` or `… drafted` commit of the intent to the next commit that records the owner's answer (a gate, an
     `auto run resumed`, `auto run started`);
   - **in-session wait:** in a session attributed to the intent, from a
     `Stop` or a permission `Notification` to the next `UserPromptSubmit`.
