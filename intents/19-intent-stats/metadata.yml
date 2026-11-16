@@ -10,9 +10,9 @@ spec_accepted: 2026-11-13 by-agent    # owner: "yes to 19" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 19" (auto_authorized 2026-11-13)
 live_checked:
 merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "/auto 19", then "run it anyway" (fourth run)
-auto_round: 1
-auto_stopped: decision needed
+auto_authorized: 2026-11-16 by-agent    # owner: "Yes to the 19 recommendations" (resume after decision needed)
+auto_round: 2
+auto_stopped:
 follows_up:
 links:
   - intents/18-intent-dependencies    blocked time between intents is part of the wait picture
