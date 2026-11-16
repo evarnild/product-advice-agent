@@ -81,8 +81,12 @@ only checks that the run is named and that its `cases_sha256`, `prompt_sha256`
 and `catalogue_sha256` equal the sha256 of `evals/cases.jsonl`,
 `src/advisor/prompts/system.md` and `src/advisor/data/catalogue.json` in the
 worktree at the reviewed commit. `compare`'s hash warnings are against the
-baseline: expected differences, not this check. A single run varies, so
-re-run a flipped case before calling it a regression.
+baseline: expected differences, not this check. A single run varies: the
+coordinator (never a reviewer agent, which calls no model) re-runs a flipped
+case with `uv run advisor-eval --only <flipped ids>` and calls it a
+regression only if it fails again. The full run stays the report `## Eval
+run` names and the baseline source; the `--only` re-run is evidence only,
+and its `compare` output shows the other cases as "removed", as expected.
 
 ## 4. Write `review.md`
 
@@ -118,8 +122,9 @@ Use exactly the format in `REVIEW-POLICY.md` → "The report".
     themselves.
 - **`## Eval run`:** after `## Live check`, either `not owed (no listed
   path)` or the run report's name, provider and model, the comparison
-  (`advisor-analysis compare`), and your reading of it (a flipped case is
-  re-run before it is called a regression: a single run varies).
+  (`advisor-analysis compare`), and your reading of it (the coordinator
+  re-runs a flipped case with `--only` before it is called a regression: a
+  single run varies; the full run stays the named report).
 - **`run:`** `auto` when `/auto` called this review (its brief says so),
   otherwise `manual`.
 - **`sampled:`** run `npm run sdlc:scan -- --sample-due <run> --exclude <id>`

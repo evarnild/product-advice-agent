@@ -150,7 +150,14 @@ shows up in the review and not afterwards.
   owner decides, no threshold blocks, and nothing in `ship` or
   `check:intent` enforces the rule.
 - **A single run is noisy.** A model's answers vary between runs of the same
-  content, so re-run a case that flipped before calling it a regression.
+  content, so a case that flipped is re-run before it is called a
+  regression. Only the coordinator re-runs it (a reviewer agent never calls
+  a model), with `uv run advisor-eval --only <flipped ids>`, and the case is
+  a regression only if it fails again. The full run stays the report that
+  `## Eval run` names and the source of the baseline `/ship` writes. The
+  `--only` re-run is cited as evidence only, never compared as a whole and
+  never written as the baseline; its `compare` output shows the other cases
+  as "removed", which is expected.
 - **The baseline moves after the merge.** After `/ship` for a change whose
   review names a run, the coordinator writes `evals/baseline.json` from
   that report (`advisor-analysis baseline <report>`) and commits it on
@@ -279,8 +286,9 @@ live-check: owed | not-needed
 ## Eval run
 - <"not owed (no listed path)", or: the run report's name, provider and
   model, the comparison with the baseline (pass rates, regressed, fixed,
-  added, removed, warnings) and the coordinator's reading; a flipped case
-  is re-run before it is called a regression (a single run varies)>
+  added, removed, warnings) and the coordinator's reading; the coordinator
+  re-runs a flipped case with `--only` before calling it a regression (a
+  single run varies), and the full run stays the named report>
 
 ## Verified myself vs. taken on trust
 - <which commands actually ran, with results>

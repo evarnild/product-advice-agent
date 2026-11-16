@@ -171,3 +171,24 @@ compare test gained a case). Mutants: M18 killed by
 `test_owes_run_ignores_changes_main_made_after_branching`; dropping
 `--no-renames` by `test_owes_run_owed_when_a_file_moves_out_of_a_listed_path`.
 `check:intent` fails only on the cleared `live_checked` gate (coordinator's).
+
+### 2026-11-16 - review round 2 rework
+
+Text only; no code, no new mutant. Owner decision: "yes to the 17 re-run
+recommendation". Chosen wording (parallel in `REVIEW-POLICY.md` "Eval runs"
+and `## Eval run` guidance, `auto/SKILL.md` step 6, `review/SKILL.md`): only
+the coordinator re-runs a flipped case, with `uv run advisor-eval --only
+<flipped ids>`; a case is a regression only if it fails again; the full run
+stays the report `## Eval run` names and the baseline source; the `--only`
+re-run is evidence only, never compared as a whole or written as the
+baseline, and its `compare` output shows the other cases as "removed"
+(expected). In auto step 6 the order is now compare (3), re-run (4), finding
+(5), stop; the run-failed step is 6.
+
+Review findings: the regression stop is renamed `auto_stopped: eval
+regressions` (CLAUDE.md did not name it). Its resume row now writes round
+`auto_round`'s `review.md` on both answers (accepted: regressions named
+accepted, no new round; rework: verdict `rework` with the finding and the
+owner's answer, then as "decision needed" with a new round), and carries the
+re-check-mismatch clause (new session: redo the review as the same round,
+then the re-check and the eval compare).
