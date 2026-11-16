@@ -158,3 +158,39 @@ Divergences from the plan:
 - The ship test seam is a real failure (a directory where `stats.md` goes) and
   `renderStatsFile(…, {collect})` for a throwing collector, not an env switch.
 - `stats-io.mjs` was added (collection shared by `stats.mjs` and `ship.mjs`).
+
+### 2026-11-16: rework after review round 1
+
+Commits (rebased onto main; these replace the pre-rebase hashes quoted in the
+2026-11-13 entry above, which are no longer on the branch): e4d31d3 (code:
+F1-F4), 1ea5d52 (tests), plus this Progress and docs commit. The rebased
+hashes of the earlier work are `git log --format=%h main..HEAD`.
+
+Shipped, from the owner's decisions of 2026-11-16 ("Yes to the 19
+recommendations") and review round 1:
+- F4: phases and the stats cutover use author time (`%at`).
+- F2: gate and in-session waits are clipped to the intent's life (first commit
+  to `merged`, or to now while unmerged); `clipToLife` in `stats-lib.mjs`.
+- F3: only `auto stopped: blocked by <n>` and `waiting for N to merge` are not
+  the owner's wait; every other `auto stopped:` opens a gate wait, and a
+  `merged (` commit ends one (`ready for /ship`).
+- F1: any commit starting `live check` ends a gate wait (`recorded`, and older
+  wordings such as `passed`).
+- Tests for F5 (idle prompt alone), F6 (the hook process reads the skill list
+  from a temp repo), F7 (S10, S2c, S16, I5, I4, M4) and for each decision.
+- README.md and sdlc.md mention `npm run stats`; the stray colon and the extra
+  blank line in `.claude/skills/auto/SKILL.md` section 10 are gone.
+
+Tests: kit 309 before the rebase; 352 after it; 366 after this rework.
+
+Live figures are a snapshot of `npm run stats -- --all` on 2026-11-16 and move
+with every commit and session: total 648h13m elapsed (per-intent wall-clock,
+overlapping), gate wait 35h17m, in-session wait 14h13m, idle 350h20m, tokens
+in 7.5k, out 3.2M, cache read 486.6M, cache write 12.5M; skipped lines: 0.
+
+Divergences from the plan:
+- `skillId` stays the first free-standing integer after the skill name (so
+  `/review feat/19-x round 2` gives 2): spec B1 says "the first integer
+  argument" and the spec was not amended on this. The test pins both ends.
+- A wait is clipped, not dropped, when it straddles the span edge; an intent
+  with no commits gets no wait booked.

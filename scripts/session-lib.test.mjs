@@ -201,6 +201,9 @@ describe('eventRecordFrom', () => {
       // a number inside a branch name or path is not an id argument
       expect(logged('/review feat/19-x')).toMatchObject({ skill: 'review' });
       expect(logged('/review feat/19-x')).not.toHaveProperty('skillId');
+      expect(logged('/review feat/19 now')).not.toHaveProperty('skillId');
+      expect(logged('/review 19-x')).not.toHaveProperty('skillId');
+      expect(logged('/review feat/19-x round 2')).toMatchObject({ skillId: 2 }); // the first free-standing integer (spec B1)
       expect(logged(`/spec 5 ${SENTINEL} 9`)).toMatchObject({ skill: 'spec', skillId: 5 });
     });
 

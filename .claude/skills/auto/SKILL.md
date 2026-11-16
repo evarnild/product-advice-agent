@@ -298,8 +298,9 @@ and a later `/auto <id>` resumes from the recorded `auto_round` and
 Put these in the brief of each agent you launch, and keep them yourself.
 Every `Agent` call you make for an intent has a description beginning
 `§<id> implement`, `§<id> rework` or `§<id> review` (for example `§13 review
-round 2`); `npm run stats` attributes tokens and time by that prefix:
+round 2`); `npm run stats` attributes tokens and time by that prefix.
 
+Safety rules:
 
 - never run `npm run ship` (the coordinator alone runs `--dry-run` at step
   8), never merge, push, rebase or delete a branch or worktree;
