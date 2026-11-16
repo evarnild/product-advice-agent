@@ -1,13 +1,105 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §19 review — Time, tokens and owner wait per intent and phase
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 23ebd8f48f2e5fe79d494acae79b8c6f8bec630e
-round: 2
+reviewed-commit: 1ca5315424f554da63118c924309942a89943ed4
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed (the paths `scripts/session-event.mjs`, `.claude/skills/**` and `scripts/ship.mjs`; `review_tier: reviewed`). The owner reads the diff.
+
+Verdict: escalate. The reviewer proposed `attest`; no finding needs rework or a
+decision, but the tier is Reviewed, so the verdict is `escalate` (the
+owner's diff read), as in this intent's earlier rounds and REVIEW-POLICY.
+
+Round 3 diff (440321a..1ca5315): `scripts/stats-io.mjs` (1 line), `scripts/stats-lib.mjs` (1 comment line), `scripts/stats-lib.test.mjs` (+3 tests or assertions), `scripts/stats.test.mjs` (+1 test), the plan.md Progress entry and `auto_round: 3`. spec.md is unchanged this round. plan.md is changed only by an appended Progress entry, below the marker.
+
+## Resolution of round 2
+| Finding | Resolution | Evidence |
+| --- | --- | --- |
+| F8 HIGH cutover took the author time of the commit that added the file | resolved: `stats-io.mjs:81` runs `git log main --first-parent -m --diff-filter=A --format=%at` | F8 (both flags dropped) and F8fp (`--first-parent` dropped) are KILLED by "uses the merge commit, not the author time of the commit that added the file" (stats.test.mjs, a throwaway repo with a `--no-ff` merge). F8m (`-m` dropped) survives as an equivalent mutant; see LOW below |
+| F9 MEDIUM F2 test did not prove its name | resolved: renamed to "caps a gate wait that ends at the merge, and lets an unmerged intent wait up to now, none of it idle"; it asserts `idleMs` 17 h and 0; the gate-side clip is commented as a guard (`stats-lib.mjs:394`) | C1 KILLED; F2g SURVIVES as a documented guard, which is acceptable (see Findings) |
+| F10 LOW intent with no commits | resolved: "books no wait to a skill id with no commits" | C4 KILLED |
+| F11 LOW `blocked_by record broken` | resolved: a `gateGaps` case, `[1,5]` booked as gate wait | R3 KILLED |
+| LOW live-check milestone vs `GATE_END` wording; F3 owner-wait stops; I2, C5, C6, R1 carried | unchanged, by choice and as decided | — |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass (the round-3 diff is exactly the four round-2 fixes plus the Progress entry; spec.md untouched) |
+| 2 | Type check | pass (FAIL only on the owed live check, which is the owner's to clear) |
+| 3 | Behaviour against the spec | pass (B8 partial now uses the cutover at the merge commit; F4 author time kept) |
+| 4 | Tests prove the behaviour | pass: 14 mutants run this round, 12 killed, 2 survive (F2g a documented guard, F8m equivalent) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (kit 369, pytest 658 reproduced; "366 before" matches round 2) |
+| 7 | Documentation | pass (no doc change needed this round) |
+| 8 | Guardrails and hygiene | pass (synthetic throwaway repo, removed in `finally`; no transcript or session-log text read) |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 19, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/19-intent-stats/review.md → ## Live check
+- owed: rule 3 (the hook in real sessions; stats over real transcripts),
+  AC7. Run it in the worktree **before** the merge (`ship` requires
+  `live_checked` first); until §19 merges, `stats-lib.mjs` is not on
+  `main`, so there is no cutover and every merged intent reads `partial`.
+- steps, in `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats`:
+  1. `npm run stats -- 13` (or the latest shipped intent): compare
+     per-phase elapsed, gate wait, in-session wait and tokens (coordinator
+     vs agents) with your memory of the run.
+  2. `npm run stats -- --all`.
+  3. Open a Claude Code session in this worktree (its hooks run this
+     branch's `scripts/session-event.mjs`); type `/sessions`, `/spec 19`
+     and a plain prompt such as `yes to 16`; then read the last lines of
+     `.git/product-advice-agent-sessions.jsonl` in the main checkout.
+- you should see: no prompt or response text anywhere; every merged
+  intent marked `partial` (no cutover before the merge; after it, only
+  those merged before §19's merge commit); `/sessions` →
+  `"skill":"sessions"`, no `skillId`; `/spec 19` →
+  `"skill":"spec","skillId":19`; the plain prompt with neither; no hook
+  output or error.
+
+## Verified myself vs. taken on trust
+**Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats` at 1ca5315; `git status --short` clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit 369 tests, 0 fail; "All
+  checks passed!"; "157 files already formatted"; mypy "Success: no issues
+  found in 28 source files"; "658 passed". Matches the reviewer and the
+  implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "25 file(s), 1707 line(s)". Matches.
+- **Coordinator, re-run:** F8, F8fp, C1, C4, R3 each KILLED by the test the
+  reviewer names; F2g and F8m SURVIVED. Matches the reviewer and the
+  implementer.
+- **Coordinator, change:** the reviewer's live-check steps said "after the
+  merge"; `ship` needs `live_checked` before the merge, so the steps run in
+  the worktree (no cutover there, every merged intent `partial`, from
+  `computeStats`'s `cutover = null` branch, `stats-lib.mjs:337`).
+
+**Verified (round-3 reviewer, worktree `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats` at 1ca5315, already its HEAD; nothing checked out):**
+- `npm run verify` → exit 0: kit "tests 369, pass 369, fail 0"; "All checks passed!"; "157 files already formatted"; mypy "Success: no issues found in 28 source files"; "658 passed".
+- `npm run check:intent` → exit 1, live check only, "25 file(s), 1707 line(s)".
+- Round-3 diff read in full. `ship.mjs:227` merges `--no-ff`, so the cutover reads a first-parent merge commit in practice.
+- The 14 mutants above.
+- Branch not pushed: no remote branch. `main` was not touched by this branch. Main has since moved b2e2815 → 59ba1d0 with §22 bookkeeping commits only.
+
+**Taken on trust:** the transcript format's stability (as in rounds 1–2), and round 2's coordinator results for mutants not re-run.
+# Round 2 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 23ebd8f48f2e5fe79d494acae79b8c6f8bec630e
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed (path table: `scripts/session-event.mjs`'s logic,
 `.claude/skills/**`, `scripts/ship.mjs`; `review_tier: reviewed`).
@@ -20,7 +112,7 @@ The reviewer's own mutation batch was stopped by Claude Code for low memory
 the coordinator ran all 28 mutants in the foreground. The Mutants table
 below is that run, not a prediction.
 
-## Resolution of round 1
+### Resolution of round 1
 | Finding | Resolution | Evidence |
 | --- | --- | --- |
 | F1 HIGH live-check stop never ends | resolved: `GATE_END` gains `live check` | F1 KILLED by "ends a live-check stop at the commit recording the answer, in any wording (F1, F3)" |
@@ -36,7 +128,7 @@ below is that run, not a prediction.
 | LOW `stats -- <id>` buckets; `skillId` first integer | unchanged by choice (B1's literal text) | worth a look |
 | I2 `projectSlug` | unchanged; survives by construction | worth a look |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (spec.md changed only in fb54597, plan.md only in 990cf51 and the Progress entry in 2626762) |
@@ -49,7 +141,7 @@ below is that run, not a prediction.
 | 8 | Guardrails and hygiene | pass (synthetic fixtures; the hook test asserts its sentinel never reaches the log, empty stdout and stderr) |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -60,7 +152,7 @@ type-check: FAIL (intent 19, feature)
 ```
 The only error is the owed live check; clearing it is the owner's.
 
-## Findings
+### Findings
 - **F8 HIGH** `scripts/stats-io.mjs:81` (`statsCutover`): with
   `--format=%at`, the cutover is the author time of the commit that added
   `stats-lib.mjs` (4415b20, 2026-11-13 18:04:59), not when it reached
@@ -108,7 +200,7 @@ The only error is the owed live check; clearing it is the owner's.
   differs only when `now` precedes the first commit), R1 (anchor dropped;
   only `auto stopped:` subjects open a gap anyway).
 
-## Mutants
+### Mutants
 Coordinator's foreground run, one mutant at a time, full kit suite each,
 backup and restore by copy with diff guards; `git status --short` clean
 after each batch.
@@ -148,14 +240,14 @@ after each batch.
 The rework must kill C1, C4, F2g (or document the guard), R3, and a
 cutover mutant dropping `--first-parent` once F8 lands.
 
-## Not checked
+### Not checked
 - "kit 352 after the rebase" (Progress): not reproduced.
 - `npm run stats -- --all` on real transcripts this round (memory); round
   1's run was clean and no output path changed.
 - From round 1: the hook in a live session, the figures against owner
   memory, `projectSlug` for unusual paths.
 
-## Live check
+### Live check
 - owed: rule 3 (the hook in real sessions; stats over real transcripts),
   AC7.
 - steps: after the merge, in the main checkout: `npm run stats -- 13` (or
@@ -170,7 +262,7 @@ cutover mutant dropping `--first-parent` once F8 lands.
   `"skill":"spec","skillId":19`; the plain prompt with neither; no hook
   output or error.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats` at 23ebd8f; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 366 tests, 0 fail; "All
