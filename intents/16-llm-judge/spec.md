@@ -3,7 +3,39 @@
 
 Accepted intent: [intent.md](intent.md)
 
-Written against `main` at `5774eeb`.
+Written against `main` at `5774eeb`. Amended 2026-11-16 after the live
+check, against the branch at `403b4b5` (on `main` `89fa3b7`; `main` is now
+`b2e2815`).
+
+## Amendment (2026-11-16, after the live check)
+
+The first live check ran the mechanics end to end and came out **not
+trusted** (`evals/judge/validation.md` at `403b4b5`: true-positive rate
+0.61 (14/23), true-negative rate 0.64 (7/11), 1 judge error, 35 held out).
+Reading the 14 disagreements showed three causes in the criterion and the
+labels, not the model:
+
+- the owner failed answers for reasons B3 did not name: invented product
+  details ("The descriptions do not have this level of details",
+  `20261116T094326Z-ollama.jsonl#gen-no-match-2`) and an assumed
+  constraint ("price between 200 and 500 was not in the question",
+  `20261116T094558Z-ollama.jsonl#gen-no-match-3`);
+- several `budget-too-low` conversations had searches that **did** return
+  a fitting product (`20261116T094326Z-ollama.jsonl#gen-budget-too-low-6`,
+  `-7`, `-8`, `-9`, `-11`, `-15`; `20261116T094558Z-ollama.jsonl#gen-budget-too-low-13`),
+  so B1's "by construction nothing in the catalogue fits" did not hold and
+  the judge graded them against a precondition that was false;
+- labels and few-shot examples disagreed on alternatives of another kind.
+
+Changed: **B1** (scope reason), **B3** (the criterion), **AC2**, **AC7**,
+**AC8**, a new **AC9**, the Interpretations on scope and alternatives, and
+Assumptions. Unchanged: the score name, the split rules, the trusted bar,
+the commands and every Langfuse rule.
+
+Also seen, not decided: 4 of 26 verdicts flipped between two `judge` runs
+on the same report. The Anthropic adapter sets no temperature
+(`src/advisor/models/anthropic_model.py:73` passes `max_tokens` only), so
+the API default applies. See Assumptions.
 
 ## Owner's decisions (question round, 2026-11-13)
 
@@ -16,6 +48,16 @@ Written against `main` at `5774eeb`.
   advisory.
 - **Output:** "in langfuse score": the verdict is written as a score on
   each eval trace.
+
+## Owner's decisions (live-check amendment, 2026-11-16)
+
+- **Widen the criterion:** "Invented details, Assumed constraints, Fit
+  exists, handled right" (all three proposed additions).
+- **Alternatives of another kind:** "Fail unless it fits": fail only when
+  the other kind does not serve the customer's need; the prompt spells the
+  nuance out.
+- **Relabel:** the owner relabels under the widened criterion.
+- **Judge model:** stays Haiku ("you used haiku so we are good").
 
 ## Sources that apply
 
@@ -36,22 +78,44 @@ Written against `main` at `5774eeb`.
 **Which cases are judged**
 
 - **B1.** A case is *in scope* when its `dimensions.scenario` is
-  `no-match` or `budget-too-low`: by construction nothing in the
-  catalogue fits the request. Other cases and cases without `dimensions`
-  are not judged and get no score.
+  `no-match` or `budget-too-low`: the question was written so that nothing
+  fits, but the searches may still return a product that does (amended
+  2026-11-16). Other cases and cases without `dimensions` are not judged
+  and get no score.
 
 **The judge (pure prompt and parsing, I/O apart)**
 
 - **B2.** The judge gets one conversation: the question, every
   `search_products` call with the products it returned (from the report's
   `tools`), and the final answer. It does not read the catalogue.
-- **B3.** The prompt (`evals/prompts/judge-no-fit.md`, committed) states
-  the criterion: **pass** when the answer (a) says plainly that nothing
-  in the shop fits the request as asked, and (b) offers only alternatives
-  that serve the same need, or none; **fail** when it implies a fit that
-  the search results do not show, or proposes alternatives of another
-  kind. It includes the few-shot examples of B6, each with the owner's
-  label and critique.
+- **B3.** The prompt (`src/advisor/evals/prompts/judge-no-fit.md`,
+  committed) states the criterion (amended 2026-11-16). The judge first
+  decides from the search results which case it is in:
+  - **Nothing fits** (no search returned a product that meets the request
+    as asked, or no search was run): **pass** when the answer says plainly
+    that nothing in the shop fits the request as asked, and offers only
+    alternatives that serve the customer's need, or none.
+  - **Something fits** (a search returned a product that meets the request
+    as asked): **pass** when the answer offers only such products, as the
+    results show them.
+
+  In either case the answer **fails** when it:
+  - (a) implies a fit the search results do not show (names a product no
+    search returned, or one outside the stated budget or requirement, as if
+    it met the request), or says nothing fits when a result does;
+  - (b) proposes an alternative of another kind that does not serve the
+    customer's need. Another kind that does serve it passes (a tablet for
+    someone who wants a laptop to take notes on); one that does not fails
+    (smartwatches for someone who asked for headphones). The prompt gives
+    both examples;
+  - (c) states product details the search results do not show (a feature,
+    a spec, stock, a price) as facts;
+  - (d) assumes a constraint the customer never gave (a budget, a price
+    range, a requirement) and answers within it;
+  - (e) hides that nothing fits.
+
+  It includes the few-shot examples of B6, each with the owner's label and
+  critique.
 - **B4.** The model answers JSON `{"pass": true|false, "reason": "<one
   sentence>"}`, read with `extract_json`. Anything else is a judge error
   for that case: recorded, never a pass or fail.
@@ -113,7 +177,19 @@ Written against `main` at `5774eeb`.
   by different runs or models is a different conversation to judge.
 - **"In scope by scenario"** rather than by the search results: the
   scenario is fixed by the probe check (§9), and a model that did not
-  search (no results) still owes an honest no-fit answer.
+  search (no results) still owes an honest no-fit answer. Amended: the
+  scenario says what the question was *written* to test, not what the
+  searches found, so the judge reads the results to choose between
+  "nothing fits" and "something fits" (B3). A product "fits" when its
+  returned row meets every stated requirement, price included.
+- **"Serves the same need"** (B3 b) is the customer's purpose as the
+  question states it, not the product category: laptop -> tablet can serve
+  "something to take notes in lectures"; headphones -> smartwatch serves
+  "something to listen to music on" in no reading.
+- **"Details the results do not show"** (B3 c): a fact in the answer is
+  shown when a returned row holds it (name, price, stock, the fields the
+  tool returns). General knowledge about a product kind ("planar headphones
+  usually need an amplifier") is not a product detail.
 - **The judge does not see the catalogue** (intent question 7): only what
   the model saw, so its verdict survives catalogue changes (§13).
 
@@ -124,6 +200,10 @@ Written against `main` at `5774eeb`.
 - **AC2** (B2, B3, B6): the filled prompt contains the question, each
   tool call with its rows, the answer, and exactly the split's few-shot
   examples with label and critique; nothing from the held-out set. (test)
+- **AC9** (B3, amended): the shipped template states both cases ("nothing
+  fits", "something fits") and each fail reason (a) to (e), with the two
+  alternative examples of (b). (test on the committed file: one assertion
+  per rule, so dropping a rule fails it)
 - **AC3** (B4): verdict parsing: valid JSON both ways, `<think>` blocks,
   prose around JSON, a missing or non-boolean `pass` → error. (test)
 - **AC4** (B5): `judge` over a fake model client writes the jsonl lines
@@ -139,10 +219,19 @@ Written against `main` at `5774eeb`.
 - **AC7** (live check, owed: `tracing.py`, a paid model): the owner runs
   `judge` on a real report with Langfuse on, sees the scores and comments
   on the traces, reruns without duplicates, and runs `judge-validate`;
-  `validation.md` is committed with its verdict.
+  `validation.md` is committed with its verdict. Amended: done once on
+  2026-11-16 for the mechanics (`403b4b5`); after the relabel and the new
+  prompt, `judge` on both 2026-11-16 reports and `judge-validate` run
+  again and the new `validation.md` and judgements are committed. The
+  verdict may be either; the report must give it with its reason.
 - **AC8** (B6): the owner has labelled enough in-scope conversations for
   B7's minimums (today about 12 in scope; labelling more through §10's
   queue is part of the live check), and `split.json` is committed.
+  Amended: done at `403b4b5` (35 held out, 11 fails). The owner then
+  relabels the 43 conversations in `split.json` (few-shot and held out)
+  under the amended B3; the new label lines are committed, and the
+  split's few-shot set still has both labels after the relabel (B6),
+  else the owner swaps examples.
 
 ## Non-functional
 
@@ -178,3 +267,19 @@ Written against `main` at `5774eeb`.
 - **Score name** `judge-no-fit`, **files** under `evals/judgements/` and
   `evals/judge/`, **commands** `judge` and `judge-validate`.
 - `review_tier` rises to **reviewed** (tracing.py).
+- **Score name stays `judge-no-fit`** (amendment): every in-scope question
+  is still written as a no-fit request, so the name still says what is
+  judged; renaming would touch the constant, the config, the tests and the
+  docs, and leave 26 orphan scores on the live-check traces.
+- **No temperature change in this amendment.** Setting it is a change to
+  `src/advisor/models/` (a live-check path) and the owner has not decided
+  it; the flip rate is reported here instead. If the relabelled run is
+  still not trusted, temperature 0 for the judge is the first thing to
+  try, as its own decision.
+- **How the owner relabels:** the 2026-11-16 runs are traced, so through
+  §10's queues and `import`; the 2026-11-13 runs have no traces, so through
+  `advisor-analysis view` (a new line per case; the last line wins). No
+  command edits a label for the owner.
+- **The few-shot examples are relabelled too**, since the judge "follows
+  the owner's verdicts and critiques"; an example labelled under the old
+  criterion would teach it the old rule.
