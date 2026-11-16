@@ -322,7 +322,7 @@ def main(
 def _changed_paths(base: str) -> list[str]:
     """The paths the current branch changed since it left `base` (git, from the cwd)."""
     done = subprocess.run(
-        ["git", "diff", "--name-only", f"{base}...HEAD"],
+        ["git", "diff", "--name-only", "--no-renames", f"{base}...HEAD"],
         capture_output=True,
         text=True,
         encoding="utf-8",

@@ -126,3 +126,34 @@ def test_owes_run_unknown_base_exits_2(tmp_path, monkeypatch):
     make_repo(repo, ["README.md"])
     monkeypatch.chdir(repo)
     assert run(["owes-run", "--base", "nope"])[0] == 2
+
+
+def test_owes_run_ignores_changes_main_made_after_branching(tmp_path, monkeypatch):
+    repo = tmp_path / "r4"
+    make_repo(repo, ["README.md"])
+    git(repo, "checkout", "-q", "main")
+    (repo / "src" / "advisor").mkdir(parents=True)
+    (repo / "src" / "advisor" / "agent.py").write_text("z", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "main moves")
+    git(repo, "checkout", "-q", "work")
+    monkeypatch.chdir(repo)
+    code, said, _ = run(["owes-run", "--base", "main"])
+    assert code == 0 and said.startswith("not owed")
+
+
+def test_owes_run_owed_when_a_file_moves_out_of_a_listed_path(tmp_path, monkeypatch):
+    repo = tmp_path / "r5"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    (repo / "src" / "advisor" / "prompts").mkdir(parents=True)
+    (repo / "src" / "advisor" / "prompts" / "system.md").write_text("p" * 200, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "base")
+    git(repo, "checkout", "-q", "-b", "work")
+    (repo / "docs").mkdir()
+    git(repo, "mv", "src/advisor/prompts/system.md", "docs/old-prompt.md")
+    git(repo, "commit", "-qm", "move")
+    monkeypatch.chdir(repo)
+    code, said, _ = run(["owes-run", "--base", "main"])
+    assert code == 0 and said.startswith("owed") and "prompts/system.md" in said

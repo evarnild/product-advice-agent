@@ -149,6 +149,8 @@ shows up in the review and not afterwards.
   is a "Needs decision: accept the regressions or rework" finding: the
   owner decides, no threshold blocks, and nothing in `ship` or
   `check:intent` enforces the rule.
+- **A single run is noisy.** A model's answers vary between runs of the same
+  content, so re-run a case that flipped before calling it a regression.
 - **The baseline moves after the merge.** After `/ship` for a change whose
   review names a run, the coordinator writes `evals/baseline.json` from
   that report (`advisor-analysis baseline <report>`) and commits it on
@@ -277,7 +279,8 @@ live-check: owed | not-needed
 ## Eval run
 - <"not owed (no listed path)", or: the run report's name, provider and
   model, the comparison with the baseline (pass rates, regressed, fixed,
-  added, removed, warnings) and the coordinator's reading>
+  added, removed, warnings) and the coordinator's reading; a flipped case
+  is re-run before it is called a regression (a single run varies)>
 
 ## Verified myself vs. taken on trust
 - <which commands actually ran, with results>

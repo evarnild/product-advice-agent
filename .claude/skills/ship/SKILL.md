@@ -64,6 +64,7 @@ Then:
 - **Re-running** `/ship <id>` after fixing what stopped a run resumes where
   it stopped; only on the owner's request.
 - **Complete:** say so.
+
 ## After a complete ship: the eval baseline
 
 When the shipped intent's `review.md` names an eval run (its `## Eval run`
@@ -78,4 +79,3 @@ the main checkout on `main`:
 
 This is part of the owner's `/ship <id>` request. It cannot be done on the
 branch: `ship` refuses files changed after the reviewed commit.
-

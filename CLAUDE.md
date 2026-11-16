@@ -68,7 +68,8 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
   on), a spec or plan amendment, running out of rounds, the live check, a
   CRITICAL finding, any red it cannot trace, a re-check mismatch, a plan
   that exists unapproved, a ship dry-run that is blocked, a worktree held by
-  another session, a fourth open session or an agent error, and ends at
+  another session, a fourth open session, an eval run that fails or an
+  agent error, and ends at
   "ready: `/ship <id>`". It never ships, and never records `spec_accepted`
   or `live_checked` without the owner's yes; the `/auto` authorisation
   covers neither. A stop shows in `npm run sessions` as

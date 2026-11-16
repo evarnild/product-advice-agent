@@ -93,12 +93,13 @@ def test_check_baseline_rejects_bad_shapes():
 def test_compare_categories_rates_and_no_warnings():
     old = rep([("a", "PASS"), ("b", "PASS"), ("c", "FAIL"), ("d", "ERROR"), ("gone", "PASS")])
     base = baseline_from(old, "b.json")
-    new = rep([("a", "FAIL"), ("b", "ERROR"), ("c", "PASS"), ("d", "PASS"), ("new", "PASS")])
+    new = rep([("a", "FAIL"), ("b", "ERROR"), ("c", "PASS"), ("d", "PASS"), ("new", "PASS"), ("newfail", "FAIL")])
     c = compare(new, base)
     assert c.regressed == [("a", "PASS", "FAIL"), ("b", "PASS", "ERROR")]
     assert c.fixed == [("c", "FAIL", "PASS"), ("d", "ERROR", "PASS")]
-    assert c.added == ["new"] and c.removed == ["gone"]
-    assert (c.old_passed, c.old_total, c.new_passed, c.new_total) == (3, 5, 3, 5)
+    assert c.added == ["new", "newfail"] and c.removed == ["gone"]
+    assert "newfail" not in [r[0] for r in c.regressed]
+    assert (c.old_passed, c.old_total, c.new_passed, c.new_total) == (3, 5, 3, 6)
     assert c.warnings == []
     text = format_comparison(c)
     assert "3/5 passed" in text and "a: PASS -> FAIL" in text and "removed (1)" in text

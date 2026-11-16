@@ -77,7 +77,12 @@ Eval-run check (`REVIEW-POLICY.md` → "Eval runs", part of pass 3): run
 change must name an eval run made on the reviewed content. Without one, write
 a HIGH finding "Needs rework: make the eval run". When the coordinator runs
 this review, it makes the run as `/auto` step 6 describes. A reviewer agent
-only checks that the run is named and that its hashes match.
+only checks that the run is named and that its `cases_sha256`, `prompt_sha256`
+and `catalogue_sha256` equal the sha256 of `evals/cases.jsonl`,
+`src/advisor/prompts/system.md` and `src/advisor/data/catalogue.json` in the
+worktree at the reviewed commit. `compare`'s hash warnings are against the
+baseline: expected differences, not this check. A single run varies, so
+re-run a flipped case before calling it a regression.
 
 ## 4. Write `review.md`
 
@@ -113,7 +118,8 @@ Use exactly the format in `REVIEW-POLICY.md` → "The report".
     themselves.
 - **`## Eval run`:** after `## Live check`, either `not owed (no listed
   path)` or the run report's name, provider and model, the comparison
-  (`advisor-analysis compare`), and your reading of it.
+  (`advisor-analysis compare`), and your reading of it (a flipped case is
+  re-run before it is called a regression: a single run varies).
 - **`run:`** `auto` when `/auto` called this review (its brief says so),
   otherwise `manual`.
 - **`sampled:`** run `npm run sdlc:scan -- --sample-due <run> --exclude <id>`

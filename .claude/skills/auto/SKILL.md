@@ -93,6 +93,8 @@ the build step, then round 1.
 | plan found the spec incomplete, plan.md exists unapproved | step 3 again, only after the owner has settled it; never approve a plan this run did not draft |
 | decision needed, spec or plan amendment needed | give the implementer the owner's answer (a new `product-advice-agent-implementer` if it cannot be resumed), wait, then **a new round** `auto_round` + 1 (step 5, item 1) |
 | re-check mismatch | redo the re-check (step 6) for round `auto_round` and write that round's `review.md`; **no new round**. If the reviewer's report is not in this conversation (a new session), redo the review as the same round, then the re-check |
+| eval regressions, decision needed | the owner either accepts the regressions or has them reworked. Accepted: write that round's `review.md` with the regressions named as accepted and **no new round**, and go on from its verdict. Rework: as "decision needed" (a **new round**) |
+| eval run failed | once the owner says the cause is cleared, redo the eval-run step (step 6) for round `auto_round`; **no new round** |
 | escalate | the owner's `/auto <id>` means "diff read": go on to the live-check stop (step 7) or the ship stop (step 8) from that review's `live-check:`; **no new round** |
 | live check owed | step 7: if the owner says it passed and `live_checked` is recorded, step 8; a defect they describe goes to the implementer, then a new round |
 | out of rounds | report the open findings again; the intent continues by hand |
@@ -241,13 +243,18 @@ After the re-check above and before writing `review.md`:
    `evals/baseline.json` (`--baseline <path>` for another file). Put the
    report's name, provider and model, the comparison, and the commit the
    run was made at in the `## Eval run` section and under "Verified myself".
-   Read the hash warnings: a run whose `prompt_sha256`, `cases_sha256` or
-   `catalogue_sha256` does not match the branch's files is not a run of the
-   reviewed content.
-4. Every case in "regressed" (PASS to FAIL or ERROR) is one finding,
-   "Needs decision: accept the regressions or rework", so the run stops
-   with `auto_stopped: decision needed`. The owner decides; no threshold
-   blocks. No regression, and the run goes on. Cases that are fixed, added
+   To check the report is a run of the reviewed content, compare its
+   `cases_sha256`, `prompt_sha256` and `catalogue_sha256` with the sha256 of
+   `evals/cases.jsonl`, `src/advisor/prompts/system.md` and
+   `src/advisor/data/catalogue.json` in the worktree at the reviewed commit.
+   `compare`'s hash warnings are against the baseline: expected
+   differences, not this check.
+4. One or more cases in "regressed" (PASS to FAIL or ERROR) make one
+   finding, "Needs decision: accept the regressions or rework", listing each
+   case. A single run varies, so re-run a case that flipped before calling
+   it a regression. Then the run stops with
+   `auto_stopped: eval regressions, decision needed`. The owner decides; no
+   threshold blocks. No regression, and the run goes on. Cases that are fixed, added
    or removed are listed and are not findings.
 5. If the run cannot complete (Ollama down or the model missing, or every
    case an ERROR), stop with `auto_stopped: eval run failed` and say why.
