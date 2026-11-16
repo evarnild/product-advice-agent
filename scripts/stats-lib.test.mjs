@@ -273,6 +273,9 @@ describe('owner wait (B6)', () => {
   it('ends an escalate stop at the resumed run', () => {
     expect(gapsOf([1, '§9: auto stopped: escalate, owner reads the diff'], [5, '§9: auto run resumed'])).toEqual([[1, 5]]);
   });
+  it('counts a broken blocked_by record as owner wait: only "blocked by <n>" is a dependency stop (F3)', () => {
+    expect(gapsOf([1, '§9: auto stopped: blocked_by record broken'], [5, '§9: auto run resumed'])).toEqual([[1, 5]]);
+  });
   it('ends a live-check stop at the commit recording the answer, in any wording (F1, F3)', () => {
     expect(gapsOf([1, '§9: auto stopped: live check owed'], [4, '§9: live check recorded (owner: "ok")'])).toEqual([[1, 4]]);
     expect(gapsOf([1, '§9: auto stopped: live check owed'], [3, '§9: live check passed (owner: ok)'])).toEqual([[1, 3]]);
@@ -434,11 +437,19 @@ describe('computeStats', () => {
       expect(run([ev(5, 'UserPromptSubmit', { skillId: 7 }), ev(5, 'Stop'), ev(30, 'UserPromptSubmit', { skillId: 7 })]).totals.sessionWaitMs).toBe(1 * H);
       expect(run([ev(1, 'UserPromptSubmit', { skillId: 7 }), ev(1, 'Stop'), ev(2.5, 'UserPromptSubmit', { skillId: 7 })]).totals.sessionWaitMs).toBe(0.5 * H);
     });
-    it('clips a gate wait that runs on past the merge, and lets an unmerged intent wait up to now', () => {
+    it('caps a gate wait that ends at the merge, and lets an unmerged intent wait up to now, none of it idle', () => {
       const c = log([0, '§7: intent accepted'], [1, '§7: auto stopped: ready for /ship'], [20, '§7: merged (abc1234)']);
-      expect(run([], c, at(30)).totals.gateWaitMs).toBe(2 * H);
+      const r = run([], c, at(30));
+      expect(r.totals.gateWaitMs).toBe(2 * H);
+      expect(r.totals.idleMs).toBe(17 * H);
       const open = log([0, '§7: intent accepted'], [1, '§7: auto stopped: decision needed'], [3, '§7: auto run resumed']);
-      expect(run([ev(4, 'UserPromptSubmit', { skillId: 7 }), ev(4, 'Stop'), ev(9, 'UserPromptSubmit', { skillId: 7 })], open, at(6)).totals.sessionWaitMs).toBe(2 * H);
+      const o = run([ev(4, 'UserPromptSubmit', { skillId: 7 }), ev(4, 'Stop'), ev(9, 'UserPromptSubmit', { skillId: 7 })], open, at(6));
+      expect(o.totals.sessionWaitMs).toBe(2 * H);
+      expect(o.totals.idleMs).toBe(0); // the 3 h after now are not booked
+    });
+    it('books no wait to a skill id with no commits', () => {
+      const s = computeStats({ commits: life(), events: [ev(0, 'UserPromptSubmit', { skillId: 99 }), ev(0.5, 'Stop'), ev(1.5, 'UserPromptSubmit', { skillId: 99 })], coordinators: [], agents: [], now: at(100) });
+      for (const i of s.intents) expect(i.totals.sessionWaitMs + i.totals.idleMs).toBe(0);
     });
   });
 

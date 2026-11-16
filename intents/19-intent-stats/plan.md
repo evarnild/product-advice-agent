@@ -194,3 +194,20 @@ Divergences from the plan:
   argument" and the spec was not amended on this. The test pins both ends.
 - A wait is clipped, not dropped, when it straddles the span edge; an intent
   with no commits gets no wait booked.
+
+### 2026-11-16: review round 2 rework
+
+Commit: the one carrying this entry (on top of 440321a).
+
+- F8: `statsCutover` runs `git log main --first-parent -m --diff-filter=A
+  --format=%at`, so the cutover is the author time of the merge that brought
+  `stats-lib.mjs` onto main, not of the commit that added it. Test: a
+  throwaway repo with a `--no-ff` merge of the stats branch.
+- F9: the F2 test now asserts `idleMs` (none booked past now); the gate-side
+  clip in `computeStats` is kept as a guard and commented as one, since a gate
+  gap already lies inside the intent's life (mutant F2g survives by design).
+- F10: a skill id with no commits books no wait. F11: `auto stopped:
+  blocked_by record broken` is gate wait.
+
+Tests: kit 366 before, 369 after. Mutants killed: F8, C1, C4, R3; F2g survives
+(equivalent guard).

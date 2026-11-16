@@ -391,6 +391,7 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     const spans = getIntent(id).spans;
     const mine = agentSpans.filter((s) => s.id === id).map((s) => s.span);
     for (const raw of gateGaps(cs)) {
+      // a guard: a gate gap starts at one of the intent's commits and ends at the next, so it lies inside its life already
       const g = clipToLife(getIntent(id), raw, now);
       if (!g) continue;
       const { wait, idle } = capWait(g.to - g.from, overlapMs(g.from, g.to, mine));

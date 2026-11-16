@@ -78,7 +78,7 @@ export function readTranscripts(transcriptRoot, paths) {
 /** When stats-lib.mjs first reached main (ms), or null while it has not: intents merged before it are `partial`. */
 export function statsCutover(root) {
   try {
-    const out = git(root, 'log', 'main', '--diff-filter=A', '--format=%at', '--', 'scripts/stats-lib.mjs');
+    const out = git(root, 'log', 'main', '--first-parent', '-m', '--diff-filter=A', '--format=%at', '--', 'scripts/stats-lib.mjs');
     const last = out.split(/\r?\n/).filter(Boolean).at(-1);
     return last ? Number(last) * 1000 : null;
   } catch {

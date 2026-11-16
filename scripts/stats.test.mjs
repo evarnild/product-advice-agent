@@ -204,3 +204,33 @@ describe('author time and the stats cutover (F4, I4)', () => {
     expect(j.intents.find((i) => i.id === 2).partial).toBe(false);
   });
 });
+
+describe('the stats cutover is when stats-lib.mjs reached main (F8)', () => {
+  it('uses the merge commit, not the author time of the commit that added the file', () => {
+    const box = realpathSync(mkdtempSync(join(tmpdir(), 'sdlc-stats3-')));
+    const r3 = join(box, 'repo');
+    mkdirSync(join(r3, 'scripts'), { recursive: true });
+    const g = (...a) => execFileSync('git', a, { cwd: r3, env: GIT_ENV, encoding: 'utf8' }).trim();
+    const c = (iso, subject, file = 'f.txt') => {
+      writeFileSync(join(r3, file), `${subject}
+`);
+      g('add', '.');
+      execFileSync('git', ['commit', '-q', '-m', subject], { cwd: r3, env: { ...GIT_ENV, GIT_AUTHOR_DATE: iso, GIT_COMMITTER_DATE: iso } });
+    };
+    try {
+      g('init', '-q', '-b', 'main');
+      g('config', 'core.autocrlf', 'false');
+      c('2026-11-01T07:00:00Z', 'init');
+      g('checkout', '-q', '-b', 'feat/9-stats');
+      c('2026-11-02T08:00:00Z', 'add stats', 'scripts/stats-lib.mjs'); // authored early
+      g('checkout', '-q', 'main');
+      c('2026-11-03T08:00:00Z', '§1: intent drafted and accepted (owner: "yes")');
+      c('2026-11-03T09:00:00Z', '§1: merged (abc1234); status done'); // after the author time, before the merge
+      execFileSync('git', ['merge', '--no-ff', '-q', '-m', 'Merge §9: stats', 'feat/9-stats'], { cwd: r3, env: { ...GIT_ENV, GIT_AUTHOR_DATE: '2026-11-04T08:00:00Z', GIT_COMMITTER_DATE: '2026-11-04T08:00:00Z' } });
+      const r = spawnSync(process.execPath, [STATS, '--all', '--json', '--transcripts', join(box, 'none')], { cwd: r3, env: GIT_ENV, encoding: 'utf8' });
+      expect(JSON.parse(r.stdout).intents.find((i) => i.id === 1).partial).toBe(true);
+    } finally {
+      rmSync(box, { recursive: true, force: true });
+    }
+  });
+});
