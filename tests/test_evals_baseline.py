@@ -93,7 +93,16 @@ def test_check_baseline_rejects_bad_shapes():
 def test_compare_categories_rates_and_no_warnings():
     old = rep([("a", "PASS"), ("b", "PASS"), ("c", "FAIL"), ("d", "ERROR"), ("gone", "PASS")])
     base = baseline_from(old, "b.json")
-    new = rep([("a", "FAIL"), ("b", "ERROR"), ("c", "PASS"), ("d", "PASS"), ("new", "PASS"), ("newfail", "FAIL")])
+    new = rep(
+        [
+            ("a", "FAIL"),
+            ("b", "ERROR"),
+            ("c", "PASS"),
+            ("d", "PASS"),
+            ("new", "PASS"),
+            ("newfail", "FAIL"),
+        ]
+    )
     c = compare(new, base)
     assert c.regressed == [("a", "PASS", "FAIL"), ("b", "PASS", "ERROR")]
     assert c.fixed == [("c", "FAIL", "PASS"), ("d", "ERROR", "PASS")]
