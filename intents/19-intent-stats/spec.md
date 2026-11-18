@@ -34,7 +34,9 @@ the 19 recommendations". They amend B3 and B6 as marked there:
 - **F4, author time:** phases and the stats cutover use author time
   (`%at`), which a rebase keeps, instead of committer time.
 
-## Owner's decisions (live check, 2026-11-18) — PROPOSED, awaiting the owner's yes
+## Owner's decisions (live check, 2026-11-18)
+
+Accepted by the owner: "yes to the amendment".
 
 The live check on §13 failed: "the coordinator actually spent time working
 on the intent and spec and there was some time spent building", and the

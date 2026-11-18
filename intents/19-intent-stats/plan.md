@@ -107,6 +107,28 @@ Re-read on `main` at `5dabf91`.
   the run, and after typing `/sessions`, sees `skill`/`skillId` and nothing
   else of the prompt in `.git/product-advice-agent-sessions.jsonl`.
 
+## Amendment (2026-11-18, live check)
+
+The spec amendment of 2026-11-18 (W1 to W3, B5a, B6, B8, AC4a) adds
+working time. The owner said "yes to the amendment" to a message that
+proposed "I record your acceptance, add a plan subtask, build it".
+
+7. **Working time (B5a, B6, B8, AC4a)** in `scripts/stats-lib.mjs` only:
+   - `sessionTurns` marks whether a turn ended at a `Stop`; a turn's work
+     length is its span, at most `WAIT_CAP_MS` when it did not (an open
+     last turn ends at `now`).
+   - `computeStats` adds `coordWorkMs` per phase (each attributed turn
+     spread over the intent's phases with `spread`, not clipped to the
+     intent's life), `agentWorkMs` per phase (the union of the intent's
+     tagged agent spans in the tag's phase), and work time on the shared
+     and unattributed lines (`sharedWork`, `unattributedWorkMs`).
+   - Gate waits take out the union of the intent's agent spans and its
+     attributed coordinator turns before the cap.
+   - `formatIntent`, `formatAll`, `formatSide`, `statsJson` and
+     `totalsOf` carry the two columns; `stats.md` follows `formatIntent`.
+   - Tests in `scripts/stats-lib.test.mjs` for each AC4a case; the
+     `stats.test.mjs` text checks updated for the new columns.
+
 ## Assumptions I made
 
 - The skill list for B1 is read by the hook at each prompt from
