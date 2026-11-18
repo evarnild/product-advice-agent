@@ -186,6 +186,12 @@ describe('author time and the stats cutover (F4, I4)', () => {
     commitDates('2026-11-01T12:00:00Z', REBASED, '§2: plan approved (auto)');
     commitDates('2026-11-01T14:00:00Z', REBASED, '§2: in-review, progress entry');
     commitDates('2026-11-01T15:00:00Z', REBASED, '§2: merged (def5678); status done');
+    // §3: drafted and approved in the same second, as /auto does; git log lists the later one first
+    commitDates('2026-11-01T16:00:00Z', REBASED, '§3: intent drafted and accepted (owner: "yes")');
+    commitDates('2026-11-01T17:00:00Z', REBASED, '§3: plan drafted (by /build-plan)');
+    commitDates('2026-11-01T17:00:00Z', REBASED, '§3: plan approved (auto)');
+    commitDates('2026-11-01T18:00:00Z', REBASED, '§3: in-review, progress entry');
+    commitDates('2026-11-01T19:00:00Z', REBASED, '§3: merged (0123abc); status done');
   });
   afterAll(() => {
     rmSync(box, { recursive: true, force: true });
@@ -196,6 +202,11 @@ describe('author time and the stats cutover (F4, I4)', () => {
     const it2 = stats('2').intents[0];
     const ms = Object.fromEntries(it2.phases.map((p) => [p.name, p.elapsedMs / 3600000]));
     expect(ms).toMatchObject({ intent: 0, plan: 1, build: 2, ship: 1 });
+  });
+
+  it('keeps commit order for commits in the same second: a drafted gate answered in that second is no wait', () => {
+    const it3 = stats('3').intents[0];
+    expect(it3.totals.gateWaitMs).toBe(0);
   });
 
   it('marks partial only the intent merged before stats-lib.mjs arrived on main, by author time (I4, F4)', () => {

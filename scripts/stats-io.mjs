@@ -93,7 +93,8 @@ export function statsCutover(root) {
  */
 export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscriptRoot(), only = null, now = Date.now(), extraCommits = [] } = {}) {
   const root = mainCheckout(cwd);
-  const commits = [...parseCommitLog(git(root, 'log', '--branches', '--format=%H %at %s')), ...extraCommits];
+  // oldest first, parents before children: commits in the same second keep the order they were made
+  const commits = [...parseCommitLog(git(root, 'log', '--branches', '--topo-order', '--reverse', '--format=%H %at %s')), ...extraCommits];
   const logFile = eventLogPath(root);
   const events = existsSync(logFile) ? parseEvents(readText(logFile)) : [];
   const { coordinators, agents } = existsSync(transcripts) ? readTranscripts(transcripts, checkoutPaths(root, events)) : { coordinators: [], agents: [] };

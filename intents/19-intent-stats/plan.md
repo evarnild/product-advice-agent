@@ -211,3 +211,20 @@ Commit: the one carrying this entry (on top of 440321a).
 
 Tests: kit 366 before, 369 after. Mutants killed: F8, C1, C4, R3; F2g survives
 (equivalent guard).
+
+### 2026-11-18: live check, same-second commits
+
+- The owner's live check failed on `npm run stats -- 13`: a phantom
+  41.5 min gate wait over build and review. `plan drafted` and
+  `plan approved` share a second; `git log` lists the later first and the
+  stable sort kept that, so `plan drafted` opened a gate nothing closed
+  until `auto run resumed`.
+- `collectStats` now reads `git log --branches --topo-order --reverse`, so
+  commits in the same second keep the order they were made
+  (`commitsByIntent` documents that it relies on this).
+- Test: "keeps commit order for commits in the same second" (stats.test.mjs,
+  throwaway repo), failing before the fix (7 200 000 ms of gate wait).
+- §13 after the fix: build and review gate wait 0 (were 6m and 30m); total
+  gate wait 40m (was 1h17m).
+
+Tests: kit 370 (369 before).

@@ -35,7 +35,7 @@ export function intentOf(subject) {
   return m ? { id: Number(m[1]), rest: m[2] } : null;
 }
 
-/** All commits, by intent id, oldest first (duplicates by hash are dropped). */
+/** All commits, by intent id, oldest first (duplicates by hash are dropped). Commits in the same second keep the order given, so pass them oldest first (`git log --topo-order --reverse`). */
 export function commitsByIntent(commits) {
   const seen = new Set();
   const by = new Map();
