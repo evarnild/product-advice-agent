@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-18 by-agent    # owner: "/auto 21"
 auto_round:
-auto_stopped: too many sessions
+auto_stopped:
 follows_up:
 blocked_by:
 links:
