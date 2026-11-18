@@ -68,3 +68,18 @@ mutation runs this week.
 - Tier: the path table decides (`infra/` is not in the Reviewed list);
   `review_tier` left empty.
 - An adjustment needs no spec or plan: `intent_accepted` is its gate.
+
+## Progress
+
+- 2026-11-18: built. New `infra/langfuse/clickhouse/low-memory.xml` (nine
+  log tables `remove="1"`, `query_log` kept; mark cache 256 MB, index mark
+  cache 64 MB, uncompressed cache 0, `max_server_memory_usage` 1 GB, sizes in
+  bytes); compose `clickhouse` service mounts it read-only under
+  `config.d/` and gets `mem_limit: 1500m`; README note with the one-off
+  `TRUNCATE TABLE system.<log>`. 3 files outside intents/, 28 lines added.
+  `check:pins` green, `verify` green (700 pytest passed). No test added
+  (budget).
+- `background_pool_size` is written at server level (top of `<clickhouse>`),
+  the form I believe 26.3 accepts. Not verified against a running server:
+  the live check must confirm ClickHouse starts healthy and `docker stats`
+  shows the cap. The README truncate example lists five of the tables.

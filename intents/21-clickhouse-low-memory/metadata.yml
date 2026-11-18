@@ -2,7 +2,7 @@
 id: 21
 slug: clickhouse-low-memory
 type: adjustment
-status: accepted
+status: in-review
 title: ClickHouse low-memory config for the local Langfuse
 review_tier:
 intent_accepted: 2026-11-15 by-agent    # owner: "accept 21 /auto 21"

@@ -75,6 +75,7 @@ services:
     image: docker.io/clickhouse/clickhouse-server:26.3.62.3
     restart: always
     user: "101:101"
+    mem_limit: 1500m
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: clickhouse
@@ -82,6 +83,7 @@ services:
     volumes:
       - langfuse_clickhouse_data:/var/lib/clickhouse
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
+      - ./clickhouse/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro
     ports:
       - 127.0.0.1:8123:8123
       - 127.0.0.1:9000:9000
