@@ -162,6 +162,27 @@ asks):
 The suite reports; it does not gate anything, and `npm run verify` never runs
 it (it tests the scorers and the runner with a scripted fake).
 
+### Eval runs on every change that can move the answers
+
+`REVIEW-POLICY.md` -> "Eval runs" lists the paths that make a run owed (the
+prompt, the agent, the models, the guardrails, the catalogue and its data, the
+config, the case model and scorers, `evals/cases.jsonl`). The commands read
+files and git only; none calls a model:
+
+```
+uv run advisor-analysis owes-run [--base main]     # "owed" with the paths, or "not owed"
+uv run advisor-analysis baseline evals/runs/<report>.json   # write evals/baseline.json
+uv run advisor-analysis compare evals/runs/<report>.json [--baseline evals/baseline.json]
+```
+
+`compare` prints both pass rates, the cases that went PASS to FAIL or ERROR
+("regressed"), the ones that went to PASS ("fixed"), cases only in one of the
+two, and a warning for each differing provider, model, case-file, prompt or
+catalogue hash. It exits 0 whatever it finds (the owner decides) and 2 for a
+missing or invalid file. `evals/baseline.json` (case ids and statuses, no
+answers) is committed; the coordinator rewrites it on `main` after a ship
+whose review made a run.
+
 ### Error analysis: from questions to failure modes
 
 The first loop of the field guide, on top of the suite. Every command here

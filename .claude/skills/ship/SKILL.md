@@ -64,3 +64,18 @@ Then:
 - **Re-running** `/ship <id>` after fixing what stopped a run resumes where
   it stopped; only on the owner's request.
 - **Complete:** say so.
+
+## After a complete ship: the eval baseline
+
+When the shipped intent's `review.md` names an eval run (its `## Eval run`
+section is not "not owed"), and only after the script reports complete, in
+the main checkout on `main`:
+
+1. Run `uv run advisor-analysis baseline evals/runs/<that report>`.
+2. Commit `evals/baseline.json` alone, as `§<id>: eval baseline from
+   <report>`, with the attribution lines you were given.
+3. Do not push it unless the owner says so. If the report file is gone, say
+   so and leave the baseline as it is.
+
+This is part of the owner's `/ship <id>` request. It cannot be done on the
+branch: `ship` refuses files changed after the reviewed commit.

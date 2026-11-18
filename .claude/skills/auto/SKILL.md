@@ -93,6 +93,8 @@ the build step, then round 1.
 | plan found the spec incomplete, plan.md exists unapproved | step 3 again, only after the owner has settled it; never approve a plan this run did not draft |
 | decision needed, spec or plan amendment needed | give the implementer the owner's answer (a new `product-advice-agent-implementer` if it cannot be resumed), wait, then **a new round** `auto_round` + 1 (step 5, item 1) |
 | re-check mismatch | redo the re-check (step 6) for round `auto_round` and write that round's `review.md`; **no new round**. If the reviewer's report is not in this conversation (a new session), redo the review as the same round, then the re-check |
+| eval regressions | write round `auto_round`'s `review.md` on both answers; **no new round** for it. Accepted: name the regressions as accepted, and go on from its verdict. Rework: verdict `rework`, with the regression finding and the owner's answer, then go on as "decision needed" (a **new round** `auto_round` + 1). If the reviewer's report is not in this conversation (a new session), redo the review as the same round, then the re-check and the eval compare |
+| eval run failed | once the owner says the cause is cleared, redo the eval-run step (step 6) for round `auto_round`; **no new round** |
 | escalate | the owner's `/auto <id>` means "diff read": go on to the live-check stop (step 7) or the ship stop (step 8) from that review's `live-check:`; **no new round** |
 | live check owed | step 7: if the owner says it passed and `live_checked` is recorded, step 8; a defect they describe goes to the implementer, then a new round |
 | out of rounds | report the open findings again; the intent continues by hand |
@@ -224,6 +226,46 @@ report. Do not write a green `review.md` over a mismatch.
 
 Put the results in the report's "Verified myself" section, each line marked
 **Coordinator, re-run**, as `/review` does for the commands it re-runs.
+
+### The eval run (REVIEW-POLICY.md → "Eval runs")
+
+After the re-check above and before writing `review.md`:
+
+1. In the worktree, run `uv run advisor-analysis owes-run --base main`. On
+   "not owed", the report's `## Eval run` says `not owed (no listed path)`
+   and you go on.
+2. On "owed", run `uv run advisor-eval` in the worktree at the reviewed
+   commit, on the default provider (Ollama). A paid provider only when the
+   owner asked for it in this conversation. Copy the report it names into
+   the main checkout's `evals/runs/` (gitignored), so it outlives the
+   worktree.
+3. Run `uv run advisor-analysis compare <report>` against the committed
+   `evals/baseline.json` (`--baseline <path>` for another file). Put the
+   report's name, provider and model, the comparison, and the commit the
+   run was made at in the `## Eval run` section and under "Verified myself".
+   To check the report is a run of the reviewed content, compare its
+   `cases_sha256`, `prompt_sha256` and `catalogue_sha256` with the sha256 of
+   `evals/cases.jsonl`, `src/advisor/prompts/system.md` and
+   `src/advisor/data/catalogue.json` in the worktree at the reviewed commit.
+   `compare`'s hash warnings are against the baseline: expected
+   differences, not this check.
+4. A single run varies, so re-run each case in "regressed" (PASS to FAIL
+   or ERROR) before calling it a regression: `uv run advisor-eval --only
+   <flipped ids>` in the worktree. Only you, the coordinator, make this
+   re-run; a reviewer agent never calls a model. A case is a regression
+   only if it fails again. The full run stays the report that `## Eval run`
+   names and the source of the baseline `/ship` writes. The `--only` re-run
+   is cited as evidence only, never compared as a whole and never written
+   as the baseline; its `compare` output shows the other cases as
+   "removed", which is expected.
+5. One or more cases that failed again make one finding, "Needs decision:
+   accept the regressions or rework", listing each case. Then the run
+   stops with `auto_stopped: eval regressions`. The owner decides; no
+   threshold blocks. No regression, and the run goes on. Cases that are
+   fixed, added or removed are listed and are not findings.
+6. If the run cannot complete (Ollama down or the model missing, or every
+   case an ERROR), stop with `auto_stopped: eval run failed` and say why.
+   Never write a green `review.md` for a change that owes a run and has none.
 
 ## 7. The stop rules
 

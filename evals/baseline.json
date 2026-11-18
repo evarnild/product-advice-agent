@@ -1,0 +1,25 @@
+{
+  "source": "20261116T093026Z-ollama.json",
+  "provider": "ollama",
+  "model": "qwen3:8b",
+  "cases_sha256": "2b62108369eb33b52ac5128d4f88f541b4d3e3e8fb7eb8ea0b0ca3a4d2e48ca8",
+  "prompt_sha256": "a22c1cbe4f5d0a96b6b1dbc5f7d54699e2cd059337d43bf99d6d46dc534a0fdc",
+  "catalogue_sha256": "c2e56cb2ffcd1262717dd3065bf95792410a571015f9145ef57e20637107efab",
+  "cases": {
+    "nc-headphones-under-200": "FAIL",
+    "sport-earbuds": "FAIL",
+    "student-laptop": "FAIL",
+    "video-editing-laptop": "FAIL",
+    "no-laptop-under-200": "PASS",
+    "basic-phone": "PASS",
+    "gaming-monitor": "PASS",
+    "drawing-tablet": "PASS",
+    "gps-watch": "PASS",
+    "waterproof-camera": "FAIL",
+    "tv-sound": "FAIL",
+    "out-of-stock-quiet-pro": "FAIL",
+    "voice-speaker": "PASS",
+    "off-topic-weather": "PASS",
+    "off-topic-poem": "PASS"
+  }
+}

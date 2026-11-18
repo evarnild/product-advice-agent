@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
@@ -33,6 +34,14 @@ from advisor.evals.annotate import (
     plan_additions,
     report_stamp,
     select_cases,
+)
+from advisor.evals.baseline import (
+    BaselineError,
+    baseline_from,
+    check_baseline,
+    compare,
+    format_comparison,
+    owes_run,
 )
 from advisor.evals.cases import CaseFileError, parse_cases
 from advisor.evals.counts import counts_markdown
@@ -53,6 +62,7 @@ DEFAULT_GENERATED = Path("evals") / "generated.jsonl"
 DEFAULT_LABELS_DIR = Path("evals") / "labels"
 DEFAULT_TAXONOMY = Path("evals") / "taxonomy.json"
 DEFAULT_DRAFT = Path("evals") / "taxonomy.draft.json"
+DEFAULT_BASELINE = Path("evals") / "baseline.json"
 LOCAL_HOST = "127.0.0.1"
 DEFAULT_PORT = 5209
 
@@ -116,6 +126,17 @@ def _parser() -> argparse.ArgumentParser:
     i.add_argument("report", type=Path)
     i.add_argument("--queue", default=None, help="queue name (default advisor-eval <run stamp>)")
     i.add_argument("--labels", type=Path, default=None, help="default evals/labels/<report>.jsonl")
+
+    b = sub.add_parser("baseline", help="write evals/baseline.json from a run report (§17)")
+    b.add_argument("report", type=Path)
+    b.add_argument("--out", type=Path, default=DEFAULT_BASELINE)
+
+    k = sub.add_parser("compare", help="compare a run report with the baseline; never blocks (§17)")
+    k.add_argument("report", type=Path)
+    k.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
+
+    o = sub.add_parser("owes-run", help="does this branch's diff owe an eval run? (§17)")
+    o.add_argument("--base", default="main", help="the branch to diff against (default main)")
     return p
 
 
@@ -266,6 +287,9 @@ def main(
             args, env, annotations_factory or _default_annotations_factory, say, fail, err
         )
 
+    if args.command in ("baseline", "compare", "owes-run"):
+        return _eval_run_command(args, say, fail)
+
     # counts
     labels_file = args.labels or labels_path_for(args.report)
     try:
@@ -292,6 +316,66 @@ def main(
             _write(args.out, text)
         except OSError as e:
             return fail(f"Could not write {args.out}: {e.strerror or e}", 1)
+    return 0
+
+
+def _changed_paths(base: str) -> list[str]:
+    """The paths the current branch changed since it left `base` (git, from the cwd)."""
+    done = subprocess.run(
+        ["git", "diff", "--name-only", "--no-renames", f"{base}...HEAD"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    if done.returncode != 0:
+        raise OSError(done.stderr.strip() or f"git diff against {base} failed")
+    return [line for line in done.stdout.splitlines() if line.strip()]
+
+
+def _eval_run_command(
+    args: argparse.Namespace,
+    say: Callable[[str], None],
+    fail: Callable[[str, int], int],
+) -> int:
+    """`baseline`, `compare` and `owes-run` (§17): files and git only, no model."""
+    if args.command == "owes-run":
+        try:
+            owed = owes_run(_changed_paths(args.base))
+        except OSError as e:
+            return fail(f"Cannot list the changes against {args.base}: {e}", 2)
+        if not owed:
+            say("not owed (no listed path changed)")
+            return 0
+        say("owed: the diff touches")
+        for path in owed:
+            say(f"  {path}")
+        return 0
+
+    try:
+        report = parse_report(args.report.read_text(encoding="utf-8"))
+    except OSError as e:
+        return fail(f"Cannot read {e.filename or args.report}: {e.strerror or e}", 2)
+    except (UnicodeDecodeError, ReportError) as e:
+        return fail(f"Input error: {e}", 2)
+
+    if args.command == "baseline":
+        text = json.dumps(baseline_from(report, args.report.name), indent=2) + "\n"
+        try:
+            _write(args.out, text)
+        except OSError as e:
+            return fail(f"Could not write {args.out}: {e.strerror or e}", 1)
+        say(f"wrote {args.out} from {args.report.name} ({len(report['cases'])} cases)")
+        return 0
+
+    # compare
+    try:
+        baseline = check_baseline(json.loads(args.baseline.read_text(encoding="utf-8")))
+    except OSError as e:
+        return fail(f"Cannot read {e.filename or args.baseline}: {e.strerror or e}", 2)
+    except (UnicodeDecodeError, json.JSONDecodeError, BaselineError) as e:
+        return fail(f"Baseline error in {args.baseline}: {e}", 2)
+    say(format_comparison(compare(report, baseline)))
     return 0
 
 

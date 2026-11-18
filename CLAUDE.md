@@ -30,6 +30,7 @@ npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
 uv run advisor-analysis generate|view|taxonomy|counts|queue|import  # error analysis on top of the evals (README.md; generate and taxonomy call a model; queue and import need the three LANGFUSE_* variables)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
+uv run advisor-analysis owes-run|baseline|compare  # does a change owe an eval run; the committed baseline; flips against it (no model; README.md "Eval runs")
 ```
 
 The kit itself needs Node ≥ 22 and nothing else: no `npm install`. The
@@ -67,7 +68,8 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
   on), a spec or plan amendment, running out of rounds, the live check, a
   CRITICAL finding, any red it cannot trace, a re-check mismatch, a plan
   that exists unapproved, a ship dry-run that is blocked, a worktree held by
-  another session, a fourth open session or an agent error, and ends at
+  another session, a fourth open session, an eval run that fails or an
+  agent error, and ends at
   "ready: `/ship <id>`". It never ships, and never records `spec_accepted`
   or `live_checked` without the owner's yes; the `/auto` authorisation
   covers neither. A stop shows in `npm run sessions` as
@@ -194,6 +196,10 @@ only. The prompts for `generate` and `taxonomy` are `evals/prompts/*.md`.
 `run.py` also records turns, tool results and guardrail checks per case.
 Committed data: `evals/generated.jsonl`, `evals/labels/*.jsonl`,
 `evals/taxonomy.json` (format in README.md "Error analysis").
+
+**Eval runs on changes** (§17): `evals/baseline.py` is pure (`EVAL_PATHS` and `owes_run`, the baseline
+and `compare`); `analysis.py` adds `baseline`, `compare` and `owes-run` (files and git, no model).
+`REVIEW-POLICY.md` -> "Eval runs" is the rule, the skills the procedure.
 
 **Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
 protocol and the no-op, SDK-free and without I/O, so the pure modules
