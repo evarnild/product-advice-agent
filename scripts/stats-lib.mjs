@@ -201,10 +201,13 @@ export function sessionTurns(events) {
         close(e.tsMs);
         if (waitFrom !== null) gaps.push({ session, from: waitFrom.ts, to: e.tsMs, who: waitFrom.who });
         waitFrom = null;
-        turn = { session, start: e.tsMs, end: Infinity, skill: e.skill ?? null, skillId: Number.isInteger(e.skillId) ? e.skillId : null, worktreeId: Number.isInteger(e.id) ? e.id : null };
+        turn = { session, start: e.tsMs, end: Infinity, stopped: false, skill: e.skill ?? null, skillId: Number.isInteger(e.skillId) ? e.skillId : null, worktreeId: Number.isInteger(e.id) ? e.id : null };
       } else if (e.event === 'Stop') {
         // A Stop restarts the gap: a permission prompt earlier in the turn was answered inside it, and the log cannot say when.
-        if (turn) waitFrom = { ts: e.tsMs, who: turn };
+        if (turn) {
+          waitFrom = { ts: e.tsMs, who: turn };
+          turn.stopped = true;
+        }
         close(e.tsMs);
       } else if (e.event === 'Notification' && e.kind === 'permission_prompt') {
         if (waitFrom === null && turn) waitFrom = { ts: e.tsMs, who: turn };
@@ -340,7 +343,7 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
   };
   const phase = (id, name) => {
     const it = getIntent(id);
-    if (!it.phases.has(name)) it.phases.set(name, { name, elapsedMs: 0, open: false, gateWaitMs: 0, sessionWaitMs: 0, idleMs: 0, tokens: bucket() });
+    if (!it.phases.has(name)) it.phases.set(name, { name, elapsedMs: 0, open: false, coordWorkMs: 0, agentWorkMs: 0, gateWaitMs: 0, sessionWaitMs: 0, idleMs: 0, tokens: bucket() });
     return it.phases.get(name);
   };
   for (const id of byIntent.keys()) {
@@ -348,10 +351,10 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
   }
 
   const shared = new Map();
-  const unattributed = bucket();
+  const unattributed = { ...bucket(), workMs: 0 };
   const sharedBucket = (ids) => {
     const key = `shared: ${ids.map((i) => `§${i}`).join(', ')}`;
-    if (!shared.has(key)) shared.set(key, bucket());
+    if (!shared.has(key)) shared.set(key, { ...bucket(), workMs: 0 });
     return shared.get(key);
   };
 
@@ -374,22 +377,44 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     }
   }
 
+  // coord work (B5a): each turn's length, spread over the phases of the intent it is attributed to, not clipped to
+  // its life; a turn that never reached its Stop counts at most WAIT_CAP_MS (an open last turn ends at now)
+  const coordSpans = new Map(); // intent id -> [[from, to]], taken out of its gate waits (W2)
+  for (const t of turns) {
+    const end = Number.isFinite(t.end) ? t.end : Math.max(t.start, now);
+    const len = t.stopped ? end - t.start : Math.min(end - t.start, WAIT_CAP_MS);
+    const a = attribution(t);
+    if (a.kind === 'intent' && byIntent.has(a.id)) {
+      coordSpans.set(a.id, [...(coordSpans.get(a.id) ?? []), [t.start, t.start + len]]);
+      for (const [name, share] of spread(getIntent(a.id).spans, t.start, t.start + len)) phase(a.id, name).coordWorkMs += len * share;
+    } else if (a.kind === 'shared') sharedBucket(a.ids).workMs += len;
+    else unattributed.workMs += len;
+  }
+
   // agent tokens, and the spans in which agents ran (not owner wait)
   const agentSpans = []; // {session, id|null, span}
+  const agentWork = new Map(); // `${id} ${phase}` -> {id, name, spans}: agent work (B5a), by the tag's phase
   for (const a of agents) {
     if (a.usage.skipped) skipped.push({ file: a.file, count: a.usage.skipped });
     const tag = agentTag(a.description);
     if (a.usage.firstTs !== null) agentSpans.push({ session: a.session, id: tag?.id ?? null, span: [a.usage.firstTs, a.usage.lastTs] });
+    if (tag && a.usage.firstTs !== null) {
+      const key = `${tag.id} ${AGENT_PHASE[tag.phase]}`;
+      if (!agentWork.has(key)) agentWork.set(key, { id: tag.id, name: AGENT_PHASE[tag.phase], spans: [] });
+      agentWork.get(key).spans.push([a.usage.firstTs, a.usage.lastTs]);
+    }
     for (const u of a.usage.turns) {
       if (tag) addTokens(phase(tag.id, AGENT_PHASE[tag.phase]).tokens, 'agents', u.model, u.usage);
       else addTokens(unattributed, 'agents', u.model, u.usage);
     }
   }
 
+  for (const w of agentWork.values()) phase(w.id, w.name).agentWorkMs += unionMs(w.spans).reduce((ms, [a, b]) => ms + (b - a), 0);
+
   // owner wait
   for (const [id, cs] of byIntent) {
     const spans = getIntent(id).spans;
-    const mine = agentSpans.filter((s) => s.id === id).map((s) => s.span);
+    const mine = [...agentSpans.filter((s) => s.id === id).map((s) => s.span), ...(coordSpans.get(id) ?? [])];
     for (const raw of gateGaps(cs)) {
       // a guard: a gate gap starts at one of the intent's commits and ends at the next, so it lies inside its life already
       const g = clipToLife(getIntent(id), raw, now);
@@ -437,10 +462,23 @@ function sumBucket(into, b) {
   }
 }
 
+/** The time columns of B8, in print order: [field, header]. */
+const COLUMNS = [
+  ['elapsedMs', 'elapsed'],
+  ['coordWorkMs', 'coord work'],
+  ['agentWorkMs', 'agent work'],
+  ['gateWaitMs', 'gate wait'],
+  ['sessionWaitMs', 'in-session'],
+  ['idleMs', 'idle'],
+];
+const TIME_COLUMNS = COLUMNS.map(([k]) => k);
+const header = () => COLUMNS.map(([, h]) => h.padStart(11)).join(' ');
+const cells = (t) => COLUMNS.map(([k]) => duration(t[k]).padStart(11)).join(' ');
+
 function totalsOf(list) {
-  const t = { elapsedMs: 0, gateWaitMs: 0, sessionWaitMs: 0, idleMs: 0, tokens: bucket() };
+  const t = { elapsedMs: 0, coordWorkMs: 0, agentWorkMs: 0, gateWaitMs: 0, sessionWaitMs: 0, idleMs: 0, tokens: bucket() };
   for (const p of list) {
-    for (const k of ['elapsedMs', 'gateWaitMs', 'sessionWaitMs', 'idleMs']) t[k] += p[k];
+    for (const k of TIME_COLUMNS) t[k] += p[k];
     sumBucket(t.tokens, p.tokens);
   }
   return t;
@@ -482,8 +520,8 @@ function tokenLines(b, indent) {
 /** The B8 text for one intent (also what `stats.md` holds, after its stamp). */
 export function formatIntent(it) {
   const flag = it.partial ? ' (partial: merged before stats existed; tokens and session waits may be missing)' : '';
-  const lines = [`§${it.id}${flag}`, `  ${'phase'.padEnd(12)} ${'elapsed'.padStart(8)} ${'gate wait'.padStart(10)} ${'in-session'.padStart(11)} ${'idle'.padStart(8)}`];
-  const row = (name, p) => `  ${name.padEnd(12)} ${duration(p.elapsedMs).padStart(8)} ${duration(p.gateWaitMs).padStart(10)} ${duration(p.sessionWaitMs).padStart(11)} ${duration(p.idleMs).padStart(8)}`;
+  const lines = [`§${it.id}${flag}`, `  ${'phase'.padEnd(12)} ${header()}`];
+  const row = (name, p) => `  ${name.padEnd(12)} ${cells(p)}`;
   for (const p of it.phases) {
     lines.push(row(p.open ? `${p.name} (open)` : p.name, p), ...tokenLines(p.tokens, '      '));
   }
@@ -493,8 +531,9 @@ export function formatIntent(it) {
 
 function formatSide(stats) {
   const lines = [];
-  for (const [label, b] of stats.shared) lines.push(`${label}`, ...tokenLines(b, '  '));
-  const un = tokenLines(stats.unattributed, '  ');
+  const work = (b) => (b.workMs ? [`  coord work ${duration(b.workMs)}`] : []);
+  for (const [label, b] of stats.shared) lines.push(`${label}`, ...work(b), ...tokenLines(b, '  '));
+  const un = [...work(stats.unattributed), ...tokenLines(stats.unattributed, '  ')];
   if (un.length) lines.push('unattributed', ...un);
   return lines;
 }
@@ -515,23 +554,23 @@ export function formatStats(stats) {
 
 /** `npm run stats -- --all`: one line per intent; `partial` marks every figure. */
 export function formatAll(stats) {
-  const lines = [`${'intent'.padEnd(8)} ${'elapsed'.padStart(9)} ${'gate wait'.padStart(10)} ${'in-session'.padStart(11)} ${'idle'.padStart(8)}  tokens (in/out/cache read/cache write)`];
-  const total = { elapsedMs: 0, gateWaitMs: 0, sessionWaitMs: 0, idleMs: 0 };
+  const lines = [`${'intent'.padEnd(8)} ${header()}  tokens (in/out/cache read/cache write)`];
+  const total = Object.fromEntries(TIME_COLUMNS.map((k) => [k, 0]));
   for (const it of stats.intents) {
     const t = it.totals;
     const u = ZERO();
     for (const src of ['coordinator', 'agents']) for (const x of t.tokens[src].values()) addUsage(u, x);
     const tag = it.partial ? ' partial' : '';
-    lines.push(`${`§${it.id}`.padEnd(8)} ${duration(t.elapsedMs).padStart(9)} ${duration(t.gateWaitMs).padStart(10)} ${duration(t.sessionWaitMs).padStart(11)} ${duration(t.idleMs).padStart(8)}  ${usageText(u)}${tag}`);
+    lines.push(`${`§${it.id}`.padEnd(8)} ${cells(t)}  ${usageText(u)}${tag}`);
     for (const k of Object.keys(total)) total[k] += t[k];
   }
   const g = grandTotal(stats);
-  lines.push(`${'total'.padEnd(8)} ${duration(total.elapsedMs).padStart(9)} ${duration(total.gateWaitMs).padStart(10)} ${duration(total.sessionWaitMs).padStart(11)} ${duration(total.idleMs).padStart(8)}  ${usageText(g)} (all sources, incl. shared and unattributed)`);
+  lines.push(`${'total'.padEnd(8)} ${cells(total)}  ${usageText(g)} (all sources, incl. shared and unattributed)`);
   lines.push(...formatSide(stats), ...formatSkipped(stats));
   return lines.join('\n');
 }
 
-const plainBucket = (b) => ({ coordinator: Object.fromEntries(b.coordinator), agents: Object.fromEntries(b.agents) });
+const plainBucket = (b) => ({ coordinator: Object.fromEntries(b.coordinator), agents: Object.fromEntries(b.agents), ...(b.workMs === undefined ? {} : { workMs: b.workMs }) });
 
 /** The same data as plain JSON (B8 `--json`). */
 export function statsJson(stats) {

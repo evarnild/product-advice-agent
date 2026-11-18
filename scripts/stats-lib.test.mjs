@@ -192,6 +192,7 @@ describe('sessionTurns', () => {
   it('closes a turn at the next prompt when no Stop came, and leaves an unfinished one open', () => {
     const { turns } = sessionTurns([ev(0, 'UserPromptSubmit'), ev(1, 'UserPromptSubmit'), ev(2, 'Stop'), ev(3, 'UserPromptSubmit')]);
     expect(turns.map((t) => t.end)).toEqual([at(1), at(2), Infinity]);
+    expect(turns.map((t) => t.stopped)).toEqual([false, true, false]);
   });
 
   it("starts a gap at a permission prompt, restarted by the turn's Stop; idle prompts do not count", () => {
@@ -387,10 +388,11 @@ describe('computeStats', () => {
     });
     const i7 = find(s, 7);
     const spec = phaseOf(i7, 'spec');
-    // gate waits: intent drafted(0) -> accepted(0.5) is in the intent phase; spec drafted(1) -> accepted(4.5) is 3.5 h in spec
+    // gate waits: intent drafted(0) -> accepted(0.5) is in the intent phase; spec drafted(1) -> accepted(4.5) is 3.5 h in spec,
+    // less the §7 turns inside it (1 -> 1.5, 2.5 -> 3: W2): 2.5 h, 2 h counted and 0.5 h idle
     expect(phaseOf(i7, 'intent').gateWaitMs).toBe(0.5 * H);
     expect(spec.gateWaitMs).toBe(2 * H);
-    expect(spec.idleMs).toBe(1.5 * H);
+    expect(spec.idleMs).toBe(0.5 * H);
     // in-session: 1 h (1.5 -> 2.5) and 1.5 h - 1 h agent = 0.5 h (3 -> 4.5), both in spec
     expect(spec.sessionWaitMs).toBe(1.5 * H);
     // 5 h (5 -> 10) in the ship phase: 2 h counted, 3 h idle; agent time is not wait
@@ -467,6 +469,85 @@ describe('computeStats', () => {
       agents: [{ file: 'agent-1.jsonl', session: 's1', description: 'x', usage: usageLines('{') }, { file: 'agent-2.jsonl', session: 's1', description: 'x', usage: usageLines('') }],
     });
     expect(s.skipped).toEqual([{ file: 'main.jsonl', count: 2 }, { file: 'agent-1.jsonl', count: 1 }]);
+  });
+});
+
+describe('working time (B5a, B6, AC4a)', () => {
+  // phases: intent 2-3, spec 3-6, plan 6-7, build 7-9, ship 9-12
+  const life = () => log([2, '§7: intent drafted (owner: x)'], [3, '§7: intent accepted'], [4, '§7: spec drafted'], [6, '§7: spec accepted'], [7, '§7: plan approved (auto)'], [9, '§7: in-review, progress entry'], [12, '§7: merged (abc1234); status done']);
+  const run = ({ events = [], agents = [], commits = life(), now = at(100) } = {}) => computeStats({ commits, events, coordinators: [], agents, now });
+  const i7 = (s) => s.intents.find((i) => i.id === 7);
+  const ph = (it, name) => it.phases.find((p) => p.name === name);
+  const agentRun = (desc, from, to) => ({ file: 'a.jsonl', session: 's1', description: desc, usage: usageLines([asst(`w${n++}`, iso(from), 'opus', [1, 1, 1, 1]), asst(`w${n++}`, iso(to), 'opus', [1, 1, 1, 1])].join(String.fromCharCode(10))) });
+
+  it('books coord work from attributed turns, spread over the phases a turn spans', () => {
+    const it = i7(run({ events: [ev(5.5, 'UserPromptSubmit', { skillId: 7 }), ev(6.5, 'Stop')] }));
+    expect(ph(it, 'spec').coordWorkMs).toBe(0.5 * H);
+    expect(ph(it, 'plan').coordWorkMs).toBe(0.5 * H);
+    expect(it.totals.coordWorkMs).toBe(1 * H);
+  });
+
+  it('books a turn before the first commit to the first phase: work is not clipped to the life', () => {
+    const it = i7(run({ events: [ev(0, 'UserPromptSubmit', { skillId: 7 }), ev(1, 'Stop')] }));
+    expect(ph(it, 'intent').coordWorkMs).toBe(1 * H);
+  });
+
+  it('caps a turn with no Stop at 2 h, whether it ended at the session end or is still open at now', () => {
+    expect(i7(run({ events: [ev(9.5, 'UserPromptSubmit', { skillId: 7 }), ev(15, 'SessionEnd')] })).totals.coordWorkMs).toBe(2 * H);
+    expect(i7(run({ events: [ev(9.5, 'UserPromptSubmit', { skillId: 7 })], now: at(30) })).totals.coordWorkMs).toBe(2 * H);
+    expect(i7(run({ events: [ev(9.5, 'UserPromptSubmit', { skillId: 7 })], now: at(10) })).totals.coordWorkMs).toBe(0.5 * H);
+    // a turn that did reach its Stop is counted whole
+    expect(i7(run({ events: [ev(1, 'UserPromptSubmit', { skillId: 7 }), ev(4, 'Stop')] })).totals.coordWorkMs).toBe(3 * H);
+  });
+
+  it('shows shared and unattributed turn time on those lines, never on an intent', () => {
+    const commits = [...life(), ...log([4.2, '§8: intent drafted (owner: y)'])];
+    // 4 -> 4.5 holds a §7 and a §8 commit: shared; 20 -> 20.25 holds none: unattributed
+    const s = run({ commits, events: [ev(3.9, 'UserPromptSubmit'), ev(4.5, 'Stop'), ev(20, 'UserPromptSubmit'), ev(20.25, 'Stop')] });
+    expect(Math.round(s.shared.get('shared: §7, §8').workMs / 1000)).toBe(Math.round(0.6 * H / 1000));
+    expect(s.unattributed.workMs).toBe(0.25 * H);
+    for (const it of s.intents) expect(it.totals.coordWorkMs).toBe(0);
+    const text = formatStats(s);
+    expect(text).toMatch(/^shared: §7, §8\n {2}coord work 36m$/m);
+    expect(text).toMatch(/^unattributed\n {2}coord work 15m$/m);
+  });
+
+  it('books a turn for an intent with no commits as unattributed', () => {
+    const s = run({ events: [ev(1, 'UserPromptSubmit', { skillId: 99 }), ev(2, 'Stop')] });
+    expect(s.unattributed.workMs).toBe(1 * H);
+    expect(s.intents.map((i) => i.id)).toEqual([7]);
+  });
+
+  it("books agent work by tag to the tag's phase, joining overlapping runs, and leaves untagged runs out", () => {
+    const it = i7(run({ agents: [agentRun('§7 implement', 7.5, 8.5), agentRun('§7 implement again', 8, 9), agentRun('§7 review round 1', 9.5, 10), agentRun('Explore', 7, 9)] }));
+    expect(ph(it, 'build').agentWorkMs).toBe(1.5 * H);
+    expect(ph(it, 'review').agentWorkMs).toBe(0.5 * H);
+    expect(it.totals.agentWorkMs).toBe(2 * H);
+  });
+
+  it("takes the intent's coordinator turns out of a gate wait, joined with its agent runs (W2)", () => {
+    const commits = log([0, '§7: intent accepted'], [2, '§7: auto stopped: spec questions'], [4, '§7: auto run resumed'], [9, '§7: merged (abc1234)']);
+    const turn = [ev(2.5, 'UserPromptSubmit', { skillId: 7 }), ev(3, 'Stop')];
+    expect(i7(run({ commits })).totals.gateWaitMs).toBe(2 * H);
+    expect(i7(run({ commits, events: turn })).totals.gateWaitMs).toBe(1.5 * H);
+    // an agent run 2.5 -> 3.5 overlaps the turn: 1 h out in all, not 1.5 h
+    expect(i7(run({ commits, events: turn, agents: [agentRun('§7 implement', 2.5, 3.5)] })).totals.gateWaitMs).toBe(1 * H);
+    // another intent's turn stays in
+    expect(i7(run({ commits, events: [ev(2.5, 'UserPromptSubmit', { skillId: 8 }), ev(3, 'Stop')] })).totals.gateWaitMs).toBe(2 * H);
+  });
+
+  it('prints and serialises both columns', () => {
+    const s = run({ events: [ev(5.5, 'UserPromptSubmit', { skillId: 7 }), ev(6.5, 'Stop')], agents: [agentRun('§7 implement', 7.5, 8.5)] });
+    const text = formatStats(s);
+    expect(text).toMatch(/phase +elapsed +coord work +agent work +gate wait +in-session +idle/);
+    expect(text).toMatch(/^ {2}build +2h00m +0s +1h00m /m);
+    expect(text).toMatch(/^ {2}total +10h00m +1h00m +1h00m /m);
+    expect(formatAll(s)).toMatch(/^intent +elapsed +coord work +agent work +gate wait/);
+    expect(formatAll(s)).toMatch(/^§7 +10h00m +1h00m +1h00m /m);
+    const j = statsJson(s);
+    expect(j.intents[0].totals.coordWorkMs).toBe(1 * H);
+    expect(j.intents[0].phases.find((p) => p.name === 'build').agentWorkMs).toBe(1 * H);
+    expect(j.unattributed.workMs).toBe(0);
   });
 });
 

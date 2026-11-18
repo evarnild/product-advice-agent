@@ -250,3 +250,25 @@ Tests: kit 366 before, 369 after. Mutants killed: F8, C1, C4, R3; F2g survives
   gate wait 40m (was 1h17m).
 
 Tests: kit 370 (369 before).
+
+### 2026-11-18: subtask 7, working time
+
+- `sessionTurns` marks `stopped`; `computeStats` adds `coordWorkMs` (attributed
+  turns spread over phases, not clipped to the life, a turn without `Stop`
+  capped at 2 h, an open last turn ending at `now`; shared and unattributed
+  turn time as `workMs` on those lines; a turn for an intent with no commits
+  is unattributed) and `agentWorkMs` (tagged runs joined per intent and
+  phase). Gate waits take out the intent's coordinator turns with its agent
+  runs (W2).
+- Output: `coord work` and `agent work` columns in `stats`, `--all` and
+  `stats.md`; `coord work` lines under shared and unattributed; `workMs` in
+  the JSON side buckets.
+- Tests: 8 for AC4a (stats-lib.test.mjs, "working time"), plus `stopped` in
+  the sessionTurns test; one changed expectation: the spec gate gap in
+  "counts gate wait and in-session wait separately" now loses the two §7
+  turns inside it (idle 1.5 h → 0.5 h).
+- §13 shows 2m coord work and no agent work, as the owner was told:
+  most of its turns are shared and its agents were untagged. §16 to §19
+  show agent work (11m, 45m, 1h37m, 1h15m).
+
+Tests: kit 378 (370 before); pytest 658.
