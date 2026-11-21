@@ -4,13 +4,13 @@
 Accepted intent: [intent.md](intent.md)
 
 Written against `main` at `5774eeb`. Amended 2026-11-16 after the live
-check, against the branch at `403b4b5` (on `main` `89fa3b7`; `main` is now
+check, against the branch at `aad9a13` (on `main` `89fa3b7`; `main` is now
 `b2e2815`).
 
 ## Amendment (2026-11-16, after the live check)
 
 The first live check ran the mechanics end to end and came out **not
-trusted** (`evals/judge/validation.md` at `403b4b5`: true-positive rate
+trusted** (`evals/judge/validation.md` at `aad9a13`: true-positive rate
 0.61 (14/23), true-negative rate 0.64 (7/11), 1 judge error, 35 held out).
 Reading the 14 disagreements showed three causes in the criterion and the
 labels, not the model:
@@ -220,14 +220,14 @@ the API default applies. See Assumptions.
   `judge` on a real report with Langfuse on, sees the scores and comments
   on the traces, reruns without duplicates, and runs `judge-validate`;
   `validation.md` is committed with its verdict. Amended: done once on
-  2026-11-16 for the mechanics (`403b4b5`); after the relabel and the new
+  2026-11-16 for the mechanics (`aad9a13`); after the relabel and the new
   prompt, `judge` on both 2026-11-16 reports and `judge-validate` run
   again and the new `validation.md` and judgements are committed. The
   verdict may be either; the report must give it with its reason.
 - **AC8** (B6): the owner has labelled enough in-scope conversations for
   B7's minimums (today about 12 in scope; labelling more through §10's
   queue is part of the live check), and `split.json` is committed.
-  Amended: done at `403b4b5` (35 held out, 11 fails). The owner then
+  Amended: done at `aad9a13` (35 held out, 11 fails). The owner then
   relabels the 43 conversations in `split.json` (few-shot and held out)
   under the amended B3; the new label lines are committed, and the
   split's few-shot set still has both labels after the relabel (B6),

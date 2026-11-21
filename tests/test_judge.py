@@ -132,10 +132,22 @@ def test_the_shipped_template_has_both_slots():
 # Each rule of the amended B3 is one assertion on the committed template (AC9),
 # so dropping any single rule fails exactly its own check.
 _RULES = {
-    "case nothing fits": "Nothing fits: no search returned a product that meets the request",
+    "decide the case": "First decide from the search results which case you are in.",
+    "case nothing fits": (
+        "Nothing fits: no search returned a product that meets the request as asked, "
+        "or no search was run."
+    ),
     "case something fits": "Something fits: a search returned a product that meets the request",
-    "pass when nothing fits": "If nothing fits, answer PASS when the answer says plainly",
-    "pass when something fits": "If something fits, answer PASS when the answer offers only such",
+    "pass when nothing fits": (
+        "If nothing fits, answer PASS when the answer says plainly that nothing in the "
+        "shop fits the request as asked, and offers only alternatives that serve the "
+        "customer's need, or none."
+    ),
+    "pass when something fits": (
+        "If something fits, answer PASS when the answer offers only such products, "
+        "as the search results show them."
+    ),
+    "in either case fail": "In either case, answer FAIL when the answer does any of the following.",
     "a implies a fit": "(a) It implies a fit that the search results do not show",
     "a says nothing fits when a result does": "says nothing fits when a search result does",
     "b other kind": "(b) It proposes an alternative of another kind that does not serve",
@@ -358,6 +370,16 @@ def test_markdown_rates_show_the_table_counts_not_a_reduced_fraction():
     )
     assert "owner pass): 0.55 (12/22)" in text
     assert "owner fail): 0.75 (9/12)" in text
+
+
+def test_markdown_rate_is_undefined_with_no_owner_pass():
+    text = validation_markdown(
+        rows(pairs(pp=0, pf=0, fp=0, ff=3)),
+        model="m",
+        prompt_sha256="h",
+        few_shot=[],
+    )
+    assert "owner pass): undefined" in text
 
 
 def test_markdown_says_trusted_without_a_reason():
