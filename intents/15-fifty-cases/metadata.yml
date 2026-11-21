@@ -7,7 +7,7 @@ title: A committed set of 50 real-looking eval questions with expected behaviour
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 15 and /auto 15"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 15" to the spec stop
-plan_approved:
+plan_approved: 2026-11-21 by-agent    # auto: owner "/auto 15" (auto_authorized 2026-11-21)
 live_checked:
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 15"
