@@ -162,3 +162,48 @@ def test_committed_cases_are_consistent_with_the_catalogue():
 
     problems = catalogue_problems(load_committed(), CATALOGUE)
     assert problems == [], "\n".join(problems)
+
+
+# --- §15 B1: expect_properties --------------------------------------------
+
+SEARCH = {"category": "laptop"}
+
+
+def test_valid_properties_parse_to_a_tuple():
+    both = ["cites_a_match", "cites_only_matches"]
+    (case,) = parse_cases(line(expect_search=SEARCH, expect_properties=both), CATALOGUE)
+    assert case.expect_properties == ("cites_a_match", "cites_only_matches")
+    (one,) = parse_cases(
+        line(expect_search=SEARCH, expect_properties=["cites_only_matches"]), CATALOGUE
+    )
+    assert one.expect_properties == ("cites_only_matches",)
+
+
+def test_no_properties_by_default():
+    (case,) = parse_cases(line(expect_search=SEARCH), CATALOGUE)
+    assert case.expect_properties == ()
+
+
+@pytest.mark.parametrize(
+    ("props", "needle"),
+    [
+        (["cites_everything"], "unknown property"),
+        (["cites_a_match", "cites_a_match"], "twice"),
+        ("cites_a_match", "non-empty list"),
+        ([], "non-empty list"),
+        ([3], "unknown property"),
+        (None, "non-empty list"),
+    ],
+)
+def test_bad_properties_name_line_case_and_field(props, needle):
+    with pytest.raises(CaseFileError) as e:
+        parse_cases(line(expect_search=SEARCH, expect_properties=props), CATALOGUE)
+    assert "line 1, case 'c1': field 'expect_properties'" in str(e.value)
+    assert needle in str(e.value)
+
+
+def test_a_property_without_expect_search_is_rejected():
+    with pytest.raises(CaseFileError) as e:
+        parse_cases(line(expect_properties=["cites_a_match"]), CATALOGUE)
+    assert "line 1, case 'c1': field 'expect_properties'" in str(e.value)
+    assert "expect_search" in str(e.value)

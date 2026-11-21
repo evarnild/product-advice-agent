@@ -117,6 +117,9 @@ def test_expected_and_forbidden():
 def test_checks_only_apply_when_the_case_asks():
     names = [c.name for c in score(Case("c", "q"), GOOD, [], CATALOGUE)]
     assert names == ["grounded", "prices", "stock"]
+    with_search = Case("c", "q", expect_search={"category": "laptop"})
+    names = [c.name for c in score(with_search, GOOD, [], CATALOGUE)]
+    assert names == ["grounded", "prices", "stock", "search"]
 
 
 def test_declines():
@@ -223,3 +226,63 @@ def test_out_of_stock_phrase_counts_mid_text():
     v = verdicts(Case("c", "q"), answer)
     assert v["stock"]
     assert v["prices"]
+
+
+# --- §15 B3: a-match and only-matches ----------------------------------------
+
+LAPTOPS = {"category": "laptop"}
+# P-001 is a headphone in the catalogue (see GOOD); P-008 and P-009 are laptops.
+
+
+def prop_case(*props, search=LAPTOPS):
+    return Case("c", "q", expect_search=search, expect_properties=props)
+
+
+def checks_by_name(case, answer):
+    return {c.name: c for c in score(case, answer, [], CATALOGUE)}
+
+
+def test_a_match_ok_with_one_fitting_id_among_misfits():
+    answer = "The Auralis Calm 300 (P-001) costs 189 euros. P-009 costs 649 euros."
+    check = checks_by_name(prop_case("cites_a_match"), answer)["a-match"]
+    assert check.ok
+
+
+def test_a_match_fails_naming_cited_ids_when_none_fits():
+    check = checks_by_name(prop_case("cites_a_match"), GOOD)["a-match"]
+    assert not check.ok and "P-001" in check.reason
+
+
+def test_a_match_fails_when_nothing_is_cited():
+    check = checks_by_name(prop_case("cites_a_match"), "No idea, sorry.")["a-match"]
+    assert not check.ok and "cites no product" in check.reason
+
+
+def test_only_matches_ok_when_all_cited_fit():
+    answer = "P-009 costs 649 euros."
+    assert checks_by_name(prop_case("cites_only_matches"), answer)["only-matches"].ok
+
+
+def test_only_matches_names_exactly_the_misfit():
+    answer = "P-009 costs 649 euros, and P-001 costs 189 euros."
+    check = checks_by_name(prop_case("cites_only_matches"), answer)["only-matches"]
+    assert not check.ok and "P-001" in check.reason and "P-009" not in check.reason
+
+
+def test_only_matches_ok_when_nothing_is_cited():
+    assert checks_by_name(prop_case("cites_only_matches"), "Nothing fits.")["only-matches"].ok
+
+
+def test_unknown_cited_ids_are_ignored_by_both_property_checks():
+    answer = "P-009 costs 649 euros. P-999 is great."
+    got = checks_by_name(prop_case("cites_a_match", "cites_only_matches"), answer)
+    assert got["a-match"].ok and got["only-matches"].ok
+    only_unknown = checks_by_name(prop_case("cites_a_match"), "P-999 is great.")
+    assert not only_unknown["a-match"].ok and "P-999" not in only_unknown["a-match"].reason
+
+
+def test_property_checks_appear_only_with_their_property():
+    one = [c.name for c in score(prop_case("cites_a_match"), GOOD, [], CATALOGUE)]
+    assert one == ["grounded", "prices", "stock", "search", "a-match"]
+    other = [c.name for c in score(prop_case("cites_only_matches"), GOOD, [], CATALOGUE)]
+    assert other == ["grounded", "prices", "stock", "search", "only-matches"]
