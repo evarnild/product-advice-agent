@@ -365,3 +365,13 @@ this entry follows.
   `test_new_cases_expect_what_their_scenario_says`; D2 KILLED by the same
   test; T5 (`MIN_VARIETY` 5 -> 4) KILLED by
   `test_variety_needs_five_of_each_not_four`. Each: 1 failed, 739 passed.
+
+### Round-2 rework (2026-11-21)
+
+Commit b1f63bb. Owner decisions: "15: R2-F1 cordless i, anc iii; R2-F2 a, vague min 1".
+
+- R2-F1: `cordless-over-ear-100-250` probe and `keywords_any` are now `["over-ear"]` (question unchanged, "over ear" with a space, so `check_coverage` passes). `anc-train-rumble-200` is back to `["noise-cancelling"]` (round-1 keyword); the over-ear note is in its source segment, "(over-ear is left to the judge, §16)", because the note regex needs `variety:` last. Question kept as is.
+- R2-F2 (a): "laptop"/"phone" restored in the four questions (husband, uni-backpack, phone-battery, student), keeping the round-1 cuts of the backpack clause and "lasts the whole day"; `vague` removed from their variety. `MIN_VARIETY` in the test is now a mapping (typo 5, multi 5, vague 1, casual 5); `test_variety_needs_five_of_each_not_four` checks each at its minimum and one below, plus 0 vague.
+- R2-F3: `test_expect_search_is_the_notes_probe_for_every_new_case` (lines 16-50 except out-of-stock and off-topic: `expect_search` equals the probe with `keywords` renamed `keywords_any`). No case legitimately differs; the no-match probes were left alone for §22.
+- Mutants (copy backup, edit, full suite, restore by copy): E1 smartwatch-gps-bright-screen-200 drops `keywords_any`, E2 anc-train-rumble-200 `keywords_any` changed, E3 smartwatch-health-100-250 drops `keywords_any`; each killed by that new test (pytest -x, 1 failed).
+- Tests: pytest 741 passed (verify); kit count per the verify output.
