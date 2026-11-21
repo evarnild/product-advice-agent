@@ -1,7 +1,7 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §22 review — Product search that still finds the right product in 500
 
-verdict: escalate
+verdict: rework
 tier: reviewed
 reviewed-commit: 6ef5579
 round: 2
@@ -13,7 +13,8 @@ Tier: Reviewed, never lowered: the path table (`src/advisor/prompts/system.md`)
 and `review_tier: reviewed`. No CRITICAL or HIGH finding and no finding
 needing rework, so the verdict is `escalate` (the owner's diff read, F5
 included). The eval run found one regression that failed again on re-run:
-F8, "Needs decision", so the run stops at `eval regressions`.
+F8, "Needs decision", so the run stops at `eval regressions`. The owner
+chose rework (F8), so the verdict is `rework`.
 
 Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 22` → "nth
 attested auto change = 5, every 3, sampled: no".
@@ -71,6 +72,12 @@ rework. 10 → 11 files with `src/advisor/evals/prompts/generate.md` (F4 a).
   **Needs decision:** accept the regression (the live check's three-run
   majority, AC8, measures it again), or rework (e.g. a prompt or tool
   wording change about stock, a spec change).
+  Across the whole run, every search set `in_stock_only` (13 of 13),
+  against 6 of 12 on `main`.
+  **Owner's decision (2026-11-21): "22 I choose option c"**: rework, a
+  prompt line telling the model to set `in_stock_only` only when the
+  customer asks for products in stock (spec B7 amendment). Verdict
+  `rework`.
 - **F5 LOW** `src/advisor/agent.py:131-132` (carried): the tool
   `description` rewritten outside the plan, unpinned (A4 survives); accurate
   under B2/B3. Worth a look in the diff read; optionally pin it in
