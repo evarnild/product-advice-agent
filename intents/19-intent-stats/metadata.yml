@@ -8,7 +8,7 @@ review_tier: reviewed    # likely changes the session hook (scripts/session-even
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 19" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 19" (auto_authorized 2026-11-13)
-live_checked:
+live_checked: 2026-11-21 by-agent    # owner: "record live_checked 19" after the hook lines (/sessions, /spec 19, a plain prompt) and npm run stats -- 17 / 19 in session; display nits (shared blocks, misaligned row, <synthetic> row, uncounted review time) left for a follow-up
 merged:
 auto_authorized: 2026-11-16 by-agent    # owner: "/auto 19" (diff read)
 auto_round: 3
