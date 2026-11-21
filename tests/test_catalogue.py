@@ -303,3 +303,18 @@ def test_blank_keywords_do_not_match_everything_or_count():
     cat = [_p("P-001", 50, description="alpha"), _p("P-002", 10, description="beta")]
     assert ids(search_products(cat, keywords=["-", " "])) == ["P-002", "P-001"]
     assert ids(search_products(cat, keywords=["", "alpha"])) == ["P-001"]
+
+
+def test_repeated_keyword_is_not_a_bigger_match_than_distinct_ones():
+    cat = [
+        _p("P-001", 50, description="beta gamma"),  # two distinct keywords
+        _p("P-002", 10, description="in-ear"),  # one keyword, however often it is listed
+    ]
+    assert ids(search_products(cat, keywords=["in-ear", "in ear", "IN EAR", "beta", "gamma"])) == [
+        "P-001",
+        "P-002",
+    ]
+    assert ids(search_products(cat, keywords=["alpha", "alpha", "beta", "gamma", "in-ear"])) == [
+        "P-001",
+        "P-002",
+    ]
