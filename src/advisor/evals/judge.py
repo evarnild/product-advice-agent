@@ -261,12 +261,9 @@ class ValidationRow:
     judge_reason: str
 
 
-def _rate(value: Fraction | None) -> str:
-    return (
-        "undefined"
-        if value is None
-        else f"{float(value):.2f} ({value.numerator}/{value.denominator})"
-    )
+def _rate(hits: int, total: int) -> str:
+    """`0.xx (a/b)` from the table's counts; a `Fraction` would print 12/22 as 6/11."""
+    return "undefined" if total == 0 else f"{hits / total:.2f} ({hits}/{total})"
 
 
 def _word(passed: bool) -> str:
@@ -294,8 +291,10 @@ def validation_markdown(
         f"- Few-shot examples: {len(few_shot)}",
         f"- Held-out conversations: {len(rows)} "
         f"({a.judged} with a verdict, {a.errors} judge errors)",
-        f"- True-positive rate (owner pass, judge pass / owner pass): {_rate(a.tpr)}",
-        f"- True-negative rate (owner fail, judge fail / owner fail): {_rate(a.tnr)}",
+        "- True-positive rate (owner pass, judge pass / owner pass): "
+        + _rate(a.pass_pass, a.pass_pass + a.pass_fail),
+        "- True-negative rate (owner fail, judge fail / owner fail): "
+        + _rate(a.fail_fail, a.owner_fails),
         "",
         "| | judge pass | judge fail |",
         "| --- | --- | --- |",

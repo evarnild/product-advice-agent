@@ -154,7 +154,7 @@ def test_trusted_at_exactly_0_8_30_and_10(tmp_path):
     assert code == 0, err
     text = w["validation"].read_text(encoding="utf-8")
     assert "**Verdict: trusted.**" in text
-    assert "0.80 (4/5)" in text
+    assert "0.80 (16/20)" in text and "0.80 (8/10)" in text
     assert out.splitlines()[-1].startswith("trusted:")
 
 

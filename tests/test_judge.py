@@ -348,6 +348,18 @@ def test_markdown_has_table_rates_verdict_and_disagreements():
     assert "- other.jsonl: no report" in text
 
 
+def test_markdown_rates_show_the_table_counts_not_a_reduced_fraction():
+    # The live check's table (2026-11-21): 12/22 and 9/12 printed as 6/11 and 3/4.
+    text = validation_markdown(
+        rows(pairs(pp=12, pf=10, fp=3, ff=9)),
+        model="m",
+        prompt_sha256="h",
+        few_shot=[],
+    )
+    assert "owner pass): 0.55 (12/22)" in text
+    assert "owner fail): 0.75 (9/12)" in text
+
+
 def test_markdown_says_trusted_without_a_reason():
     text = validation_markdown(
         rows(pairs(pp=16, pf=4, fp=2, ff=8)),
