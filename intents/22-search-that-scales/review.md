@@ -1,7 +1,7 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §22 review — Product search that still finds the right product in 500
 
-verdict: escalate
+verdict: rework
 tier: reviewed
 reviewed-commit: a179911
 round: 4
@@ -87,7 +87,7 @@ The only error is the owed live check: the owner's, not rework.
   tool and schema wording (`agent.py:60-63` "Any one keyword …", `:130-132`
   "ordered by keywords matched"), which reads as "keywords help ranking";
   one run per side, qwen3:8b. The search code does what the spec says.
-  **Needs decision:** (a) accept, the live check's three-run majority
+  **Decided (c)**, owner: "22 c", "In the tool", "Yes, a field per row"; spec amendment B11 (fdc9929), so the verdict is `rework`. **Needs decision:** (a) accept, the live check's three-run majority
   measures it again; (b) rework the wording: tell the model to use keywords
   only for features the customer named (prompt or tool description, a
   B7-style amendment); (c) a spec change to search: when no product
