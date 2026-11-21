@@ -12,7 +12,7 @@ live_checked: 2026-11-21 by-agent    # owner: "live check 21 passed"
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 21" (after the live check)
 auto_round: 2
-auto_stopped: live check owed
+auto_stopped: ready for /ship
 follows_up:
 blocked_by:
 links:
