@@ -1,13 +1,222 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §22 review — Product search that still finds the right product in 500
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: a179911
-round: 4
+reviewed-commit: 2cfeed2
+round: 5
 sampled: no
 run: manual
 live-check: owed
+
+Tier: Reviewed, never lowered: the path table (`src/advisor/prompts/system.md`)
+and `review_tier: reviewed`. Round 5 is by hand, after the owner's F11
+decision (c), spec amendment B11 (fdc9929). No CRITICAL or HIGH finding and
+none needing rework; the eval run shows no regression and F11's three cases
+passing. Verdict `escalate`: the owner reads the diff.
+
+Sampling: `npm run sdlc:scan -- --sample-due manual --exclude 22` → "nth
+attested manual change = 1, every 5, sampled: no" (moot: Reviewed).
+
+Changed since round 4 (a179911): fdc9929 spec B11 and AC9 (the owner's
+words), 68faf51 round 4's verdict to rework, 5edf5cb the rework, 2cfeed2 AC9
+moved after AC8 (order only). `metadata.yml` unchanged (`status: in-review`,
+`auto_round: 3`).
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: 5edf5cb does B11 and AC9; nit: the plan's subtasks above Progress do not mention B11 (Progress does) |
+| 2 | Type check | pass (FAIL only on the owed live check, the owner's) |
+| 3 | Behaviour against the spec | pass for B1–B9 and B11; eval run made, no regression |
+| 4 | Tests prove the behaviour, not only pass | findings (1): F5 residual (D2); 24 mutants, 23 killed |
+| 5 | Conventions | pass (`catalogue.py` stays pure; tests use the fake) |
+| 6 | Numbers in prose | pass: "859 passed", "7 failed before", "41 of 42 vs 31 of 41" reproduced |
+| 7 | Documentation | findings (1): F14 (LOW) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 22, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/22-search-that-scales/review.md → ## Live check, then set live_checked: <date> in intents/22-search-that-scales/metadata.yml.
+  note:  12 file(s), 484 line(s) changed outside intents/.
+```
+The only error is the owed live check: the owner's, not rework.
+
+## Resolution of round 4
+| Round 4 | Severity | At 2cfeed2 | Evidence |
+| --- | --- | --- | --- |
+| F11 three regressions, vague keyword empties the search | MEDIUM (the owner chose c) | resolved: B11 in the tool (`agent.py:123-138`): a keyword search with no rows re-runs on the filters alone; rows carry `keywords_matched`, fallback rows 0; prompt `system.md:15-16` "A row with `keywords_matched` 0 does not have the features asked for: say so, and do not present it as a fit." | B1–B8, P1–P3 KILLED; eval run: `monitor-room-500`, `monitor-small-desk-400`, `phone-battery-all-day-400` PASS, each through a fallback search |
+| F9 LDAC probe tightens the search check | MEDIUM, worth a look | unchanged (`evals/cases.jsonl:29`) | `headphones-ldac-balanced-200` PASS in this run |
+| F10 probe edits not in the notes | LOW | unchanged | — |
+| F5 tool description unpinned | LOW | mostly resolved: the description changed for B11 and is pinned by fragments (D1 KILLED); a contradicting rewrite keeping the fragments survives (D2) | see Findings |
+| F7 `generate.md` no-match clause | LOW | unchanged | — |
+
+## The change
+- `catalogue.py:113-164`: `keyword_set` and `keywords_matched` are the old
+  inline expressions moved out; `search_products` calls both, results
+  unchanged (R1–R7 KILLED, incl. the consistency tests).
+- `agent.py`: `if not words` (non-blank, normalised) → plain rows, no field;
+  else search, and `if not found` re-run with `keywords=None` and the same
+  `filters` (category, prices, stock, limit); every row gets
+  `keywords_matched(p, words)`. Validation still raises before any search.
+  `_execute` traces the rows returned, fallback rows included.
+- Consumers of the rows: `score.py` scores arguments, not rows; `run.py`,
+  `tracing.py`, `view.py` store or `.get` fields; `judge.py:63-66` serialises
+  rows as JSON, so the judge now sees the field and fallback rows (Not
+  checked).
+
+## Findings
+- **F14 LOW** `src/advisor/agent.py:145-146`, `README.md:353`: "if no product
+  matches any keyword": the fallback fires when no product *passing the other
+  filters* matches (category phone with `["laptop"]` falls back though
+  laptops match). Worth a look: "if no product within the other filters
+  matches any keyword".
+- **F13 LOW** `intents/22-search-that-scales/spec.md:195-196`: the
+  assumption "The search result rows are unchanged" is stale under B11
+  (B11 says it amends B6). Worth a look; above Progress is the owner's.
+- **F5 LOW** (residual) `tests/test_agent.py:350-352`: the description is
+  pinned by fragments; D2 ("…nothing is returned and keywords_matched 0
+  never shows.") survives. Worth a look: pin the full sentence, as the prompt
+  test does.
+- **F9 MEDIUM, F10 LOW, F7 LOW** (carried, unchanged): worth a look.
+
+Nit: `filters: dict[str, Any]` (`agent.py`) takes the keyword arguments to
+`search_products` out of mypy's view; the tests cover them.
+
+**Mutants** (the reviewer's harness, specs in the coordinator's scratchpad
+`r5/`: copy backup, one-match byte replace, full suite, restore by copy, `git
+status --short` clean after each):
+
+| Mutant | Target | Result | Killed by |
+| --- | --- | --- | --- |
+| B1 no fallback | `agent.py` | KILLED (2) | `test_no_match_keyword_search_falls_back_to_filter_only_rows_with_count_zero`, `test_fallback_respects_category_price_stock_and_limit` |
+| B2, B2b, B2c, B2d fallback drops filters / limit / stock / category | `agent.py` | KILLED (1 each) | `test_fallback_respects_category_price_stock_and_limit` |
+| B3 field on blank-only keywords | `agent.py` | KILLED | `test_blank_only_keywords_have_no_field_and_no_fallback_change` |
+| B4 fallback always | `agent.py` | KILLED (5) | `test_search_with_matches_has_no_fallback_rows_and_counts_each_row`, … |
+| B5 count raw keywords | `agent.py` | KILLED (2) | `test_duplicate_and_spelling_variant_keywords_count_once`, `test_blank_keywords_alongside_real_ones_still_count` |
+| B5b count occurrences | `catalogue.py` | KILLED (2) | catalogue and consistency tests |
+| B6 no field on fallback | `agent.py` | KILLED | `test_no_match_keyword_search_falls_back…` |
+| B7 field without keywords | `agent.py` | KILLED (6) | `test_search_without_keywords_has_no_keywords_matched_field`, tracing tests |
+| B8 tool words not normalised | `agent.py` | KILLED (3) | `test_duplicate_and_spelling_variant…` |
+| R1–R7 refactor (dedup, blank guard, normalise, brand, raw words, flattened count, haystack) | `catalogue.py` | KILLED | catalogue, agent and consistency tests |
+| P1 sentence deleted, P2 weakened, P3 "say so" dropped | `system.md:15-16` | KILLED | `test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit` |
+| D1 description reverted | `agent.py:142-147` | KILLED | `test_schema_text_says_any_keyword_matches_and_default_ten` |
+| D2 description contradicts | `agent.py:146` | **SURVIVED** | F5 residual |
+
+Not run as equivalent: a fallback row's count hard-coded to 0; `keywords=words`
+in the first search.
+
+## Not checked
+- B10, AC8 and the intent's numbers over the 50 cases: the live check (three
+  runs per side).
+- How often the fallback fires and what the model does with 0-match rows
+  beyond one run: here 15 of 41 searches fell back (incl.
+  `out-of-stock-quiet-pro`, `gaming-monitor`, the Norvik cases); whether it
+  presents such rows as fits.
+- The §16 judge on conversations with fallback rows and `keywords_matched`;
+  `evals/judge/validation.md` predates §22. No judge call.
+- `advisor-analysis generate` under the any-of probe rule; calls a model.
+
+## Live check
+- owed: rule 1 (`src/advisor/prompts/system.md`), AC8/B10 (three-run
+  majority), rule 3 (0-match rows not presented as fits; the stock filter's
+  rate; F11's three cases).
+- steps:
+  1. Start Ollama with the default model (README "Evaluating answers").
+  2. On `main`, in `C:/Users/eric/src/product-advice-agent`, run `uv run
+     advisor-eval --provider ollama` three times (50 cases each); note the
+     three reports. A full run takes about 10 to 12 minutes; close heavy
+     programs first.
+  3. In `C:/Users/eric/src/product-advice-agent-wt/22-search-that-scales`,
+     run the same three times; copy the reports to the main checkout's
+     `evals/runs/`. (This review's run, `20261121T165658Z-ollama.json`, may
+     count as one of the three.)
+  4. Tally per case: `uv run python -c "import json,sys;
+     r=json.load(open(sys.argv[1],encoding='utf-8')); print({c['id']:
+     c['status'] for c in r['cases']})" <report>`; a case passes on a side
+     when PASS in at least 2 of 3.
+  5. Count searches, stock filter, keywords and fallbacks per report: `uv
+     run python -c "import json,sys;
+     r=json.load(open(sys.argv[1],encoding='utf-8')); t=[t for c in
+     r['cases'] for t in c['tools'] if t['name']=='search_products'];
+     print(len(t), sum(bool(x['arguments'].get('in_stock_only')) for x in
+     t), sum(bool(x['arguments'].get('keywords')) for x in t),
+     sum(bool(x.get('results')) and all(y.get('keywords_matched')==0 for y in
+     x['results']) for x in t))" <report>`.
+  6. In the worktree: `uv run advisor "I want in-ear headphones with LDAC
+     and a balanced output, under 200 euros"` and read the answer.
+- you should see: `student-laptop` and `nc-headphones-under-200` PASS in at
+  least 2 of 3 branch runs; no case passing 2 of 3 on `main` fails 2 of 3 on
+  the branch (watch `monitor-room-500`, `monitor-small-desk-400`,
+  `phone-battery-all-day-400`, `gaming-monitor`, `headphones-ldac-balanced-200`);
+  in step 6 an answer that says no product has LDAC or a balanced output
+  and does not offer the returned headphones as fits. The review then names
+  the six reports, and `live_checked` is recorded at your word.
+
+## Eval run
+- owed: `uv run advisor-analysis owes-run --base main` → `evals/cases.jsonl`,
+  `src/advisor/agent.py`, `src/advisor/catalogue.py`,
+  `src/advisor/evals/cases.py`, `src/advisor/prompts/system.md`.
+- report: `evals/runs/20261121T165658Z-ollama.json` (ollama, qwen3:8b), made
+  by the coordinator in the worktree at 2cfeed2, copied to the main
+  checkout's `evals/runs/`: **38/50**. (A first attempt was stopped by
+  Claude Code for low memory and wrote no report.)
+- `compare` against `evals/baseline.json` (`20261121T125003Z-ollama.json`,
+  §15, 29/50): regressed (1) `gaming-monitor`; fixed (10)
+  `nc-headphones-under-200`, `student-laptop`, `video-editing-laptop`,
+  `smartwatch-gps-bright-screen-200`, `smartwatch-health-100-250`,
+  `laptop-husband-work-1000`, `laptop-uni-backpack-900`, `music-gift-150`,
+  `headphones-hifi-transparent-200`, `cordless-over-ear-100-250`; added 0,
+  removed 0; warnings `cases_sha256`, `prompt_sha256` differ (expected).
+- re-run: `uv run advisor-eval --only gaming-monitor` →
+  `20261121T170758Z-ollama.json`, PASS: not a regression (in the full run
+  the model searched `["gaming"]` under 300 euros and got fallback rows).
+- F11's three: PASS, each via a fallback search (`["student"]`,
+  `["studying"]`, `["simple", "basic"]`).
+- hashes: the report's `cases_sha256` `b7a88ce6db45…`, `prompt_sha256`
+  `c2a38987f5c8…`, `catalogue_sha256` `c2e56cb2ffcd…` equal the sha256 of the
+  worktree's files (working-tree bytes).
+- counts: 41 searches; stock filter 19 (baseline 23 of 41); keywords 39
+  (baseline 31); fallback 15 (baseline 0). `tv-sound` FAIL (no search; FAIL
+  in the baseline too, so not a flip).
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (worktree at 2cfeed2; `git status --short` clean
+before and after):
+- **Coordinator, re-run:** `npm run verify` → "All checks passed!", "177
+  files already formatted", mypy "Success: no issues found in 31 source
+  files", "859 passed". Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "12 file(s), 484 line(s)". Matches.
+- **Coordinator, re-run:** D2 SURVIVED (859 passed); B1 KILLED (2 failed,
+  857 passed); B5 KILLED (2 failed, 857 passed). Matches the reviewer.
+- **Coordinator, re-run:** the eval run, compare, the `--only` re-run, the
+  hash check, and the search, stock, keyword and fallback counts.
+
+**Reviewer (agent), read-only:** `git diff 72c1cd2..2cfeed2`; the other 21
+mutants; the 7 new or changed tests against 72c1cd2's `src` (7 failed, 27
+passed); the consumers of tool rows; `owes-run`; sampling.
+
+**Taken on trust:** which test kills each mutant (the reviewer's report);
+that the 7 tests fail before the change (the reviewer's and implementer's
+runs).
+
+# Round 4 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: a179911
+- round: 4
+- sampled: no
+- run: manual
+- live-check: owed
 
 Tier: Reviewed, never lowered: the path table (`src/advisor/prompts/system.md`)
 and `review_tier: reviewed`. Round 4 is by hand (the owner's "rebase 22 and
@@ -25,7 +234,7 @@ under any-of search, a `ruff format` fix and Progress. `main` (438b0ec) is an
 ancestor of a179911. `metadata.yml` is unchanged (`auto_round: 3`,
 `auto_stopped: escalate, owner reads the diff`, `status: in-review`).
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass: the merge does the plan's "keeps §15's `fits` filter and applies this ordering key after it"; the probe fixes the plan's "the second to merge fixes it" |
@@ -38,7 +247,7 @@ ancestor of a179911. `metadata.yml` is unchanged (`auto_round: 3`,
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -49,7 +258,7 @@ type-check: FAIL (intent 22, feature)
 ```
 The only error is the owed live check: the owner's, not rework.
 
-## The merge
+### The merge
 - `_expected_results` (`src/advisor/evals/cases.py:215-236`) is §15's
   `fits` on category, price and stock (`others`, without `keywords_any`)
   plus §22's distinct-keyword count, the `words and matched(p) == 0` guard
@@ -73,7 +282,7 @@ The only error is the owed live check: the owner's, not rework.
   "minimalist"]` ("GPS" 30). Each new word matches 0 products. Questions
   unchanged.
 
-## Findings
+### Findings
 - **F11 MEDIUM (eval run)** three regressions, each FAIL again on the
   `--only` re-run (`20261121T154217Z-ollama.json`), all "cites no product":
   `monitor-room-500`, `monitor-small-desk-400`, `phone-battery-all-day-400`.
@@ -135,7 +344,7 @@ A4 and G2 not re-run (lines unchanged since f20551b); earlier rounds' killed
 mutants not re-run (`catalogue.py`, `agent.py`, `system.md` byte-identical
 to f20551b).
 
-## Not checked
+### Not checked
 - B10, AC8 and the intent's numbers over the 50 cases: the live check
   (three runs per side).
 - F11 beyond one run plus a re-run; whether (b) or (c) would fix it.
@@ -148,7 +357,7 @@ to f20551b).
 - Whether the model presents partial matches as fits; availability
   questions read as stock requests: the live check.
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/prompts/system.md`), AC8/B10 (three-run
   majority), rule 3 (vague keywords, F11; the stock filter's rate; partial
   matches presented as fits).
@@ -181,7 +390,7 @@ to f20551b).
   the "balanced sound" models as fits. The review then names the six
   reports, and `live_checked` is recorded at your word.
 
-## Eval run
+### Eval run
 - owed: `uv run advisor-analysis owes-run --base main` → `evals/cases.jsonl`,
   `src/advisor/agent.py`, `src/advisor/catalogue.py`,
   `src/advisor/evals/cases.py`, `src/advisor/prompts/system.md`.
@@ -204,7 +413,7 @@ to f20551b).
 - stock filter: 23 of 42 searches (baseline 23 of 41). Keywords: 41 of 42
   (baseline 31 of 41).
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (worktree at a179911; `git status --short` clean
 before and after):
