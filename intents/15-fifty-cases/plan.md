@@ -302,3 +302,66 @@ Divergences from the plan:
   budget-too-low cases (the minimum).
 - One data commit for subtasks 5 and 6 together (the 15 and 35 were produced
   by one script).
+
+### Correction to the entry above (round 1, F5)
+
+- Only the tablet probe (`haiku:gen-budget-too-low-11`) failed `check_coverage`
+  as written. The three out-of-stock probes passed as written
+  (`check_coverage` ignores category for out-of-stock); their edits corrected
+  the generator's category to the product's real one (P-017 phone, P-024
+  tablet, P-032 speaker). So one source, not four, had a probe that did not fit.
+- A feature correction was unmentioned: `gen-out-of-stock-1` ->
+  `norvik-fold-brother-gift`, feature monitor -> phone (P-017).
+- The number of `fits` tests in `tests/test_evals_consistency.py` is 3, not 4.
+
+### Progress: round 1 rework (2026-11-21)
+
+Owner's words: "15: F1 a for gps, health, both over-ear; b for the other three;
+F4 accept" (spec B6 amendment, db3c3af). Commit: d5ece55 (data, tests, README);
+this entry follows.
+
+- **F1 (a)**: the feature word is in the probe (`note`) and `keywords_any`.
+  Fit counts on the 500 catalogue (fitting `expect_search`, before -> after):
+  `smartwatch-gps-bright-screen-200` GPS: 16 -> 4; `smartwatch-health-100-250`
+  "heart rate" (the catalogue has no SpO2 anywhere, so not used): 12 -> 8;
+  `anc-train-rumble-200` ["noise-cancelling", "over-ear"]: 8 -> 18 (over-ear
+  alone 13); `cordless-over-ear-100-250` ["wireless", "over-ear"]: 23 -> 23
+  (over-ear alone 8). Caveat: `keywords_any` is any-of, so for the two
+  over-ear cases the added word widens or leaves the fit set: it scores
+  nothing the old keyword did not. Needs the owner's eye (an all-of form would
+  be a spec change). In those two questions "over-ear" is written "over ear",
+  because `check_coverage` rejects a spelling-differs question containing its
+  keyword verbatim; the keyword stays "over-ear" (hyphen = space in search).
+  All 35 probes still pass `check_coverage`; `catalogue_problems` is empty.
+- **F1 (b)**: cut from the questions: `laptop-uni-backpack-900` (backpack
+  clause), `monitor-small-desk-400` (small desk), `phone-battery-all-day-400`
+  (all-day battery).
+- **F4**: accepted; the note of `tablet-reading-drawing-80` reads "source:
+  haiku:gen-budget-too-low-11 (source edited: max_price 120 to 80, see spec B6
+  amendment)".
+- **F2**: `test_new_cases_expect_what_their_scenario_says` enforces B6's table
+  as amended, with the probe's `product_id` for out-of-stock.
+- **F3**: `variety_problems(cases)` uses `MIN_VARIETY`; new test
+  `test_variety_needs_five_of_each_not_four` (4 fails, 5 passes, per variety;
+  unknown variety named).
+- **F5**: corrected above. **F6**: README "Changing the catalogue" names B4's
+  message.
+- **F7**: out-of-stock questions name an exact product, so they are no longer
+  `vague` (tagged `none`, or `typo` for `aurelis-home-gift-mum`, where
+  "Aurelis" misspells Auralis; `casual` for `norvik-fold-cheap-student`). Five
+  questions with no category word are `vague`: `music-gift-150`,
+  `laptop-uni-backpack-900`, `phone-battery-all-day-400`,
+  `laptop-husband-work-1000`, `laptop-student-way-over-budget` (the last
+  three rewritten to drop "laptop"/"phone"; the expectation still names the
+  category, so a model that must ask what they want would fail them: for the
+  owner's read). `multi` = the question states two or more of a category, a
+  price bound, a feature or purpose; applied to all 35 (so
+  `sister-birthday-watch` is now multi).
+- **Variety counts now**: typo 6, multi 28, vague 5, casual 10 (4 cases `none`).
+  Spread unchanged: scenarios 10/9/8/7/7/5/4; features unchanged except none.
+- **Verify**: kit tests pass; ruff "All checks passed!", 164 files formatted,
+  mypy 29 files clean, 740 passed (was 739; one new test).
+- **Mutants** (copy backup, `uv run pytest -q`, restored by copy): D1 KILLED by
+  `test_new_cases_expect_what_their_scenario_says`; D2 KILLED by the same
+  test; T5 (`MIN_VARIETY` 5 -> 4) KILLED by
+  `test_variety_needs_five_of_each_not_four`. Each: 1 failed, 739 passed.
