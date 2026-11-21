@@ -1,13 +1,193 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §15 review — A committed set of 50 real-looking eval questions with expected behaviour
 
-verdict: rework
+verdict: attest
 tier: attested
-reviewed-commit: 27d5428
-round: 2
+reviewed-commit: 5f5ccb0
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Attested by the path table: the branch touches
+`src/advisor/evals/cases.py` and `score.py` (`src/**`, not in the Reviewed
+row), tests, `evals/cases.jsonl`, `README.md`, `CLAUDE.md` and intent
+artefacts; the round-2 rework adds no path (`evals/cases.jsonl`,
+`tests/test_evals_cases.py`, `spec.md`, `plan.md`). `review_tier` empty. No
+CRITICAL or HIGH finding; the eval run is named below.
+
+HEAD 1de93e9 differs from 5f5ccb0 only in `metadata.yml` (`auto_round: 3`,
+`auto_stopped` cleared); the reviewed content is 5f5ccb0.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 15` → "nth
+attested auto change = 5, every 3, sampled: no".
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the rework does the amendment at 8084fe5 and R2-F3's test, nothing more |
+| 2 | Type check | pass (FAIL only on the owed live check, the owner's) |
+| 3 | Behaviour against the spec | pass; eval run made, no regression |
+| 4 | Tests prove the behaviour, not only pass | pass: E1–E4 and the variety mutants killed; E5 survives by design |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | findings (1): R3-F1 |
+| 7 | Documentation | pass (README and CLAUDE.md name no variety minimums) |
+| 8 | Guardrails and hygiene | pass (no dependency, secret or user data) |
+| 9 | Repository-specific footguns | pass (list empty; round 2's `keywords_any` any-of suggestion stands for the owner) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 15, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/15-fifty-cases/review.md → ## Live check, then set live_checked: <date> in intents/15-fifty-cases/metadata.yml.
+  note:  10 file(s), 690 line(s) changed outside intents/.
+```
+The only error is the owed live check (AC6): the owner's, not rework.
+
+## Resolution of round 2
+| # | Round 2 | Owner's decision (8084fe5) | At 5f5ccb0 | Status |
+| --- | --- | --- | --- | --- |
+| R2-F1 cordless | line 47 any-of `["wireless","over-ear"]` | (i) | probe and `keywords_any` `["over-ear"]`; question unchanged ("over ear"); `check_coverage` ok; 8 fit (P-001, P-035, P-043, P-051, P-203, P-211, P-419, P-443), all wireless and over-ear | resolved |
+| R2-F1 anc | line 46 any-of `["noise-cancelling","over-ear"]` | (iii) | `["noise-cancelling"]` in probe and `expect_search`, as round 1; note "(over-ear is left to the judge, §16)" in the source segment (`variety:` must stay last for `NOTE_RE`); `check_coverage` ok, 8 fit | resolved |
+| R2-F2 | lines 20, 21, 24, 35 without a category word | (a) | "laptop" / "phone" back; `vague` removed; probes pass `check_coverage` (19, 17, 12 fit; 0 in budget for budget-too-low) | resolved |
+| R2-F2 vague minimum | B8 5 vague | "vague min 1" | `MIN_VARIETY = {"typo": 5, "multi": 5, "vague": 1, "casual": 5}` (`tests/test_evals_cases.py:214`); counts typo 6, multi 28, vague 1 (`music-gift-150`), casual 10, none 4 | resolved |
+| R2-F3 | `expect_search` not tied to the probe | Needs rework | `test_expect_search_is_the_notes_probe_for_every_new_case` (`:443-452`), 28 cases, guard `checked >= 25`; kills E1–E4 | resolved |
+| R2-F4 | unscored extras, lines 17, 18, 23 | worth a look | unchanged | the owner's AC6 read |
+
+Wording of the four restored questions: `laptop-husband-work-1000`
+byte-identical to round 1; `laptop-uni-backpack-900` round 1 minus the
+backpack clause (round 1's (b)); `phone-battery-all-day-400` "My old phone
+is flat by lunchtime and I just want a new one. Nothing fancy, up to 400
+euros." (follows the source, keeps (b)'s cut);
+`laptop-student-way-over-budget` "a laptop to write my essays on" ("essays"
+is left from round 2's rewrite, not in `gen-budget-too-low-13`; harmless,
+nit). All read like customers.
+
+## Findings
+- **R3-F1 LOW** `intents/15-fifty-cases/plan.md:135`: the plan body still
+  says "B8: at least 5 cases each of `typo`, `multi`, `vague`, `casual`";
+  the amended B8 and the test say vague ≥ 1. The amendment governs and
+  Progress (`plan.md:374`) records it. Worth a look: the owner may add a
+  pointer (above Progress is the owner's).
+
+Nits: `test_variety_needs_five_of_each_not_four` is now misnamed (vague's
+boundary is 1/0); `anc-train-rumble-200` keeps "over ear" (no longer forced,
+reads naturally); `assert MIN_VARIETY == {…}` (`:438`) restates line 214.
+
+**Mutants** (copy backup, one-match replace, full product suite, restore by
+copy; `git status --short` shows only the two untracked pool files):
+
+| Mutant | Target | Result | Killing test |
+| --- | --- | --- | --- |
+| E1 | `:17` `smartwatch-gps-bright-screen-200` drops `["GPS"]` from `expect_search` | KILLED | `test_expect_search_is_the_notes_probe_for_every_new_case` |
+| E2 | `:46` anc `expect_search` → `["noise-cancelling","over-ear"]` | KILLED | same |
+| E3 | `:18` `smartwatch-health-100-250` drops `["heart rate"]` | KILLED | same |
+| E4 | `:47` cordless `expect_search` → `["wireless"]` (probe stays) | KILLED | same |
+| E5 | `:47` cordless probe and `expect_search` both → `["wireless"]` | **SURVIVED** | none, by design: a coherent B6-valid edit; the owner's AC6 read confirms data values |
+| E6 | `:25` `music-gift-150` loses `vague` | KILLED | `test_the_committed_file_has_the_customer_style_variety` |
+| M1 | vague minimum 1 → 0 | KILLED | `test_variety_needs_five_of_each_not_four` |
+| M2 | typo minimum 5 → 4 | KILLED | same |
+| M3 | `counts[v] < MIN_VARIETY[v]` → `< 1` | KILLED | same |
+| T1 | probe test skips everything | KILLED (the `checked >= 25` guard) | `test_expect_search_is_the_notes_probe_for_every_new_case` |
+| T3 | probe test drops the `keywords` → `keywords_any` rename | KILLED | same |
+
+No rework is open.
+
+## Not checked
+- The AC6 read (rule 3): whether the 50 read like customers and expect what
+  the owner wants, including R2-F4 (lines 17, 18, 23), `music-gift-150` (the
+  one vague case: expects `speaker` with `cites_only_matches`, so a
+  headphones answer fails), and `cordless-over-ear-100-250` (its
+  spelling-differs content is now only "over ear" against "over-ear").
+- **Cross-intent, §22** (round 2, stopped at an eval regression): any-of
+  search makes the no-match probes `headphones-ldac-balanced-200` and
+  `smartwatch-gps-apps-minimalist` match products and fail
+  `check_coverage`; both branches edit `_expected_results`, CLAUDE.md and
+  README. Whichever merges second rebases and fixes it (§22's plan).
+- The merged tree under `npm run verify`: `git merge-tree --write-tree main
+  HEAD` exits 0; main changed no eval input since the merge base. A rebase
+  before `/ship` means a new review round.
+- Mutants not run: the coherent anc revert (like E5); fixture internals;
+  round 1's code mutants (`cases.py`, `score.py` unchanged since round 1);
+  kit behaviour (no kit file changed).
+
+## Live check
+- owed: rule 3 (AC6).
+- steps:
+  1. In `C:/Users/eric/src/product-advice-agent-wt/15-fifty-cases`, open
+     `evals/cases.jsonl`: lines 1–15 are §8's (only `dimensions` added),
+     16–50 the new 35, each `note` naming its source (`haiku:` = `evals/generated
+     haiku.jsonl`), probe and variety.
+  2. Read all 50 questions and expectations; look closely at lines 20, 21,
+     24, 35 (category words restored), 46, 47 (over-ear), 25 (the one
+     vague case) and 17, 18, 23 (unscored extras). Edit anything wrong.
+  3. After any edit: `npm run verify`, commit on `feat/15-fifty-cases` (an
+     edit means a new review round).
+  4. The model run is already made (Eval run below: 29/50 on qwen3:8b);
+     re-run `uv run advisor-eval` from the worktree only if you edit.
+- you should see: questions that read like customers with expectations you
+  agree with; the report's 29/50 is the baseline pass rate (AC6). A FAIL on
+  no-match or budget-too-low wording is not by itself a defect (§16's
+  judge). Then say "15 live checked" and `live_checked` is recorded at your
+  word.
+
+## Eval run
+- owed: `uv run advisor-analysis owes-run --base main` → "owed: the diff
+  touches" `evals/cases.jsonl`, `src/advisor/evals/cases.py`,
+  `src/advisor/evals/score.py`.
+- report: `evals/runs/20261121T125003Z-ollama.json` (ollama, qwen3:8b), made
+  by the coordinator in the worktree at 1de93e9 (content = 5f5ccb0), copied
+  to the main checkout's `evals/runs/`: **29/50**.
+- `uv run advisor-analysis compare` against `evals/baseline.json`
+  (`20261116T093026Z-ollama.json`, 8/15): regressed (0); fixed (1)
+  `waterproof-camera`; added (35); removed (0); warning `cases_sha256`
+  differs (expected: the cases changed).
+- hashes: the report's `cases_sha256` `a965c9f099f7…`, `prompt_sha256`
+  `a22c1cbe4f5d…`, `catalogue_sha256` `c2e56cb2ffcd…` equal the sha256 of
+  the worktree's `evals/cases.jsonl`, `src/advisor/prompts/system.md`,
+  `src/advisor/data/catalogue.json`.
+- reading: no regression, so no `--only` re-run. Of the 35 new cases 14
+  fail, most "cites no product" on several-matches and exact-match cases,
+  and the three Norvik/Pelagic out-of-stock cases miss their product; these
+  are the new cases' first measurement (the baseline /ship writes), not
+  regressions.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (worktree at 1de93e9; `git status --short` only the
+two untracked pool files before and after):
+- **Coordinator, re-run:** `npm run verify` → kit "tests 298", "pass 298",
+  "fail 0"; "All checks passed!"; "164 files already formatted"; mypy
+  "Success: no issues found in 29 source files"; "741 passed". Matches the
+  reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "10 file(s), 690 line(s)". Matches.
+- **Coordinator, re-run:** E1, E2, E3 KILLED (1 failed, 740 passed each);
+  E5 SURVIVED (741 passed). Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `owes-run`, the eval run, compare and the hash
+  check above.
+
+**Reviewer (agent), read-only:** `git diff 27d5428..5f5ccb0`; scratch checks
+with `parse_cases`, `fits`, `catalogue_problems`, `check_coverage` (50
+cases, problems empty, variety counts, fit counts, the 8 cordless fits);
+E4, E6, M1–M3, T1, T3; `git merge-tree`; sampling.
+
+**Taken on trust:** which test kills each mutant (the reviewer's and the
+implementer's reports; the coordinator's harness records the failure count
+only); that the pool files are the owner's pools; round 1's code mutants.
+
+# Round 2 (history)
+
+
+- verdict: rework
+- tier: attested
+- reviewed-commit: 27d5428
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Attested by the path table, unchanged from round 1 (the rework
 touches `evals/cases.jsonl`, `tests/test_evals_cases.py`, `README.md` and
@@ -17,7 +197,7 @@ finding.
 Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 15` → "nth
 attested auto change = 5, every 3, sampled: no".
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | findings (1): R2-F2 |
@@ -30,7 +210,7 @@ attested auto change = 5, every 3, sampled: no".
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty; suggestion below) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -41,7 +221,7 @@ type-check: FAIL (intent 15, feature)
 ```
 The only error is the owed live check (AC6), not a rework finding.
 
-## Resolution of round 1
+### Resolution of round 1
 | # | Round 1 | Owner's decision | At 27d5428 | Status |
 | --- | --- | --- | --- | --- |
 | F1 (a) | `smartwatch-gps-bright-screen-200` (17) | (a) | `keywords_any: ["GPS"]` in probe and `expect_search`; fits 16 → 4 (P-025, P-110, P-206, P-366); "bright screen" unscored (R2-F4) | resolved |
@@ -58,7 +238,7 @@ The only error is the owed live check (AC6), not a rework finding.
 | F6 | README missing B4 message | worth a look | `README.md:292-295` quotes it, matching `cases.py:236` | resolved |
 | F7 | `vague` tags literal | worth a look | out-of-stock cases re-tagged; five `vague` reached by rewriting three questions to drop their category word | acted on beyond the owner's decisions: R2-F2 |
 
-## Findings
+### Findings
 - **R2-F1 MEDIUM** `evals/cases.jsonl:46,47` (`anc-train-rumble-200`,
   `cordless-over-ear-100-250`): F1 (a) is not achieved for the two over-ear
   cases. `keywords_any` is any-of (`fits`, `cases.py:206-212`; the `search`
@@ -159,7 +339,7 @@ SURVIVED.
   V3 (`VARIETIES[:3]`) KILLED.
 - **E1, E2, E3 SURVIVED** (R2-F3).
 
-## Not checked
+### Not checked
 - Whether the 50 read like customers and the expectations are what the
   owner wants: the owner's AC6 read (rule 3), including R2-F2's fairness
   question and R2-F4.
@@ -174,7 +354,7 @@ SURVIVED.
   mutants); the unreachable out-of-stock assertion; round 1's code mutants
   (`cases.py`, `score.py` unchanged).
 
-## Live check
+### Live check
 - owed: rule 3 (AC6).
 - steps:
   1. Decide R2-F1 (lines 46, 47: i, ii or iii) and R2-F2 (lines 20, 21, 24,
@@ -194,7 +374,7 @@ SURVIVED.
   of the committed `evals/cases.jsonl`; `a-match` / `only-matches` on cases
   with properties. Quote the pass rate as the baseline (AC6).
 
-## Eval run
+### Eval run
 owed: `uv run advisor-analysis owes-run --base main` → "owed: the diff
 touches `evals/cases.jsonl`, `src/advisor/evals/cases.py`,
 `src/advisor/evals/score.py`". **Not made this round** (verdict rework;
@@ -204,7 +384,7 @@ Hashes at 27d5428: `evals/cases.jsonl` `3c72d16c…2db7`, prompt
 `a22c1cbe…0fdc`, catalogue `c2e56cb2…efab` (prompt and catalogue equal the
 baseline's).
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in the worktree at 27d5428; `git status --short`
 only the two untracked pool files before and after):
