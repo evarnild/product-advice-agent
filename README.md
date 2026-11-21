@@ -289,8 +289,10 @@ ids only grow and are never reused; a product leaves by deletion and its id
 is retired; a few products' edits are an adjustment, many products, a
 category or a field a feature. `npm run verify` fails, naming the case and
 the product, when an edit leaves a case in `evals/cases.jsonl` expecting a
-product its `expect_search` no longer returns (or forbidding one it does):
-fix the case in the same branch. A catalogue change also owes an
+product its `expect_search` no longer returns (or forbidding one it does), or
+carrying `cites_a_match` when no product fits its `expect_search` ("no product
+fits expect_search, so cites_a_match cannot pass"): fix the case in the same
+branch. A catalogue change also owes an
 `advisor-eval` run; each report records `catalogue_sha256`. Old reports and
 labels are not redone.
 

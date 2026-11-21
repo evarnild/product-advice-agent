@@ -264,6 +264,16 @@ def variety_counts(cases):
     return counts
 
 
+def variety_problems(cases):
+    """What misses B8's at-least-`MIN_VARIETY` of each variety; empty when it is met."""
+    counts = variety_counts(cases)
+    problems = [
+        f"{v}: {counts[v]}, fewer than {MIN_VARIETY}" for v in VARIETIES if counts[v] < MIN_VARIETY
+    ]
+    problems += [f"unknown variety {v}" for v in counts if v not in (*VARIETIES, "none")]
+    return problems
+
+
 BALANCED_SIZES = {
     "exact-match": 10,
     "several-matches": 9,
@@ -308,27 +318,34 @@ def test_new_cases_name_their_source_and_a_probe_that_passes_the_coverage_check(
 
 
 def test_the_committed_file_has_the_customer_style_variety():
-    counts = variety_counts(load_committed())
-    for variety in VARIETIES:
-        assert counts[variety] >= MIN_VARIETY, f"{variety}: {counts[variety]}"
-    assert set(counts) <= {*VARIETIES, "none"}
+    assert variety_problems(load_committed()) == []
 
 
 def test_new_cases_expect_what_their_scenario_says():
+    """B6's table, as amended: each scenario's expectations on the 35 new cases."""
     for c in load_committed():
         if "source:" not in c.note:
             continue
         scenario = c.dimensions["scenario"]
+        probe = json.loads(NOTE_RE.match(c.note)["probe"])
+        props = c.expect_properties
         if scenario == "off-topic":
             assert c.must_decline, c.id
         elif scenario == "out-of-stock":
-            assert c.expect_ids and not c.expect_properties, c.id
-        elif scenario in ("several-matches", "spelling-differs"):
-            assert "cites_a_match" in c.expect_properties, c.id
-            if scenario == "spelling-differs":
-                assert "keywords_any" in c.expect_search, c.id
-        else:  # no-match, budget-too-low, exact-match
-            assert c.expect_search and not c.expect_ids and not c.must_decline, c.id
+            assert list(c.expect_ids) == [probe["product_id"]], c.id
+            assert not props, c.id
+        elif scenario in ("no-match", "budget-too-low"):
+            assert c.expect_search and not c.expect_ids, c.id
+            assert not props and not c.must_decline, c.id
+        elif scenario == "exact-match":
+            assert c.expect_search, c.id
+            assert c.expect_ids or "cites_a_match" in props, c.id
+        elif scenario == "several-matches":
+            assert c.expect_search and "cites_a_match" in props, c.id
+        else:
+            assert scenario == "spelling-differs", c.id
+            assert c.expect_search and "keywords_any" in c.expect_search, c.id
+            assert "cites_a_match" in props, c.id
 
 
 def test_the_balanced_list_meets_the_spread():
@@ -400,3 +417,20 @@ def test_variety_is_counted_from_the_note_with_a_boundary():
     assert (
         variety_counts([dims_case(1, "laptop", "exact-match", note="a typo in prose")]) == Counter()
     )
+
+
+def test_variety_needs_five_of_each_not_four():
+    def cs(n, variety):
+        note = f"probe: {{}}; variety: {variety}"
+        return [dims_case(i, "laptop", "exact-match", note=note) for i in range(n)]
+
+    def with_four(missing, n):
+        return [
+            *(c for v in VARIETIES if v != missing for c in cs(5, v)),
+            *cs(n, missing),
+        ]
+
+    for variety in VARIETIES:
+        assert [p for p in variety_problems(with_four(variety, 5)) if variety in p] == []
+        assert [p for p in variety_problems(with_four(variety, 4)) if variety in p] != []
+    assert variety_problems([*with_four("typo", 5), *cs(1, "wild")]) == ["unknown variety wild"]
