@@ -216,3 +216,22 @@ Assumptions: ordering key and de-duplication as in the plan; blank-only
 blank list excludes everything there, where `search_products` would match all;
 no committed case has one); the prompt test compares whitespace-normalised
 text; live check and eval runs are the coordinator's and owner's.
+
+### 2026-11-21 — rework after review round 1
+
+Commits: the `§22: round-1 rework tests (F1-F3), F4 prompt wording` commit, then this Progress entry.
+
+- F1: brand-only assertion (`keywords=["quiet"]` gives `["P-004"]`) in `test_keywords_case_insensitive_any_may_match`.
+- F2: two consistency tests in `tests/test_evals_consistency.py` (distinct count not occurrences; spelling variants de-duplicated), each comparing ids and equality with `search_products(..., limit=10)`.
+- F3: `_expected_results` now `if words and matched(p) == 0: return False`; test with `["-"]` and `["-", "alpha"]` against `search_products`.
+- F4 (a), the owner's decision "22: F4 a", outside the plan's subtasks: `src/advisor/evals/prompts/generate.md` now describes a probe's `"keywords"` as any-of, and a no-match probe must match none; a new test pins the sentence (no test pinned the old one).
+- F5: no change (owner's diff read).
+- F6 correction: +14 tests (one replaced); 807 passed at 38e0c83.
+
+Mutants (each run on the full suite, restored by copy, tree clean after):
+- M13 (brand dropped from the haystack): killed by `test_keywords_case_insensitive_any_may_match`.
+- C2 (no dedup in `_expected_results`): killed by `test_expected_results_deduplicates_spelling_variants`.
+- C6 (count occurrences): killed by `test_expected_results_counts_distinct_keywords_not_occurrences`.
+- C3 (no `words and` guard): killed by `test_expected_results_blank_only_words_match_like_search_products`.
+
+Tests: 811 passed in the full pytest run (four added by this rework).
