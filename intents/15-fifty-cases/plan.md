@@ -217,3 +217,88 @@ Re-read on `main` at `17e69a4`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### Phase 1 — 2026-11-21 (implementer)
+
+Commits: `22fd187` (subtasks 1-4: `fits`, `expect_properties`, `a-match` /
+`only-matches`, the B4 message), `17f21c8` (subtasks 5-6: dimensions on the 15
+and the 35 new cases), `98564bc` (subtask 7: spread, variety and probe tests),
+`9d50935` (subtask 8: docs). Subtask 9: this entry and `status: in-review`.
+
+Tests: `npm run verify` green, 739 passed (kit tests, ruff, mypy, pytest).
+`catalogue_problems` on the committed 50 is empty. New tests: 6 parse
+(B1), 4 `fits` / 3 B4 (consistency), 8 score (B3), and the spread, variety,
+probe and boundary tests in `tests/test_evals_cases.py`.
+
+Mutant checks (restored by copy): `fits` `>` to `>=` on `max_price`, B4 `not
+expected` inverted, `a-match` ok-condition made always true, the
+existing-id filter in the property checks dropped. Each failed at least one
+test.
+
+Dimensions on §8's 15 (feature / scenario / persona):
+nc-headphones-under-200 headphones / several-matches / enthusiast;
+sport-earbuds headphones / several-matches / student;
+student-laptop laptop / several-matches / student;
+video-editing-laptop laptop / exact-match / enthusiast;
+no-laptop-under-200 laptop / budget-too-low / student;
+basic-phone phone / exact-match / non-technical;
+gaming-monitor monitor / exact-match / enthusiast;
+drawing-tablet tablet / exact-match / student;
+gps-watch smartwatch / exact-match / enthusiast;
+waterproof-camera camera / spelling-differs / non-technical;
+tv-sound speaker / exact-match / non-technical;
+out-of-stock-quiet-pro headphones / out-of-stock / non-technical;
+voice-speaker speaker / out-of-stock / non-technical;
+off-topic-weather off-topic / off-topic / non-technical;
+off-topic-poem off-topic / off-topic / gift buyer.
+
+The 35 sources (generated id -> new id; `haiku:` marks `evals/generated
+haiku.jsonl`, the rest `evals/generated.jsonl`; both files number ids from 1):
+gen-exact-match-1 -> gift-smartwatch-300; haiku:gen-exact-match-1 ->
+smartwatch-gps-bright-screen-200; haiku:gen-exact-match-2 ->
+smartwatch-health-100-250; haiku:gen-exact-match-3 -> sister-birthday-watch;
+gen-several-matches-1 -> laptop-husband-work-1000; haiku:gen-several-matches-2
+-> laptop-uni-backpack-900; gen-several-matches-5 -> monitor-room-500;
+gen-several-matches-6 -> monitor-small-desk-400; haiku:gen-several-matches-1 ->
+phone-battery-all-day-400; haiku:gen-several-matches-5 -> music-gift-150;
+gen-no-match-3 -> camera-wildlife-zoom; haiku:gen-no-match-5 ->
+camera-underwater-pink-200; gen-no-match-1 -> headphones-hifi-transparent-200;
+haiku:gen-no-match-2 -> headphones-ldac-balanced-200; haiku:gen-no-match-9 ->
+monitor-curved-tuner-300; haiku:gen-no-match-3 -> laptop-bathrom-projector;
+gen-no-match-5 -> smartwatch-gps-apps-minimalist; haiku:gen-no-match-8 ->
+smartwatch-eink-barometer-200; haiku:gen-budget-too-low-14 -> laptop-uni-250;
+gen-budget-too-low-13 -> laptop-student-way-over-budget;
+gen-budget-too-low-8 -> tablet-under-100; haiku:gen-budget-too-low-11 ->
+tablet-reading-drawing-80; haiku:gen-out-of-stock-4 ->
+pelagic-studio-back-soon; gen-out-of-stock-1 -> norvik-fold-brother-gift;
+haiku:gen-out-of-stock-7 -> norvik-fold-cheap-student; haiku:gen-out-of-stock-3
+-> norvik-canvas-school; gen-out-of-stock-2 -> aurelis-home-gift-mum;
+haiku:gen-spelling-differs-1 -> shower-speaker-water-proof;
+haiku:gen-spelling-differs-2 -> beach-speaker-waterprof;
+haiku:gen-spelling-differs-3 -> heartrate-training-zones;
+haiku:gen-spelling-differs-4 -> anc-train-rumble-200;
+haiku:gen-spelling-differs-5 -> cordless-over-ear-100-250;
+haiku:gen-spelling-differs-6 -> camera-wet-weather-300;
+haiku:gen-off-topic-1 -> off-topic-sourdough; haiku:gen-off-topic-2 ->
+off-topic-zone-two.
+
+Spread (committed file): exact-match 10, several-matches 9, no-match 8,
+spelling-differs 7, out-of-stock 7, budget-too-low 5, off-topic 4. Features:
+laptop 9, smartwatch 8, headphones 7, speaker 6, phone 4, monitor 4, tablet 4,
+camera 4, off-topic 4. Variety tags (a case may carry several): typo 6, multi
+20, vague 6, casual 10, none 3.
+
+Divergences from the plan:
+- Four sources had a probe that did not fit as written, so the probe in the
+  case's `note` is the source's with one correction: `haiku:gen-budget-too-low-11`
+  (tablet under 120 matched one tablet; probe now `max_price` 80, since the
+  pool has too few tablet candidates that pass), and the category of
+  `haiku:gen-out-of-stock-7` (smartwatch to phone), `haiku:gen-out-of-stock-3`
+  (laptop to tablet) and `gen-out-of-stock-2` (monitor, via its probe, to
+  speaker) corrected to the product's real category. All 35 probes pass
+  `check_coverage`.
+- Most budget-too-low sources in both pools fail on the 500-product catalogue
+  (cheap items exist); only laptop and one tablet candidate pass, hence 5
+  budget-too-low cases (the minimum).
+- One data commit for subtasks 5 and 6 together (the 15 and 35 were produced
+  by one script).
