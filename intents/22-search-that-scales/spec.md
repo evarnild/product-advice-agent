@@ -143,11 +143,6 @@ Written against `main` at `1a38b99`.
 - **AC6** (B7): the shipped prompt contains the keywords line and the
   stock line (B7 amendment). (test on the
   committed file) and the live check below.
-- **AC9** (B11): a keyword search with no match returns the filter-only
-  rows with `keywords_matched` 0; a search with matches returns no
-  fallback rows and each row's count; a search without keywords has no
-  `keywords_matched` field; the prompt contains the third sentence. (tests:
-  `tests/test_agent.py`) The live check covers how the model uses it.
 - **AC7** (B8, B9): `_expected_results` ranks like `search_products` for
   the same arguments (a test comparing both on the committed catalogue for
   every case's `expect_search`), and `catalogue_problems` on the committed
@@ -156,6 +151,11 @@ Written against `main` at `1a38b99`.
   `uv run advisor-eval --provider ollama` three times on `main` before the
   merge and three times on the branch, and compares per case by majority.
   The review names the six reports.
+- **AC9** (B11): a keyword search with no match returns the filter-only
+  rows with `keywords_matched` 0; a search with matches returns no
+  fallback rows and each row's count; a search without keywords has no
+  `keywords_matched` field; the prompt contains the third sentence. (tests:
+  `tests/test_agent.py`) The live check covers how the model uses it.
 
 ## Non-functional
 
