@@ -194,8 +194,9 @@ the local FastHTML label viewer, the only module that imports `fasthtml`,
 `starlette` or `uvicorn` (`tests/test_boundaries.py`); it binds 127.0.0.1
 only. The prompts for `generate` and `taxonomy` are `evals/prompts/*.md`.
 `run.py` also records turns, tool results and guardrail checks per case.
-Committed data: `evals/generated.jsonl`, `evals/labels/*.jsonl`,
-`evals/taxonomy.json` (format in README.md "Error analysis").
+Committed data: `evals/cases.jsonl` (the 50 cases, §15), `evals/labels/*.jsonl`,
+`evals/taxonomy.json` (format in README.md "Error analysis"). `evals/generated.jsonl`
+is a generated pool, not committed (the 35 new cases were rewritten from it).
 
 **Eval runs on changes** (§17): `evals/baseline.py` is pure (`EVAL_PATHS` and `owes_run`, the baseline
 and `compare`); `analysis.py` adds `baseline`, `compare` and `owes-run` (files and git, no model).
