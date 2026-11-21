@@ -57,8 +57,10 @@ _SEARCH_SCHEMA: dict[str, Any] = {
         "keywords": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Words to look for in the name, brand or description. Any one keyword can match; "
-            "products matching more of the keywords come first.",
+            "description": (
+                "Words to look for in the name, brand or description. Any one keyword "
+                "can match; products matching more of the keywords come first."
+            ),
         },
         "in_stock_only": {"type": "boolean"},
         "limit": {"type": "integer", "description": "Maximum results, 1 to 10 (default 10)."},

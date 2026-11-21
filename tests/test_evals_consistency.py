@@ -1,9 +1,8 @@
 """The cases-versus-catalogue consistency check (§13 B1-B4), on a tiny catalogue."""
 
-from advisor.catalogue import Product
-from advisor.catalogue import load_catalogue, search_products
 from pathlib import Path
 
+from advisor.catalogue import Product, load_catalogue, search_products
 from advisor.evals.cases import Case, _expected_results, catalogue_problems, parse_cases
 
 COMMITTED = Path(__file__).parent.parent / "evals" / "cases.jsonl"
