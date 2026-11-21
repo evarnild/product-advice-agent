@@ -75,6 +75,17 @@ drafted on the `main` that has it.
   | no-match, budget-too-low | `expect_search` only; wording is left to the judge (§16) |
   | off-topic | `must_decline: true` |
 
+  **Amendment (2026-11-21, owner: "15: F1 a for gps, health, both
+  over-ear; b for the other three; F4 accept", review round 1 F1, F4).**
+  Where a rewritten question keeps a feature the catalogue can score, its
+  word is added to the case's probe and `keywords_any` (the probe in
+  `note` still passes `check_coverage`): `smartwatch-gps-bright-screen-200`,
+  `smartwatch-health-100-250`, `anc-train-rumble-200`,
+  `cordless-over-ear-100-250`. Where it cannot, the extra is cut from the
+  question: `laptop-uni-backpack-900`, `monitor-small-desk-400`,
+  `phone-battery-all-day-400`. `tablet-reading-drawing-80` keeps its edited
+  source (probe `max_price` 80), disclosed in its `note`.
+
 - **B7.** A test asserts the spread: exactly 50 cases; every scenario
   present, off-topic 2–4, every other scenario 5–12; each of the 8
   categories at least 4 times as `feature`. It replaces
