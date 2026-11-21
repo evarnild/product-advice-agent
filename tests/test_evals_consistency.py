@@ -1,7 +1,12 @@
 """The cases-versus-catalogue consistency check (§13 B1-B4), on a tiny catalogue."""
 
 from advisor.catalogue import Product
-from advisor.evals.cases import Case, catalogue_problems
+from advisor.catalogue import load_catalogue, search_products
+from pathlib import Path
+
+from advisor.evals.cases import Case, _expected_results, catalogue_problems, parse_cases
+
+COMMITTED = Path(__file__).parent.parent / "evals" / "cases.jsonl"
 
 
 def prod(pid, price, category="laptop", in_stock=True, name="Thing", desc="plain"):
@@ -113,3 +118,39 @@ def test_case_without_expect_search_is_not_checked():
     cat = [prod("P-001", 100)]
     c = case(expect_ids=("P-001",), forbid_ids=("P-001",))
     assert catalogue_problems([c], cat) == []
+
+
+def test_expected_results_rank_by_keywords_matched_then_price_then_id():
+    # count order, price order and id order all disagree
+    cat = [
+        prod("P-005", 90, desc="alpha beta"),
+        prod("P-002", 50, desc="alpha"),
+        prod("P-001", 50, desc="beta"),
+        prod("P-003", 10, desc="beta"),
+        prod("P-004", 5, desc="gamma"),
+    ]
+    got = _expected_results({"keywords_any": ["alpha", "BETA", "beta"]}, cat)
+    assert [p.id for p in got] == ["P-005", "P-003", "P-001", "P-002"]
+    assert got == search_products(cat, keywords=["alpha", "BETA", "beta"], limit=10)
+
+
+def test_expected_results_match_search_products_on_every_committed_case():
+    catalogue = load_catalogue()
+    checked = 0
+    for c in parse_cases(COMMITTED.read_text(encoding="utf-8"), catalogue):
+        if not c.expect_search:
+            continue
+        s = c.expect_search
+        got = _expected_results(s, catalogue)[:10]
+        want = search_products(
+            catalogue,
+            category=s.get("category"),
+            min_price=s.get("min_price"),
+            max_price=s.get("max_price"),
+            keywords=s.get("keywords_any"),
+            in_stock_only=bool(s.get("in_stock_only")),
+            limit=10,
+        )
+        assert [p.id for p in got] == [p.id for p in want], c.id
+        checked += 1
+    assert checked > 0

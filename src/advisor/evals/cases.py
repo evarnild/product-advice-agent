@@ -167,7 +167,10 @@ def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
 
 
 def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> list[Product]:
-    """Products satisfying every constraint in `search`, in search order (price, then id)."""
+    """Products satisfying every constraint in `search`, in `search_products` order.
+
+    That is: distinct `keywords_any` matched (most first), then price, then id (§22).
+    """
 
     def ok(p: Product) -> bool:
         if "category" in search and p.category != search["category"]:
@@ -180,15 +183,22 @@ def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> l
         if search.get("in_stock_only") and not p.in_stock:
             return False
         if "keywords_any" in search:
-            # Interpretation: any-of, as score._call_satisfies reads it, not the
-            # all-of of search_products(keywords=...): the check asks what a
-            # search that satisfies the case's expect_search could show.
-            haystack = _norm(f"{p.name} {p.brand} {p.description}")
-            if not any(_norm(w) in haystack for w in search["keywords_any"]):
+            # Any-of, as score._call_satisfies reads it; search_products matches any
+            # keyword too since §22, so the filter and the ranking below agree.
+            if matched(p) == 0:
                 return False
         return True
 
-    return sorted((p for p in catalogue if ok(p)), key=lambda p: (p.price_eur, p.id))
+    # Distinct after normalising, blanks dropped, as in search_products (§22).
+    words = list(
+        dict.fromkeys(w for w in (_norm(k) for k in search.get("keywords_any", ())) if w.strip())
+    )
+
+    def matched(p: Product) -> int:
+        haystack = _norm(f"{p.name} {p.brand} {p.description}")
+        return sum(1 for w in words if w in haystack)
+
+    return sorted((p for p in catalogue if ok(p)), key=lambda p: (-matched(p), p.price_eur, p.id))
 
 
 def catalogue_problems(cases: Sequence[Case], catalogue: Sequence[Product]) -> list[str]:
