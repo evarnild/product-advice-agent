@@ -57,10 +57,11 @@ _SEARCH_SCHEMA: dict[str, Any] = {
         "keywords": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Words that must all appear in the name, brand or description.",
+            "description": "Words to look for in the name, brand or description. Any one keyword can match; "
+            "products matching more of the keywords come first.",
         },
         "in_stock_only": {"type": "boolean"},
-        "limit": {"type": "integer", "description": "Maximum results, 1 to 10 (default 5)."},
+        "limit": {"type": "integer", "description": "Maximum results, 1 to 10 (default 10)."},
     },
     "additionalProperties": False,
 }
@@ -106,7 +107,9 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
         in_stock_only = args.get("in_stock_only", False)
         if not isinstance(in_stock_only, bool):
             raise ToolError("'in_stock_only' must be true or false")
-        limit = args.get("limit", 5)
+        # search_products keeps its own default of 5 for its other callers; the tool
+        # defaults to 10 so a ranked list is not cut before the best match shows (§22).
+        limit = args.get("limit", 10)
         if isinstance(limit, bool) or not isinstance(limit, int):
             raise ToolError("'limit' must be an integer")
         found = search_products(
@@ -123,8 +126,8 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
     spec = ToolSpec(
         name="search_products",
         description=(
-            "Search the shop's product catalogue. All given filters must match. "
-            "Results are sorted by price, cheapest first."
+            "Search the shop's product catalogue. The category, price and stock filters must "
+            "all hold. Results are ordered by keywords matched, then price, cheapest first."
         ),
         parameters=_SEARCH_SCHEMA,
     )

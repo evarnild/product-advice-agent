@@ -314,3 +314,36 @@ def test_tracer_gets_an_empty_list_on_every_error_path():
     assert [e[1] for e in events] == ["no_such_tool", "search_products", "broken"]
     assert [e[3] for e in events] == [[], [], []]
     assert all(e[4] is True for e in events)
+
+
+MANY = [
+    Product(f"P-{i:03d}", f"Phone {i}", "Acme", "phone", float(i), True, {}, "plain")
+    for i in range(1, 16)
+]
+
+
+def _ids_many(args):
+    fake = ScriptedModelClient([call(args), final("ok")])
+    run_agent("q", fake, [search_tool(MANY)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    assert not res.is_error
+    return [i["id"] for i in json.loads(res.content)]
+
+
+def test_tool_default_limit_is_ten_and_explicit_limit_is_passed_through():
+    assert len(_ids_many({})) == 10
+    assert len(_ids_many({"limit": 3})) == 3
+    assert len(_ids_many({"limit": 99})) == 10
+
+
+def test_tool_ranks_by_keywords_matched_and_any_keyword_matches():
+    assert _ids_for({"keywords": ["zoom", "solid", "nothing"]}) == ["P-011", "P-012"]
+    assert _ids_for({"keywords": ["zoom", "lens"]}) == ["P-012", "P-011"]
+
+
+def test_schema_text_says_any_keyword_matches_and_default_ten():
+    props = search_tool(ARG_CAT).spec.parameters["properties"]
+    kw = props["keywords"]["description"]
+    assert "Any one keyword can match" in kw and "more of the keywords come first" in kw
+    assert "all appear" not in kw
+    assert "default 10" in props["limit"]["description"]
