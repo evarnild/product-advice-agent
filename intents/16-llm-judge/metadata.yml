@@ -2,14 +2,14 @@
 id: 16
 slug: llm-judge
 type: feature
-status: in-review
+status: done
 title: An LLM judge for one failure mode, validated against the owner's labels
 review_tier: reviewed    # writes scores to Langfuse through src/advisor/tracing.py (Reviewed by meaning)
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 16 /auto 16"
 spec_accepted: 2026-11-16 by-agent    # owner: "accept 16 amendment" (live-check amendment, 9f46347; first accepted 2026-11-13)
 plan_approved: 2026-11-13 by-agent    # auto: owner "accept 16 /auto 16" (auto_authorized 2026-11-13)
 live_checked: 2026-11-21 by-agent    # owner: "live check passed" (judge, rerun, import, judge-validate; rate-count defect fixed in e172c01)
-merged:
+merged: 67ef2e4    # 2026-11-21, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-16 by-agent    # owner: "/auto 16", then "§16 is yours"
 auto_round: 2
 auto_stopped: live check owed
