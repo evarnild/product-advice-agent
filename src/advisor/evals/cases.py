@@ -204,9 +204,8 @@ def fits(p: Product, search: dict[str, Any]) -> bool:
     if search.get("in_stock_only") and not p.in_stock:
         return False
     if "keywords_any" in search:
-        # Interpretation: any-of, as score._call_satisfies reads it, not the
-        # all-of of search_products(keywords=...): the check asks what a
-        # search that satisfies the case's expect_search could show.
+        # Interpretation: any-of, as score._call_satisfies reads it and, since
+        # §22, as search_products(keywords=...) matches too.
         haystack = _norm(f"{p.name} {p.brand} {p.description}")
         if not any(_norm(w) in haystack for w in search["keywords_any"]):
             return False

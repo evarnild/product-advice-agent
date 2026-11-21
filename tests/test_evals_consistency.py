@@ -191,6 +191,7 @@ def test_generate_prompt_describes_keywords_as_any_of():
     assert "any of which may appear" in text
     assert "must all appear" not in text
 
+
 # --- §15 B2: the one `fits` predicate ---------------------------------------
 
 

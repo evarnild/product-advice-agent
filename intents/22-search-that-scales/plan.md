@@ -239,3 +239,11 @@ Tests: 811 passed in the full pytest run (four added by this rework).
 ### Round 2 rework (F8, owner's option c), 2026-11-21
 
 Commit 2e5a794. Added to the search rule in `src/advisor/prompts/system.md`: "Set `in_stock_only` only when the customer asks for products in stock; otherwise leave it off, so an out-of-stock match can still be named and flagged." Tool description in `agent.py` unchanged. Test first: `test_prompt_tells_the_model_to_set_in_stock_only_only_when_asked` failed before the edit, passed after. Mutant (sentence deleted): killed by that test (1 failed, 811 passed); restored by copy. Tests: 812 passed in verify. No eval run (no model calls); the owed re-run is the coordinator's.
+
+### Merge of main (§15) and the no-match probes, 2026-11-21
+
+Commits: the `Merge main (§15) into feat/22-search-that-scales` merge commit, then the probe-fix commit. A merge, not a rebase, so the review's commit hashes stay valid.
+
+- Conflicts: `_expected_results` in `src/advisor/evals/cases.py` now uses §15's `fits` for the category, price and stock constraints and keeps §22's any-of keywords (distinct, normalised, blanks dropped, `words and matched(p) == 0` guard, brand in the haystack) and ranking (distinct keywords, price, id); it still equals `search_products`. `fits` keeps its any-of keyword test, with its comment updated. `tests/test_evals_consistency.py` keeps both sides' tests. CLAUDE.md and README merged cleanly and read consistently.
+- "Whichever merges second fixes it": under any-of search §15's two no-match probes matched products. `headphones-ldac-balanced-200` is now `["ldac", "balanced cable"]` (was `ldac`, `balanced`, `in-ear`) and `smartwatch-gps-apps-minimalist` is `["third-party apps", "minimalist"]` (was `GPS`, ...), in `expect_search` and in the note's probe. No product contains any of these words. Question texts unchanged. All 35 probes in the committed cases pass `check_coverage`; `catalogue_problems` is empty.
+- Tests: 851 passed in verify.
