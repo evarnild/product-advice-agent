@@ -304,3 +304,92 @@ def test_a_client_that_cannot_be_built_is_a_config_error_without_the_key(monkeyp
         make_annotations(ENV)
     assert caught.value.step == "config"
     assert "sk-test" not in str(caught.value) and "ValueError" in str(caught.value)
+
+
+# --- §16: the judge-no-fit config and scores (B8-B11, AC6) ---------------------
+
+
+def test_the_judge_config_is_created_once_as_boolean_judge_no_fit():
+    api = FakeApi(configs=[[config("c1", "pass")]])
+    assert annotations(api).ensure_judge_config() == "cfg-new"
+    (kwargs,) = api.called("score_configs.create")
+    assert kwargs["name"] == "judge-no-fit"
+    assert kwargs["data_type"] == "BOOLEAN"
+    assert kwargs["description"]
+
+
+def test_an_existing_boolean_judge_config_is_reused_and_a_pass_config_is_not_taken():
+    api = FakeApi(configs=[[config("p1", "pass"), config("j1", "judge-no-fit")]])
+    assert annotations(api).ensure_judge_config() == "j1"
+    assert api.called("score_configs.create") == []
+
+
+def test_a_judge_config_of_another_type_is_a_conflict():
+    api = FakeApi(configs=[[config("j1", "judge-no-fit", "NUMERIC")]])
+    with pytest.raises(AnnotationError) as caught:
+        annotations(api).ensure_judge_config()
+    assert caught.value.step == "config"
+    assert "'judge-no-fit' exists with data type NUMERIC, not BOOLEAN" in str(caught.value)
+
+
+def test_write_scores_sends_boolean_scores_with_ids_comments_and_no_queue():
+    from advisor.evals.annotate import JudgeScore
+
+    api = FakeApi()
+    annotations(api).write_scores(
+        [
+            JudgeScore("id-1", "t1", True, "Says nothing fits."),
+            JudgeScore("id-2", "t2", False, "r"),
+        ],
+        "cfg-j",
+    )
+    (kwargs,) = api.called("scores.create")
+    first, second = kwargs["request"]
+    assert (first.id, first.trace_id, first.name) == ("id-1", "t1", "judge-no-fit")
+    assert first.value == 1.0 and second.value == 0.0
+    assert first.data_type == "BOOLEAN" and first.config_id == "cfg-j"
+    assert first.comment == "Says nothing fits."
+    assert first.queue_id is None
+    assert first.source == "API"
+    assert api.called("annotation_queues.create_queue_item") == []
+
+
+def test_write_scores_sends_nothing_for_nothing_and_batches_by_100():
+    from advisor.evals.annotate import JudgeScore
+
+    api = FakeApi()
+    annotations(api).write_scores([], "cfg")
+    assert api.called("scores.create") == []
+    many = [JudgeScore(f"i{n}", f"t{n}", True, "") for n in range(250)]
+    annotations(api).write_scores(many, "cfg")
+    assert [len(kw["request"]) for kw in api.called("scores.create")] == [100, 100, 50]
+
+
+def test_write_scores_error_names_the_step_and_redacts_the_keys():
+    from advisor.evals.annotate import JudgeScore
+
+    api = FakeApi()
+    api.error_on["scores.create"] = RuntimeError("bad auth sk-secret-private for pk-public")
+    with pytest.raises(AnnotationError) as caught:
+        annotations(api, ("sk-secret-private", "pk-public")).write_scores(
+            [JudgeScore("i", "t", True, "")], "cfg"
+        )
+    assert caught.value.step == "score-write"
+    assert "sk-secret-private" not in str(caught.value) and "pk-public" not in str(caught.value)
+    assert "***" in str(caught.value)
+
+
+def test_rejected_scores_are_an_error_with_the_message_redacted():
+    from types import SimpleNamespace as NS
+
+    from advisor.evals.annotate import JudgeScore
+
+    api = FakeApi()
+    api.scores.create = lambda **kw: NS(
+        accepted=0, rejected=1, errors=[NS(message="invalid for sk-secret-private")]
+    )
+    with pytest.raises(AnnotationError) as caught:
+        annotations(api, ("sk-secret-private",)).write_scores([JudgeScore("i", "t", True, "")], "c")
+    assert caught.value.step == "score-write"
+    assert "1 score(s) rejected" in str(caught.value)
+    assert "sk-secret-private" not in str(caught.value)

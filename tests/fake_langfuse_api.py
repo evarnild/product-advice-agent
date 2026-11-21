@@ -111,6 +111,12 @@ class FakeApi:
                 raise self.error_on["annotation_queues.create_queue_item"]
             return NS(id="item")
 
+        def create_scores(**kwargs):
+            c.append(("scores.create", kwargs))
+            if "scores.create" in self.error_on:
+                raise self.error_on["scores.create"]
+            return NS(accepted=len(kwargs["request"]), rejected=0, errors=[])
+
         self.score_configs = NS(
             get=make(_Paged, "score_configs.get", configs), create=create_config
         )
@@ -121,7 +127,7 @@ class FakeApi:
             create_queue_item=create_item,
         )
         self.observations = NS(get_many=make(_Cursor, "observations.get_many", observations))
-        self.scores = NS(get_many=make(_Cursor, "scores.get_many", scores))
+        self.scores = NS(get_many=make(_Cursor, "scores.get_many", scores), create=create_scores)
 
     def called(self, method):
         return [kw for m, kw in self.calls if m == method]

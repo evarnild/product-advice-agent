@@ -1,9 +1,10 @@
 """Langfuse annotation queues, SDK-free (§10 B19).
 
-The `Annotations` protocol is what the `queue` and `import` subcommands need
-from Langfuse; `advisor.tracing.LangfuseAnnotations` implements it with the
-SDK. Everything here is pure: choosing the cases of a report, matching run
-traces to cases, and turning annotation scores into §9 label lines.
+The `Annotations` protocol is what the `queue`, `import` and `judge` subcommands need
+from Langfuse (queues, labels, and the judge score config and batch writes);
+`advisor.tracing.LangfuseAnnotations` implements it with the SDK. Everything here is
+pure: choosing the cases of a report, matching run traces to cases, and turning
+annotation scores into §9 label lines.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from typing import Any, Protocol
 from advisor.evals.labels import Label, label_line
 
 SCORE_NAME = "pass"
+JUDGE_SCORE_NAME = "judge-no-fit"  # §16: never `pass`, so `import` cannot take it for a label
 CASE_TAG = "case:"
 STAMP_FORMAT = "%Y%m%dT%H%M%SZ"
 
@@ -48,6 +50,16 @@ class Score:
     timestamp: datetime
 
 
+@dataclass(frozen=True)
+class JudgeScore:
+    """One `judge-no-fit` verdict for a trace (§16); a fixed id makes a rerun replace it."""
+
+    score_id: str
+    trace_id: str
+    value: bool
+    comment: str
+
+
 class Annotations(Protocol):
     """What the subcommands use of Langfuse. Raises `AnnotationError`."""
 
@@ -73,6 +85,14 @@ class Annotations(Protocol):
 
     def annotation_scores(self, queue_id: str) -> list[Score]:
         """Every annotation score named `pass` made in the queue."""
+        ...
+
+    def ensure_judge_config(self) -> str:
+        """The id of the BOOLEAN `judge-no-fit` score config; creates it when missing (§16 B10)."""
+        ...
+
+    def write_scores(self, scores: Sequence[JudgeScore], config_id: str) -> None:
+        """Write the `judge-no-fit` scores, never into a queue; the same id replaces (§16 B9)."""
         ...
 
 

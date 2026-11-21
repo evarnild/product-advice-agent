@@ -150,3 +150,94 @@ All with fakes; no socket, no key.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: build (subtasks 1-8)
+
+Commits: `5fa5f52` pure judge logic and prompt; `611d990` score config and batch writes in `tracing.py`; `ea6d6a0` `judge` and `judge-validate`; `5e2c032` validate tests; `8b1e194` initial split; docs commit; this entry.
+
+Shipped: `src/advisor/evals/judge.py` (scope, conversation, prompt, verdict, split, agreement, `validation.md`), `src/advisor/evals/judging.py` (the two commands' I/O), `judge-no-fit.md` prompt, `LangfuseAnnotations.ensure_judge_config` / `write_scores` (SDK 5.2.0 `api.scores.create(request=[CreateScoreRequest(id, trace_id, name, value, data_type, comment, config_id, source)])`, `queue_id` left unset), `evals/judge/split.json` (8 few-shot: 4 pass, 4 fail; 9 held out: 6 pass, 3 fail), README and CLAUDE.md. No live call was made; `validation.md` is not committed (the live check produces it).
+
+Tests: 608 before, 678 after (pytest); kit tests 255 unchanged. Mutations checked by backup and restore: `tpr <= MIN_RATE` and a non-Anthropic provider both fail tests.
+
+Divergences from the plan:
+- The prompt is `src/advisor/evals/prompts/judge-no-fit.md` (beside `taxonomy.md`), not `evals/prompts/`, which does not exist.
+- Prompt written with subtask 1 (the shipped-template test needs it), not as its own commit.
+- The `judge` / `judge-validate` bodies are in a new module `judging.py` (analysis.py only parses and dispatches), to keep analysis.py readable.
+- `write_scores(scores, config_id)` takes the config id (the command calls `ensure_judge_config` once), and a batch with `rejected > 0` is an `AnnotationError` at step `score-write`.
+- `JUDGE_SCORE_NAME` lives in `annotate.py`; `judge` added to the pure-module list in `test_boundaries.py`.
+- B7 minimums (30 conversations, 10 fails) count conversations with a verdict (judge errors excluded), and a zero-owner-fail table is "not trusted".
+- Extra options `--labels-dir`, `--runs-dir`, `--judgements-dir` (defaults are the repo paths) so tests need no chdir.
+- The few-shot examples need their run reports in `evals/runs/` (local, not committed); without one, `judge` exits 2 naming it. `judge-validate` skips a held-out conversation whose report is missing.
+
+### 2026-11-13: review round 1 rework
+
+Commits: this round's single rework commit (hash in `git log`; subject "§16: review round 1 rework"). Tests: 678 before, 683 after (kit 255 unchanged).
+
+Fixes, tests first:
+- HIGH (M30): `test_no_owner_pass_means_undefined_tpr_and_not_trusted` (0 owner passes, 30 owner fails: not trusted, "undefined" among the reasons).
+- MEDIUM: `_examples` raises `InputError` (exit 2, before any call) for an out-of-scope few-shot case; test `test_an_out_of_scope_few_shot_case_exits_2_before_any_call`.
+- MEDIUM (G12): `test_a_partial_langfuse_configuration_writes_the_file_only` (two of three variables: exit 0, "Langfuse is not configured", annotations factory never called).
+- LOW (M15): `#c` and `f#` added to `test_duplicates_and_bad_refs_are_errors`.
+- LOW stale text: CLAUDE.md (analysis imports `advisor.tracing` for `queue`, `import` and `judge`), the `LangfuseAnnotations` and `make_annotations` docstrings.
+
+Optional items taken: M10 (both slots filled in one `re.sub` pass, with a test); a verdict without a string `reason` is now a judge error (B4: "anything else"), the old `{"pass": true}` case moved to the error tests; the per-run `prompt_sha256` reading is in the README; CLAUDE.md prompt path is `src/advisor/evals/prompts/`.
+
+Mutation checks by backup and restore: M30 (TPR-undefined reason removed), G12 (`all` to `any`) and M15 (`parse_ref` accepting `#c`/`f#`) each fail a test now.
+
+### 2026-11-16: review round 2 rework
+
+Commits: this round's single rework commit (subject "§16: review round 2 rework"). Pre-rebase hashes in the first entry replaced with the post-rebase ones.
+
+- M10b: `test_a_slot_inside_a_conversation_is_not_filled_again` now puts `[[examples]]` and `[[conversation]]` in the conversation and asserts each text appears exactly once, unchanged. Checked by applying the chained-replace mutant (conversation slot filled first) to `judge.py`: the test fails (the `[[examples]]` in the conversation was replaced); file restored by copy.
+- Stale docstrings naming only `queue` and `import` now name `judge` (module docstring, exit codes, the `_LANGFUSE_ENV` comment in `analysis.py`; `annotate.py` header).
+- `judging.LANGFUSE_ENV` is compared with `tracing.REQUIRED_ENV` in `tests/test_boundaries.py`.
+- Left alone, as asked: an empty `reason` still counts as a verdict (owner's call).
+
+### 2026-11-16: live-check amendment
+
+Owner: "accept 16 amendment". Commit: this entry's single commit (subject "§16: live-check amendment: widened judge prompt").
+
+Shipped: `judge-no-fit.md` rewritten to amended B3 (decide "nothing fits" / "something fits" from the results, the pass rule for each, then fail reasons (a) to (e) in either case, with both (b) examples; JSON format, slots and few-shot block unchanged). AC9: `test_the_shipped_template_states_each_rule_of_b3` (12 parametrised assertions). README text on scope updated; no module docstring said "by construction". AC2's test, the data (labels, split, validation, judgements) and `src/advisor/models/` untouched; no temperature change.
+
+Mutation checks (drop each rule from the template by backup and restore): each of the 9 rule lines and the (b) tablet, (b) smartwatch and (a) tail sentences fails its own assertion.
+
+No plan conflict found.
+
+### 2026-11-21: live-check defect: reduced rate counts
+
+Found by the owner's live check: `validation.md` printed the rates as reduced fractions (`0.55 (6/11)` for a 12/22 table, `0.75 (3/4)` for 9/12), because `_rate` printed `Fraction.numerator/denominator`. `_rate(hits, total)` now prints the table's counts; the rates and the trusted decision were already right. Test first: `test_markdown_rates_show_the_table_counts_not_a_reduced_fraction` (failed before the fix); `test_trusted_at_exactly_0_8_30_and_10` had pinned the reduced `4/5` and now asserts `16/20` and `8/10`. Tests: 788 before, 789 after. `validation.md` is regenerated by the owner's next `judge-validate`.
+
+### 2026-11-21: review round 3 rework (manual review, F1 to F5)
+
+Owner's decisions, verbatim: "16 1. accept old files 2. accept current labels 3. update them".
+
+- F1 (AC7, the `20261116T094558Z` judgements): accepted as they are. The owner accepted the pre-amendment judgements of that report and reads AC7 as met. `judge` was not re-run; `evals/judgements/20261116T094558Z-ollama.jsonl` is untouched.
+- F2 (AC8, refs without a post-amendment label line): the owner accepts the current labels against AC8. 12 of the 43 refs were relabelled after the amendment; 31 were kept. `evals/labels` is untouched.
+- F3: `_RULES` in `tests/test_judge.py` now holds the full sentences of `judge-no-fit.md` lines 10, 13 and 15 (cases and both PASS rules), plus new entries for the line-8 sentence and the line-17 sentence. The prompt is not edited.
+- F4: new `test_markdown_rate_is_undefined_with_no_owner_pass` renders `validation_markdown` on a table with no owner pass and asserts `owner pass): undefined`.
+- F5: owner-approved hash-only edits. `spec.md` `403b4b5` to `aad9a13` (lines 7, 13, 223, 230; subject "live check data: 26 new held-out labels"); `metadata.yml:9` comment `60635df` to `9f46347` (subject "spec amendment after the live check", no gate value changed); the build entry's hashes in this plan (`a98c115`/`5fa5f52`, `4f16caa`/`611d990`, `8c24a35`/`ea6d6a0`, `8e6fbac`/`5e2c032`, `97f7cf6`/`8b1e194`), each checked by subject in `git log`. Only hashes changed.
+
+Tests: 789 before, 792 after (pytest: 2 new rule entries, 1 F4 test). `npm run verify` green. No change in `src/`.
+
+Mutation checks (backup, apply, `uv run pytest -q`, restore by copy; each fails exactly one test, 791 passed):
+- P1 (drop ", or no search was run"): killed by `test_the_shipped_template_states_each_rule_of_b3[case nothing fits]`.
+- P2 (drop " and offers only alternatives ... or none"): killed by `[pass when nothing fits]`.
+- P4 (drop the line-17 sentence): killed by `[in either case fail]`.
+- P5 (drop the line-8 sentence): killed by `[decide the case]`.
+- P6 (drop ", as the search results show them"): killed by `[pass when something fits]`.
+- E4 (`"undefined"` to `"n/a"` in `judge.py:266`): killed by `test_markdown_rate_is_undefined_with_no_owner_pass`.
+
+### 2026-11-21: review round 4 rework (manual review, F6)
+
+Owner's decision, verbatim: "16 rework".
+
+- F6: in `_RULES` of `tests/test_judge.py`, "case something fits" (line 11), "a implies a fit" (line 19, the whole line; the separate "a says nothing fits when a result does" entry is folded into it and removed), "b other kind" (line 20's first sentence), "c invented details" (line 21) and "d assumed constraint" (line 22) now assert the full text of their line in `judge-no-fit.md`. The prompt is not edited. Test-only change.
+
+Tests: 792 before, 791 after (the folded entry is gone). `npm run verify` green.
+
+Mutation checks (backup by copy, apply, `uv run pytest -q`, restore by copy; each fails exactly one test, 790 passed), all in `test_the_shipped_template_states_each_rule_of_b3`:
+- X1 (line 11: drop " as asked"): killed by `[case something fits]`.
+- X4 (line 19: drop the parenthesis): killed by `[a implies a fit]`.
+- X5 (line 21: drop " (a feature, a spec, stock or a price)"): killed by `[c invented details]`.
+- X6 (line 22: drop " and answers within it"): killed by `[d assumed constraint]`.
+- P1: `[case nothing fits]`; P2: `[pass when nothing fits]`; P4: `[in either case fail]`; P5: `[decide the case]`; P6: `[pass when something fits]`. All still killed.

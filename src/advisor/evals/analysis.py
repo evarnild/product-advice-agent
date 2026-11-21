@@ -1,14 +1,17 @@
-"""The `advisor-analysis` command: generate | view | taxonomy | counts (§9), queue | import (§10).
+"""The `advisor-analysis` command: generate | view | taxonomy | counts (§9), queue | import (§10),
+judge | judge-validate (§16, in `judging`).
 
 Files, the model client, the clock and stdout live here. The pure parts are in
 `generate`, `coverage`, `labels`, `taxonomy` and `counts`; the viewer (the only
-FastHTML code) is imported only by the `view` subcommand. `queue` and `import` reach
-Langfuse through `annotate.Annotations`; `advisor.tracing` is imported only when one runs.
+FastHTML code) is imported only by the `view` subcommand. `queue`, `import` and `judge` reach
+Langfuse through `annotate.Annotations` (`judge` also writes the judge score);
+`advisor.tracing` is imported only when one of them runs.
 
 Exit codes: 0 done, 1 the work could not be done (model unreachable, nothing
-kept, a draft that does not validate), 2 bad arguments or files, and for `queue` and
-`import` also a missing `LANGFUSE_*` variable, filters that match no case, a queue
-that does not exist or conflicts, and a Langfuse error.
+kept, a draft that does not validate), 2 bad arguments or files, and for `queue`,
+`import` and `judge` also a Langfuse error; `queue` and `import` also exit 2 on a missing
+`LANGFUSE_*` variable, filters that match no case, and a queue that does not exist or
+conflicts (`judge` without Langfuse writes the file only).
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ from typing import Any, TextIO
 
 from advisor.catalogue import CatalogueError, load_catalogue
 from advisor.config import ConfigError, load_env, load_settings
+from advisor.evals import judging
 from advisor.evals import taxonomy as tax
 from advisor.evals.annotate import (
     AnnotationError,
@@ -70,7 +74,7 @@ ServeFn = Callable[[Any, str, int], None]
 AnnotationsFactory = Callable[[Mapping[str, str]], Annotations]
 
 # The same three names as `advisor.tracing.REQUIRED_ENV` (a test compares them).
-# Importing that constant would load `langfuse`, which only `queue` and `import` may do.
+# Importing that constant would load `langfuse`, which only `queue`, `import` and `judge` may do.
 _LANGFUSE_ENV = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
 
 
@@ -137,7 +141,23 @@ def _parser() -> argparse.ArgumentParser:
 
     o = sub.add_parser("owes-run", help="does this branch's diff owe an eval run? (§17)")
     o.add_argument("--base", default="main", help="the branch to diff against (default main)")
+
+    j = sub.add_parser("judge", help="judge a report's no-fit answers with the LLM judge (§16)")
+    j.add_argument("report", type=Path)
+    _judge_options(j)
+    j.add_argument("--judgements-dir", type=Path, default=judging.DEFAULT_JUDGEMENTS_DIR)
+
+    jv = sub.add_parser("judge-validate", help="measure the judge against the owner's labels")
+    _judge_options(jv)
+    jv.add_argument("--out", type=Path, default=judging.DEFAULT_VALIDATION)
     return p
+
+
+def _judge_options(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--split", type=Path, default=judging.DEFAULT_SPLIT)
+    p.add_argument("--model", default=None, help="Anthropic model (default claude-haiku-5-5)")
+    p.add_argument("--labels-dir", type=Path, default=judging.DEFAULT_LABELS_DIR)
+    p.add_argument("--runs-dir", type=Path, default=judging.DEFAULT_RUNS_DIR)
 
 
 def labels_path_for(report: Path) -> Path:
@@ -281,6 +301,31 @@ def main(
         say(f"wrote {len(taxonomy.modes)} failure modes to {args.out}; edit it, then save it as")
         say(f"{DEFAULT_TAXONOMY} (it is committed; the draft is not)")
         return 0
+
+    if args.command in ("judge", "judge-validate"):
+        paths = judging.Paths(args.split, args.labels_dir, args.runs_dir)
+        if args.command == "judge":
+            return judging.run_judge(
+                report_path=args.report,
+                paths=paths,
+                judgements_dir=args.judgements_dir,
+                model=args.model,
+                env=env,
+                client_factory=client_factory,
+                annotations_factory=annotations_factory or _default_annotations_factory,
+                now=now,
+                say=say,
+                err=err,
+            )
+        return judging.run_validate(
+            paths=paths,
+            out_path=args.out,
+            model=args.model,
+            env=env,
+            client_factory=client_factory,
+            say=say,
+            err=err,
+        )
 
     if args.command in ("queue", "import"):
         return _annotation_command(
