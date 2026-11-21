@@ -175,3 +175,44 @@ Re-read on `main` at `bbb48a1`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-21 — build (subtasks 1-8)
+
+Commits: e3410f5 (matching and order), 669023c (tool default 10, schema),
+3353f83 (`_expected_results`, ADR 0003), 04baa3e (prompt sentence, AC4 test),
+07bc3f9 (README, CLAUDE.md), e9a9170, 7e16fee, 8e1bd49 (format, one more
+mutant-killing test, lint), plus the hand-over commit.
+
+Shipped: `search_products` matches any keyword and orders by (distinct
+keywords matched desc, price, id), default limit still 5; the tool defaults to
+10 and its keywords/limit schema text and its description changed;
+`_expected_results` orders the same way; ADR 0003 wording; one sentence in the
+prompt's search rule; AC4 real-catalogue test; docs.
+
+Tests: 804 passed in the full pytest run before the last additions; the suite
+grew by about 20 tests (catalogue, agent, consistency); `npm run verify` and
+`check:intent` outputs are in the hand-over report.
+
+Cases and probes changed: none. The full suite was green after subtask 1-3
+with no change to any coverage probe test, `coverage.py`, or
+`evals/cases.jsonl`; `catalogue_problems` on the committed cases is empty.
+
+Mutants (all restored by copy; the killing tests):
+- drop the count key / reverse it: `test_more_keywords_matched_ranks_first_then_price_then_id`, `test_a_keyword_counts_once_however_often_it_appears`, `test_limit_cuts_the_ranked_list_and_keeps_the_leader`, the tool ranking test.
+- any -> all: `test_keywords_case_insensitive_any_may_match` and the ranking tests.
+- drop the id tie-break: `test_no_filters_sorted_price_then_id`, the ranking test, the consistency ranking test.
+- count occurrences: `test_a_keyword_counts_once_however_often_it_appears`.
+- drop the blank filter: `test_blank_keywords_do_not_match_everything_or_count`.
+- tool default 5: `test_tool_default_limit_is_ten_...`, `test_committed_catalogue_student_laptop_under_700_finds_p009`.
+- `_expected_results` without the count key: the consistency ranking test and the committed-case comparison.
+- no de-duplication of keywords: first SURVIVED; `test_repeated_keyword_is_not_a_bigger_match_than_distinct_ones` was added and kills it.
+
+Divergences: the tool's `description` text ("All given filters must match.
+Sorted by price") was stale under the new rule, so it was updated too. No
+other divergence.
+
+Assumptions: ordering key and de-duplication as in the plan; blank-only
+`keywords_any` is not specially handled in `_expected_results` (an empty or
+blank list excludes everything there, where `search_products` would match all;
+no committed case has one); the prompt test compares whitespace-normalised
+text; live check and eval runs are the coordinator's and owner's.

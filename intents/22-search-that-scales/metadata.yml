@@ -2,7 +2,7 @@
 id: 22
 slug: search-that-scales
 type: feature
-status: accepted
+status: in-review
 title: Product search that still finds the right product in 500
 review_tier: reviewed    # spec B7 changes src/advisor/prompts/system.md
 intent_accepted: 2026-11-16 by-agent    # owner: "accept 22"
