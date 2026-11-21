@@ -11,8 +11,8 @@ plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-18 by-agent    # owner: "/auto 21"
-auto_round: 1
-auto_stopped: decision needed
+auto_round: 2
+auto_stopped:
 follows_up:
 blocked_by:
 links:
