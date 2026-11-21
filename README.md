@@ -354,6 +354,7 @@ consistency test names.
 npm run verify        # kit tests, then ruff check, ruff format --check, mypy, pytest
 npm run check:intent  # does this branch match its intent?
 npm run queue         # every intent by status, generated from metadata.yml
+npm run stats -- <id> # time, owner wait and tokens per phase of an intent (--all, --json)
 ```
 
 `verify` calls `uv run`, so run `npm run setup:worktree` (or `uv sync`)

@@ -24,6 +24,7 @@ npm run queue         # the intent queue, generated from metadata.yml (--next-id
 npm run spawn -- <id> # parallel session for an intent (see "Parallel sessions")
 npm run sessions      # what every worktree/session is doing (--json for data, --log for the event tail)
 npm run ship -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /ship skill)
+npm run stats -- <id>|--all  # elapsed time, owner wait and tokens per phase (--json; the stats.md /ship commits)
 npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
@@ -110,7 +111,7 @@ npm run sessions -- --log 30    # the raw event tail
   `.git/product-advice-agent-sessions.jsonl`, written by the hooks in
   `.claude/settings.json` on start, prompt, turn end, notification and end.
   That file is never committed, and no agent writes to it by hand. It holds
-  **no prompt text**: a prompt is logged by its length only. Events are
+  **no prompt text**: a prompt is logged by its length, plus `skill` and `skillId` when it starts with one of this repo's slash commands (`/spec 17` logs `spec`, 17) and nothing else of it. Events are
   filed under the session's project directory, so a session that `cd`s into
   another worktree still shows as itself. A permission prompt or question
   shows as `needs you`. Claude Code's idle "waiting for your input"

@@ -1,0 +1,1 @@
+{"type":"assistant","timestamp":"2026-11-01T10:50:00Z","message":{"id":"g2","model":"model-b","content":[{"type":"text","text":"SENTINEL-PROMPT-TEXT-7f3a"}],"usage":{"input_tokens":9,"output_tokens":9,"cache_read_input_tokens":9,"cache_creation_input_tokens":9}}}

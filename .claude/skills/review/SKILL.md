@@ -36,7 +36,9 @@ line of `review.md`.
   `# Round N (history)`, as the policy describes.
 
 For a substantial branch, delegate the passes to the `product-advice-agent-reviewer`
-agent, giving it this skill's instructions and the policy, then assemble its
+agent (the `Agent` call's description begins `§<id> review`, for example
+`§13 review round 2`, so `npm run stats` can attribute it), giving it this
+skill's instructions and the policy, then assemble its
 output into the report. Do not trust an implementer's self-report, and do
 not trust a sub-agent's either: re-run the commands whose results you quote.
 

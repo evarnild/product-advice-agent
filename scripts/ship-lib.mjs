@@ -9,7 +9,7 @@ export const STEPS = [
   { id: 'preconditions', label: 'check the merge preconditions' },
   { id: 'merge', label: 'merge --no-ff into main' },
   { id: 'verify', label: 'npm run verify on main' },
-  { id: 'bookkeeping', label: 'bookkeeping commit (metadata.yml)' },
+  { id: 'bookkeeping', label: 'bookkeeping commit (metadata.yml, stats.md)' },
   { id: 'push', label: 'push main to origin (when there is one)' },
   { id: 'remove', label: 'remove the worktree and delete the branch' },
 ];

@@ -1,3 +1,8 @@
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import { expect } from './expect.mjs';
 import {
@@ -19,6 +24,7 @@ import {
   portFor,
   sessionBrief,
   sessionState,
+  skillOf,
   sortRows,
   worktreePathFor,
 } from './session-lib.mjs';
@@ -180,6 +186,48 @@ describe('eventRecordFrom', () => {
     expect(JSON.stringify(r)).not.toContain('SECRET');
     expect(eventRecordFrom({ ...base, hook_event_name: 'UserPromptSubmit' }).fields.promptChars).toBe(0);
     expect(eventRecordFrom({ ...base, hook_event_name: 'UserPromptSubmit', prompt: ['not', 'text'] }).fields.promptChars).toBe(0);
+  });
+
+  describe('skill and skillId (§19 B1)', () => {
+    const SKILLS = ['spec', 'auto', 'review'];
+    const SENTINEL = 'SENTINEL-PROMPT-TEXT-7f3a';
+    const logged = (prompt, skills = SKILLS) => eventRecordFrom({ ...base, hook_event_name: 'UserPromptSubmit', prompt }, {}, '.', skills).fields;
+
+    it('logs the skill and the first integer argument of a slash prompt', () => {
+      expect(logged('/spec 17')).toMatchObject({ skill: 'spec', skillId: 17 });
+      expect(logged('/auto 13')).toMatchObject({ skill: 'auto', skillId: 13 });
+      expect(logged('  \n /review  ')).toMatchObject({ skill: 'review' });
+      expect(logged('/review')).not.toHaveProperty('skillId');
+      // a number inside a branch name or path is not an id argument
+      expect(logged('/review feat/19-x')).toMatchObject({ skill: 'review' });
+      expect(logged('/review feat/19-x')).not.toHaveProperty('skillId');
+      expect(logged('/review feat/19 now')).not.toHaveProperty('skillId');
+      expect(logged('/review 19-x')).not.toHaveProperty('skillId');
+      expect(logged('/review feat/19-x round 2')).toMatchObject({ skillId: 2 }); // the first free-standing integer (spec B1)
+      expect(logged(`/spec 5 ${SENTINEL} 9`)).toMatchObject({ skill: 'spec', skillId: 5 });
+    });
+
+    it('logs neither for anything else', () => {
+      for (const p of ['/unknown 3', 'yes to 16', 'accept 15 and /auto 15', 'please /spec 3', '//spec 3', '/specx 3', '', null, 42, ['/spec 1']]) {
+        const f = logged(p);
+        expect(f).not.toHaveProperty('skill');
+        expect(f).not.toHaveProperty('skillId');
+      }
+      expect(logged('/spec 17', [])).not.toHaveProperty('skill');
+      expect(logged('/spec 17', null)).not.toHaveProperty('skill');
+      expect(skillOf('/spec 17', 'spec')).toEqual({});
+    });
+
+    it('never logs any other prompt text', () => {
+      for (const p of [`/spec 17 ${SENTINEL}`, `/auto ${SENTINEL}`, `${SENTINEL} /spec 3`, `/unknown ${SENTINEL}`]) {
+        expect(JSON.stringify(eventRecordFrom({ ...base, hook_event_name: 'UserPromptSubmit', prompt: p }, {}, '.', SKILLS))).not.toContain(SENTINEL);
+      }
+      expect(Object.keys(logged(`/spec 17 ${SENTINEL}`)).sort()).toEqual(['detail', 'event', 'promptChars', 'session', 'skill', 'skillId']);
+    });
+
+    it('adds the fields only to prompt events', () => {
+      expect(eventRecordFrom({ ...base, hook_event_name: 'Stop', prompt: '/spec 17' }, {}, '.', SKILLS).fields).not.toHaveProperty('skill');
+    });
   });
 
   it('keeps the notification type and message', () => {
@@ -399,5 +447,38 @@ describe('sessionsData (sessions --json)', () => {
         session: { state: 'no events', since: null, ageSeconds: null, detail: '' },
       },
     ]);
+  });
+});
+
+describe('session-event.mjs (the hook process)', () => {
+  const run = (stdin) => spawnSync(process.execPath, [join(dirname(fileURLToPath(import.meta.url)), 'session-event.mjs')], { input: stdin, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: join(tmpdir(), 'sdlc-no-such-dir') } });
+
+  it('prints nothing and exits 0 on malformed, empty or non-repo input', () => {
+    for (const stdin of ['', 'not json', '{', 'null', '[]', '{"hook_event_name":"UserPromptSubmit","prompt":"/spec 3 SENTINEL"}']) {
+      const r = run(stdin);
+      expect(r.status).toBe(0);
+      expect(r.stdout).toBe('');
+      expect(r.stderr).toBe('');
+    }
+  });
+
+  const HOOK_SENTINEL = 'SENTINEL-PROMPT-TEXT-7f3a';
+  it('reads the repo skill list from .claude/skills and logs skill and skillId, printing nothing (B1 wiring)', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'sdlc-hook-')));
+    try {
+      execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
+      execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '--allow-empty', '-m', 'init'], { cwd: dir });
+      mkdirSync(join(dir, '.claude', 'skills', 'spec'), { recursive: true });
+      const stdin = JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: 's-hook', cwd: dir, prompt: `/spec 17 ${HOOK_SENTINEL}` });
+      const r = spawnSync(process.execPath, [join(dirname(fileURLToPath(import.meta.url)), 'session-event.mjs')], { input: stdin, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+      expect(r.status).toBe(0);
+      expect(r.stdout).toBe('');
+      expect(r.stderr).toBe('');
+      const text = readFileSync(join(dir, '.git', 'product-advice-agent-sessions.jsonl'), 'utf8');
+      expect(text).not.toContain(HOOK_SENTINEL);
+      expect(JSON.parse(text.trim().split(/\r?\n/).at(-1))).toMatchObject({ event: 'UserPromptSubmit', skill: 'spec', skillId: 17 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -65,7 +65,7 @@ Re-read on `main` at `5dabf91`.
    with the 2 h cap and idle (B6); `formatStats` / JSON (B8). Tests over
    fixtures (AC2–AC5 logic). Commit.
 3. **I/O** (`scripts/stats.mjs`, `package.json` `stats`): reads `git log`
-   (`--format=%H %ct %s` over `main` and local branches), the session log,
+   (`--format=%H %at %s`, author time per the 2026-11-16 spec amendment over `main` and local branches), the session log,
    and transcripts under `~/.claude/projects/` for the main checkout's and
    worktrees' slugs (root overridable by `--transcripts <dir>` for tests);
    `-- <id>`, `--all` (with `partial` for intents merged before this
@@ -107,6 +107,28 @@ Re-read on `main` at `5dabf91`.
   the run, and after typing `/sessions`, sees `skill`/`skillId` and nothing
   else of the prompt in `.git/product-advice-agent-sessions.jsonl`.
 
+## Amendment (2026-11-18, live check)
+
+The spec amendment of 2026-11-18 (W1 to W3, B5a, B6, B8, AC4a) adds
+working time. The owner said "yes to the amendment" to a message that
+proposed "I record your acceptance, add a plan subtask, build it".
+
+7. **Working time (B5a, B6, B8, AC4a)** in `scripts/stats-lib.mjs` only:
+   - `sessionTurns` marks whether a turn ended at a `Stop`; a turn's work
+     length is its span, at most `WAIT_CAP_MS` when it did not (an open
+     last turn ends at `now`).
+   - `computeStats` adds `coordWorkMs` per phase (each attributed turn
+     spread over the intent's phases with `spread`, not clipped to the
+     intent's life), `agentWorkMs` per phase (the union of the intent's
+     tagged agent spans in the tag's phase), and work time on the shared
+     and unattributed lines (`sharedWork`, `unattributedWorkMs`).
+   - Gate waits take out the union of the intent's agent spans and its
+     attributed coordinator turns before the cap.
+   - `formatIntent`, `formatAll`, `formatSide`, `statsJson` and
+     `totalsOf` carry the two columns; `stats.md` follows `formatIntent`.
+   - Tests in `scripts/stats-lib.test.mjs` for each AC4a case; the
+     `stats.test.mjs` text checks updated for the new columns.
+
 ## Assumptions I made
 
 - The skill list for B1 is read by the hook at each prompt from
@@ -121,3 +143,190 @@ Re-read on `main` at `5dabf91`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-13: subtasks 1 to 6
+
+Commits: a9095ec (hook skill/skillId, B1), 6c79966 (pure stats core), 5e72fe8
+(`npm run stats`, I/O, fixtures), 4522a54 (`/ship` writes `stats.md`, B9),
+5a90d3c (skills name agents, `/grid` reads `stats.md`, CLAUDE.md), 3f0e376
+(a wait straddling a milestone is split over the phases it touches), plus this
+Progress commit.
+
+Shipped: `eventRecordFrom` logs `skill`/`skillId` for a prompt starting with a
+repo skill name (names read by `session-event.mjs` from `.claude/skills/`);
+`scripts/stats-lib.mjs` (pure), `stats-io.mjs`, `stats.mjs` and the `stats`
+script; `/ship` adds `intents/<id>/stats.md` to the bookkeeping commit and,
+on any failure, writes nothing and says so; `/spawn`, `/auto`, `/review` name
+agents `§<id> implement|rework|review`; `/grid` Measures reads `stats.md`.
+
+Tests: kit tests 255 before, 309 after (hook and skill parsing, stats-lib,
+stats end to end on synthetic fixtures with a sentinel prompt string, ship
+with `stats.md` and with a stats failure). `npm run verify` green.
+
+Real run (`npm run stats -- --all`, terminal only): total 176h of elapsed
+(per-intent wall-clock, overlapping), gate wait 17h40m, in-session wait 13h56m,
+idle 80h43m, tokens in 5.9k, out 2.7M, cache read 397M, cache write 9.8M
+(all sources, including shared and unattributed); skipped lines: 0.
+
+Divergences from the plan:
+- A coordinator turn in a worktree session with no skill goes to that
+  worktree's intent id before the commits rule (a fact in the log, not a guess).
+- A `Stop` restarts an in-session wait that a permission prompt began, since the
+  log cannot say when the prompt was answered inside the turn.
+- A dependency stop (`auto stopped: waiting for N to merge`) is not gate wait.
+- A wait that crosses a milestone is divided over the phases by length.
+- Transcript assistant lines repeat per content block; a message counts once
+  by its `message.id`.
+- The ship test seam is a real failure (a directory where `stats.md` goes) and
+  `renderStatsFile(…, {collect})` for a throwing collector, not an env switch.
+- `stats-io.mjs` was added (collection shared by `stats.mjs` and `ship.mjs`).
+
+### 2026-11-16: rework after review round 1
+
+Commits (rebased onto main; these replace the pre-rebase hashes quoted in the
+2026-11-13 entry above, which are no longer on the branch): e4d31d3 (code:
+F1-F4), 1ea5d52 (tests), plus this Progress and docs commit. The rebased
+hashes of the earlier work are `git log --format=%h main..HEAD`.
+
+Shipped, from the owner's decisions of 2026-11-16 ("Yes to the 19
+recommendations") and review round 1:
+- F4: phases and the stats cutover use author time (`%at`).
+- F2: gate and in-session waits are clipped to the intent's life (first commit
+  to `merged`, or to now while unmerged); `clipToLife` in `stats-lib.mjs`.
+- F3: only `auto stopped: blocked by <n>` and `waiting for N to merge` are not
+  the owner's wait; every other `auto stopped:` opens a gate wait, and a
+  `merged (` commit ends one (`ready for /ship`).
+- F1: any commit starting `live check` ends a gate wait (`recorded`, and older
+  wordings such as `passed`).
+- Tests for F5 (idle prompt alone), F6 (the hook process reads the skill list
+  from a temp repo), F7 (S10, S2c, S16, I5, I4, M4) and for each decision.
+- README.md and sdlc.md mention `npm run stats`; the stray colon and the extra
+  blank line in `.claude/skills/auto/SKILL.md` section 10 are gone.
+
+Tests: kit 309 before the rebase; 352 after it; 366 after this rework.
+
+Live figures are a snapshot of `npm run stats -- --all` on 2026-11-16 and move
+with every commit and session: total 648h13m elapsed (per-intent wall-clock,
+overlapping), gate wait 35h17m, in-session wait 14h13m, idle 350h20m, tokens
+in 7.5k, out 3.2M, cache read 486.6M, cache write 12.5M; skipped lines: 0.
+
+Divergences from the plan:
+- `skillId` stays the first free-standing integer after the skill name (so
+  `/review feat/19-x round 2` gives 2): spec B1 says "the first integer
+  argument" and the spec was not amended on this. The test pins both ends.
+- A wait is clipped, not dropped, when it straddles the span edge; an intent
+  with no commits gets no wait booked.
+
+### 2026-11-16: review round 2 rework
+
+Commit: the one carrying this entry (on top of 440321a).
+
+- F8: `statsCutover` runs `git log main --first-parent -m --diff-filter=A
+  --format=%at`, so the cutover is the author time of the merge that brought
+  `stats-lib.mjs` onto main, not of the commit that added it. Test: a
+  throwaway repo with a `--no-ff` merge of the stats branch.
+- F9: the F2 test now asserts `idleMs` (none booked past now); the gate-side
+  clip in `computeStats` is kept as a guard and commented as one, since a gate
+  gap already lies inside the intent's life (mutant F2g survives by design).
+- F10: a skill id with no commits books no wait. F11: `auto stopped:
+  blocked_by record broken` is gate wait.
+
+Tests: kit 366 before, 369 after. Mutants killed: F8, C1, C4, R3; F2g survives
+(equivalent guard).
+
+### 2026-11-18: live check, same-second commits
+
+- The owner's live check failed on `npm run stats -- 13`: a phantom
+  41.5 min gate wait over build and review. `plan drafted` and
+  `plan approved` share a second; `git log` lists the later first and the
+  stable sort kept that, so `plan drafted` opened a gate nothing closed
+  until `auto run resumed`.
+- `collectStats` now reads `git log --branches --topo-order --reverse`, so
+  commits in the same second keep the order they were made
+  (`commitsByIntent` documents that it relies on this).
+- Test: "keeps commit order for commits in the same second" (stats.test.mjs,
+  throwaway repo), failing before the fix (7 200 000 ms of gate wait).
+- §13 after the fix: build and review gate wait 0 (were 6m and 30m); total
+  gate wait 40m (was 1h17m).
+
+Tests: kit 370 (369 before).
+
+### 2026-11-18: subtask 7, working time
+
+- `sessionTurns` marks `stopped`; `computeStats` adds `coordWorkMs` (attributed
+  turns spread over phases, not clipped to the life, a turn without `Stop`
+  capped at 2 h, an open last turn ending at `now`; shared and unattributed
+  turn time as `workMs` on those lines; a turn for an intent with no commits
+  is unattributed) and `agentWorkMs` (tagged runs joined per intent and
+  phase). Gate waits take out the intent's coordinator turns with its agent
+  runs (W2).
+- Output: `coord work` and `agent work` columns in `stats`, `--all` and
+  `stats.md`; `coord work` lines under shared and unattributed; `workMs` in
+  the JSON side buckets.
+- Tests: 8 for AC4a (stats-lib.test.mjs, "working time"), plus `stopped` in
+  the sessionTurns test; one changed expectation: the spec gate gap in
+  "counts gate wait and in-session wait separately" now loses the two §7
+  turns inside it (idle 1.5 h → 0.5 h).
+- §13 shows 2m coord work and no agent work, as the owner was told:
+  most of its turns are shared and its agents were untagged. §16 to §19
+  show agent work (11m, 45m, 1h37m, 1h15m).
+
+Tests: kit 378 (370 before); pytest 658.
+
+### 2026-11-21: round 4 rework (F1, F2, F3)
+
+Owner's decisions, quoted: "19 1b 2a". spec.md and plan.md above this marker
+are unchanged: both decisions keep B5a's wording ("never counted twice";
+"attributed to the intent as in B4").
+
+- F1 (option b): agent work is joined per intent, never per (intent, phase).
+  Runs are taken in start order and each books only the part beyond what
+  earlier-started runs cover, so an overlap goes to the earlier run's phase
+  and per-phase agent work sums to the union. Code comment: "B5a: joined per
+  intent; an overlap goes to the earlier run's phase". Reviewer's case
+  (implement 7.5-8.5 h, review 8-9 h): total 1.5 h, build 1 h, review 0.5 h.
+- F2 (option a): a turn attributed to an intent with no commits books its
+  coord work to that intent's unphased bucket, as its tokens did; one turn,
+  one line. Probe now gives rows [7, 99], §99 coord work 1 h, unattributed 0.
+  The test is renamed to "books a turn for an intent with no commits to that
+  intent's unphased bucket, not unattributed".
+- F3: "prints and serialises both columns" asserts the `formatAll` total row.
+- F4, F5: not requested, untouched.
+
+Mutants (backup by copy, restored by copy):
+- F1, revert to the per-(intent, phase) key: killed by "joins agent work per
+  intent: an overlap goes to the earlier run's phase, and phases sum to the
+  total (B5a)" (the only failure in stats-lib.test.mjs).
+- F2, send the work back to unattributed (`&& byIntent.has(a.id)`): killed by
+  "books a turn for an intent with no commits to that intent's unphased
+  bucket, not unattributed".
+- F6, old four keys in the `formatAll` total: killed by "prints and
+  serialises both columns".
+
+Tests: kit 379 (378 before); pytest 658. `npm run stats -- 19` (numbers
+only): total agent work 1h15m, coord work 11m, unchanged from before.
+
+### Round-5 rework (2026-11-21)
+
+Owner's words: "19 rework". Test-only; the one code change is a comment at
+the B5a join in `scripts/stats-lib.mjs` ("Equal starts: the shorter run
+books first").
+
+- F1: two tests added beside the B5a overlap test: reverse input order
+  (review 8-9, implement 7.5-8.5: build 1 h, review 0.5 h, total 1.5 h) and a
+  contained run (implement 7-10, review 8-9, rework 9.5-11: build 3 h, review
+  1 h, total 4 h; rework maps to the review phase).
+- F2: "on equal starts, the shorter run books first" (implement 8-10, review
+  8-9: review 1 h, build 1 h).
+
+Mutants (backup by copy, restored by copy; run on `scripts/stats-lib.test.mjs`
+alone for speed, all other kit tests unaffected by the join):
+- N2 (drop the sort): killed by "joins agent work whatever the input order of
+  the runs (B5a)" and the equal-starts test.
+- N3 (sort on start only): killed by "on equal starts, the shorter run books
+  first (B5a)".
+- N5 (drop `if (part > 0)`): killed by "books nothing for a run contained in
+  an earlier one, and only the tail of a later one (B5a)".
+- N6 (`covered = to`): killed by the same contained-run test.
+
+Tests: kit 382 (379 before), all green via `npm run verify`.
