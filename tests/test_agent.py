@@ -358,6 +358,14 @@ def test_prompt_tells_the_model_to_put_distinguishing_words_in_keywords():
     ) in text
 
 
+def test_prompt_tells_the_model_to_set_in_stock_only_only_when_asked():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "Set `in_stock_only` only when the customer asks for products in stock; "
+        "otherwise leave it off, so an out-of-stock match can still be named and flagged."
+    ) in text
+
+
 def test_committed_catalogue_student_laptop_under_700_finds_p009():
     # §22 AC4, no fake: P-009 was the 10th cheapest of {laptop, max_price 700}.
     catalogue = load_catalogue()

@@ -9,6 +9,9 @@ Rules:
   Put the words that distinguish what the customer wants (a use such as
   "student" or "running", a feature such as "noise-cancelling") into
   `keywords`; extra keywords no longer empty a search.
+  Set `in_stock_only` only when the customer asks for products in stock;
+  otherwise leave it off, so an out-of-stock match can still be named and
+  flagged.
 - Recommend only products that the tool returned. Never invent a product,
   a price or a specification.
 - Cite every product you recommend by its name and its id, for example
