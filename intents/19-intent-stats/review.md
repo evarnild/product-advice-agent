@@ -1,13 +1,133 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §19 review — Time, tokens and owner wait per intent and phase
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 6b4fba77e01459946f7ab42bcb136da16920b875
-round: 5
+reviewed-commit: e653ad2
+round: 6
 sampled: no
 run: manual
 live-check: owed
+
+Tier: Reviewed, never lowered (path table: `scripts/session-event.mjs`,
+`.claude/skills/**`, `scripts/ship.mjs` in the branch diff;
+`review_tier: reviewed`).
+
+Sampling: not attest, so not sampled (`sdlc:scan --sample-due manual`
+printed "sampled: no" in round 5; no attested manual change since).
+
+Run: manual, by the coordinator itself (the owner's "19 rework"; the
+rework is one comment line and three tests, small enough to review without
+a reviewer agent).
+
+Scope: `git diff 6b4fba7..HEAD`: bc3c787 (three tests in
+`scripts/stats-lib.test.mjs`, one comment line in `scripts/stats-lib.mjs`),
+e653ad2 (plan.md Progress), and b98d440 (round-5 review.md). No code line
+changed; spec.md, intent.md and metadata.yml unchanged.
+
+## Resolution of round 5
+| Round 5 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| F1 MEDIUM | run order and contained runs unpinned (N2, N5, N6 survived) | fixed | `stats-lib.test.mjs` "joins agent work whatever the input order of the runs (B5a)" (review 8–9, implement 7.5–8.5 → build 1 h, review 0.5 h, total 1.5 h); "books nothing for a run contained in an earlier one, and only the tail of a later one (B5a)" (implement 7–10, review 8–9, rework 9.5–11 → build 3 h, review 1 h, total 4 h; `AGENT_PHASE` maps rework to review). N2, N5, N6 KILLED |
+| F2 LOW | equal-start tie-break unpinned (N3) | fixed | "on equal starts, the shorter run books first (B5a)" (implement 8–10, review 8–9 → review 1 h, build 1 h); comment at `stats-lib.mjs:414`. N3 KILLED |
+| F4, F5 (carried, worth a look) | IO1 `--topo-order`; docs one-liners | unchanged, not requested | — |
+| Nit F7 | cell width | unchanged (the owner's display follow-up) | — |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: tests and one comment, as round 5 asked |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass: no code changed; the new tests pin B5a's join for out-of-order input, contained runs and equal starts, with expected values from B5a and the owner's "1b" |
+| 4 | Tests prove the behaviour | pass: N2, N3, N5, N6 killed (the full kit suite) |
+| 5 | Conventions | pass: synthetic fixtures, pure tests |
+| 6 | Numbers in prose | pass: kit 382 (379 + 3), pytest 658 reproduced |
+| 7 | Documentation | pass (no user-facing change) |
+| 8 | Guardrails and hygiene | pass: no dependency, secret or real data; no transcript or session-log text read or printed |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 19, feature)
+  note:  25 file(s), 1882 line(s) changed outside intents/.
+```
+
+## Findings
+None new. Carried, worth a look: round-4 F4 (IO1, `stats-io.mjs:97`), F5
+(`CLAUDE.md:27`, `README.md:276`, `sdlc.md:151`); nit F7.
+
+**Mutants** (`scripts/stats-lib.mjs`; exact-string replace asserted once,
+backed up and restored by copy; full kit suite `npm run test:kit` each):
+
+| # | Line | Mutation | Result | Killing test (from the implementer; the coordinator saw the suite fail) |
+| --- | --- | --- | --- | --- |
+| N2 | :417 | no `sort` | KILLED | "joins agent work whatever the input order…", "on equal starts…" |
+| N3 | :417 | no end tie-break | KILLED | "on equal starts, the shorter run books first" |
+| N5 | :419 | drop `if (part > 0)` | KILLED | "books nothing for a run contained in an earlier one…" |
+| N6 | :420 | `covered = to` | KILLED | same |
+
+## Not checked
+- Which test failed for each mutant: the coordinator's harness records the
+  suite's exit code only; the killing tests are the implementer's report.
+- §14's real figures (round 5: agent work 98 → 66 min under the new rule):
+  the owner's re-check below.
+- IO1 and F7 not re-run (lines unchanged since round 5, where both
+  survived as carried).
+- The transcript format's stability; the display nits the owner left for a
+  follow-up.
+
+## Live check
+- owed: rule 3 (AC7). Recorded `live_checked: 2026-11-21 by-agent`
+  (3c8337f) predates the round-4 rework, which changed how agent work is
+  booked; round 5 found §14's figures change. **A re-check is owed before
+  the merge** (`check:intent` doesn't enforce it, since the date is set).
+- steps:
+  1. In `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats`: `npm
+     run stats -- 19`, then `npm run stats -- 14`.
+  2. §19: coord work and agent work as the recorded check saw them.
+  3. §14: check against your memory that a review (or rework) run
+     overlapped its implement run, so the overlap now counts once, in build.
+- you should see: §19 totals coord work ~11m, agent work ~1h16m (build
+  ~20m, review ~56m); §14 coord work ~18m, agent work ~1h06m (build ~56m,
+  review ~10m), the phase agent-work cells summing to the total. If it
+  passes, say so and `live_checked` is re-dated at your word; if §14 looks
+  wrong, say what and it goes back to rework.
+
+## Eval run
+not owed: `owes-run` is absent on this branch (it predates §17); main's
+`EVAL_PATHS` applied by hand in round 5 match nothing, and this round adds
+only kit tests.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in the worktree at e653ad2; `git status --short`
+clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit "tests 382", "fail 0";
+  "All checks passed!"; "157 files already formatted"; mypy "Success: no
+  issues found in 28 source files"; "658 passed". Matches the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "25 file(s), 1882
+  line(s)".
+- **Coordinator, re-run:** N2, N3, N5, N6 each KILLED (full kit suite).
+  Matches the implementer.
+- **Coordinator, read:** `git diff 6b4fba7..HEAD`: one comment line in
+  `stats-lib.mjs`, three tests, Progress; no other code.
+
+**Taken on trust:** which test kills each mutant (the implementer's
+report); the owner's decisions as quoted in Progress; round 5's real-data
+figures.
+# Round 5 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 6b4fba77e01459946f7ab42bcb136da16920b875
+- round: 5
+- sampled: no
+- run: manual
+- live-check: owed
 
 Tier: Reviewed, never lowered; set by the path table
 (`scripts/session-event.mjs`, `.claude/skills/**`, `scripts/ship.mjs` in the
@@ -29,7 +149,7 @@ Verdict: rework. The rework does what the owner decided, and the code is
 right on every probe; one MEDIUM test gap needs a mechanical fix (F1).
 Without it, escalate.
 
-## Resolution of round 4
+### Resolution of round 4
 | Item | Decision | Status at 6b4fba7 | Evidence |
 | --- | --- | --- | --- |
 | F1 agent work double-counted across phases | owner (b): join per intent, an overlap to the earlier-started run's phase | **resolved** | `stats-lib.mjs:397-421`: `agentWork` per intent id, runs sorted by start, each books only the part beyond `covered`. Probe (implement 7.5–8.5 h, review 8–9 h): total 1.5 h, build 1 h, review 0.5 h. Test `stats-lib.test.mjs:524`. Mutant F1 killed |
@@ -40,7 +160,7 @@ Without it, escalate.
 | Nit F7 cell width | follow-up | unchanged | F7 (`:485`) still survives (cosmetic) |
 | Live check (AC7) | — | recorded at 3c8337f, before this rework | see Live check |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass: exactly F1 (b), F2 (a), F3; F4, F5 untouched as stated; spec.md and plan.md unchanged above Progress |
@@ -53,7 +173,7 @@ Without it, escalate.
 | 8 | Guardrails and hygiene | pass: no dependency, no secret, synthetic fixtures; no prompt or response text read or printed (real-data runs reduced to minute totals inside a script) |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -62,7 +182,7 @@ type-check: PASS (intent 19, feature)
   note:  25 file(s), 1860 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **F1 MEDIUM** `scripts/stats-lib.mjs:416-419`, `scripts/stats-lib.test.mjs:524-538`:
   no test pins the run ordering or contained runs, though real data depends
   on both: `stats-io.mjs:62` lists `agent-*.jsonl` in directory order
@@ -117,7 +237,7 @@ The rework must kill N2 (`:416`), N5 (`:418`), N6 (`:419`). Not run:
 comment-only lines (`:388`, `:397`, `:412-413`); `:390` (unchanged, killed
 in round 4 as W6); `covered = -Infinity` → `0` (equivalent, timestamps > 0).
 
-## Not checked
+### Not checked
 - Whether §14's real figures are right: the rework changes them (Live
   check); only the owner's memory can say whether a §14 review run
   overlapped an implement run by about half an hour.
@@ -127,7 +247,7 @@ in round 4 as W6); `covered = -Infinity` → `0` (equivalent, timestamps > 0).
 - The transcript format's stability (as in rounds 1–4).
 - The display nits the owner left for a follow-up.
 
-## Live check
+### Live check
 - owed: rule 3 (AC7, stats over real transcripts). Rules 1 and 2 don't
   apply.
 - recorded: `live_checked: 2026-11-21 by-agent` (3c8337f), on the code
@@ -151,13 +271,13 @@ in round 4 as W6); `covered = -Infinity` → `0` (equivalent, timestamps > 0).
   passes, keep `live_checked` or re-date it at your word; if §14 looks
   wrong, clear it and send the change back to rework.
 
-## Eval run
+### Eval run
 not owed: `owes-run` is absent on this branch, so main's `EVAL_PATHS` (10
 entries, `git show main:src/advisor/evals/baseline.py`) were applied by hand
 to `git diff --name-only main...HEAD` (merge-base b2e2815); nothing matches
 (kit scripts, fixtures, skills, docs, `package.json`, intents).
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in the worktree at 6b4fba7; `git status --short`
 clean before and after):
