@@ -512,10 +512,21 @@ describe('working time (B5a, B6, AC4a)', () => {
     expect(text).toMatch(/^unattributed\n {2}coord work 15m$/m);
   });
 
-  it('books a turn for an intent with no commits as unattributed', () => {
+  it("books a turn for an intent with no commits to that intent's unphased bucket, not unattributed", () => {
     const s = run({ events: [ev(1, 'UserPromptSubmit', { skillId: 99 }), ev(2, 'Stop')] });
-    expect(s.unattributed.workMs).toBe(1 * H);
-    expect(s.intents.map((i) => i.id)).toEqual([7]);
+    expect(s.unattributed.workMs).toBe(0);
+    expect(s.intents.map((i) => i.id)).toEqual([7, 99]);
+    const it99 = s.intents.find((i) => i.id === 99);
+    expect(it99.totals.coordWorkMs).toBe(1 * H);
+    expect(ph(it99, 'unphased').coordWorkMs).toBe(1 * H);
+  });
+
+  it("joins agent work per intent: an overlap goes to the earlier run's phase, and phases sum to the total (B5a)", () => {
+    const it = i7(run({ agents: [agentRun('§7 implement', 7.5, 8.5), agentRun('§7 review round 1', 8, 9)] }));
+    expect(it.totals.agentWorkMs).toBe(1.5 * H);
+    expect(ph(it, 'build').agentWorkMs).toBe(1 * H);
+    expect(ph(it, 'review').agentWorkMs).toBe(0.5 * H);
+    expect(it.phases.reduce((n, p) => n + p.agentWorkMs, 0)).toBe(it.totals.agentWorkMs);
   });
 
   it("books agent work by tag to the tag's phase, joining overlapping runs, and leaves untagged runs out", () => {
@@ -544,6 +555,7 @@ describe('working time (B5a, B6, AC4a)', () => {
     expect(text).toMatch(/^ {2}total +10h00m +1h00m +1h00m /m);
     expect(formatAll(s)).toMatch(/^intent +elapsed +coord work +agent work +gate wait/);
     expect(formatAll(s)).toMatch(/^§7 +10h00m +1h00m +1h00m /m);
+    expect(formatAll(s)).toMatch(/^total +10h00m +1h00m +1h00m /m);
     const j = statsJson(s);
     expect(j.intents[0].totals.coordWorkMs).toBe(1 * H);
     expect(j.intents[0].phases.find((p) => p.name === 'build').agentWorkMs).toBe(1 * H);

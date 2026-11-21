@@ -384,7 +384,8 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     const end = Number.isFinite(t.end) ? t.end : Math.max(t.start, now);
     const len = t.stopped ? end - t.start : Math.min(end - t.start, WAIT_CAP_MS);
     const a = attribution(t);
-    if (a.kind === 'intent' && byIntent.has(a.id)) {
+    if (a.kind === 'intent') {
+      // B4/B5a: a turn attributed to an intent with no commits yet lands in its unphased bucket, as its tokens do
       coordSpans.set(a.id, [...(coordSpans.get(a.id) ?? []), [t.start, t.start + len]]);
       for (const [name, share] of spread(getIntent(a.id).spans, t.start, t.start + len)) phase(a.id, name).coordWorkMs += len * share;
     } else if (a.kind === 'shared') sharedBucket(a.ids).workMs += len;
@@ -393,15 +394,14 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
 
   // agent tokens, and the spans in which agents ran (not owner wait)
   const agentSpans = []; // {session, id|null, span}
-  const agentWork = new Map(); // `${id} ${phase}` -> {id, name, spans}: agent work (B5a), by the tag's phase
+  const agentWork = new Map(); // id -> [{name, span}]: agent runs (B5a), by the tag's phase
   for (const a of agents) {
     if (a.usage.skipped) skipped.push({ file: a.file, count: a.usage.skipped });
     const tag = agentTag(a.description);
     if (a.usage.firstTs !== null) agentSpans.push({ session: a.session, id: tag?.id ?? null, span: [a.usage.firstTs, a.usage.lastTs] });
     if (tag && a.usage.firstTs !== null) {
-      const key = `${tag.id} ${AGENT_PHASE[tag.phase]}`;
-      if (!agentWork.has(key)) agentWork.set(key, { id: tag.id, name: AGENT_PHASE[tag.phase], spans: [] });
-      agentWork.get(key).spans.push([a.usage.firstTs, a.usage.lastTs]);
+      if (!agentWork.has(tag.id)) agentWork.set(tag.id, []);
+      agentWork.get(tag.id).push({ name: AGENT_PHASE[tag.phase], span: [a.usage.firstTs, a.usage.lastTs] });
     }
     for (const u of a.usage.turns) {
       if (tag) addTokens(phase(tag.id, AGENT_PHASE[tag.phase]).tokens, 'agents', u.model, u.usage);
@@ -409,7 +409,16 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
     }
   }
 
-  for (const w of agentWork.values()) phase(w.id, w.name).agentWorkMs += unionMs(w.spans).reduce((ms, [a, b]) => ms + (b - a), 0);
+  // B5a: joined per intent; an overlap goes to the earlier run's phase. Runs in start order; each books only the
+  // part beyond what earlier-started runs already cover, so per-phase work sums to the union of the intent's runs.
+  for (const [id, runs] of agentWork) {
+    let covered = -Infinity;
+    for (const { name, span: [from, to] } of runs.sort((x, y) => x.span[0] - y.span[0] || x.span[1] - y.span[1])) {
+      const part = to - Math.max(from, covered);
+      if (part > 0) phase(id, name).agentWorkMs += part;
+      covered = Math.max(covered, to);
+    }
+  }
 
   // owner wait
   for (const [id, cs] of byIntent) {
