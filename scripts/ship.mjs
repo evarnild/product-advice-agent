@@ -22,6 +22,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseGate, parseMetadata, parseReviewHeader } from './intent-check-lib.mjs';
+import { renderStatsFile } from './stats-io.mjs';
 import { appendEvent, findIntentDir, git, mainCheckout, readIntentMetadataFromBranch } from './session-io.mjs';
 import { branchFor, parseWorktreeList, pathKey, worktreePathFor } from './session-lib.mjs';
 import {
@@ -270,15 +271,35 @@ function bookkeeping(root, loc, trailers) {
   } catch (e) {
     throw new Stop('bookkeeping', `could not prepare the bookkeeping (nothing was written): ${errText(e)}`);
   }
+  // Stats never block a ship (§19 B9): any failure to collect or write them leaves no file and a line in the report.
+  const stats = writeStatsFile(root, loc, hash);
+  if (stats.edit) edits.push(stats.edit);
   try {
-    for (const x of edits) writeFileSync(x.file, x.after);
+    writeFileSync(edits[0].file, edits[0].after);
     const message = commitMessage(`§${id}: merged (${hash}); status done`, trailers);
     const commit = commitPaths(root, edits.map((x) => x.rel), message);
-    return `merged: ${hash}, status done (${commit})`;
+    return `merged: ${hash}, status done (${commit})${stats.note}`;
   } catch (e) {
-    for (const x of edits) writeFileSync(x.file, x.before);
+    for (const x of edits) {
+      if (x.before === null) rmSync(x.file, { force: true });
+      else writeFileSync(x.file, x.before);
+    }
     gitOk(root, 'restore', '--staged', '--', ...edits.map((x) => x.rel));
     throw new Stop('bookkeeping', `the bookkeeping commit failed; the file was restored and unstaged (the merge stays): ${errText(e)}`);
+  }
+}
+
+/** Writes `intents/<id>/stats.md` and returns its edit, or `{note}` saying why there is none. Never throws. */
+function writeStatsFile(root, loc, hash) {
+  const rel = `${loc.dir}/stats.md`;
+  const file = join(root, rel);
+  try {
+    const text = renderStatsFile(root, loc.metadata.id, hash);
+    const before = existsSync(file) ? readFileSync(file, 'utf8') : null;
+    writeFileSync(file, text);
+    return { edit: { rel, file, before, after: text }, note: `; ${rel} written` };
+  } catch (e) {
+    return { edit: null, note: `; stats.md NOT written (stats never block a ship): ${errText(e)}` };
   }
 }
 

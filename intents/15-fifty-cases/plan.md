@@ -217,3 +217,161 @@ Re-read on `main` at `17e69a4`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### Phase 1 — 2026-11-21 (implementer)
+
+Commits: `22fd187` (subtasks 1-4: `fits`, `expect_properties`, `a-match` /
+`only-matches`, the B4 message), `17f21c8` (subtasks 5-6: dimensions on the 15
+and the 35 new cases), `98564bc` (subtask 7: spread, variety and probe tests),
+`9d50935` (subtask 8: docs). Subtask 9: this entry and `status: in-review`.
+
+Tests: `npm run verify` green, 739 passed (kit tests, ruff, mypy, pytest).
+`catalogue_problems` on the committed 50 is empty. New tests: 6 parse
+(B1), 4 `fits` / 3 B4 (consistency), 8 score (B3), and the spread, variety,
+probe and boundary tests in `tests/test_evals_cases.py`.
+
+Mutant checks (restored by copy): `fits` `>` to `>=` on `max_price`, B4 `not
+expected` inverted, `a-match` ok-condition made always true, the
+existing-id filter in the property checks dropped. Each failed at least one
+test.
+
+Dimensions on §8's 15 (feature / scenario / persona):
+nc-headphones-under-200 headphones / several-matches / enthusiast;
+sport-earbuds headphones / several-matches / student;
+student-laptop laptop / several-matches / student;
+video-editing-laptop laptop / exact-match / enthusiast;
+no-laptop-under-200 laptop / budget-too-low / student;
+basic-phone phone / exact-match / non-technical;
+gaming-monitor monitor / exact-match / enthusiast;
+drawing-tablet tablet / exact-match / student;
+gps-watch smartwatch / exact-match / enthusiast;
+waterproof-camera camera / spelling-differs / non-technical;
+tv-sound speaker / exact-match / non-technical;
+out-of-stock-quiet-pro headphones / out-of-stock / non-technical;
+voice-speaker speaker / out-of-stock / non-technical;
+off-topic-weather off-topic / off-topic / non-technical;
+off-topic-poem off-topic / off-topic / gift buyer.
+
+The 35 sources (generated id -> new id; `haiku:` marks `evals/generated
+haiku.jsonl`, the rest `evals/generated.jsonl`; both files number ids from 1):
+gen-exact-match-1 -> gift-smartwatch-300; haiku:gen-exact-match-1 ->
+smartwatch-gps-bright-screen-200; haiku:gen-exact-match-2 ->
+smartwatch-health-100-250; haiku:gen-exact-match-3 -> sister-birthday-watch;
+gen-several-matches-1 -> laptop-husband-work-1000; haiku:gen-several-matches-2
+-> laptop-uni-backpack-900; gen-several-matches-5 -> monitor-room-500;
+gen-several-matches-6 -> monitor-small-desk-400; haiku:gen-several-matches-1 ->
+phone-battery-all-day-400; haiku:gen-several-matches-5 -> music-gift-150;
+gen-no-match-3 -> camera-wildlife-zoom; haiku:gen-no-match-5 ->
+camera-underwater-pink-200; gen-no-match-1 -> headphones-hifi-transparent-200;
+haiku:gen-no-match-2 -> headphones-ldac-balanced-200; haiku:gen-no-match-9 ->
+monitor-curved-tuner-300; haiku:gen-no-match-3 -> laptop-bathrom-projector;
+gen-no-match-5 -> smartwatch-gps-apps-minimalist; haiku:gen-no-match-8 ->
+smartwatch-eink-barometer-200; haiku:gen-budget-too-low-14 -> laptop-uni-250;
+gen-budget-too-low-13 -> laptop-student-way-over-budget;
+gen-budget-too-low-8 -> tablet-under-100; haiku:gen-budget-too-low-11 ->
+tablet-reading-drawing-80; haiku:gen-out-of-stock-4 ->
+pelagic-studio-back-soon; gen-out-of-stock-1 -> norvik-fold-brother-gift;
+haiku:gen-out-of-stock-7 -> norvik-fold-cheap-student; haiku:gen-out-of-stock-3
+-> norvik-canvas-school; gen-out-of-stock-2 -> aurelis-home-gift-mum;
+haiku:gen-spelling-differs-1 -> shower-speaker-water-proof;
+haiku:gen-spelling-differs-2 -> beach-speaker-waterprof;
+haiku:gen-spelling-differs-3 -> heartrate-training-zones;
+haiku:gen-spelling-differs-4 -> anc-train-rumble-200;
+haiku:gen-spelling-differs-5 -> cordless-over-ear-100-250;
+haiku:gen-spelling-differs-6 -> camera-wet-weather-300;
+haiku:gen-off-topic-1 -> off-topic-sourdough; haiku:gen-off-topic-2 ->
+off-topic-zone-two.
+
+Spread (committed file): exact-match 10, several-matches 9, no-match 8,
+spelling-differs 7, out-of-stock 7, budget-too-low 5, off-topic 4. Features:
+laptop 9, smartwatch 8, headphones 7, speaker 6, phone 4, monitor 4, tablet 4,
+camera 4, off-topic 4. Variety tags (a case may carry several): typo 6, multi
+20, vague 6, casual 10, none 3.
+
+Divergences from the plan:
+- Four sources had a probe that did not fit as written, so the probe in the
+  case's `note` is the source's with one correction: `haiku:gen-budget-too-low-11`
+  (tablet under 120 matched one tablet; probe now `max_price` 80, since the
+  pool has too few tablet candidates that pass), and the category of
+  `haiku:gen-out-of-stock-7` (smartwatch to phone), `haiku:gen-out-of-stock-3`
+  (laptop to tablet) and `gen-out-of-stock-2` (monitor, via its probe, to
+  speaker) corrected to the product's real category. All 35 probes pass
+  `check_coverage`.
+- Most budget-too-low sources in both pools fail on the 500-product catalogue
+  (cheap items exist); only laptop and one tablet candidate pass, hence 5
+  budget-too-low cases (the minimum).
+- One data commit for subtasks 5 and 6 together (the 15 and 35 were produced
+  by one script).
+
+### Correction to the entry above (round 1, F5)
+
+- Only the tablet probe (`haiku:gen-budget-too-low-11`) failed `check_coverage`
+  as written. The three out-of-stock probes passed as written
+  (`check_coverage` ignores category for out-of-stock); their edits corrected
+  the generator's category to the product's real one (P-017 phone, P-024
+  tablet, P-032 speaker). So one source, not four, had a probe that did not fit.
+- A feature correction was unmentioned: `gen-out-of-stock-1` ->
+  `norvik-fold-brother-gift`, feature monitor -> phone (P-017).
+- The number of `fits` tests in `tests/test_evals_consistency.py` is 3, not 4.
+
+### Progress: round 1 rework (2026-11-21)
+
+Owner's words: "15: F1 a for gps, health, both over-ear; b for the other three;
+F4 accept" (spec B6 amendment, db3c3af). Commit: d5ece55 (data, tests, README);
+this entry follows.
+
+- **F1 (a)**: the feature word is in the probe (`note`) and `keywords_any`.
+  Fit counts on the 500 catalogue (fitting `expect_search`, before -> after):
+  `smartwatch-gps-bright-screen-200` GPS: 16 -> 4; `smartwatch-health-100-250`
+  "heart rate" (the catalogue has no SpO2 anywhere, so not used): 12 -> 8;
+  `anc-train-rumble-200` ["noise-cancelling", "over-ear"]: 8 -> 18 (over-ear
+  alone 13); `cordless-over-ear-100-250` ["wireless", "over-ear"]: 23 -> 23
+  (over-ear alone 8). Caveat: `keywords_any` is any-of, so for the two
+  over-ear cases the added word widens or leaves the fit set: it scores
+  nothing the old keyword did not. Needs the owner's eye (an all-of form would
+  be a spec change). In those two questions "over-ear" is written "over ear",
+  because `check_coverage` rejects a spelling-differs question containing its
+  keyword verbatim; the keyword stays "over-ear" (hyphen = space in search).
+  All 35 probes still pass `check_coverage`; `catalogue_problems` is empty.
+- **F1 (b)**: cut from the questions: `laptop-uni-backpack-900` (backpack
+  clause), `monitor-small-desk-400` (small desk), `phone-battery-all-day-400`
+  (all-day battery).
+- **F4**: accepted; the note of `tablet-reading-drawing-80` reads "source:
+  haiku:gen-budget-too-low-11 (source edited: max_price 120 to 80, see spec B6
+  amendment)".
+- **F2**: `test_new_cases_expect_what_their_scenario_says` enforces B6's table
+  as amended, with the probe's `product_id` for out-of-stock.
+- **F3**: `variety_problems(cases)` uses `MIN_VARIETY`; new test
+  `test_variety_needs_five_of_each_not_four` (4 fails, 5 passes, per variety;
+  unknown variety named).
+- **F5**: corrected above. **F6**: README "Changing the catalogue" names B4's
+  message.
+- **F7**: out-of-stock questions name an exact product, so they are no longer
+  `vague` (tagged `none`, or `typo` for `aurelis-home-gift-mum`, where
+  "Aurelis" misspells Auralis; `casual` for `norvik-fold-cheap-student`). Five
+  questions with no category word are `vague`: `music-gift-150`,
+  `laptop-uni-backpack-900`, `phone-battery-all-day-400`,
+  `laptop-husband-work-1000`, `laptop-student-way-over-budget` (the last
+  three rewritten to drop "laptop"/"phone"; the expectation still names the
+  category, so a model that must ask what they want would fail them: for the
+  owner's read). `multi` = the question states two or more of a category, a
+  price bound, a feature or purpose; applied to all 35 (so
+  `sister-birthday-watch` is now multi).
+- **Variety counts now**: typo 6, multi 28, vague 5, casual 10 (4 cases `none`).
+  Spread unchanged: scenarios 10/9/8/7/7/5/4; features unchanged except none.
+- **Verify**: kit tests pass; ruff "All checks passed!", 164 files formatted,
+  mypy 29 files clean, 740 passed (was 739; one new test).
+- **Mutants** (copy backup, `uv run pytest -q`, restored by copy): D1 KILLED by
+  `test_new_cases_expect_what_their_scenario_says`; D2 KILLED by the same
+  test; T5 (`MIN_VARIETY` 5 -> 4) KILLED by
+  `test_variety_needs_five_of_each_not_four`. Each: 1 failed, 739 passed.
+
+### Round-2 rework (2026-11-21)
+
+Commit b1f63bb. Owner decisions: "15: R2-F1 cordless i, anc iii; R2-F2 a, vague min 1".
+
+- R2-F1: `cordless-over-ear-100-250` probe and `keywords_any` are now `["over-ear"]` (question unchanged, "over ear" with a space, so `check_coverage` passes). `anc-train-rumble-200` is back to `["noise-cancelling"]` (round-1 keyword); the over-ear note is in its source segment, "(over-ear is left to the judge, §16)", because the note regex needs `variety:` last. Question kept as is.
+- R2-F2 (a): "laptop"/"phone" restored in the four questions (husband, uni-backpack, phone-battery, student), keeping the round-1 cuts of the backpack clause and "lasts the whole day"; `vague` removed from their variety. `MIN_VARIETY` in the test is now a mapping (typo 5, multi 5, vague 1, casual 5); `test_variety_needs_five_of_each_not_four` checks each at its minimum and one below, plus 0 vague.
+- R2-F3: `test_expect_search_is_the_notes_probe_for_every_new_case` (lines 16-50 except out-of-stock and off-topic: `expect_search` equals the probe with `keywords` renamed `keywords_any`). No case legitimately differs; the no-match probes were left alone for §22.
+- Mutants (copy backup, edit, full suite, restore by copy): E1 smartwatch-gps-bright-screen-200 drops `keywords_any`, E2 anc-train-rumble-200 `keywords_any` changed, E3 smartwatch-health-100-250 drops `keywords_any`; each killed by that new test (pytest -x, 1 failed).
+- Tests: pytest 741 passed (verify); kit count per the verify output.

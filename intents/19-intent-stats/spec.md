@@ -18,6 +18,43 @@ Written against `main` at `157bd42`.
 - **Backfill:** "Best effort, marked partial" for §1–§18; no `stats.md`
   for them.
 
+## Owner's decisions (review round 1, 2026-11-16)
+
+The owner answered round 1's three "Needs decision" findings with "Yes to
+the 19 recommendations". They amend B3 and B6 as marked there:
+
+- **F2, waits clipped to the intent's lifetime:** gate and in-session
+  waits count only inside the intent's span, from its first commit to its
+  `merged` commit (or now, if unmerged); time outside is not booked to it.
+- **F3, which stops count:** only dependency stops are not the owner's
+  wait (`auto stopped: blocked by <n>`, and the older `waiting for N to
+  merge`); every other `auto stopped:` counts, including `ready for /ship`
+  until `merged`. Older live-check wordings (`live check passed` and the
+  like) end a gate wait, as `live check recorded` does.
+- **F4, author time:** phases and the stats cutover use author time
+  (`%at`), which a rebase keeps, instead of committer time.
+
+## Owner's decisions (live check, 2026-11-18)
+
+Accepted by the owner: "yes to the amendment".
+
+The live check on §13 failed: "the coordinator actually spent time working
+on the intent and spec and there was some time spent building", and the
+table showed only waits. The owner asked for a working-time figure ("1 and
+2"). This amends B5, B6 and B8 as marked there:
+
+- **W1, working time is reported:** per phase, **coord work** (the
+  coordinator's turns attributed to the intent) and **agent work** (the
+  runs of agents tagged for the intent), beside elapsed and the waits.
+  They are separate columns and may overlap (a coordinator turn while a
+  background agent runs counts in both).
+- **W2, working time is not owner wait:** a gate wait takes out the
+  intent's coordinator turns as well as its agents' runs before the 2 h cap.
+- **W3, what is not covered:** a coordinator turn is attributed as in B4
+  and never split, so a shared turn's time goes to its "shared" line, not
+  to an intent; work before an intent's first commit counts only when its
+  turn is attributed to the intent (by `skillId` or a `§N:` commit in it).
+
 ## Sources that apply
 
 | Source | What it settles |
@@ -51,7 +88,7 @@ Written against `main` at `157bd42`.
 **Phases**
 
 - **B3.** An intent's phases are the spans between its milestone commits
-  (on `main` and its branch, by committer time): **intent** (drafted →
+  (on `main` and its branch, by author time, amended 2026-11-16): **intent** (drafted →
   accepted), **spec** (→ spec accepted), **plan** (→ plan approved),
   **build** (→ first `auto round` or `in-review`), **review** (→ the last
   `review round` before the ship, rework included), **live check**
@@ -70,10 +107,23 @@ Written against `main` at `157bd42`.
   unattributed. Nothing is counted twice.
 - **B5.** **Elapsed:** wall-clock per phase from B3. Overlapping intents
   each count their own wall-clock (time is not shared out).
+- **B5a.** **Working time** (added 2026-11-18, W1, W3):
+  - **coord work:** the length of each coordinator turn (B4's turn: a
+    `UserPromptSubmit` to its `Stop`; with no `Stop`, to the session's next
+    prompt or end, at most 2 h) attributed to the intent as in B4, spread
+    over the phases it spans like a wait. Not clipped to the intent's
+    lifetime: a turn before the first commit goes to the first phase.
+    Shared and unattributed turns' time is shown on those lines, as their
+    tokens are.
+  - **agent work:** the span of each agent run tagged `§<id>` (its
+    transcript's first to last line), booked to the tag's phase as its
+    tokens are (B2); the runs of one intent are joined, never counted twice.
 - **B6.** **Owner wait**, two kinds, each gap capped at 2 h with the excess
-  reported as **idle**:
-  - **gate wait:** from an `auto stopped:` or `… drafted` commit of the
-    intent to the next commit that records the owner's answer (a gate, an
+  reported as **idle**; the intent's coord work and agent work inside a gap
+  are taken out first (amended 2026-11-18, W2):
+  - **gate wait** (amended 2026-11-16, see the owner's decisions above:
+    dependency stops excluded, clipped to the intent's span): from an
+    `auto stopped:` or `… drafted` commit of the intent to the next commit that records the owner's answer (a gate, an
     `auto run resumed`, `auto run started`);
   - **in-session wait:** in a session attributed to the intent, from a
     `Stop` or a permission `Notification` to the next `UserPromptSubmit`.
@@ -82,11 +132,11 @@ Written against `main` at `157bd42`.
 
 **Outputs**
 
-- **B8.** `npm run stats -- <id>` prints, per phase: elapsed, gate wait,
-  in-session wait, idle, and tokens per model split coordinator / agents;
+- **B8.** `npm run stats -- <id>` prints, per phase: elapsed, coord work,
+  agent work (added 2026-11-18), gate wait, in-session wait, idle, and tokens per model split coordinator / agents;
   then totals; then unattributed and shared lines and the skipped-line
   count. `--json` gives the same data. `npm run stats -- --all` prints one
-  line per intent, marking every figure for an intent merged before this
+  line per intent with the same time columns, marking every figure for an intent merged before this
   change as `partial`.
 - **B9.** `/ship` writes `intents/<id>/stats.md` (the B8 table, generated,
   stamped) into its bookkeeping commit. If collecting fails, ship writes
@@ -119,6 +169,12 @@ Written against `main` at `157bd42`.
   commits, shared, unattributed; unreadable lines counted. (kit tests)
 - **AC4** (B6): gate and in-session waits, the 2 h cap and idle, agent
   time excluded. (kit tests)
+- **AC4a** (B5a, B6, added 2026-11-18): coord work from attributed turns,
+  spread over phases, a turn before the first commit, a turn with no
+  `Stop` capped; shared and unattributed turn time on their lines; agent
+  work by tag with overlapping runs joined; a gate wait with a coordinator
+  turn inside it loses that turn's time; commits in the same second keep
+  their order. (kit tests)
 - **AC5** (B8–B10): `stats` text and JSON on fixtures; `--all` with
   `partial`; ship writes `stats.md` in the bookkeeping commit on a temp
   repo and still ships when collection throws; no prompt text in any
@@ -127,7 +183,8 @@ Written against `main` at `157bd42`.
   reading. (review)
 - **AC7** (live check, owed: real transcripts and the hook): the owner runs
   `npm run stats -- 13` (or the latest shipped intent) and `-- --all`, and
-  checks the figures against their memory of the run; a prompt typed after
+  checks the figures, coord work and agent work included, against their
+  memory of the run; a prompt typed after
   the change logs `skill`/`skillId` and nothing else in the session log.
 
 ## Non-functional

@@ -75,13 +75,34 @@ drafted on the `main` that has it.
   | no-match, budget-too-low | `expect_search` only; wording is left to the judge (§16) |
   | off-topic | `must_decline: true` |
 
+  **Amendment (2026-11-21, owner: "15: F1 a for gps, health, both
+  over-ear; b for the other three; F4 accept", review round 1 F1, F4).**
+  Where a rewritten question keeps a feature the catalogue can score, its
+  word is added to the case's probe and `keywords_any` (the probe in
+  `note` still passes `check_coverage`): `smartwatch-gps-bright-screen-200`,
+  `smartwatch-health-100-250`, `anc-train-rumble-200`,
+  `cordless-over-ear-100-250`. Where it cannot, the extra is cut from the
+  question: `laptop-uni-backpack-900`, `monitor-small-desk-400`,
+  `phone-battery-all-day-400`. `tablet-reading-drawing-80` keeps its edited
+  source (probe `max_price` 80), disclosed in its `note`.
+
+  **Amendment (2026-11-21, owner: "15: R2-F1 cordless i, anc iii; R2-F2 a,
+  vague min 1", review round 2 R2-F1, R2-F2).** `cordless-over-ear-100-250`:
+  `"over-ear"` replaces `"wireless"` in its probe and `keywords_any`.
+  `anc-train-rumble-200`: back to the round-1 `["noise-cancelling"]`, its
+  `note` saying over-ear is left to §16's judge. `laptop-husband-work-1000`,
+  `laptop-uni-backpack-900`, `phone-battery-all-day-400` and
+  `laptop-student-way-over-budget` name their category again ("laptop",
+  "phone"), and lose `vague`. B8's vague count becomes at least 1.
+
 - **B7.** A test asserts the spread: exactly 50 cases; every scenario
   present, off-topic 2–4, every other scenario 5–12; each of the 8
   categories at least 4 times as `feature`. It replaces
   `test_committed_file_validates_and_has_12_to_20_cases`.
 - **B8.** The set includes customer-style variety, named in each case's
   `note` so the review can count it: at least 5 with a misspelling or
-  typo, 5 with two or more constraints, 5 vague (no category word), 5 in
+  typo, 5 with two or more constraints, 1 vague (no category word; 5
+  before the round-2 amendment), 5 in
   a casual or follow-up register.
 - **B9.** `CLAUDE.md` and README stop calling `evals/generated.jsonl`
   committed: it is a generated pool, not committed. The two generated

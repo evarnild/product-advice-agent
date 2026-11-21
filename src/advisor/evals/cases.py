@@ -20,7 +20,10 @@ _FIELDS = (
     "expect_search",
     "note",
     "dimensions",
+    "expect_properties",
 )
+# What a case may ask of the products an answer cites (§15 B1).
+PROPERTIES = ("cites_a_match", "cites_only_matches")
 # The values `dimensions` may take (§9 B1).
 FEATURES = (*CATEGORIES, "off-topic")
 SCENARIOS = (
@@ -49,6 +52,7 @@ class Case:
     expect_search: dict[str, Any] = field(default_factory=dict)
     note: str = ""
     dimensions: dict[str, str] | None = None
+    expect_properties: tuple[str, ...] = ()
 
 
 _Fail = Callable[[str, str], CaseFileError]
@@ -111,6 +115,23 @@ def _dimensions(raw: dict[str, Any], fail: _Fail) -> dict[str, str]:
     return {k: value[k] for k in _DIMENSION_KEYS}
 
 
+def _properties(raw: dict[str, Any], fail: _Fail) -> tuple[str, ...]:
+    value = raw["expect_properties"]
+    if not isinstance(value, list) or not value:
+        raise fail("expect_properties", "must be a non-empty list of property names")
+    for name in value:
+        if not isinstance(name, str) or name not in PROPERTIES:
+            raise fail(
+                "expect_properties",
+                f"has unknown property {name!r} (allowed: {', '.join(PROPERTIES)})",
+            )
+    if len(set(value)) != len(value):
+        raise fail("expect_properties", "names a property twice")
+    if "expect_search" not in raw:
+        raise fail("expect_properties", "needs expect_search on the same case")
+    return tuple(value)
+
+
 def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
     """Parse and validate JSON-lines `text`; raises CaseFileError."""
     known = {p.id for p in catalogue}
@@ -159,6 +180,7 @@ def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
                 expect_search=_search(raw, fail) if "expect_search" in raw else {},
                 note=note,
                 dimensions=_dimensions(raw, fail) if "dimensions" in raw else None,
+                expect_properties=_properties(raw, fail) if "expect_properties" in raw else (),
             )
         )
     if not cases:
@@ -166,37 +188,51 @@ def parse_cases(text: str, catalogue: Sequence[Product]) -> list[Case]:
     return cases
 
 
+def fits(p: Product, search: dict[str, Any]) -> bool:
+    """Whether `p` satisfies every constraint in `search` (§13 B2, §15 B2).
+
+    The one rule behind both the consistency check and the `a-match` /
+    `only-matches` scores, so the two cannot drift apart.
+    """
+    if "category" in search and p.category != search["category"]:
+        return False
+    if "max_price" in search and p.price_eur > search["max_price"]:
+        return False
+    if "min_price" in search and p.price_eur < search["min_price"]:
+        return False
+    # false means no stock filter, as in search_products, not "out of stock only".
+    if search.get("in_stock_only") and not p.in_stock:
+        return False
+    if "keywords_any" in search:
+        # Interpretation: any-of, as score._call_satisfies reads it, not the
+        # all-of of search_products(keywords=...): the check asks what a
+        # search that satisfies the case's expect_search could show.
+        haystack = _norm(f"{p.name} {p.brand} {p.description}")
+        if not any(_norm(w) in haystack for w in search["keywords_any"]):
+            return False
+    return True
+
+
 def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> list[Product]:
     """Products satisfying every constraint in `search`, in `search_products` order.
 
     That is: distinct `keywords_any` matched (most first), then price, then id (§22).
+    The non-keyword constraints are `fits` (§15); the keywords are ranked here.
     """
-
-    def ok(p: Product) -> bool:
-        if "category" in search and p.category != search["category"]:
-            return False
-        if "max_price" in search and p.price_eur > search["max_price"]:
-            return False
-        if "min_price" in search and p.price_eur < search["min_price"]:
-            return False
-        # false means no stock filter, as in search_products, not "out of stock only".
-        if search.get("in_stock_only") and not p.in_stock:
-            return False
-        if "keywords_any" in search:
-            # Any-of, as score._call_satisfies reads it; search_products matches any
-            # keyword too since §22, so the filter and the ranking below agree.
-            if words and matched(p) == 0:
-                return False
-        return True
-
     # Distinct after normalising, blanks dropped, as in search_products (§22).
     words = list(
         dict.fromkeys(w for w in (_norm(k) for k in search.get("keywords_any", ())) if w.strip())
     )
+    others = {k: v for k, v in search.items() if k != "keywords_any"}
 
     def matched(p: Product) -> int:
         haystack = _norm(f"{p.name} {p.brand} {p.description}")
         return sum(1 for w in words if w in haystack)
+
+    def ok(p: Product) -> bool:
+        # Any-of, as score._call_satisfies reads it; search_products matches any
+        # keyword too since §22, so the filter and the ranking agree.
+        return fits(p, others) and not (words and matched(p) == 0)
 
     return sorted((p for p in catalogue if ok(p)), key=lambda p: (-matched(p), p.price_eur, p.id))
 
@@ -212,6 +248,12 @@ def catalogue_problems(cases: Sequence[Case], catalogue: Sequence[Product]) -> l
         if not case.expect_search:
             continue
         expected = _expected_results(case.expect_search, catalogue)
+        # Reading of "fits none of the first MAX_LIMIT": any fitting product is
+        # in the first MAX_LIMIT of the ordered list, so the rule is "none fit".
+        if "cites_a_match" in case.expect_properties and not expected:
+            problems.append(
+                f"case '{case.id}': no product fits expect_search, so cites_a_match cannot pass"
+            )
         ranks = {p.id: n for n, p in enumerate(expected, start=1)}
         for pid in case.expect_ids:
             if pid not in ranks:

@@ -2,17 +2,17 @@
 id: 19
 slug: intent-stats
 type: feature
-status: accepted
+status: done
 title: Time, tokens and owner wait per intent and phase
 review_tier: reviewed    # likely changes the session hook (scripts/session-event.mjs, .claude/settings.json) and /ship
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 19" to the spec stop
 plan_approved: 2026-11-13 by-agent    # auto: owner "/auto 19" (auto_authorized 2026-11-13)
-live_checked:
-merged:
-auto_authorized: 2026-11-13 by-agent    # owner: "/auto 19", then "run it anyway" (fourth run)
-auto_round:
-auto_stopped:
+live_checked: 2026-11-21 by-agent    # owner: "record live_checked 19" after the hook lines (/sessions, /spec 19, a plain prompt) and npm run stats -- 17 / 19 in session; display nits (shared blocks, misaligned row, <synthetic> row, uncounted review time) left for a follow-up
+merged: 1fc8165    # 2026-11-21, merged by Claude on the owner's explicit request in chat
+auto_authorized: 2026-11-16 by-agent    # owner: "/auto 19" (diff read)
+auto_round: 3
+auto_stopped: out of rounds, open findings below
 follows_up:
 links:
   - intents/18-intent-dependencies    blocked time between intents is part of the wait picture

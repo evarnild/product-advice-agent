@@ -148,6 +148,9 @@ to 5 without a prompt between them, and ends at step 6's door:
 - `npm run sessions` shows every worktree: status, gates, ahead/behind
   `main`, uncommitted files, and whether its session is working, idle or
   needs you.
+- `npm run stats -- <id>` (or `--all`) shows where an intent's time, your
+  waiting and its tokens went, per phase, from git, the session log and the
+  Claude Code transcripts. `/ship` keeps it as `intents/<id>/stats.md`.
 - `/grid` refreshes `docs/sdlc-grid.md`. Run it every few weeks.
 - A defect you hit becomes a new **fix** intent. Triaging it is one of your
   gates too.

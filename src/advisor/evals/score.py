@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from advisor.catalogue import Product, _norm
-from advisor.evals.cases import Case
+from advisor.evals.cases import Case, fits
 from advisor.guardrails import REFUSAL_TEXT
 
 # `P-` plus three digits, not inside a longer token (`P-0011`, `XP-001`).
@@ -175,6 +175,32 @@ def score(
                 if ok
                 else f"no search_products call matches {case.expect_search} "
                 f"({len(searches)} call(s))",
+            )
+        )
+    # Cited ids that are not in the catalogue are left to `grounded`.
+    existing = [by_id[i] for i in cited if i in by_id]
+    if "cites_a_match" in case.expect_properties:
+        matching = [p.id for p in existing if fits(p, case.expect_search)]
+        checks.append(
+            Check(
+                "a-match",
+                bool(matching),
+                f"cites a fitting product ({', '.join(matching)})"
+                if matching
+                else f"none of the cited products fits ({', '.join(p.id for p in existing)})"
+                if existing
+                else "cites no product",
+            )
+        )
+    if "cites_only_matches" in case.expect_properties:
+        misfits = [p.id for p in existing if not fits(p, case.expect_search)]
+        checks.append(
+            Check(
+                "only-matches",
+                not misfits,
+                f"cites {', '.join(misfits)} which do not fit"
+                if misfits
+                else "every cited product fits",
             )
         )
     return checks

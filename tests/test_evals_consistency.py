@@ -190,3 +190,53 @@ def test_generate_prompt_describes_keywords_as_any_of():
     )
     assert "any of which may appear" in text
     assert "must all appear" not in text
+
+# --- §15 B2: the one `fits` predicate ---------------------------------------
+
+
+def test_fits_each_constraint_kind():
+    from advisor.evals.cases import fits
+
+    p = prod("P-001", 200, category="laptop", name="Quiet Book", desc="has a Noise-Cancelling mic")
+    assert fits(p, {"category": "laptop"})
+    assert not fits(p, {"category": "phone"})
+    assert fits(p, {"max_price": 200}) and not fits(p, {"max_price": 199.99})
+    assert fits(p, {"min_price": 200}) and not fits(p, {"min_price": 200.01})
+    assert fits(p, {"keywords_any": ["zzz", "noise cancelling"]})  # any-of, hyphen-insensitive
+    assert fits(p, {"keywords_any": ["QUIET"]})  # name, case-insensitive
+    assert not fits(p, {"keywords_any": ["zzz"]})
+    assert fits(p, {})
+
+
+def test_fits_keywords_look_in_brand_too():
+    from advisor.evals.cases import fits
+
+    assert fits(prod("P-001", 1), {"keywords_any": ["brand"]})
+
+
+def test_fits_stock():
+    from advisor.evals.cases import fits
+
+    gone = prod("P-001", 1, in_stock=False)
+    assert not fits(gone, {"in_stock_only": True})
+    assert fits(gone, {"in_stock_only": False})
+    assert fits(prod("P-002", 1), {"in_stock_only": True})
+
+
+# --- §15 B4: cites_a_match needs something that fits -------------------------
+
+
+def test_cites_a_match_with_nothing_fitting_is_one_problem_naming_the_case():
+    c = case(expect_search={"max_price": 50}, expect_properties=("cites_a_match",))
+    (p,) = catalogue_problems([c], [prod("P-001", 100)])
+    assert "c1" in p and "no product fits" in p and "cites_a_match" in p
+
+
+def test_cites_a_match_with_one_fitting_product_is_fine():
+    c = case(expect_search={"max_price": 100}, expect_properties=("cites_a_match",))
+    assert catalogue_problems([c], [prod("P-001", 100)]) == []
+
+
+def test_cites_only_matches_alone_may_fit_nothing():
+    c = case(expect_search={"max_price": 50}, expect_properties=("cites_only_matches",))
+    assert catalogue_problems([c], [prod("P-001", 100)]) == []

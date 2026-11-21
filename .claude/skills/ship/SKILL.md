@@ -16,7 +16,9 @@ You are the **coordinator** (the main checkout, on `main`). This skill wraps
 `npm run ship`, which does the steps as tested code. The rules it applies are
 `REVIEW-POLICY.md` → "Merging" (preconditions, `--no-ff`, `verify`,
 bookkeeping); read that section rather than relying on this file. The
-queue is generated, so the bookkeeping commit holds `metadata.yml` only.
+queue is generated, so the bookkeeping commit holds `metadata.yml` and the
+generated `stats.md` of the intent (§19); if the stats cannot be collected
+the report says so and the ship goes on without that file.
 
 ## The request
 

@@ -1,0 +1,5 @@
+{"type":"user","timestamp":"2026-11-01T09:10:00Z","message":{"role":"user","content":"SENTINEL-PROMPT-TEXT-7f3a"}}
+{"type":"assistant","timestamp":"2026-11-01T09:15:00Z","message":{"id":"m1","model":"model-a","content":[{"type":"text","text":"SENTINEL-PROMPT-TEXT-7f3a"}],"usage":{"input_tokens":100,"output_tokens":10,"cache_read_input_tokens":1000,"cache_creation_input_tokens":5}}}
+{"type":"assistant","timestamp":"2026-11-01T09:15:00Z","message":{"id":"m1","model":"model-a","content":[{"type":"text","text":"SENTINEL-PROMPT-TEXT-7f3a"}],"usage":{"input_tokens":100,"output_tokens":10,"cache_read_input_tokens":1000,"cache_creation_input_tokens":5}}}
+this line is not json SENTINEL-PROMPT-TEXT-7f3a
+{"type":"assistant","timestamp":"2026-11-01T09:16:00Z","message":{"id":"m2","model":"model-b","content":[{"type":"text","text":"SENTINEL-PROMPT-TEXT-7f3a"}],"usage":{"input_tokens":7,"output_tokens":3,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}}
