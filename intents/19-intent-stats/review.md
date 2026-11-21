@@ -3,11 +3,200 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: 727e28db7b469b40132dd217f15c3cf80caa4e50
-round: 4
+reviewed-commit: 6b4fba77e01459946f7ab42bcb136da16920b875
+round: 5
 sampled: no
 run: manual
 live-check: owed
+
+Tier: Reviewed, never lowered; set by the path table
+(`scripts/session-event.mjs`, `.claude/skills/**`, `scripts/ship.mjs` in the
+branch diff) and `review_tier: reviewed`.
+
+Sampling: `npm run sdlc:scan -- --sample-due manual --exclude 19` →
+"sample-due manual: nth attested manual change = 1, every 5, sampled: no".
+
+Why this round: the round-4 rework (0d0b3a7 code and tests; 6b4fba7
+Progress) applies the owner's "19 1b 2a" (F1 option b, F2 option a).
+
+Scope: `git diff 727e28d..HEAD`: `scripts/stats-lib.mjs` (+12/−9 code),
+`scripts/stats-lib.test.mjs` (one test renamed and strengthened, one added,
+one assertion added), `plan.md` (Progress, below the marker),
+`review.md` (round 4, abc275e). spec.md, intent.md and metadata.yml
+unchanged; plan.md has 0 removed lines, all additions after `## Progress`.
+
+Verdict: rework. The rework does what the owner decided, and the code is
+right on every probe; one MEDIUM test gap needs a mechanical fix (F1).
+Without it, escalate.
+
+## Resolution of round 4
+| Item | Decision | Status at 6b4fba7 | Evidence |
+| --- | --- | --- | --- |
+| F1 agent work double-counted across phases | owner (b): join per intent, an overlap to the earlier-started run's phase | **resolved** | `stats-lib.mjs:397-421`: `agentWork` per intent id, runs sorted by start, each books only the part beyond `covered`. Probe (implement 7.5–8.5 h, review 8–9 h): total 1.5 h, build 1 h, review 0.5 h. Test `stats-lib.test.mjs:524`. Mutant F1 killed |
+| F2 a no-commit intent's turn on two lines | owner (a): coord work to the intent's unphased bucket | **resolved** | `stats-lib.mjs:387` `if (a.kind === 'intent')`. Probe: rows [7, 99], §99 unphased coord work 1 h, unattributed 0. Test `:515`. Mutant F2 killed |
+| F3 mutant F6, the `--all` total row | Needs rework | **resolved** | `stats-lib.test.mjs:558` asserts `/^total +10h00m +1h00m +1h00m /m`; F6 (`:567`) killed by "prints and serialises both columns" |
+| F4 IO1 (`--topo-order`) | worth a look | unchanged (not requested) | IO1 still survives (near-equivalent) |
+| F5 docs one-liners | worth a look | unchanged (not requested) | `CLAUDE.md:27` still "elapsed time, owner wait and tokens per phase" |
+| Nit F7 cell width | follow-up | unchanged | F7 (`:485`) still survives (cosmetic) |
+| Live check (AC7) | — | recorded at 3c8337f, before this rework | see Live check |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: exactly F1 (b), F2 (a), F3; F4, F5 untouched as stated; spec.md and plan.md unchanged above Progress |
+| 2 | Type check | pass (PASS) |
+| 3 | Behaviour against the spec | pass: B5a "joined, never counted twice" holds (per-phase sum equals the union on 6 synthetic shapes, including reversed input order and a contained run); "attributed to the intent as in B4" holds for a no-commit intent |
+| 4 | Tests prove the behaviour | findings (1): 15 mutants, 9 killed, 6 survived; N2, N5, N6 real gaps (F1); N3 a tie-break (F2); IO1, F7 carried |
+| 5 | Conventions | pass: kit-only, pure, no model or network, synthetic fixtures |
+| 6 | Numbers in prose | pass: Progress figures reproduce; `stats -- 19` agent work 76 min (1h16m) against Progress 1h15m (rounding plus a still-running tagged run) |
+| 7 | Documentation | pass; F5 carried |
+| 8 | Guardrails and hygiene | pass: no dependency, no secret, synthetic fixtures; no prompt or response text read or printed (real-data runs reduced to minute totals inside a script) |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 19, feature)
+  note:  25 file(s), 1860 line(s) changed outside intents/.
+```
+
+## Findings
+- **F1 MEDIUM** `scripts/stats-lib.mjs:416-419`, `scripts/stats-lib.test.mjs:524-538`:
+  no test pins the run ordering or contained runs, though real data depends
+  on both: `stats-io.mjs:62` lists `agent-*.jsonl` in directory order
+  (random agent ids), not start order. Probes on mutated copies outside the
+  repo:
+  - N2 (no `sort`): the reviewer's case in reverse order gives total 1 h
+    against a union of 1.5 h (review 1 h, build 0);
+  - N5 (drop `if (part > 0)`): implement 7–10, review 8–9, rework 9.5–11
+    gives build 3 h, review 0, total 3 h (correct: build 3 h, review 1 h,
+    total 4 h): a negative part is booked to review;
+  - N6 (`covered = to`): the same runs give review 1.5 h, total 4.5 h.
+
+  All three survive the full kit suite (every fixture is in start order,
+  none has a contained run). The code is right on every probe: fragility,
+  not wrong output. **Needs rework:** add two cases to the B5a test at
+  `:524`: (i) `[agentRun('§7 review round 1', 8, 9), agentRun('§7 implement',
+  7.5, 8.5)]` → build 1 h, review 0.5 h, total 1.5 h (kills N2); (ii)
+  `[agentRun('§7 implement', 7, 10), agentRun('§7 review round 1', 8, 9),
+  agentRun('§7 rework', 9.5, 11)]` → build 3 h, review 1 h, total 4 h (kills
+  N5, N6).
+- **F2 LOW** `scripts/stats-lib.mjs:416`: the tie-break `|| x.span[1] -
+  y.span[1]` (N3) is pinned by no test, and the owner's rule ("the
+  earlier-started run's phase") doesn't cover equal starts; today the
+  shorter run books first (review 8–9 with implement 8–10 → build 1 h,
+  review 1 h); without it, directory order decides (build 2 h). Equal starts
+  to the millisecond are unlikely. Worth a look: pin it, or leave it.
+- Carried, worth a look: round-4 F4 (IO1, `stats-io.mjs:97`), F5
+  (`CLAUDE.md:27`, `README.md:276`, `sdlc.md:151`); nit F7
+  (`stats-lib.mjs:485`), the owner's display follow-up.
+
+**Mutants** (full kit suite each; exact-string replace, asserted unique and
+applied; backed up and restored by copy):
+
+| # | Line | Mutation | Result | Killing test |
+| --- | --- | --- | --- | --- |
+| F1 | stats-lib.mjs:414-421 | back to a per-(intent, phase) union | KILLED | "joins agent work per intent: an overlap goes to the earlier run's phase…" |
+| F2 | :387 | `&& byIntent.has(a.id)` restored | KILLED | "books a turn for an intent with no commits to that intent's unphased bucket…" |
+| F6 | :567 | `--all` total with the old 4 keys | KILLED | "prints and serialises both columns" |
+| IO1 | stats-io.mjs:97 | drop `--topo-order` | SURVIVED (near-equivalent; round-4 F4) | — |
+| F7 | :485 | cell width 11 → 10 | SURVIVED (cosmetic) | — |
+| N1 | :415 | `covered = Infinity` | KILLED | "joins…", "books agent work by tag…", "prints and serialises both columns" |
+| N2 | :416 | no `sort` | **SURVIVED** (F1) | — |
+| N3 | :416 | no end tie-break | SURVIVED (F2) | — |
+| N4 | :417 | `part = to - from` | KILLED | "joins…", "books agent work by tag…" |
+| N5 | :418 | drop `if (part > 0)` | **SURVIVED** (F1) | — |
+| N6 | :419 | `covered = to` | **SURVIVED** (F1) | — |
+| N7 | :418 | always book to `build` | KILLED | "joins…", "books agent work by tag…" |
+| N8 | :404 | run's phase always `review` | KILLED | "joins…", "books agent work by tag…", "prints and serialises…" |
+| N11 | :403 | a new array per run | KILLED | "joins…", "books agent work by tag…" |
+
+The rework must kill N2 (`:416`), N5 (`:418`), N6 (`:419`). Not run:
+comment-only lines (`:388`, `:397`, `:412-413`); `:390` (unchanged, killed
+in round 4 as W6); `covered = -Infinity` → `0` (equivalent, timestamps > 0).
+
+## Not checked
+- Whether §14's real figures are right: the rework changes them (Live
+  check); only the owner's memory can say whether a §14 review run
+  overlapped an implement run by about half an hour.
+- Equal-start tie-breaking on real transcripts (F2).
+- `owes-run` (absent on this branch, which predates §17); main's
+  `EVAL_PATHS` applied by hand.
+- The transcript format's stability (as in rounds 1–4).
+- The display nits the owner left for a follow-up.
+
+## Live check
+- owed: rule 3 (AC7, stats over real transcripts). Rules 1 and 2 don't
+  apply.
+- recorded: `live_checked: 2026-11-21 by-agent` (3c8337f), on the code
+  before this rework.
+- **A re-check is owed before the merge** (`check:intent` doesn't enforce
+  it, since the date is set): the rework changes how agent work is booked,
+  and on real data that changes a figure. §14 agent work drops from 98 min
+  to 66 min (review 43 → 10 min; build 56 min unchanged); §17 and §19, the
+  intents the recorded check covered, are unchanged; no other intent's coord
+  or agent work changed (22 compared, old code against new).
+- steps:
+  1. In `C:/Users/eric/src/product-advice-agent-wt/19-intent-stats`: `npm
+     run stats -- 19`, then `npm run stats -- 14`.
+  2. §19: compare the coord work and agent work columns with what the
+     recorded check saw.
+  3. §14: check against your memory that a review (or rework) run
+     overlapped its implement run, so the overlap now counts once, in build.
+- you should see: §19 totals coord work ~11m, agent work ~1h16m (build ~20m,
+  review ~56m); §14 totals coord work ~18m, agent work ~1h06m (build ~56m,
+  review ~10m), the phase agent-work cells summing to the total. If it
+  passes, keep `live_checked` or re-date it at your word; if §14 looks
+  wrong, clear it and send the change back to rework.
+
+## Eval run
+not owed: `owes-run` is absent on this branch, so main's `EVAL_PATHS` (10
+entries, `git show main:src/advisor/evals/baseline.py`) were applied by hand
+to `git diff --name-only main...HEAD` (merge-base b2e2815); nothing matches
+(kit scripts, fixtures, skills, docs, `package.json`, intents).
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in the worktree at 6b4fba7; `git status --short`
+clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit "tests 379", "fail 0";
+  "All checks passed!"; "157 files already formatted"; mypy "Success: no
+  issues found in 28 source files"; "658 passed". Matches the reviewer and
+  the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "25 file(s), 1860
+  line(s)". Matches.
+- **Coordinator, re-run:** the kills the rework claims: F2 and F6 KILLED
+  (full kit suite). F1 (a multi-line revert) not re-run by me; the reviewer
+  and the implementer both report it killed.
+- **Coordinator, re-run:** survivors N2, N3, N5, N6, IO1, F7 each SURVIVED
+  the full kit suite. Matches the reviewer.
+
+**Reviewer, verified:** verify (kit 379, pytest 658), check:intent,
+sampling; spec, intent and metadata unchanged and plan.md additions below
+Progress; main untouched, no remote branch; synthetic probes against the
+real `stats-lib.mjs` (six shapes summing to the union; the F2 case;
+`formatAll` with no NaN); mutated copies outside the repo for N2, N3, N5,
+N6; the 15 mutants; real data numbers only (`node scripts/stats.mjs 19
+--json`, `14 --json`, `--all --json`, reduced to minute totals in a script,
+also with the 727e28d stats scripts): §19 coord 11, agent 76 (build 20,
+review 56) both versions; §14 agent work 98 → 66. No prompt or response text
+read, printed or kept.
+
+**Taken on trust:** the owner's "19 1b 2a" as quoted in Progress; the
+content of the recorded live check (3c8337f); round 4's results for
+untouched lines.
+# Round 4 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 727e28db7b469b40132dd217f15c3cf80caa4e50
+- round: 4
+- sampled: no
+- run: manual
+- live-check: owed
 
 Tier: Reviewed, never lowered; set by the path table
 (`scripts/session-event.mjs`, `.claude/skills/**`, `scripts/ship.mjs` in the
@@ -32,7 +221,7 @@ Scope: `git diff 1ca5315..727e28d`: `scripts/stats-io.mjs` (1 line),
 B5a, B6, B8, AC4a, AC7), `plan.md` (subtask 7, two Progress entries),
 metadata and review.md, against the amended spec and plan subtask 7.
 
-## Resolution of round 3
+### Resolution of round 3
 | Item | Status at 727e28d | Evidence |
 | --- | --- | --- |
 | F2g gate-side `clipToLife` (documented guard) | holds | comment still at `stats-lib.mjs:419`; code unchanged |
@@ -40,7 +229,7 @@ metadata and review.md, against the amended spec and plan subtask 7.
 | Carried LOWs (live-check milestone wording, F3 owner-wait stops, I2, C5, C6, R1) | unchanged, as decided | — |
 | Live check owed (AC7) | recorded: `live_checked: 2026-11-21 by-agent` (3c8337f) | see Live check |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass: plan subtask 7 plus the same-second fix (3ba38c7), which amended AC4a covers; amendment proposed cf9f831, accepted 0c175dd, code 1870007; edits above Progress come under the owner's acceptance |
@@ -53,7 +242,7 @@ metadata and review.md, against the amended spec and plan subtask 7.
 | 8 | Guardrails and hygiene | pass: no new dependency, no secret, synthetic fixtures, no prompt or response text read or printed |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -62,7 +251,7 @@ type-check: PASS (intent 19, feature)
   note:  25 file(s), 1839 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **F1 LOW** `scripts/stats-lib.mjs:396-412`: agent work is joined per
   (intent, phase), not per intent. Overlapping `§N implement` and `§N review`
   runs count the overlap once in build and again in review, so totals count
@@ -132,7 +321,7 @@ The rework must kill F6. Not run: the `firstTs !== null` half of `:401`
 (equivalent), `:412` `+=` → `=` (keys unique, equivalent), comment-only
 lines (:38, :96, :380–382, :419).
 
-## Not checked
+### Not checked
 - Whether 1870007's code was written before the amendment was accepted: the
   commits are in order, four minutes apart; git can't tell when code was
   written.
@@ -145,7 +334,7 @@ lines (:38, :96, :380–382, :419).
   has no `owes-run` (exit 2); main's `EVAL_PATHS` applied by hand instead.
 - The transcript format's stability (as in rounds 1–3).
 
-## Live check
+### Live check
 - owed: rule 3 (AC7: stats over real transcripts and the hook in real
   sessions). Already **recorded**: `live_checked: 2026-11-21 by-agent`
   (3c8337f).
@@ -159,13 +348,13 @@ lines (:38, :96, :380–382, :419).
   is booked: then re-run `npm run stats -- 19` in the worktree and compare
   the coord work and agent work columns with the previous figures.
 
-## Eval run
+### Eval run
 not owed: `owes-run` is absent on this branch, so main's `EVAL_PATHS`
 (`src/advisor/evals/baseline.py` at main) were applied by hand to `git diff
 --name-only main...HEAD` (merge-base b2e2815); nothing matches (kit
 scripts, skills, docs and intents only).
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in the worktree at 727e28d; `git status --short`
 clean before and after):
