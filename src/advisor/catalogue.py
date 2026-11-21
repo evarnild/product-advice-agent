@@ -110,6 +110,20 @@ def _norm(text: str) -> str:
     return text.lower().replace("-", " ")
 
 
+def keyword_set(keywords: Sequence[str] | None) -> list[str]:
+    """The distinct, normalised, non-blank keywords: "in-ear" and "in ear" are one (§22 B3)."""
+    return list(dict.fromkeys(w for w in (_norm(k) for k in keywords or []) if w.strip()))
+
+
+def keywords_matched(product: Product, words: Sequence[str]) -> int:
+    """How many of `words` (from `keyword_set`) the product's name, brand or description has.
+
+    A keyword counts once however often it appears in the text (§22 B3, B11).
+    """
+    haystack = _norm(f"{product.name} {product.brand} {product.description}")
+    return sum(1 for w in words if w in haystack)
+
+
 def search_products(
     catalogue: Sequence[Product],
     category: str | None = None,
@@ -119,16 +133,18 @@ def search_products(
     in_stock_only: bool = False,
     limit: int = 5,
 ) -> list[Product]:
-    """Products matching every given filter, cheapest first (ties by id), at most `limit`.
+    """Products passing every filter, best keyword match first, at most `limit`.
 
-    `limit` is clamped to 1..10. Keywords all have to appear, case-insensitively,
-    in the name, brand or description. A hyphen counts as a space, in keywords and
-    product text alike, so 'noise-cancelling' finds 'noise cancelling' (§7).
+    `limit` is clamped to 1..10. With keywords, a product needs at least one of them,
+    case-insensitively, in its name, brand or description; products are ordered by how
+    many distinct keywords they match (most first), then price (cheapest first), then
+    id. Without keywords the order is price, then id. A hyphen counts as a space, in
+    keywords and product text alike, so 'noise-cancelling' finds 'noise cancelling' (§7).
     """
     limit = max(MIN_LIMIT, min(MAX_LIMIT, limit))
-    words = [_norm(k) for k in keywords or [] if _norm(k).strip()]
+    words = keyword_set(keywords)
 
-    def matches(p: Product) -> bool:
+    def passes(p: Product) -> bool:
         if category is not None and p.category != category:
             return False
         if min_price is not None and p.price_eur < min_price:
@@ -137,7 +153,12 @@ def search_products(
             return False
         if in_stock_only and not p.in_stock:
             return False
-        haystack = _norm(f"{p.name} {p.brand} {p.description}")
-        return all(w in haystack for w in words)
+        return True
 
-    return sorted((p for p in catalogue if matches(p)), key=lambda p: (p.price_eur, p.id))[:limit]
+    # Any keyword is enough (OR), not all of them: a model that adds one keyword too many
+    # (tv sound: ["soundbar", "external"]) used to get nothing back. Precision comes back
+    # through the ranking below, not through excluding products.
+    scored = [(keywords_matched(p, words), p) for p in catalogue if passes(p)]
+    hits = [(n, p) for n, p in scored if n > 0 or not words]
+    hits.sort(key=lambda t: (-t[0], t[1].price_eur, t[1].id))
+    return [p for _, p in hits][:limit]

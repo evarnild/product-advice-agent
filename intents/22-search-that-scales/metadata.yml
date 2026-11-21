@@ -2,17 +2,17 @@
 id: 22
 slug: search-that-scales
 type: feature
-status: accepted
+status: in-review
 title: Product search that still finds the right product in 500
 review_tier: reviewed    # spec B7 changes src/advisor/prompts/system.md
 intent_accepted: 2026-11-16 by-agent    # owner: "accept 22"
 spec_accepted: 2026-11-16 by-agent    # owner: "yes, record spec_accepted 22"
 plan_approved: 2026-11-21 by-agent    # auto: owner "/auto 22" (auto_authorized 2026-11-21)
-live_checked:
+live_checked: 2026-11-21 by-agent    # owner: "live checked /ship 22"
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 22"
-auto_round:
-auto_stopped: too many sessions
+auto_round: 3
+auto_stopped: escalate, owner reads the diff
 follows_up:
 blocked_by:
   - 14    measured on the 500-product catalogue

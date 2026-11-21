@@ -164,12 +164,89 @@ def test_price_bounds_inclusive():
     assert ids(search_products(CAT, min_price=100, max_price=100)) == ["P-001"]
 
 
-def test_keywords_case_insensitive_all_must_match():
+def test_keywords_case_insensitive_any_may_match():
     assert ids(search_products(CAT, keywords=["noise"])) == ["P-003", "P-004"]
-    assert ids(search_products(CAT, keywords=["NOISE", "light"])) == ["P-004"]
-    assert ids(search_products(CAT, keywords=["quiet", "noise"])) == ["P-004"]
+    assert ids(search_products(CAT, keywords=["NOISE", "light"])) == ["P-004", "P-003"]
     assert ids(search_products(CAT, keywords=["alpha"])) == ["P-001"]
-    assert search_products(CAT, keywords=["noise", "alpha"]) == []
+    # a brand alone matches (P-004's brand is "Quiet")
+    assert ids(search_products(CAT, keywords=["quiet"])) == ["P-004"]
+    # one of two is enough; a product matching neither is left out
+    assert ids(search_products(CAT, keywords=["noise", "alpha"])) == ["P-003", "P-001", "P-004"]
+    assert search_products(CAT, keywords=["zzz", "yyy"]) == []
+
+
+def _ranked():
+    # count order, price order and id order all disagree:
+    # P-005 matches both words (dearest), P-001/P-002 tie on price with one word,
+    # P-003 matches one word and is cheapest.
+    return [
+        _p("P-005", 90, description="alpha beta"),
+        _p("P-002", 50, description="alpha"),
+        _p("P-001", 50, description="beta"),
+        _p("P-003", 10, description="beta"),
+        _p("P-004", 5, description="gamma"),
+    ]
+
+
+def test_more_keywords_matched_ranks_first_then_price_then_id():
+    got = search_products(_ranked(), keywords=["alpha", "beta"])
+    assert ids(got) == ["P-005", "P-003", "P-001", "P-002"]
+
+
+def test_duplicate_and_hyphen_variant_keywords_count_once():
+    cat = [
+        _p("P-001", 50, description="noise cancelling in ear"),
+        _p("P-002", 10, description="noise cancelling"),
+    ]
+    # duplicates must not lift P-002 above P-001 by being counted twice
+    assert ids(search_products(cat, keywords=["noise", "NOISE", "in ear"])) == ["P-001", "P-002"]
+    assert ids(search_products(cat, keywords=["noise-cancelling", "noise cancelling"])) == [
+        "P-002",
+        "P-001",
+    ]
+    cat2 = [_p("P-001", 50, description="in-ear noise"), _p("P-002", 10, description="in-ear")]
+    assert ids(search_products(cat2, keywords=["in-ear", "in ear", "noise"])) == ["P-001", "P-002"]
+
+
+def test_a_keyword_counts_once_however_often_it_appears():
+    cat = [
+        _p("P-001", 50, description="alpha beta"),
+        _p("P-002", 10, description="alpha alpha alpha alpha"),
+    ]
+    assert ids(search_products(cat, keywords=["alpha", "beta"])) == ["P-001", "P-002"]
+
+
+def test_non_keyword_filters_still_exclude_with_keywords():
+    cat = [
+        _p("P-001", 50, category="phone", description="alpha"),
+        _p("P-002", 500, description="alpha"),
+        _p("P-003", 5, description="alpha", in_stock=False),
+        _p("P-004", 60, description="alpha"),
+    ]
+    assert ids(search_products(cat, keywords=["alpha"], category="laptop")) == [
+        "P-003",
+        "P-004",
+        "P-002",
+    ]
+    assert ids(search_products(cat, keywords=["alpha"], max_price=60)) == [
+        "P-003",
+        "P-001",
+        "P-004",
+    ]
+    assert ids(search_products(cat, keywords=["alpha"], min_price=60)) == ["P-004", "P-002"]
+    assert ids(search_products(cat, keywords=["alpha"], in_stock_only=True)) == [
+        "P-001",
+        "P-004",
+        "P-002",
+    ]
+
+
+def test_limit_cuts_the_ranked_list_and_keeps_the_leader():
+    got = search_products(_ranked(), keywords=["alpha", "beta"], limit=1)
+    assert ids(got) == ["P-005"]
+    many = [_p(f"P-{i:03d}", i, description="alpha") for i in range(1, 21)]
+    assert len(search_products(many, keywords=["alpha"], limit=99)) == 10
+    assert len(search_products(many, keywords=["alpha"], limit=0)) == 1
 
 
 def test_limit_default_and_clamp():
@@ -222,3 +299,24 @@ def test_committed_catalogue_noise_cancelling_headphones_under_200():
 def test_hyphen_only_keyword_is_ignored():
     assert ids(search_products(CAT, keywords=["-"])) == ids(search_products(CAT))
     assert ids(search_products(CAT, keywords=["--", "noise"])) == ["P-003", "P-004"]
+
+
+def test_blank_keywords_do_not_match_everything_or_count():
+    cat = [_p("P-001", 50, description="alpha"), _p("P-002", 10, description="beta")]
+    assert ids(search_products(cat, keywords=["-", " "])) == ["P-002", "P-001"]
+    assert ids(search_products(cat, keywords=["", "alpha"])) == ["P-001"]
+
+
+def test_repeated_keyword_is_not_a_bigger_match_than_distinct_ones():
+    cat = [
+        _p("P-001", 50, description="beta gamma"),  # two distinct keywords
+        _p("P-002", 10, description="in-ear"),  # one keyword, however often it is listed
+    ]
+    assert ids(search_products(cat, keywords=["in-ear", "in ear", "IN EAR", "beta", "gamma"])) == [
+        "P-001",
+        "P-002",
+    ]
+    assert ids(search_products(cat, keywords=["alpha", "alpha", "beta", "gamma", "in-ear"])) == [
+        "P-001",
+        "P-002",
+    ]

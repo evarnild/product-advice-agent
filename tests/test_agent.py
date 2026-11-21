@@ -11,7 +11,7 @@ from advisor.agent import (
     run_agent,
     search_tool,
 )
-from advisor.catalogue import Product
+from advisor.catalogue import Product, load_catalogue, search_products
 from advisor.models.base import ModelError, ModelTurn, ToolCall, Usage
 from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import NoopTracer
@@ -314,3 +314,144 @@ def test_tracer_gets_an_empty_list_on_every_error_path():
     assert [e[1] for e in events] == ["no_such_tool", "search_products", "broken"]
     assert [e[3] for e in events] == [[], [], []]
     assert all(e[4] is True for e in events)
+
+
+MANY = [
+    Product(f"P-{i:03d}", f"Phone {i}", "Acme", "phone", float(i), True, {}, "plain")
+    for i in range(1, 16)
+]
+
+
+def _ids_many(args):
+    fake = ScriptedModelClient([call(args), final("ok")])
+    run_agent("q", fake, [search_tool(MANY)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    assert not res.is_error
+    return [i["id"] for i in json.loads(res.content)]
+
+
+def test_tool_default_limit_is_ten_and_explicit_limit_is_passed_through():
+    assert len(_ids_many({})) == 10
+    assert len(_ids_many({"limit": 3})) == 3
+    assert len(_ids_many({"limit": 99})) == 10
+
+
+def test_tool_ranks_by_keywords_matched_and_any_keyword_matches():
+    assert _ids_for({"keywords": ["zoom", "solid", "nothing"]}) == ["P-011", "P-012"]
+    assert _ids_for({"keywords": ["zoom", "lens"]}) == ["P-012", "P-011"]
+
+
+def test_schema_text_says_any_keyword_matches_and_default_ten():
+    props = search_tool(ARG_CAT).spec.parameters["properties"]
+    kw = props["keywords"]["description"]
+    assert "Any one keyword can match" in kw and "more of the keywords come first" in kw
+    assert "all appear" not in kw
+    assert "default 10" in props["limit"]["description"]
+    desc = " ".join(search_tool(ARG_CAT).spec.description.split())
+    assert "each row has keywords_matched" in desc
+    assert "no product matches any keyword" in desc and "keywords_matched 0" in desc
+
+
+def test_prompt_tells_the_model_to_put_distinguishing_words_in_keywords():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "Put the words that distinguish what the customer wants (a use such as "
+        '"student" or "running", a feature such as "noise-cancelling") into '
+        "`keywords`; extra keywords no longer empty a search."
+    ) in text
+
+
+def test_prompt_tells_the_model_to_set_in_stock_only_only_when_asked():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "Set `in_stock_only` only when the customer asks for products in stock; "
+        "otherwise leave it off, so an out-of-stock match can still be named and flagged."
+    ) in text
+
+
+def test_committed_catalogue_student_laptop_under_700_finds_p009():
+    # §22 AC4, no fake: P-009 was the 10th cheapest of {laptop, max_price 700}.
+    catalogue = load_catalogue()
+    found = search_products(catalogue, category="laptop", max_price=700, keywords=["student"])
+    assert found[0].id == "P-009"
+    fake = ScriptedModelClient([call({"category": "laptop", "max_price": 700}), final("ok")])
+    run_agent("q", fake, [search_tool(catalogue)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    ids = [i["id"] for i in json.loads(res.content)]
+    assert len(ids) == 10
+    assert "P-009" in ids
+
+
+# --- §22 B11 / AC9: keyword fallback and keywords_matched in the tool ---
+
+
+def _rows(args, catalogue=ARG_CAT):
+    fake = ScriptedModelClient([call(args), final("ok")])
+    run_agent("q", fake, [search_tool(catalogue)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    assert not res.is_error
+    return json.loads(res.content)
+
+
+def test_no_match_keyword_search_falls_back_to_filter_only_rows_with_count_zero():
+    rows = _rows({"category": "phone", "keywords": ["student"]})
+    assert [r["id"] for r in rows] == ["P-010", "P-011", "P-012", "P-013"]
+    assert all(r["keywords_matched"] == 0 for r in rows)
+    # same rows as the filter-only search, in the normal order
+    assert [r["id"] for r in rows] == _ids_for({"category": "phone"})
+
+
+def test_fallback_respects_category_price_stock_and_limit():
+    kw = ["nothing-like-this"]
+    assert [r["id"] for r in _rows({"category": "phone", "min_price": 200, "keywords": kw})] == [
+        "P-012",
+        "P-013",
+    ]
+    assert [r["id"] for r in _rows({"max_price": 160, "keywords": kw})] == ["P-010", "P-011"]
+    assert [r["id"] for r in _rows({"in_stock_only": True, "keywords": kw})] == [
+        "P-010",
+        "P-012",
+        "P-013",
+    ]
+    assert [r["id"] for r in _rows({"limit": 2, "keywords": kw})] == ["P-010", "P-011"]
+    assert _rows({"category": "laptop", "keywords": kw}) == []
+    assert _rows({"min_price": 9999, "keywords": kw}) == []
+
+
+def test_search_with_matches_has_no_fallback_rows_and_counts_each_row():
+    rows = _rows({"keywords": ["zoom", "lens", "nothing"]})
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-012", 2), ("P-011", 1)]
+
+
+def test_duplicate_and_spelling_variant_keywords_count_once():
+    cat = [
+        Product("P-020", "Quiet Phone", "Acme", "phone", 10.0, True, {}, "in-ear noise cancelling")
+    ]
+    rows = _rows({"keywords": ["in-ear", "in ear", "IN-EAR", "noise-cancelling"]}, cat)
+    assert rows[0]["keywords_matched"] == 2
+
+
+def test_blank_only_keywords_have_no_field_and_no_fallback_change():
+    for kws in ([" "], [""], ["-", " "], []):
+        rows = _rows({"category": "phone", "keywords": kws})
+        assert [r["id"] for r in rows] == ["P-010", "P-011", "P-012", "P-013"]
+        assert all("keywords_matched" not in r for r in rows)
+    assert _rows({"category": "laptop", "keywords": [" "]}) == []
+
+
+def test_search_without_keywords_has_no_keywords_matched_field():
+    rows = _rows({"category": "phone"})
+    assert rows and all("keywords_matched" not in r for r in rows)
+
+
+def test_blank_keywords_alongside_real_ones_still_count():
+    rows = _rows({"keywords": ["", "zoom"]})
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-011", 1), ("P-012", 1)]
+
+
+def test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "A row with `keywords_matched` 0 does not have the features asked for: say so, "
+        "and do not present it as a fit."
+    ) in text

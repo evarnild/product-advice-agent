@@ -58,6 +58,34 @@ Written against `main` at `1a38b99`.
   or "running", a feature such as "noise-cancelling") into `keywords`, and
   that extra keywords no longer empty a search. No other rule changes.
 
+  **Amendment (2026-11-21, owner: "22 I choose option c", review round 2
+  F8).** A second added sentence in the search rule tells the model to set
+  `in_stock_only` only when the customer asks for products in stock, and
+  otherwise to leave it off, so an out-of-stock match can still be named
+  and flagged. AC6 also covers this line. (Round 2's eval run: every
+  search set `in_stock_only`, against 6 of 12 on `main`, and
+  `voice-speaker` lost its out-of-stock P-032.)
+
+**The keyword fallback** (`agent.py`, the tool)
+
+- **B11. Amendment (2026-11-21, owner: "22 c", then "In the tool" and "Yes,
+  a field per row"; review round 4 F11).** When a tool search with
+  keywords returns no rows, the tool runs the same search again without
+  the keywords (the B1 filters and `limit` unchanged) and returns those
+  rows. `search_products`, B2, B3, `_expected_results` and the eval's
+  coverage checks are unchanged: the fallback lives in the tool only. On a
+  search with keywords (non-blank), every returned row carries
+  `keywords_matched`, the number of distinct keywords it matches (B3's
+  count, the same function); fallback rows carry 0. This amends B6's
+  "result fields unchanged" for that one field. A third added sentence in
+  the prompt's search rule tells the model that a row with
+  `keywords_matched` 0 does not have the features asked for, so it must
+  say so rather than present it as a fit. (Round 4's eval run: the model
+  added a keyword no product contains on 3 cases, `monitor-room-500`,
+  `monitor-small-desk-400`, `phone-battery-all-day-400`, got 0 rows and
+  cited nothing; keywords on 41 of 42 searches against 31 of 41 on
+  `main`.)
+
 **The eval consistency check** (§13, `cases.py`)
 
 - **B8.** `_expected_results` ranks the same way as B2-B3, so "rank within
@@ -112,7 +140,8 @@ Written against `main` at `1a38b99`.
 - **AC5** (B5, B6): the tool's default limit is 10 and its schema text
   says any keyword matches and the default is 10. (test:
   `tests/test_agent.py`)
-- **AC6** (B7): the shipped prompt contains the keywords line. (test on the
+- **AC6** (B7): the shipped prompt contains the keywords line and the
+  stock line (B7 amendment). (test on the
   committed file) and the live check below.
 - **AC7** (B8, B9): `_expected_results` ranks like `search_products` for
   the same arguments (a test comparing both on the committed catalogue for
@@ -122,6 +151,11 @@ Written against `main` at `1a38b99`.
   `uv run advisor-eval --provider ollama` three times on `main` before the
   merge and three times on the branch, and compares per case by majority.
   The review names the six reports.
+- **AC9** (B11): a keyword search with no match returns the filter-only
+  rows with `keywords_matched` 0; a search with matches returns no
+  fallback rows and each row's count; a search without keywords has no
+  `keywords_matched` field; the prompt contains the third sentence. (tests:
+  `tests/test_agent.py`) The live check covers how the model uses it.
 
 ## Non-functional
 

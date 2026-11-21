@@ -21,8 +21,9 @@ that express what the question asks for. The probe keys are all optional:
 
 - "category": one of the categories above
 - "min_price" and "max_price": numbers, in euros
-- "keywords": a list of words that must all appear in a product's name,
-  brand or description (lower case)
+- "keywords": a list of words, any of which may appear in a product's name,
+  brand or description (lower case); a no-match probe must use words that
+  match none of them
 - "product_id": only for the out-of-stock scenario, the id of the product
   the question is about
 

@@ -175,3 +175,85 @@ Re-read on `main` at `bbb48a1`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-21 — build (subtasks 1-8)
+
+Commits: e3410f5 (matching and order), 669023c (tool default 10, schema),
+3353f83 (`_expected_results`, ADR 0003), 04baa3e (prompt sentence, AC4 test),
+07bc3f9 (README, CLAUDE.md), e9a9170, 7e16fee, 8e1bd49 (format, one more
+mutant-killing test, lint), plus the hand-over commit.
+
+Shipped: `search_products` matches any keyword and orders by (distinct
+keywords matched desc, price, id), default limit still 5; the tool defaults to
+10 and its keywords/limit schema text and its description changed;
+`_expected_results` orders the same way; ADR 0003 wording; one sentence in the
+prompt's search rule; AC4 real-catalogue test; docs.
+
+Tests: 804 passed in the full pytest run before the last additions; the suite
+grew by about 20 tests (catalogue, agent, consistency); `npm run verify` and
+`check:intent` outputs are in the hand-over report.
+
+Cases and probes changed: none. The full suite was green after subtask 1-3
+with no change to any coverage probe test, `coverage.py`, or
+`evals/cases.jsonl`; `catalogue_problems` on the committed cases is empty.
+
+Mutants (all restored by copy; the killing tests):
+- drop the count key / reverse it: `test_more_keywords_matched_ranks_first_then_price_then_id`, `test_a_keyword_counts_once_however_often_it_appears`, `test_limit_cuts_the_ranked_list_and_keeps_the_leader`, the tool ranking test.
+- any -> all: `test_keywords_case_insensitive_any_may_match` and the ranking tests.
+- drop the id tie-break: `test_no_filters_sorted_price_then_id`, the ranking test, the consistency ranking test.
+- count occurrences: `test_a_keyword_counts_once_however_often_it_appears`.
+- drop the blank filter: `test_blank_keywords_do_not_match_everything_or_count`.
+- tool default 5: `test_tool_default_limit_is_ten_...`, `test_committed_catalogue_student_laptop_under_700_finds_p009`.
+- `_expected_results` without the count key: the consistency ranking test and the committed-case comparison.
+- no de-duplication of keywords: first SURVIVED; `test_repeated_keyword_is_not_a_bigger_match_than_distinct_ones` was added and kills it.
+
+Divergences: the tool's `description` text ("All given filters must match.
+Sorted by price") was stale under the new rule, so it was updated too. No
+other divergence.
+
+Assumptions: ordering key and de-duplication as in the plan; blank-only
+`keywords_any` is not specially handled in `_expected_results` (an empty or
+blank list excludes everything there, where `search_products` would match all;
+no committed case has one); the prompt test compares whitespace-normalised
+text; live check and eval runs are the coordinator's and owner's.
+
+### 2026-11-21 — rework after review round 1
+
+Commits: the `§22: round-1 rework tests (F1-F3), F4 prompt wording` commit, then this Progress entry.
+
+- F1: brand-only assertion (`keywords=["quiet"]` gives `["P-004"]`) in `test_keywords_case_insensitive_any_may_match`.
+- F2: two consistency tests in `tests/test_evals_consistency.py` (distinct count not occurrences; spelling variants de-duplicated), each comparing ids and equality with `search_products(..., limit=10)`.
+- F3: `_expected_results` now `if words and matched(p) == 0: return False`; test with `["-"]` and `["-", "alpha"]` against `search_products`.
+- F4 (a), the owner's decision "22: F4 a", outside the plan's subtasks: `src/advisor/evals/prompts/generate.md` now describes a probe's `"keywords"` as any-of, and a no-match probe must match none; a new test pins the sentence (no test pinned the old one).
+- F5: no change (owner's diff read).
+- F6 correction: +14 tests (one replaced); 807 passed at 38e0c83.
+
+Mutants (each run on the full suite, restored by copy, tree clean after):
+- M13 (brand dropped from the haystack): killed by `test_keywords_case_insensitive_any_may_match`.
+- C2 (no dedup in `_expected_results`): killed by `test_expected_results_deduplicates_spelling_variants`.
+- C6 (count occurrences): killed by `test_expected_results_counts_distinct_keywords_not_occurrences`.
+- C3 (no `words and` guard): killed by `test_expected_results_blank_only_words_match_like_search_products`.
+
+Tests: 811 passed in the full pytest run (four added by this rework).
+
+### Round 2 rework (F8, owner's option c), 2026-11-21
+
+Commit 2e5a794. Added to the search rule in `src/advisor/prompts/system.md`: "Set `in_stock_only` only when the customer asks for products in stock; otherwise leave it off, so an out-of-stock match can still be named and flagged." Tool description in `agent.py` unchanged. Test first: `test_prompt_tells_the_model_to_set_in_stock_only_only_when_asked` failed before the edit, passed after. Mutant (sentence deleted): killed by that test (1 failed, 811 passed); restored by copy. Tests: 812 passed in verify. No eval run (no model calls); the owed re-run is the coordinator's.
+
+### Merge of main (§15) and the no-match probes, 2026-11-21
+
+Commits: the `Merge main (§15) into feat/22-search-that-scales` merge commit, then the probe-fix commit. A merge, not a rebase, so the review's commit hashes stay valid.
+
+- Conflicts: `_expected_results` in `src/advisor/evals/cases.py` now uses §15's `fits` for the category, price and stock constraints and keeps §22's any-of keywords (distinct, normalised, blanks dropped, `words and matched(p) == 0` guard, brand in the haystack) and ranking (distinct keywords, price, id); it still equals `search_products`. `fits` keeps its any-of keyword test, with its comment updated. `tests/test_evals_consistency.py` keeps both sides' tests. CLAUDE.md and README merged cleanly and read consistently.
+- "Whichever merges second fixes it": under any-of search §15's two no-match probes matched products. `headphones-ldac-balanced-200` is now `["ldac", "balanced cable"]` (was `ldac`, `balanced`, `in-ear`) and `smartwatch-gps-apps-minimalist` is `["third-party apps", "minimalist"]` (was `GPS`, ...), in `expect_search` and in the note's probe. No product contains any of these words. Question texts unchanged. All 35 probes in the committed cases pass `check_coverage`; `catalogue_problems` is empty.
+- Tests: 851 passed in verify.
+
+### Round 4 rework (F11 option c, B11 / AC9), 2026-11-21
+
+Commits: the `§22: B11 keyword fallback and keywords_matched in the tool` commit, then this entry.
+
+- `catalogue.py`: `keyword_set` and `keywords_matched` extracted from `search_products` (B3's normalisation and count, one place); `search_products` results unchanged.
+- `agent.py` tool: with a non-blank keyword and no rows, the same search without keywords (same category, prices, stock, limit); every row of a keyword search carries `keywords_matched` (0 on fallback rows); no field without non-blank keywords. Tool description says so (pinned in `test_schema_text_says_any_keyword_matches_and_default_ten`).
+- `prompts/system.md`: third sentence, pinned by `test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit`. README and CLAUDE.md say the fallback and the field.
+- Failed before the change (7): the fallback, fallback-filters, counts, spelling-variant, blank-alongside-real, prompt tests, and the schema-text test. Passed before (guards): blank-only keywords and no keywords have no field.
+- Tests: 859 passed in verify. No eval run (no model calls). Spec's AC order nit (AC9 before AC7) left for the coordinator.

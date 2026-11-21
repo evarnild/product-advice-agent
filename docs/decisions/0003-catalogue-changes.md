@@ -20,6 +20,7 @@ supersedes nothing.
 
 - The check covers `evals/cases.jsonl` only, and only cases with
   `expect_search`. An expected product must be matched by the case's filters
-  and rank within the first 10 results; a forbidden one must not be matched.
+  and rank within the first 10 results, ordered as `search_products` orders
+  them (keywords matched, then price, then id); a forbidden one must not be matched.
 - A case that relies on stock without `in_stock_only` is not checked for it.
 - Growing the catalogue (§14) is checked by the same test.

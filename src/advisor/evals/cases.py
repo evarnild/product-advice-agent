@@ -204,9 +204,8 @@ def fits(p: Product, search: dict[str, Any]) -> bool:
     if search.get("in_stock_only") and not p.in_stock:
         return False
     if "keywords_any" in search:
-        # Interpretation: any-of, as score._call_satisfies reads it, not the
-        # all-of of search_products(keywords=...): the check asks what a
-        # search that satisfies the case's expect_search could show.
+        # Interpretation: any-of, as score._call_satisfies reads it and, since
+        # §22, as search_products(keywords=...) matches too.
         haystack = _norm(f"{p.name} {p.brand} {p.description}")
         if not any(_norm(w) in haystack for w in search["keywords_any"]):
             return False
@@ -214,8 +213,27 @@ def fits(p: Product, search: dict[str, Any]) -> bool:
 
 
 def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> list[Product]:
-    """Products satisfying every constraint in `search`, in search order (price, then id)."""
-    return sorted((p for p in catalogue if fits(p, search)), key=lambda p: (p.price_eur, p.id))
+    """Products satisfying every constraint in `search`, in `search_products` order.
+
+    That is: distinct `keywords_any` matched (most first), then price, then id (§22).
+    The non-keyword constraints are `fits` (§15); the keywords are ranked here.
+    """
+    # Distinct after normalising, blanks dropped, as in search_products (§22).
+    words = list(
+        dict.fromkeys(w for w in (_norm(k) for k in search.get("keywords_any", ())) if w.strip())
+    )
+    others = {k: v for k, v in search.items() if k != "keywords_any"}
+
+    def matched(p: Product) -> int:
+        haystack = _norm(f"{p.name} {p.brand} {p.description}")
+        return sum(1 for w in words if w in haystack)
+
+    def ok(p: Product) -> bool:
+        # Any-of, as score._call_satisfies reads it; search_products matches any
+        # keyword too since §22, so the filter and the ranking agree.
+        return fits(p, others) and not (words and matched(p) == 0)
+
+    return sorted((p for p in catalogue if ok(p)), key=lambda p: (-matched(p), p.price_eur, p.id))
 
 
 def catalogue_problems(cases: Sequence[Case], catalogue: Sequence[Product]) -> list[str]:

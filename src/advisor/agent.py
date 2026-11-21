@@ -8,7 +8,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from advisor.catalogue import CATEGORIES, Product, search_products
+from advisor.catalogue import (
+    CATEGORIES,
+    Product,
+    keyword_set,
+    keywords_matched,
+    search_products,
+)
 from advisor.guardrails import REFUSAL_TEXT, check_input, check_output
 from advisor.models.base import (
     Message,
@@ -57,10 +63,13 @@ _SEARCH_SCHEMA: dict[str, Any] = {
         "keywords": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Words that must all appear in the name, brand or description.",
+            "description": (
+                "Words to look for in the name, brand or description. Any one keyword "
+                "can match; products matching more of the keywords come first."
+            ),
         },
         "in_stock_only": {"type": "boolean"},
-        "limit": {"type": "integer", "description": "Maximum results, 1 to 10 (default 5)."},
+        "limit": {"type": "integer", "description": "Maximum results, 1 to 10 (default 10)."},
     },
     "additionalProperties": False,
 }
@@ -106,25 +115,35 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
         in_stock_only = args.get("in_stock_only", False)
         if not isinstance(in_stock_only, bool):
             raise ToolError("'in_stock_only' must be true or false")
-        limit = args.get("limit", 5)
+        # search_products keeps its own default of 5 for its other callers; the tool
+        # defaults to 10 so a ranked list is not cut before the best match shows (§22).
+        limit = args.get("limit", 10)
         if isinstance(limit, bool) or not isinstance(limit, int):
             raise ToolError("'limit' must be an integer")
-        found = search_products(
-            catalogue,
-            category=category,
-            min_price=_number(args, "min_price"),
-            max_price=_number(args, "max_price"),
-            keywords=keywords,
-            in_stock_only=in_stock_only,
-            limit=limit,
-        )
-        return [_product_json(p) for p in found]
+        filters: dict[str, Any] = {
+            "category": category,
+            "min_price": _number(args, "min_price"),
+            "max_price": _number(args, "max_price"),
+            "in_stock_only": in_stock_only,
+            "limit": limit,
+        }
+        words = keyword_set(keywords)
+        found = search_products(catalogue, keywords=keywords, **filters)
+        if not words:
+            return [_product_json(p) for p in found]
+        # B11: keywords that match nothing must not empty the answer; the same search
+        # without them still returns rows, each marked as matching none of the keywords.
+        if not found:
+            found = search_products(catalogue, keywords=None, **filters)
+        return [{**_product_json(p), "keywords_matched": keywords_matched(p, words)} for p in found]
 
     spec = ToolSpec(
         name="search_products",
         description=(
-            "Search the shop's product catalogue. All given filters must match. "
-            "Results are sorted by price, cheapest first."
+            "Search the shop's product catalogue. The category, price and stock filters must "
+            "all hold. Results are ordered by keywords matched, then price, cheapest first. When "
+            "keywords are given, each row has keywords_matched; if no product matches any "
+            "keyword, the rows for the other filters are returned with keywords_matched 0."
         ),
         parameters=_SEARCH_SCHEMA,
     )
