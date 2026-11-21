@@ -211,7 +211,7 @@ def test_a_property_without_expect_search_is_rejected():
 # --- §15 B5, B7, B8: the 50 and their spread --------------------------------
 
 VARIETIES = ("typo", "multi", "vague", "casual")
-MIN_VARIETY = 5
+MIN_VARIETY = {"typo": 5, "multi": 5, "vague": 1, "casual": 5}  # B8, as amended
 SCENARIO_RANGE = (5, 12)
 OFF_TOPIC_RANGE = (2, 4)
 MIN_PER_FEATURE = 4
@@ -265,10 +265,12 @@ def variety_counts(cases):
 
 
 def variety_problems(cases):
-    """What misses B8's at-least-`MIN_VARIETY` of each variety; empty when it is met."""
+    """What misses B8's per-variety minimum (`MIN_VARIETY`); empty when it is met."""
     counts = variety_counts(cases)
     problems = [
-        f"{v}: {counts[v]}, fewer than {MIN_VARIETY}" for v in VARIETIES if counts[v] < MIN_VARIETY
+        f"{v}: {counts[v]}, fewer than {MIN_VARIETY[v]}"
+        for v in VARIETIES
+        if counts[v] < MIN_VARIETY[v]
     ]
     problems += [f"unknown variety {v}" for v in counts if v not in (*VARIETIES, "none")]
     return problems
@@ -424,13 +426,28 @@ def test_variety_needs_five_of_each_not_four():
         note = f"probe: {{}}; variety: {variety}"
         return [dims_case(i, "laptop", "exact-match", note=note) for i in range(n)]
 
-    def with_four(missing, n):
+    def with_n(variety, n):
         return [
-            *(c for v in VARIETIES if v != missing for c in cs(5, v)),
-            *cs(n, missing),
+            *(c for v in VARIETIES if v != variety for c in cs(MIN_VARIETY[v], v)),
+            *cs(n, variety),
         ]
 
-    for variety in VARIETIES:
-        assert [p for p in variety_problems(with_four(variety, 5)) if variety in p] == []
-        assert [p for p in variety_problems(with_four(variety, 4)) if variety in p] != []
-    assert variety_problems([*with_four("typo", 5), *cs(1, "wild")]) == ["unknown variety wild"]
+    for variety, low in MIN_VARIETY.items():
+        assert [p for p in variety_problems(with_n(variety, low)) if variety in p] == []
+        assert [p for p in variety_problems(with_n(variety, low - 1)) if variety in p] != []
+    assert MIN_VARIETY == {"typo": 5, "multi": 5, "vague": 1, "casual": 5}
+    assert variety_problems(with_n("vague", 0)) == ["vague: 0, fewer than 1"]
+    assert variety_problems(with_n("typo", 4)) == ["typo: 4, fewer than 5"]
+    assert variety_problems([*with_n("typo", 5), *cs(1, "wild")]) == ["unknown variety wild"]
+
+
+def test_expect_search_is_the_notes_probe_for_every_new_case():
+    checked = 0
+    for c in load_committed()[15:]:
+        if c.dimensions["scenario"] in ("out-of-stock", "off-topic"):
+            continue
+        probe = json.loads(NOTE_RE.match(c.note)["probe"])
+        want = {("keywords_any" if k == "keywords" else k): v for k, v in probe.items()}
+        assert c.expect_search == want, c.id
+        checked += 1
+    assert checked >= 25
