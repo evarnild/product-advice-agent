@@ -6,9 +6,16 @@ this test, not loosening the pinning.
 """
 
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 COMPOSE = Path(__file__).resolve().parent.parent / "infra" / "langfuse" / "docker-compose.yml"
+
+LOW_MEMORY = COMPOSE.parent / "clickhouse" / "low-memory.xml"
+LOG_TABLES = (
+    "trace_log text_log metric_log asynchronous_metric_log part_log "
+    "processors_profile_log opentelemetry_span_log query_thread_log query_views_log"
+).split()
 
 SERVICES = {"langfuse-worker", "langfuse-web", "clickhouse", "minio", "redis", "postgres"}
 MIN_LANGFUSE = (4, 59, 0)
@@ -99,3 +106,23 @@ def test_exactly_the_six_services_and_no_gateway() -> None:
     names = _services()
     assert "langfuse-ai-gateway" not in names
     assert sorted(names) == sorted(SERVICES)
+
+
+def test_clickhouse_is_capped_and_mounts_the_low_memory_config() -> None:
+    lines = _lines()
+    start = lines.index("  clickhouse:")
+    block = lines[start + 1 : lines.index("  minio:")]
+    assert "    mem_limit: 1500m" in block
+    mount = "      - ./clickhouse/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro"
+    assert mount in block
+
+
+def test_low_memory_config_trims_logs_and_caps_memory() -> None:
+    root = ET.parse(LOW_MEMORY).getroot()
+    for table in LOG_TABLES:
+        node = root.find(table)
+        assert node is not None and node.get("remove") == "1", table
+    assert root.find("query_log") is None
+    memory = root.find("max_server_memory_usage")
+    assert memory is not None and memory.text == "1073741824"
+    assert root.find("background_pool_size") is None  # owner's decision (21 F1)

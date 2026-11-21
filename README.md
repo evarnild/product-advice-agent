@@ -99,9 +99,10 @@ check that it parses, run `docker compose --env-file infra/langfuse/.env.example
 container) by `infra/langfuse/clickhouse/low-memory.xml`, which also turns off
 its own diagnostic log tables (`query_log` stays). On an existing install, free
 the old tables once with `docker compose -f infra/langfuse/docker-compose.yml
-exec clickhouse clickhouse-client --user clickhouse --password "$CLICKHOUSE_PASSWORD"
--q "TRUNCATE TABLE system.trace_log"` (repeat for `text_log`, `metric_log`,
-`asynchronous_metric_log`, `part_log`); not automated.
+exec clickhouse sh -c 'clickhouse-client --user clickhouse --password
+"$CLICKHOUSE_PASSWORD" -q "TRUNCATE TABLE system.trace_log"'` (repeat for
+`text_log`, `metric_log`, `asynchronous_metric_log`, `part_log`,
+`processors_profile_log`); not automated.
 
 **Coming from the v3 stack.** v4 replaces v3; it is not upgraded in place.
 Run `docker compose -f infra/langfuse/docker-compose.yml down -v` first (this

@@ -83,3 +83,15 @@ mutation runs this week.
   the form I believe 26.3 accepts. Not verified against a running server:
   the live check must confirm ClickHouse starts healthy and `docker stats`
   shows the cap. The README truncate example lists five of the tables.
+- 2026-11-21: round-1 rework. F1 (owner: option b): `background_pool_size`
+  removed from low-memory.xml, default applies, no `<merge_tree>` block, the
+  1 GB cap stays. F2: README truncate example runs through `sh -c '...'` so the
+  container expands `$CLICKHOUSE_PASSWORD`. F3 (owner: add a short test): two
+  tests in tests/test_compose.py (compose: `mem_limit: 1500m`, read-only mount
+  under `config.d/`; XML: nine log tables `remove="1"`, no `query_log`,
+  `max_server_memory_usage` 1073741824, `background_pool_size` absent).
+  F4: `processors_profile_log` added to the README list. Mutants, each run on a
+  backup and restored by copy: delete `mem_limit` killed, delete mount line
+  killed, drop `:ro` killed (all by the compose test); memory 0 killed by the
+  XML test. `verify` green (702 pytest passed, was 700). Outside intents/: 4
+  files, 55 lines vs main (budget 5 files, 60).
