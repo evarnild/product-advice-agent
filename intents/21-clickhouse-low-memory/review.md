@@ -1,13 +1,202 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §21 review — ClickHouse low-memory config for the local Langfuse
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 239fefc
-round: 1
+reviewed-commit: 907102a
+round: 2
 sampled: no
 run: auto
 live-check: owed
+
+Tier: the path table puts `infra/langfuse/*` at Attested and README,
+`tests/` and intents at Automated; `review_tier` is empty. Round 1's F1
+(HIGH) raised it to **Reviewed** (rule 3), and a tier is never lowered. No
+rework findings this round, so on the Reviewed tier the verdict is
+`escalate`: the owner reads the diff.
+
+Adjustment budget (`git diff --numstat main...HEAD -- . ':!intents'`): 4
+files, 55 lines outside `intents/`, all additions (README.md 9,
+low-memory.xml 17, docker-compose.yml 2, tests/test_compose.py 27), within 5
+files / 60 lines; no core code. The fourth file was the owner's decision
+("21: b and add short test").
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 21` →
+"sample-due auto: nth attested auto change = 5, every 3, sampled: no".
+
+## Resolution of round 1
+| Finding | Owner's decision | Now (907102a) | Status |
+| --- | --- | --- | --- |
+| F1 HIGH `background_pool_size` 2 vs MergeTree free-entries defaults | (b) drop it, default, no `merge_tree` block | `low-memory.xml` has neither; `tests/test_compose.py:128` asserts the absence (M7 killed) | resolved; server start is live-check step 2 |
+| F2 MEDIUM TRUNCATE expanded `$CLICKHOUSE_PASSWORD` in the host shell | Needs rework | `README.md:101-103` runs `exec clickhouse sh -c '... --password "$CLICKHOUSE_PASSWORD" ...'`; the container's `sh` expands it (`docker-compose.yml:82`) | resolved for bash and Git Bash; see F6 for PowerShell 5.1 |
+| F3 MEDIUM no test; M1-M4 survived | short test in `tests/test_compose.py`, fourth file accepted | `tests/test_compose.py:111-118` (compose block: `mem_limit: 1500m`, the `:ro` mount), `:120-128` (XML parses, nine `remove="1"`, no `query_log`, cap 1073741824, no `background_pool_size`) | resolved: M1-M4 killed |
+| F4 LOW `processors_profile_log` missing from the README list | worth a look | `README.md:104-105` lists it | resolved |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | findings (1): F5 LOW, the intent's "Exactly what changes" still lists `background_pool_size` and 3 files |
+| 2 | Type check | pass apart from the owed live check (FAIL whose only error is the unrecorded live check, the owner's); 4 files, 55 lines |
+| 3 | Behaviour against the intent | findings (1): F6 LOW; settings, mount, cap and README match the intent plus round 1's decisions; eval run not owed |
+| 4 | Tests prove the behaviour | findings (1): F7 LOW; 9 of 12 mutants killed, the three cache-size mutants survive |
+| 5 | Conventions | pass: images untouched, `check:pins` six ok; ports still 127.0.0.1; nothing in `src/`, no core code, no dependency (stdlib `xml.etree`) |
+| 6 | Numbers in prose | pass for what reproduces offline (702 passed, 4 files / 55 lines, 1 GiB / 256 MiB / 64 MiB); `docker stats` figures need Docker |
+| 7 | Documentation | pass; README describes the round-2 config; CLAUDE.md does not describe the ClickHouse config |
+| 8 | Guardrails and hygiene | pass: no secret in the XML, test or README |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 21, adjustment)
+  error: A live check is owed and not recorded. Do the steps in intents/21-clickhouse-low-memory/review.md → ## Live check, then set live_checked: <date> in intents/21-clickhouse-low-memory/metadata.yml.
+  note:  4 file(s), 55 line(s) changed outside intents/.
+```
+The only error is the owed live check, the owner's to clear, not a finding.
+
+## Findings
+- **F5 LOW** `intents/21-clickhouse-low-memory/intent.md:54,57,65`: "Exactly
+  what changes" (the adjustment's plan) still says "sets
+  `background_pool_size` to 2" and "3 files, about 35 lines", and the
+  Assumptions still place `background_pool_size` at server level. The code
+  follows the owner's F1 (b) and F3 decisions (round 1, `## Progress`); the
+  text above Progress is the owner's to amend. Worth a look: update those
+  bullets to "no `background_pool_size` (default)" and "4 files (adds
+  `tests/test_compose.py`), 55 lines".
+- **F6 LOW** `README.md:101-103`: the TRUNCATE command works as written in
+  bash, Git Bash and PowerShell 7.3+. Windows PowerShell 5.1 does not escape
+  embedded double quotes when passing arguments to a native program, so the
+  single-quoted `sh -c` argument would reach `docker` split and fail
+  visibly (harmless). Reasoned from PowerShell's documented behaviour, not
+  run. Worth a look: label the command "in bash or Git Bash". Live-check
+  step 7 shows whether it bites.
+- **F7 LOW** `infra/langfuse/clickhouse/low-memory.xml:13-15`: no test reads
+  `mark_cache_size`, `index_mark_cache_size` or `uncompressed_cache_size`;
+  M8-M10 survive. Within the owner's "short test"; the 1 GiB and 1500m caps
+  still bound memory and live-check step 4 checks the values. Worth a look:
+  three `root.find(...).text ==` lines would kill them (55 of 60 lines).
+
+**Mutants** (full product suite, 702 tests, plus `check-pins`; backup and
+restore by copy; a `git diff --quiet` guard proves each applied):
+- M1 `docker-compose.yml:78` delete `mem_limit: 1500m`: KILLED (`test_clickhouse_is_capped_and_mounts_the_low_memory_config`)
+- M2 `docker-compose.yml:86` delete the mount line: KILLED (same test)
+- M3 `docker-compose.yml:86` drop `:ro`: KILLED (same test)
+- M4 `low-memory.xml:16` `max_server_memory_usage` → 0: KILLED (`test_low_memory_config_trims_logs_and_caps_memory`)
+- M5 `low-memory.xml:8` delete `processors_profile_log remove="1"`: KILLED (XML test)
+- M6 add `<query_log remove="1"/>`: KILLED (XML test)
+- M7 re-add `<background_pool_size>2</background_pool_size>`: KILLED (XML test)
+- M11 `low-memory.xml:4` `text_log remove="1"` → `remove="0"`: KILLED (XML test)
+- M12 `docker-compose.yml:78` `mem_limit` → 15000m: KILLED (compose test)
+- M8 `low-memory.xml:13` `mark_cache_size` → 5368709120: SURVIVED (F7)
+- M9 `low-memory.xml:15` `uncompressed_cache_size` → 8589934592: SURVIVED (F7)
+- M10 `low-memory.xml:14` `index_mark_cache_size` → 5368709120: SURVIVED (F7)
+
+The tests prove the repository side (cap, read-only mount, nine removed
+logs, `query_log` kept, 1 GiB cap, no `background_pool_size`); ClickHouse's
+behaviour is the live check's.
+
+## Not checked
+- Whether ClickHouse 26.3.62.3 starts healthy with this config (`remove="1"`
+  on each section, the default background pool). Needs Docker.
+- Whether the settings take effect, and whether the removed logs stop growing
+  while `query_log` grows.
+- Whether MergeTree mutations (Langfuse's deletes) still run (probe, step 6).
+- The memory outcome: under 1.5 GiB, the 700 MiB target at rest, the 1 GiB
+  cap holding under a heavy UI query.
+- The bind mount readable by uid 101 on Docker Desktop for Windows;
+  `mem_limit` honoured by the owner's compose version.
+- The README's TRUNCATE in the owner's shell (F6), and TRUNCATE working once
+  the section is removed from config.
+- Langfuse end to end: traces, scores and annotation queues.
+- ClickHouse's parser reading the CRLF working-tree XML (step 2).
+
+## Live check
+- owed: rule 1 (`infra/`); also covers every Not-checked item. Run it **in
+  the worktree `C:/Users/eric/src/product-advice-agent-wt/21-clickhouse-low-memory`,
+  before the merge**. The stack shares ports and volumes with main's: first
+  `docker compose -f infra/langfuse/docker-compose.yml down` in the main
+  checkout (**without** `-v`), then copy the main checkout's
+  `infra/langfuse/.env` into the worktree's `infra/langfuse/`.
+- steps (in the worktree, in Git Bash unless a step says otherwise):
+  1. `docker compose -f infra/langfuse/docker-compose.yml up -d`.
+  2. `docker compose -f infra/langfuse/docker-compose.yml ps`: every container
+     healthy or running, clickhouse healthy (not restarting). If it restarts:
+     `docker compose -f infra/langfuse/docker-compose.yml logs clickhouse |
+     grep -iE "BAD_ARGUMENTS|Exception|remove"` and stop.
+  3. `docker stats --no-stream`: clickhouse under 1.5 GiB, LIMIT ~1.465 GiB;
+     again after ~5 minutes at rest, target under 700 MiB.
+  4. Settings took: `docker compose -f infra/langfuse/docker-compose.yml exec
+     clickhouse sh -c 'clickhouse-client --user clickhouse --password
+     "$CLICKHOUSE_PASSWORD" -q "SELECT name, value FROM system.server_settings
+     WHERE name IN ('"'"'max_server_memory_usage'"'"','"'"'mark_cache_size'"'"','"'"'index_mark_cache_size'"'"','"'"'uncompressed_cache_size'"'"')"'`:
+     1073741824, 268435456, 67108864, 0. No `background_pool_size`
+     expectation: it stays at the server default.
+  5. Logs off: in the same `exec ... sh -c` form, `SELECT count()` on
+     `system.trace_log`, `text_log`, `metric_log`, `asynchronous_metric_log`,
+     twice a minute apart: no growth, or "unknown table".
+     `system.query_log` still grows after clicking around the UI.
+  6. MergeTree and mutations: `CREATE DATABASE probe21; CREATE TABLE
+     probe21.t (x UInt8) ENGINE=MergeTree ORDER BY x; INSERT INTO probe21.t
+     VALUES (1),(2); ALTER TABLE probe21.t DELETE WHERE x=1 SETTINGS
+     mutations_sync=1; SELECT count() FROM probe21.t; DROP DATABASE
+     probe21;` (`clickhouse-client --multiquery`, or one at a time): no
+     error, count 1.
+  7. The README's one-off step, **exactly as written** (`README.md:101-103`,
+     as one line) in Git Bash; if you normally use PowerShell, try it there
+     too and note the version (F6). Exit 0; then `SELECT sum(bytes_on_disk)
+     FROM system.parts WHERE database='system' AND table='trace_log' AND
+     active` is about 0.
+  8. With the three `LANGFUSE_*` variables in the root `.env` and Ollama up:
+     `uv run advisor-eval --provider ollama --only <one or two case ids>`
+     finishes and prints its pass line.
+  9. http://localhost:3000: the run's traces (tagged `eval`) open with spans,
+     a trace's scores show, Annotation Queues lists and opens the queues.
+- you should see: every container healthy; ClickHouse under 1.5 GiB with a
+  ~1.465 GiB limit; the four settings as configured; removed logs not
+  growing while `query_log` grows; the probe mutation at count 1; the README
+  command working as written; the eval's traces, scores and queues in the
+  UI. Then bring this stack down (without `-v`) and restart main's.
+
+## Eval run
+not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
+"not owed (no listed path changed)".
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in the worktree at 907102a; `git status --short`
+clean before and after):
+- **Coordinator, re-run:** `npm run verify` → "All checks passed!", "162
+  files already formatted", mypy "Success: no issues found in 29 source
+  files", "702 passed". Matches the reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "4 file(s), 55 line(s)". Matches.
+- **Coordinator, re-run:** the kills the rework claims: M1, M2, M3 KILLED
+  (the compose test, 1 failed), M4 KILLED (the XML test, 1 failed). Matches
+  the reviewer and the implementer.
+- **Coordinator, re-run:** survivors M8, M9, M10 each SURVIVED (702 passed,
+  `check:pins` exit 0). Matches the reviewer.
+
+**Reviewer, verified:** verify (kit 298, pytest 702), check:intent,
+sampling, `check:pins` (six ok), `owes-run`; the round-2 diff
+(`6e8b428..HEAD`) read in full; mutants M1-M12; nothing pushed (no remote
+branch); Docker not started, no model called.
+
+**Taken on trust:** ClickHouse 26.3.62.3's behaviour with this config
+(start-up, `remove="1"`, the default pool passing the MergeTree sanity
+check, the cap holding); PowerShell 5.1's argument passing (F6); everything
+under Not checked.
+# Round 1 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 239fefc
+- round: 1
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: the path table puts `infra/langfuse/*` at Attested (build config, not
 in the Reviewed list) and README/intents at Automated; `review_tier` is
@@ -19,7 +208,7 @@ lines in all), within 5 files / 60 lines; no core code.
 Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 21` →
 "sample-due auto: nth attested auto change = 5, every 3, sampled: no".
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass (every listed setting present with the intended value; nothing extra) |
@@ -32,7 +221,7 @@ Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 21` →
 | 8 | Guardrails and hygiene | pass (no secret in the new file; the README uses a variable, not a password) |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -41,7 +230,7 @@ type-check: PASS (intent 21, adjustment)
   note:  3 file(s), 28 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **F1 HIGH** `infra/langfuse/clickhouse/low-memory.xml:17`:
   `<background_pool_size>2</background_pool_size>` without matching
   `<merge_tree>` overrides. With the default
@@ -91,7 +280,7 @@ only kit script that reads the compose file; backup and restore by copy):
   trivially): each `remove="1"` line (xml:3-11), the cache sizes (xml:13-15),
   `background_pool_size` (xml:17).
 
-## Not checked
+### Not checked
 - Whether ClickHouse 26.3.62.3 starts with this config: the F1 sanity check,
   `remove="1"` on each of the nine log sections, a top-level
   `background_pool_size`. Needs Docker.
@@ -104,7 +293,7 @@ only kit script that reads the compose file; backup and restore by copy):
 - `TRUNCATE TABLE system.trace_log` once the section is removed from config.
 - Langfuse end to end: traces, scores and annotation queues after the change.
 
-## Live check
+### Live check
 - owed: rule 1 (`infra/`); also covers every Not-checked item. Run it **in
   the worktree `C:/Users/eric/src/product-advice-agent-wt/21-clickhouse-low-memory`,
   before the merge**, after F1 is resolved. The stack shares ports and
@@ -149,11 +338,11 @@ only kit script that reads the compose file; backup and restore by copy):
   working, and the eval's traces, scores and queues in the UI. Then bring
   this stack down (without `-v`) and restart main's.
 
-## Eval run
+### Eval run
 not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
 "not owed (no listed path changed)".
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in the worktree at 239fefc; `git status --short`
 clean before and after):
