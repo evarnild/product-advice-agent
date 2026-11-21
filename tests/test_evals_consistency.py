@@ -153,3 +153,40 @@ def test_expected_results_match_search_products_on_every_committed_case():
         assert [p.id for p in got] == [p.id for p in want], c.id
         checked += 1
     assert checked > 0
+
+
+def _same_as_search(cat, words):
+    got = _expected_results({"keywords_any": words}, cat)
+    want = search_products(cat, keywords=words, limit=10)
+    assert got == want
+    return [p.id for p in got]
+
+
+def test_expected_results_counts_distinct_keywords_not_occurrences():
+    cat = [
+        prod("P-001", 50, desc="alpha beta"),
+        prod("P-002", 10, desc="alpha alpha alpha alpha"),
+    ]
+    assert _same_as_search(cat, ["alpha", "beta"]) == ["P-001", "P-002"]
+
+
+def test_expected_results_deduplicates_spelling_variants():
+    cat = [prod("P-001", 50, desc="beta gamma"), prod("P-002", 10, desc="in-ear")]
+    words = ["in-ear", "in ear", "IN EAR", "beta", "gamma"]
+    assert _same_as_search(cat, words) == ["P-001", "P-002"]
+
+
+def test_expected_results_blank_only_words_match_like_search_products():
+    cat = [prod("P-001", 50, desc="alpha"), prod("P-002", 10)]
+    assert _same_as_search(cat, ["-"]) == ["P-002", "P-001"]
+    assert _same_as_search(cat, ["-", "alpha"]) == ["P-001"]
+
+
+def test_generate_prompt_describes_keywords_as_any_of():
+    text = " ".join(
+        (Path(__file__).parent.parent / "src/advisor/evals/prompts/generate.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    assert "any of which may appear" in text
+    assert "must all appear" not in text

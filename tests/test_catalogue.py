@@ -168,6 +168,8 @@ def test_keywords_case_insensitive_any_may_match():
     assert ids(search_products(CAT, keywords=["noise"])) == ["P-003", "P-004"]
     assert ids(search_products(CAT, keywords=["NOISE", "light"])) == ["P-004", "P-003"]
     assert ids(search_products(CAT, keywords=["alpha"])) == ["P-001"]
+    # a brand alone matches (P-004's brand is "Quiet")
+    assert ids(search_products(CAT, keywords=["quiet"])) == ["P-004"]
     # one of two is enough; a product matching neither is left out
     assert ids(search_products(CAT, keywords=["noise", "alpha"])) == ["P-003", "P-001", "P-004"]
     assert search_products(CAT, keywords=["zzz", "yyy"]) == []

@@ -185,7 +185,7 @@ def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> l
         if "keywords_any" in search:
             # Any-of, as score._call_satisfies reads it; search_products matches any
             # keyword too since §22, so the filter and the ranking below agree.
-            if matched(p) == 0:
+            if words and matched(p) == 0:
                 return False
         return True
 
