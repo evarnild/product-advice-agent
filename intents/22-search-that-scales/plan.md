@@ -235,3 +235,7 @@ Mutants (each run on the full suite, restored by copy, tree clean after):
 - C3 (no `words and` guard): killed by `test_expected_results_blank_only_words_match_like_search_products`.
 
 Tests: 811 passed in the full pytest run (four added by this rework).
+
+### Round 2 rework (F8, owner's option c), 2026-11-21
+
+Commit 2e5a794. Added to the search rule in `src/advisor/prompts/system.md`: "Set `in_stock_only` only when the customer asks for products in stock; otherwise leave it off, so an out-of-stock match can still be named and flagged." Tool description in `agent.py` unchanged. Test first: `test_prompt_tells_the_model_to_set_in_stock_only_only_when_asked` failed before the edit, passed after. Mutant (sentence deleted): killed by that test (1 failed, 811 passed); restored by copy. Tests: 812 passed in verify. No eval run (no model calls); the owed re-run is the coordinator's.
