@@ -272,3 +272,36 @@ Tests: kit 370 (369 before).
   show agent work (11m, 45m, 1h37m, 1h15m).
 
 Tests: kit 378 (370 before); pytest 658.
+
+### 2026-11-21: round 4 rework (F1, F2, F3)
+
+Owner's decisions, quoted: "19 1b 2a". spec.md and plan.md above this marker
+are unchanged: both decisions keep B5a's wording ("never counted twice";
+"attributed to the intent as in B4").
+
+- F1 (option b): agent work is joined per intent, never per (intent, phase).
+  Runs are taken in start order and each books only the part beyond what
+  earlier-started runs cover, so an overlap goes to the earlier run's phase
+  and per-phase agent work sums to the union. Code comment: "B5a: joined per
+  intent; an overlap goes to the earlier run's phase". Reviewer's case
+  (implement 7.5-8.5 h, review 8-9 h): total 1.5 h, build 1 h, review 0.5 h.
+- F2 (option a): a turn attributed to an intent with no commits books its
+  coord work to that intent's unphased bucket, as its tokens did; one turn,
+  one line. Probe now gives rows [7, 99], §99 coord work 1 h, unattributed 0.
+  The test is renamed to "books a turn for an intent with no commits to that
+  intent's unphased bucket, not unattributed".
+- F3: "prints and serialises both columns" asserts the `formatAll` total row.
+- F4, F5: not requested, untouched.
+
+Mutants (backup by copy, restored by copy):
+- F1, revert to the per-(intent, phase) key: killed by "joins agent work per
+  intent: an overlap goes to the earlier run's phase, and phases sum to the
+  total (B5a)" (the only failure in stats-lib.test.mjs).
+- F2, send the work back to unattributed (`&& byIntent.has(a.id)`): killed by
+  "books a turn for an intent with no commits to that intent's unphased
+  bucket, not unattributed".
+- F6, old four keys in the `formatAll` total: killed by "prints and
+  serialises both columns".
+
+Tests: kit 379 (378 before); pytest 658. `npm run stats -- 19` (numbers
+only): total agent work 1h15m, coord work 11m, unchanged from before.
