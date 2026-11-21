@@ -1,10 +1,13 @@
 import json
+import re
+from collections import Counter
 from pathlib import Path
 
 import pytest
 
 from advisor.catalogue import CATEGORIES, load_catalogue
-from advisor.evals.cases import FEATURES, SCENARIOS, CaseFileError, parse_cases
+from advisor.evals.cases import FEATURES, SCENARIOS, Case, CaseFileError, parse_cases
+from advisor.evals.coverage import PERSONAS, check_coverage, parse_probe
 
 COMMITTED = Path(__file__).parent.parent / "evals" / "cases.jsonl"
 CATALOGUE = load_catalogue()
@@ -18,10 +21,6 @@ def line(**fields):
 
 def load_committed():
     return parse_cases(COMMITTED.read_text(encoding="utf-8"), CATALOGUE)
-
-
-def test_committed_file_validates_and_has_12_to_20_cases():
-    assert 12 <= len(load_committed()) <= 20
 
 
 def test_committed_file_covers_every_category():
@@ -207,3 +206,197 @@ def test_a_property_without_expect_search_is_rejected():
         parse_cases(line(expect_properties=["cites_a_match"]), CATALOGUE)
     assert "line 1, case 'c1': field 'expect_properties'" in str(e.value)
     assert "expect_search" in str(e.value)
+
+
+# --- §15 B5, B7, B8: the 50 and their spread --------------------------------
+
+VARIETIES = ("typo", "multi", "vague", "casual")
+MIN_VARIETY = 5
+SCENARIO_RANGE = (5, 12)
+OFF_TOPIC_RANGE = (2, 4)
+MIN_PER_FEATURE = 4
+NOTE_RE = re.compile(
+    r"^(?:source: (?P<source>[^;]+); )?probe: (?P<probe>\{.*?\})(?:; variety: (?P<variety>.*))?$"
+)
+
+
+def dims_case(n, feature, scenario, persona=PERSONAS[0], note=""):
+    return Case(
+        f"c{n}",
+        f"question {n}",
+        note=note,
+        dimensions={"feature": feature, "scenario": scenario, "persona": persona},
+    )
+
+
+def spread_problems(cases):
+    """What is wrong with the spread of `cases`; empty when it meets B5 and B7."""
+    problems = []
+    if len(cases) != 50:
+        problems.append(f"{len(cases)} cases, not 50")
+    if any(c.dimensions is None for c in cases):
+        return [*problems, "a case has no dimensions"]
+    dims = [c.dimensions for c in cases]
+    scenarios = Counter(d["scenario"] for d in dims)
+    for scenario in SCENARIOS:
+        low, high = OFF_TOPIC_RANGE if scenario == "off-topic" else SCENARIO_RANGE
+        if not low <= scenarios[scenario] <= high:
+            problems.append(f"scenario {scenario}: {scenarios[scenario]}, not {low}-{high}")
+    features = Counter(d["feature"] for d in dims)
+    for category in CATEGORIES:
+        if features[category] < MIN_PER_FEATURE:
+            problems.append(f"feature {category}: {features[category]}, fewer than 4")
+    if any(d["persona"] not in PERSONAS for d in dims):
+        problems.append("a persona is not in PERSONAS")
+    if len({c.id for c in cases}) != len(cases):
+        problems.append("duplicate ids")
+    if len({c.question for c in cases}) != len(cases):
+        problems.append("duplicate questions")
+    return problems
+
+
+def variety_counts(cases):
+    counts = Counter()
+    for c in cases:
+        m = NOTE_RE.match(c.note)
+        if m and m["variety"]:
+            counts.update(v.strip() for v in m["variety"].split(","))
+    return counts
+
+
+BALANCED_SIZES = {
+    "exact-match": 10,
+    "several-matches": 9,
+    "no-match": 8,
+    "budget-too-low": 5,
+    "out-of-stock": 7,
+    "spelling-differs": 7,
+    "off-topic": 4,
+}
+
+
+def balanced(**overrides):
+    """50 cases that meet the spread; `overrides` changes scenario sizes (keys use _ for -)."""
+    sizes = {**BALANCED_SIZES, **{k.replace("_", "-"): v for k, v in overrides.items()}}
+    cases = []
+    for scenario, size in sizes.items():
+        for _ in range(size):
+            n = len(cases)
+            feature = "off-topic" if scenario == "off-topic" else CATEGORIES[n % 8]
+            cases.append(dims_case(n, feature, scenario))
+    return cases
+
+
+def test_the_committed_file_has_exactly_50_cases_that_meet_the_spread():
+    cases = load_committed()
+    assert len(cases) == 50
+    assert spread_problems(cases) == []
+
+
+def test_new_cases_name_their_source_and_a_probe_that_passes_the_coverage_check():
+    cases = load_committed()
+    with_source = [c for c in cases if "source:" in c.note]
+    assert len(with_source) == 35
+    for c in with_source:
+        m = NOTE_RE.match(c.note)
+        assert m and m["source"] and m["variety"], c.id
+        probe = parse_probe(json.loads(m["probe"]))
+        assert probe is not None, c.id
+        assert probe.to_note() == "probe: " + m["probe"], c.id  # as Probe.to_note writes it
+        ok, why = check_coverage(c.dimensions["scenario"], probe, c.question, CATALOGUE)
+        assert ok, f"{c.id}: {why}"
+
+
+def test_the_committed_file_has_the_customer_style_variety():
+    counts = variety_counts(load_committed())
+    for variety in VARIETIES:
+        assert counts[variety] >= MIN_VARIETY, f"{variety}: {counts[variety]}"
+    assert set(counts) <= {*VARIETIES, "none"}
+
+
+def test_new_cases_expect_what_their_scenario_says():
+    for c in load_committed():
+        if "source:" not in c.note:
+            continue
+        scenario = c.dimensions["scenario"]
+        if scenario == "off-topic":
+            assert c.must_decline, c.id
+        elif scenario == "out-of-stock":
+            assert c.expect_ids and not c.expect_properties, c.id
+        elif scenario in ("several-matches", "spelling-differs"):
+            assert "cites_a_match" in c.expect_properties, c.id
+            if scenario == "spelling-differs":
+                assert "keywords_any" in c.expect_search, c.id
+        else:  # no-match, budget-too-low, exact-match
+            assert c.expect_search and not c.expect_ids and not c.must_decline, c.id
+
+
+def test_the_balanced_list_meets_the_spread():
+    assert spread_problems(balanced()) == []
+
+
+@pytest.mark.parametrize("scenario", [s for s in SCENARIOS if s != "off-topic"])
+def test_scenario_bounds_are_exact(scenario):
+    # Trade cases with off-topic-free "no-match" (or "exact-match") to stay at 50.
+    other = "no-match" if scenario != "no-match" else "exact-match"
+    base = BALANCED_SIZES
+
+    def problems(size):
+        sizes = {scenario.replace("-", "_"): size}
+        sizes[other.replace("-", "_")] = base[other] + base[scenario] - size
+        return [p for p in spread_problems(balanced(**sizes)) if f"scenario {scenario}" in p]
+
+    assert problems(5) == [] and problems(12) == []
+    assert problems(4) != [] and problems(13) != []
+
+
+def test_off_topic_bounds_are_two_to_four():
+    def problems(size):
+        cases = balanced(off_topic=size, no_match=8 + 4 - size)
+        return [p for p in spread_problems(cases) if "scenario off-topic" in p]
+
+    assert problems(2) == [] and problems(4) == []
+    assert problems(1) != [] and problems(5) != []
+
+
+def test_each_category_needs_four_features_not_three():
+    first = CATEGORIES[0]
+
+    def relabelled(keep):
+        out, seen = [], 0
+        for c in balanced():
+            d = dict(c.dimensions)
+            if d["feature"] == first:
+                seen += 1
+                if seen > keep:
+                    d["feature"] = CATEGORIES[1]
+            out.append(Case(c.id, c.question, note=c.note, dimensions=d))
+        return out
+
+    assert [p for p in spread_problems(relabelled(4)) if first in p] == []
+    assert [p for p in spread_problems(relabelled(3)) if first in p] != []
+
+
+def test_spread_rejects_a_wrong_count_bad_personas_and_duplicates():
+    cases = balanced()
+    assert spread_problems(cases[:-1])
+    assert spread_problems([*cases, dims_case(99, "laptop", "exact-match")])
+    bad = [*cases[:-1], dims_case(98, "off-topic", "off-topic", persona="a pirate")]
+    assert any("persona" in p for p in spread_problems(bad))
+    dup = [*cases[:-1], cases[0]]
+    assert any("duplicate ids" in p for p in spread_problems(dup))
+    same_question = [*cases[:-1], Case("other", cases[0].question, dimensions=cases[0].dimensions)]
+    assert any("duplicate questions" in p for p in spread_problems(same_question))
+
+
+def test_variety_is_counted_from_the_note_with_a_boundary():
+    def cs(n):
+        note = "source: gen-x; probe: {}; variety: typo, multi"
+        return [dims_case(i, "laptop", "exact-match", note=note) for i in range(n)]
+
+    assert variety_counts(cs(5))["typo"] == 5 and variety_counts(cs(5))["multi"] == 5
+    assert variety_counts(cs(4))["typo"] == 4
+    assert variety_counts([dims_case(1, "laptop", "exact-match", note="probe: {}")]) == Counter()
+    assert (
+        variety_counts([dims_case(1, "laptop", "exact-match", note="a typo in prose")]) == Counter()
+    )
