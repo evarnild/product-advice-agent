@@ -226,3 +226,18 @@ Mutation checks (backup, apply, `uv run pytest -q`, restore by copy; each fails 
 - P5 (drop the line-8 sentence): killed by `[decide the case]`.
 - P6 (drop ", as the search results show them"): killed by `[pass when something fits]`.
 - E4 (`"undefined"` to `"n/a"` in `judge.py:266`): killed by `test_markdown_rate_is_undefined_with_no_owner_pass`.
+
+### 2026-11-21: review round 4 rework (manual review, F6)
+
+Owner's decision, verbatim: "16 rework".
+
+- F6: in `_RULES` of `tests/test_judge.py`, "case something fits" (line 11), "a implies a fit" (line 19, the whole line; the separate "a says nothing fits when a result does" entry is folded into it and removed), "b other kind" (line 20's first sentence), "c invented details" (line 21) and "d assumed constraint" (line 22) now assert the full text of their line in `judge-no-fit.md`. The prompt is not edited. Test-only change.
+
+Tests: 792 before, 791 after (the folded entry is gone). `npm run verify` green.
+
+Mutation checks (backup by copy, apply, `uv run pytest -q`, restore by copy; each fails exactly one test, 790 passed), all in `test_the_shipped_template_states_each_rule_of_b3`:
+- X1 (line 11: drop " as asked"): killed by `[case something fits]`.
+- X4 (line 19: drop the parenthesis): killed by `[a implies a fit]`.
+- X5 (line 21: drop " (a feature, a spec, stock or a price)"): killed by `[c invented details]`.
+- X6 (line 22: drop " and answers within it"): killed by `[d assumed constraint]`.
+- P1: `[case nothing fits]`; P2: `[pass when nothing fits]`; P4: `[in either case fail]`; P5: `[decide the case]`; P6: `[pass when something fits]`. All still killed.
