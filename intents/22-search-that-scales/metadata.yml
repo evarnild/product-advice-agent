@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 22"
 auto_round: 2
-auto_stopped:
+auto_stopped: eval regressions
 follows_up:
 blocked_by:
   - 14    measured on the 500-product catalogue
