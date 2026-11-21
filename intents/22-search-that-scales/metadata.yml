@@ -11,8 +11,8 @@ plan_approved: 2026-11-21 by-agent    # auto: owner "/auto 22" (auto_authorized 
 live_checked:
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 22"
-auto_round: 2
-auto_stopped: eval regressions
+auto_round: 3
+auto_stopped:
 follows_up:
 blocked_by:
   - 14    measured on the 500-product catalogue
