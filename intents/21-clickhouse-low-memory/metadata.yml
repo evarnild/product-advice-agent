@@ -8,7 +8,7 @@ review_tier:
 intent_accepted: 2026-11-15 by-agent    # owner: "accept 21 /auto 21"
 spec_accepted:
 plan_approved:
-live_checked:
+live_checked: 2026-11-21 by-agent    # owner: "live check 21 passed"
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 21" (diff read)
 auto_round: 2
