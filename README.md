@@ -134,7 +134,7 @@ model. An Anthropic run **costs money** and needs `ANTHROPIC_API_KEY`.
 The suite asks each question in `evals/cases.jsonl` once, through the same
 agent as `advisor`, and scores the answer with fixed checks. There is no
 judge model. **A run uses a real model**: the local one by default (slow on
-CPU, minutes for the 15 cases), or Anthropic when `ADVISOR_MODEL_PROVIDER` is
+CPU, minutes for the 50 cases), or Anthropic when `ADVISOR_MODEL_PROVIDER` is
 set (cents per run). It reads the same environment and `.env` as `advisor`.
 When `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are all
 set, each case is also one Langfuse trace (the same spans as an `advisor`
@@ -167,6 +167,11 @@ asks):
 - **search** (when the case has `expect_search`): at least one
   `search_products` call matched `category`, `max_price`, `min_price`,
   `in_stock_only` and `keywords_any`.
+- **a-match** / **only-matches** (a case with `expect_properties`, which
+  needs `expect_search`): `cites_a_match` wants at least one cited product
+  that fits the case's `expect_search` (the same rule as the catalogue
+  consistency check); `cites_only_matches` wants every cited product to fit.
+  Cited ids that are not in the catalogue are left to **grounded**.
 
 The suite reports; it does not gate anything, and `npm run verify` never runs
 it (it tests the scorers and the runner with a scripted fake).
@@ -212,7 +217,9 @@ uv run advisor-analysis counts evals/runs/<report>.json        # the tables
    `search_products` arguments it expresses, and is kept only if the probe
    fits its scenario against the real catalogue (a "no match" question must
    match nothing, and so on). It prints asked / kept / dropped per scenario.
-   Read and edit `evals/generated.jsonl` before you use it. Cases carry an
+   `evals/generated.jsonl` is a generated pool, not committed: read and edit
+   it before you use it, and copy the questions you keep into
+   `evals/cases.jsonl` (which holds the 50 committed cases). Cases carry an
    optional `dimensions` object (`feature`, `scenario`, `persona`).
 2. **advisor-eval** records, per case, the model turns, each tool call with
    the products it returned, and the guardrail checks, plus `prompt_sha256`
@@ -333,8 +340,10 @@ ids only grow and are never reused; a product leaves by deletion and its id
 is retired; a few products' edits are an adjustment, many products, a
 category or a field a feature. `npm run verify` fails, naming the case and
 the product, when an edit leaves a case in `evals/cases.jsonl` expecting a
-product its `expect_search` no longer returns (or forbidding one it does):
-fix the case in the same branch. A catalogue change also owes an
+product its `expect_search` no longer returns (or forbidding one it does), or
+carrying `cites_a_match` when no product fits its `expect_search` ("no product
+fits expect_search, so cites_a_match cannot pass"): fix the case in the same
+branch. A catalogue change also owes an
 `advisor-eval` run; each report records `catalogue_sha256`. Old reports and
 labels are not redone.
 
