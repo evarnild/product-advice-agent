@@ -3,11 +3,249 @@
 
 verdict: rework
 tier: reviewed
-reviewed-commit: 28aa68c1138c56c2f79d91ba295bf651d26cd8ce
-round: 2
+reviewed-commit: 241dfd988e432fb18ba6256e0694531f6820bcd3
+round: 3
 sampled: no
-run: auto
+run: manual
 live-check: owed
+
+Tier: Reviewed, never lowered; set by the path table (`src/advisor/tracing.py`,
+Reviewed by meaning) and `review_tier: reviewed`.
+
+Sampling: `npm run sdlc:scan -- --sample-due manual --exclude 16` →
+"sample-due manual: nth attested manual change = 1, every 5, sampled: no".
+
+Run: manual (the owner's `/review 16`); the `/auto 16` run stays at round 2,
+stopped at "live check owed".
+
+Scope: the whole change against the amended spec (B1–B11, AC1–AC9), focused
+on `git diff 50887b2..HEAD`: the round-2 rework (af036fe), the widened prompt
+and the AC9 test (140467c), the rate-count fix (e172c01), the live-check data
+(aad9a13, 798fc74, 241dfd9) and the spec amendment (9f46347, bbde313).
+
+The branch was rebased again after round 2 (main 480a676; every branch
+commit's committer date 2026-11-18 13:58). The §16 patch on `src`, `tests`,
+`CLAUDE.md` and `README.md` is identical before (`1687047..28aa68c`) and
+after (`480a676..50887b2`): 1975 added and removed lines each, `diff` empty.
+
+## Resolution of round 2
+| Round 2 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| LOW | M10b chained replace survives | fixed | `tests/test_judge.py:109-115`; M10b KILLED by `test_a_slot_inside_a_conversation_is_not_filled_again` |
+| LOW | stale docstrings (`analysis.py`, `annotate.py:3`) | fixed | module docstring, exit codes and `_LANGFUSE_ENV` comment (`:76-77`) name `judge`; `annotate.py:3-7` names the judge score config and batch writes |
+| LOW (worth a look) | `judging.LANGFUSE_ENV` a third copy | taken | `tests/test_boundaries.py:211-215`; L1 (drop `LANGFUSE_HOST`) KILLED by `test_judging_langfuse_variables_match_the_tracing_module` |
+| LOW (worth a look) | empty `reason` counts as a verdict | left, the owner's call (plan.md, round-2 rework entry) | `judge.py` unchanged; under Not checked |
+| LOW (worth a look) | `plan.md:156` pre-rebase hashes | fixed in af036fe, **stale again** after the 2026-11-18 rebase | F5 |
+| Needs decision | live check before round 3 | resolved: live check first (owner: "16 live check first", ce05c08) | this round reviews the LOW fixes and the live-check files together |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the four rework items, the B3 template plus AC9 test and README paragraph, the `_rate` fix, the live-check data, gates and metadata; no unplanned scope |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | findings (2): F1 (AC7, the 094558Z judgements), F2 (AC8 relabel evidence) |
+| 4 | Tests prove the behaviour | findings (2): F3 (prompt clauses P1, P2, P4, P5, P6), F4 (E4 `"undefined"`) |
+| 5 | Conventions | pass: `langfuse` only in `tracing.py`; the model faked in every test; no network in verify |
+| 6 | Numbers in prose | findings (1): F5 cited hashes not on the branch |
+| 7 | Documentation | pass: README "LLM judge" describes the nothing-fits / something-fits split; CLAUDE.md already describes the judge |
+| 8 | Guardrails and hygiene | pass: ruff, format, mypy strict clean; no new dependency; no key, token or email in the data files; no model text reaches a shell, SQL or HTML |
+| 9 | Repository-specific footguns | pass (list empty); proposed addition under Findings |
+
+Pass 3 detail: B1–B2, B4–B6, B8–B11 unchanged since round 2. B3/AC9: the
+template (`src/advisor/evals/prompts/judge-no-fit.md:8-22`) states both
+cases, both pass rules, fail reasons (a)–(e) and both (b) examples. B7:
+`judge.py:264-266`, `:294-297` print each rate from the table's counts. The
+committed `validation.md` is consistent with the labels: 35 held out, 33 with
+a verdict, 2 errors; TPR 0.52 (11/21), TNR 0.75 (9/12); a recount of the
+current owner labels of the 35 held-out refs gives 23 pass, 12 fail; verdict
+"not trusted" with both reasons (AC7 allows either); B7's minimums hold (33 ≥
+30, 12 ≥ 10). Prompt hash `a6cff797…005f`, recomputed from the committed
+template, `split.json` and labels, equals `validation.md`'s and every line of
+`evals/judgements/20261116T094326Z-ollama.jsonl`.
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 16, feature)
+  note:  22 file(s), 2223 line(s) changed outside intents/.
+```
+
+## Findings
+- **F1 MEDIUM** `evals/judgements/20261116T094558Z-ollama.jsonl`: amended AC7
+  says "`judge` on both 2026-11-16 reports … run again and the new …
+  judgements are committed". This file was last changed in aad9a13: its 6
+  lines have `judged_at` 2026-11-16T11 and `prompt_sha256` `f491bbc2…9461`,
+  the pre-amendment prompt; the current one is `a6cff797…`. Only
+  `20261116T094326Z` was re-judged on 2026-11-21. So 6 committed verdicts,
+  and their `judge-no-fit` scores in Langfuse, come from the old criterion;
+  `judge-validate` is unaffected (it re-judges the held-out set itself).
+  **Needs decision:** re-run `uv run advisor-analysis judge
+  evals/runs/20261116T094558Z-ollama.json` and commit the file (another
+  review round: ship refuses changed files), or accept the stale file and
+  read AC7 as met, saying so in metadata or the plan.
+- **F2 MEDIUM** `evals/labels/*.jsonl` against amended AC8 ("the owner
+  relabels the 43 conversations in `split.json` … the new label lines are
+  committed"). Only 12 of the 43 refs have a label line written after the
+  amendment was accepted (bbde313, 2026-11-16 13:09 +0100): the 12 in
+  `20261113T072503Z-ollama.jsonl` (798fc74). The other 31: 5 in
+  `20261113T070516Z-anthropic.jsonl` (1 few-shot, 4 held out; no traces, so a
+  relabel would go through `view`, which appends a line) have only their
+  2026-11-13 lines; 26 in the two 2026-11-16 reports have only lines from
+  11:02–11:17Z, before the amendment draft, and `import` skips a score equal
+  to the current label (`annotate.py:224-227`), so an unchanged relabel
+  leaves no trace. **Needs decision:** confirm whether these 31 were judged
+  again under amended B3; if not, relabel them (then a new `judge-validate`
+  and another round), or accept the current labels and note it against AC8.
+- **F3 MEDIUM** `tests/test_judge.py:134-152` (AC9): dropping a whole rule
+  line is killed (P3, P7 and the implementer's 12 drops); dropping a clause
+  inside a rule survives the full suite. These clauses are B3 content:
+  - P1 ", or no search was run" (`judge-no-fit.md:10`);
+  - P2 "and offers only alternatives that serve the customer's need, or
+    none" (`:13`, the nothing-fits pass rule);
+  - P6 ", as the search results show them" (`:15`);
+  - P4 the "In either case, answer FAIL…" line (`:17`), which applies
+    (a)–(e) to both cases;
+  - P5 "First decide from the search results which case you are in" (`:8`).
+
+  **Needs rework:** make the `_RULES` phrases for "case nothing fits", "pass
+  when nothing fits" and "pass when something fits" the full sentences of
+  `judge-no-fit.md:10`, `:13` and `:15`, and add one entry each for the `:8`
+  and `:17` lines, so P1, P2, P4, P5 and P6 are killed.
+- **F4 LOW** `src/advisor/evals/judge.py:266`: mutant E4 (`"undefined"` →
+  `"n/a"`) survives (789 passed); no test asserts what `validation.md` prints
+  for a rate without a denominator (removing the guard, E4b, is killed by a
+  ZeroDivisionError). **Needs rework:** in `test_judge.py`, call
+  `validation_markdown` on a table with no owner pass and assert `"owner
+  pass): undefined"` is in the text.
+- **F5 LOW** stale commit hashes after the 2026-11-18 rebase; none is an
+  ancestor of HEAD (post-rebase equivalents by subject in brackets):
+  - `plan.md:156` (Progress): `a98c115`→`5fa5f52`, `4f16caa`→`611d990`,
+    `8c24a35`→`ea6d6a0`, `8e6fbac`→`5e2c032`, `97f7cf6`→`8b1e194`.
+    **Needs rework** (below the Progress marker, mechanical).
+  - `spec.md:7, :13, :223, :230`: `403b4b5`→`aad9a13`; `metadata.yml:9`
+    (comment): `60635df`→`9f46347`. **Needs decision** for `spec.md` (above
+    Progress, owner-accepted): leave as history, or update.
+- **Proposed footgun** (pass 9, the owner's: a policy edit is Reviewed
+  tier): "commit hashes cited in intent artefacts go stale when a branch is
+  rebased" (recurred in §16 rounds 2 and 3). One option: a `check:intent`
+  note for cited hashes that are not ancestors of the branch.
+
+**Mutants** (one change each, backed up and restored by copy; full product
+suite, `uv run pytest -q`, `-x` unless noted; `git diff --quiet` ≠ 0 asserted
+before each run):
+
+| Id | Target | Result | Killed by |
+| --- | --- | --- | --- |
+| E1 | `judge.py:266` print the reduced `Fraction` (reverts e172c01) | KILLED (no `-x`: 2 failed, 787 passed) | `test_markdown_rates_show_the_table_counts_not_a_reduced_fraction`, `test_trusted_at_exactly_0_8_30_and_10` |
+| E2 | `judge.py:297` TNR denominator `a.judged` | KILLED | `test_the_report_has_the_table_both_rates_and_the_disagreements` |
+| E3 | `judge.py:295` TPR denominator `pp+fp` | KILLED | same |
+| **E4** | `judge.py:266` `"undefined"` → `"n/a"` | **SURVIVED** | F4 |
+| E4b | `judge.py:266` no zero guard | KILLED | `test_a_held_out_conversation_without_its_run_report_is_skipped_not_judged` |
+| E5 | `judge.py:266` `.2f` → `.1f` | KILLED | `test_the_report_has_the_table_both_rates_and_the_disagreements` |
+| M10b | `judge.py:96` chained replace, conversation first (round-2 survivor) | KILLED | `test_a_slot_inside_a_conversation_is_not_filled_again` |
+| L1 | `judging.py:41` drop `LANGFUSE_HOST` | KILLED | `test_judging_langfuse_variables_match_the_tracing_module` |
+| **P1** | `judge-no-fit.md:10` drop ", or no search was run" | **SURVIVED** | F3 |
+| **P2** | `judge-no-fit.md:13` drop the alternatives clause | **SURVIVED** | F3 |
+| P3 | `judge-no-fit.md` drop the (c) line | KILLED | `test_the_shipped_template_states_each_rule_of_b3[c invented details]` |
+| **P4** | `judge-no-fit.md:17` drop "In either case…" | **SURVIVED** | F3 |
+| **P5** | `judge-no-fit.md:8` drop "First decide…" | **SURVIVED** | F3 |
+| **P6** | `judge-no-fit.md:15` drop ", as the search results show them" | **SURVIVED** | F3 |
+| P7 | `judge-no-fit.md` drop the (d) line | KILLED | `test_the_shipped_template_states_each_rule_of_b3[d assumed constraint]` |
+
+The rework must kill P1, P2, P4, P5, P6 (`judge-no-fit.md:10, :13, :17, :8,
+:15`) and E4 (`judge.py:266`). The e172c01 fix is proved (E1); the round-2
+rework is proved (M10b, L1).
+
+## Not checked
+- The model's judgements: no model was called; that Haiku's committed
+  verdicts are its replies, and that Langfuse showed scores, comments and no
+  duplicates, are the owner's live-check claims.
+- Whether the 6 traces of `20261116T094558Z` still carry old-prompt
+  `judge-no-fit` scores in Langfuse (not queried).
+- Whether the owner relabelled the 31 refs without changing them (F2; git
+  can't show it).
+- The amendment's "4 of 26 verdicts flipped between two `judge` runs": only
+  the last run's file is committed.
+- The amendment's list of budget-too-low cases where a fitting product was
+  returned: the run reports' tool rows were not opened per case.
+- Still open from round 2: an empty `reason` (the owner's call); `system=""`
+  and `tools=[]` with Anthropic; the server-side upsert on score `id`;
+  non-`ModelError` client exceptions.
+- Round-1 and round-2 killed mutants other than M10b: not re-run (code
+  unchanged; the rebase kept the patch identical).
+- What `1687047..480a676` brought in from main: reviewed under its own
+  intents; only `verify` covers the interaction.
+
+## Live check
+- owed: rule 1 (the change touches `src/advisor/tracing.py`) and rule 3 (paid
+  model output, the Langfuse batch-score endpoint); spec AC7, AC8.
+- **recorded:** `live_checked: 2026-11-21 by-agent` (owner: "live check
+  passed") in 241dfd9 (HEAD). e172c01, the last code change, precedes it;
+  241dfd9 changes only `evals/judge/validation.md`,
+  `evals/judgements/20261116T094326Z-ollama.jsonl` and `metadata.yml`.
+  `validation.md` shows the unreduced counts (11/21, 9/12), so
+  `judge-validate` ran on the e172c01 code, with the prompt hash recomputed
+  from the committed template and split.
+- **Coverage:** the code, yes. The data has one gap: the 094558Z judgements
+  were not re-run under the widened prompt (F1). A rework that changes only
+  tests and `plan.md` leaves the recorded check covering the runtime; a
+  re-run of `judge` on 094558Z is part of AC7 and its file needs review.
+- steps (only if the owner closes the F1 gap):
+  1. In `C:/Users/eric/src/product-advice-agent-wt/16-llm-judge`, with
+     `.env` holding `ANTHROPIC_API_KEY` and the three `LANGFUSE_*`, and
+     Langfuse up: `uv run advisor-analysis judge
+     evals/runs/20261116T094558Z-ollama.json`.
+  2. You should see 6 `PASS|FAIL|ERROR` lines and `judge-no-fit: 6 scored, 0
+     no trace` (or the actual count); in Langfuse, one `judge-no-fit` score
+     per trace with the new reason as its comment; in
+     `evals/judgements/20261116T094558Z-ollama.jsonl`, `prompt_sha256`
+     `a6cff79749036f5a24cd6f6bacf3cc43101d04ebdc24dfdee13933a56e9f005f` on
+     every line.
+  3. Commit the file.
+
+## Eval run
+not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
+"not owed (no listed path changed)". The judge prompt is under
+`src/advisor/evals/prompts/`, not `src/advisor/prompts/`.
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in the worktree at 241dfd9; `git status --short`
+clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit "tests 298", "fail 0";
+  "All checks passed!"; "170 files already formatted"; mypy "Success: no
+  issues found in 31 source files"; "789 passed". Matches the reviewer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "22 file(s), 2223
+  line(s)". Matches.
+- **Coordinator, re-run:** survivors P1, P2, P4, P5, P6
+  (`judge-no-fit.md`) and E4 (`judge.py:266`) each SURVIVED the full product
+  suite (789 passed). Matches the reviewer.
+
+**Reviewer, verified:** verify, check:intent, `owes-run`, sampling; the
+rebase patch comparison; commit order (e172c01 09:37 before 241dfd9 09:47);
+main 480a676 an ancestor of HEAD; no remote branch for `feat/16-llm-judge`;
+label timestamps per split ref (counts only) and the held-out owner totals
+against `validation.md`; `judged_at`, model and `prompt_sha256` of both
+judgements files; the prompt hash recomputed (run reports read-only from the
+main checkout's `evals/runs/`); 15 mutants as tabled; no model, Langfuse or
+network call.
+
+**Taken on trust:** the owner's live-check observations in Langfuse; that
+the committed verdicts are Haiku's replies; the amendment's flip count;
+rounds 1 and 2's kills on unchanged code; Anthropic accepting `system=""`;
+Langfuse upserting on score `id`.
+# Round 2 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 28aa68c1138c56c2f79d91ba295bf651d26cd8ce
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed (path table: `src/advisor/tracing.py` by meaning;
 `review_tier: reviewed`).
@@ -21,7 +259,7 @@ merged code; `git range-diff` and a normalised patch comparison show the
 §16 `src`/`tests` patches unchanged by the rebase. 699 tests = 624 on
 `main` + 70 (round 1) + 5 (rework).
 
-## Round-1 findings: resolution
+### Round-1 findings: resolution
 | Round 1 | Finding | Resolution | Evidence |
 | --- | --- | --- | --- |
 | HIGH | M30 undefined TPR could come out trusted | fixed | `test_no_owner_pass_means_undefined_tpr_and_not_trusted` (`tests/test_judge.py:268`); M30, M30b KILLED |
@@ -34,7 +272,7 @@ merged code; `git range-diff` and a normalised patch comparison show the
 | worth a look | verdict without `reason` | taken | `judge.py:123-126` → `JudgeError`; consistent with B4 ("anything else is a judge error") and AC3; R1-R3 KILLED |
 | worth a look | `CLAUDE.md` prompt path | taken | `src/advisor/evals/prompts/*.md` |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass |
@@ -47,7 +285,7 @@ merged code; `git range-diff` and a normalised patch comparison show the
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -58,7 +296,7 @@ type-check: FAIL (intent 16, feature)
 ```
 FAIL only on the owed live check.
 
-## Findings
+### Findings
 - **LOW** `tests/test_judge.py:109-112`: M10b (chained replace,
   conversation first, at `judge.py:96`) survives; the comment at
   `judge.py:95` claims a slot-like string inside the conversation is never
@@ -101,7 +339,7 @@ FAIL only on the owed live check.
 | M10d | conversation stripped | SURVIVED, equivalent in effect | – |
 | R1 / R2 / R3 | `judge.py:124-126` | KILLED | test_anything_else_is_a_judge_error, test_valid_verdicts |
 
-## Not checked
+### Not checked
 - Real Haiku output (how often a reply lacks `reason`, now an ERROR);
   `system=""`, `tools=[]` with Anthropic.
 - The Langfuse batch score `POST`, upsert on `id`, server-side
@@ -112,7 +350,7 @@ FAIL only on the owed live check.
 - Round 1's 66 killed mutants not re-run (code unchanged across the
   rebase); §13's code brought in by the rebase (reviewed under §13).
 
-## Live check
+### Live check
 - owed: rule 1 (`src/advisor/tracing.py`) and rule 3 (paid model output;
   the Langfuse batch-score endpoint and upsert). Spec AC7, AC8.
 - steps:
@@ -144,7 +382,7 @@ FAIL only on the owed live check.
   score-batch 4xx (`Langfuse score-write failed: …`, keys as `***`) or a
   high ERROR rate is a defect.
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in `C:/Users/eric/src/product-advice-agent-wt/16-llm-judge` at 28aa68c; `git status --short` clean before and after):
 - **Coordinator, re-run:** `npm run verify` → kit 255 tests, 0 fail; "All
