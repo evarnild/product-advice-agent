@@ -154,5 +154,3 @@ def search_products(
     hits = [(n, p) for n, p in scored if n > 0 or not words]
     hits.sort(key=lambda t: (-t[0], t[1].price_eur, t[1].id))
     return [p for _, p in hits][:limit]
-
-

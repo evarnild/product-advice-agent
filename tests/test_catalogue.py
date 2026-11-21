@@ -226,7 +226,11 @@ def test_non_keyword_filters_still_exclude_with_keywords():
         "P-004",
         "P-002",
     ]
-    assert ids(search_products(cat, keywords=["alpha"], max_price=60)) == ["P-003", "P-001", "P-004"]
+    assert ids(search_products(cat, keywords=["alpha"], max_price=60)) == [
+        "P-003",
+        "P-001",
+        "P-004",
+    ]
     assert ids(search_products(cat, keywords=["alpha"], min_price=60)) == ["P-004", "P-002"]
     assert ids(search_products(cat, keywords=["alpha"], in_stock_only=True)) == [
         "P-001",
