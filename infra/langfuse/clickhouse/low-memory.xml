@@ -1,0 +1,17 @@
+<clickhouse>
+    <!-- Intent 21: keep the local ClickHouse small. query_log stays on purpose. -->
+    <trace_log remove="1"/>
+    <text_log remove="1"/>
+    <metric_log remove="1"/>
+    <asynchronous_metric_log remove="1"/>
+    <part_log remove="1"/>
+    <processors_profile_log remove="1"/>
+    <opentelemetry_span_log remove="1"/>
+    <query_thread_log remove="1"/>
+    <query_views_log remove="1"/>
+
+    <mark_cache_size>268435456</mark_cache_size>
+    <index_mark_cache_size>67108864</index_mark_cache_size>
+    <uncompressed_cache_size>0</uncompressed_cache_size>
+    <max_server_memory_usage>1073741824</max_server_memory_usage>
+</clickhouse>

@@ -95,6 +95,15 @@ traces. The compose file needs `infra/langfuse/.env` to exist; to only
 check that it parses, run `docker compose --env-file infra/langfuse/.env.example
 -f infra/langfuse/docker-compose.yml config -q`.
 
+**Memory.** ClickHouse is capped at 1 GB of server memory (1500m for the
+container) by `infra/langfuse/clickhouse/low-memory.xml`, which also turns off
+its own diagnostic log tables (`query_log` stays). On an existing install, free
+the old tables once with `docker compose -f infra/langfuse/docker-compose.yml
+exec clickhouse sh -c 'clickhouse-client --user clickhouse --password
+"$CLICKHOUSE_PASSWORD" -q "TRUNCATE TABLE system.trace_log"'` (repeat for
+`text_log`, `metric_log`, `asynchronous_metric_log`, `part_log`,
+`processors_profile_log`); not automated.
+
 **Coming from the v3 stack.** v4 replaces v3; it is not upgraded in place.
 Run `docker compose -f infra/langfuse/docker-compose.yml down -v` first (this
 deletes the v3 traces), then `up -d`, and create the account, project and

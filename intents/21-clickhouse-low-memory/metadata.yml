@@ -2,17 +2,17 @@
 id: 21
 slug: clickhouse-low-memory
 type: adjustment
-status: accepted
+status: in-review
 title: ClickHouse low-memory config for the local Langfuse
 review_tier:
 intent_accepted: 2026-11-15 by-agent    # owner: "accept 21 /auto 21"
 spec_accepted:
 plan_approved:
-live_checked:
+live_checked: 2026-11-21 by-agent    # owner: "live check 21 passed"
 merged:
-auto_authorized: 2026-11-18 by-agent    # owner: "/auto 21"
-auto_round:
-auto_stopped: too many sessions
+auto_authorized: 2026-11-21 by-agent    # owner: "/auto 21" (after the live check)
+auto_round: 2
+auto_stopped: ready for /ship
 follows_up:
 blocked_by:
 links:
