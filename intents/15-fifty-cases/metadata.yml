@@ -2,14 +2,14 @@
 id: 15
 slug: fifty-cases
 type: feature
-status: in-review
+status: done
 title: A committed set of 50 real-looking eval questions with expected behaviour
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "accept 15 and /auto 15"
 spec_accepted: 2026-11-13 by-agent    # owner: "yes to 15" to the spec stop
 plan_approved: 2026-11-21 by-agent    # auto: owner "/auto 15" (auto_authorized 2026-11-21)
 live_checked: 2026-11-21 by-agent    # owner: "15 live checked"
-merged:
+merged: 08e6754    # 2026-11-21, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 15"
 auto_round: 3
 auto_stopped: live check owed
