@@ -411,6 +411,7 @@ export function computeStats({ commits, events, coordinators, agents, now, cutov
 
   // B5a: joined per intent; an overlap goes to the earlier run's phase. Runs in start order; each books only the
   // part beyond what earlier-started runs already cover, so per-phase work sums to the union of the intent's runs.
+  // Equal starts: the shorter run books first.
   for (const [id, runs] of agentWork) {
     let covered = -Infinity;
     for (const { name, span: [from, to] } of runs.sort((x, y) => x.span[0] - y.span[0] || x.span[1] - y.span[1])) {

@@ -529,6 +529,27 @@ describe('working time (B5a, B6, AC4a)', () => {
     expect(it.phases.reduce((n, p) => n + p.agentWorkMs, 0)).toBe(it.totals.agentWorkMs);
   });
 
+  it('joins agent work whatever the input order of the runs (B5a)', () => {
+    const it = i7(run({ agents: [agentRun('§7 review round 1', 8, 9), agentRun('§7 implement', 7.5, 8.5)] }));
+    expect(ph(it, 'build').agentWorkMs).toBe(1 * H);
+    expect(ph(it, 'review').agentWorkMs).toBe(0.5 * H);
+    expect(it.totals.agentWorkMs).toBe(1.5 * H);
+  });
+
+  it('books nothing for a run contained in an earlier one, and only the tail of a later one (B5a)', () => {
+    const it = i7(run({ agents: [agentRun('§7 implement', 7, 10), agentRun('§7 review round 1', 8, 9), agentRun('§7 rework', 9.5, 11)] }));
+    expect(ph(it, 'build').agentWorkMs).toBe(3 * H);
+    expect(ph(it, 'review').agentWorkMs).toBe(1 * H);
+    expect(it.totals.agentWorkMs).toBe(4 * H);
+  });
+
+  it('on equal starts, the shorter run books first (B5a)', () => {
+    const it = i7(run({ agents: [agentRun('§7 implement', 8, 10), agentRun('§7 review round 1', 8, 9)] }));
+    expect(ph(it, 'review').agentWorkMs).toBe(1 * H);
+    expect(ph(it, 'build').agentWorkMs).toBe(1 * H);
+    expect(it.totals.agentWorkMs).toBe(2 * H);
+  });
+
   it("books agent work by tag to the tag's phase, joining overlapping runs, and leaves untagged runs out", () => {
     const it = i7(run({ agents: [agentRun('§7 implement', 7.5, 8.5), agentRun('§7 implement again', 8, 9), agentRun('§7 review round 1', 9.5, 10), agentRun('Explore', 7, 9)] }));
     expect(ph(it, 'build').agentWorkMs).toBe(1.5 * H);
