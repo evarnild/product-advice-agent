@@ -1,13 +1,150 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §16 review — An LLM judge for one failure mode, validated against the owner's labels
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 53a491d0d3869afb38cb8eed186f7c71a8f7d2d9
-round: 4
+reviewed-commit: 1d79fe95fe21e1a779c0e2d94861a7bbe87f9ed1
+round: 5
 sampled: no
 run: manual
 live-check: owed
+
+Tier: Reviewed, never lowered; set by the path table (`src/advisor/tracing.py`
+in the branch diff, Reviewed by meaning) and `review_tier: reviewed`.
+
+Sampling: `npm run sdlc:scan -- --sample-due manual --exclude 16` →
+"sample-due manual: nth attested manual change = 1, every 5, sampled: no".
+
+Run: manual (the owner's "16 rework", then a round-5 `/review`).
+
+Scope: `git diff 53a491d..HEAD`: 1d79fe9 (the round-4 rework) and 7ba2fd6
+(round-4 `review.md`). Files: `intents/16-llm-judge/plan.md` (Progress
+appended, `:230-243`), `intents/16-llm-judge/review.md`,
+`tests/test_judge.py`. **No `src/` or `evals/` file changed**; `spec.md`
+and `metadata.yml` unchanged; README.md and CLAUDE.md unchanged.
+
+## Resolution of round 4
+| Round 4 | Finding | Resolution | Evidence |
+| --- | --- | --- | --- |
+| F6 MEDIUM | `_RULES` prefixes; X1, X4, X5, X6 survived (`judge-no-fit.md:11, :19, :21, :22`) | fixed | `tests/test_judge.py:140` "case something fits", `:153` "a implies a fit", `:163` "c invented details", `:167` "d assumed constraint" assert the full text of `:11, :19, :21, :22`; `:158` "b other kind" the full first sentence of `:20`. "a says nothing fits when a result does" folded into `:153`, whose line still holds it (X7 killed). X1, X4, X5, X6 KILLED. Prompt not edited |
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the F6 test change and a Progress entry quoting "16 rework"; prompt and spec untouched |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass: AC9 at clause level for every B3 clause in lines 8, 10, 11, 13, 15, 17, 19, 21, 22, plus (b)'s first sentence and both examples; runtime unchanged since round 3 |
+| 4 | Tests prove the behaviour | findings (1): F7 LOW, two `:20` lead-in survivors, judged not AC9 rule content; every required mutant killed |
+| 5 | Conventions | pass: a pure test on the committed file; no model, network or Langfuse |
+| 6 | Numbers in prose | pass: "791 after", "792 before", "each fails exactly one test, 790 passed" reproduced; line numbers 11, 19–22 match |
+| 7 | Documentation | pass (nothing user-facing changed) |
+| 8 | Guardrails and hygiene | pass: ruff, format, mypy strict clean; no dependency, secret, user data or owner label text |
+| 9 | Repository-specific footguns | pass (list empty); the round-3 proposal (stale hashes after a rebase) open, the owner's call; no new hash cited |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: PASS (intent 16, feature)
+  note:  22 file(s), 2258 line(s) changed outside intents/.
+```
+
+## Findings
+- **F7 LOW** `tests/test_judge.py:161-162` (AC9, B3 b): two mutants
+  survive, each dropping a lead-in of `judge-no-fit.md:20` and keeping its
+  example in lowercase: B1b ("Another kind that does serve the need passes:
+  "), B2b ("Another kind that does not serve it fails: "); 791 passed each.
+  Judged not separate rule content: AC9 asks for "each fail reason (a) to
+  (e), with the two alternative examples of (b)"; without the lead-ins the
+  rule sentence and both examples are still asserted, and each example
+  carries its own verdict ("… passes", "… fail"). Worth a look: asserting
+  all of `:20` as one line would kill both (test-only).
+
+**Mutants** (`src/advisor/evals/prompts/judge-no-fit.md`; byte-exact
+replace asserted once, CRLF handled; backed up and restored by copy;
+`git diff --quiet` ≠ 0 before and = 0 after each; full product suite, no
+`-x`):
+
+| Id | Target | Result | Killed by |
+| --- | --- | --- | --- |
+| X1 | `:11` "as asked." → "." | KILLED (1 failed, 790 passed) | `test_the_shipped_template_states_each_rule_of_b3[case something fits]` |
+| X4 | `:19` drop the (a) parenthetical | KILLED | `…[a implies a fit]` |
+| X5 | `:21` drop " (a feature, a spec, stock or a price)" | KILLED | `…[c invented details]` |
+| X6 | `:22` drop " and answers within it" | KILLED | `…[d assumed constraint]` |
+| P1 | `:10` drop ", or no search was run" | KILLED | `…[case nothing fits]` |
+| P5 | `:8` drop "First decide…" | KILLED | `…[decide the case]` |
+| X7 | `:19` drop ", or it says nothing fits when a search result does" | KILLED | `…[a implies a fit]` |
+| B4 | `:20` drop " that does not serve the customer's need" | KILLED | `…[b other kind]` |
+| B3 | `:20` drop the tablet sentence | KILLED | `…[b tablet example]` |
+| B1 | `:20` lead-in → "A tablet" | KILLED (through the capital letter) | `…[b tablet example]` |
+| B2 | `:20` lead-in → "Smartwatches" | KILLED (through the capital letter) | `…[b smartwatch example]` |
+| B1b | `:20` drop the "passes" lead-in, lowercase kept | **SURVIVED** (791 passed) | F7 |
+| B2b | `:20` drop the "fails" lead-in, lowercase kept | **SURVIVED** (791 passed) | F7 |
+| E1 | `:23` drop the (e) line | KILLED | `…[e hides]` |
+| E2 | `:23` "It hides that nothing fits." → "It hides that." | KILLED | `…[e hides]` |
+
+The tests prove AC9's B3 rules at clause level; the only exceptions are
+`:20`'s two lead-ins (F7), framing rather than rule content.
+
+## Not checked
+- P2, P4, P6 not re-run this round (killed in round 4 by the reviewer and
+  the coordinator; their assertions unchanged in 1d79fe9).
+- Judge output on real input: the owner's 2026-11-21 live check; no model
+  called.
+- `evals/judge/validation.md`, judgements and labels not recounted
+  (unchanged since 241dfd9; round 3 recounted them).
+- The "empty `reason` counts as a verdict" behaviour (the owner's call,
+  round 2).
+- `main` has moved (merge-base `480a676`; `main` now has §21 and the §15
+  plan); no rebase or trial merge (read-only).
+- Remote state (no upstream; not checked over the network).
+
+## Live check
+- owed: rule 1 (the branch diff touches `src/advisor/tracing.py`).
+- recorded: `live_checked: 2026-11-21 by-agent` (owner: "live check
+  passed") at 241dfd9. Since then only `tests/test_judge.py` and
+  `intents/16-llm-judge/` changed, so **the recorded check still covers the
+  reviewed runtime content**; `check:intent` passes with it.
+
+## Eval run
+not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
+"not owed (no listed path changed)".
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (in the worktree at 1d79fe9; `git status --short`
+clean before and after):
+- **Coordinator, re-run:** `npm run verify` → kit "tests 298", "fail 0";
+  "All checks passed!"; "170 files already formatted"; mypy "Success: no
+  issues found in 31 source files"; "791 passed". Matches the reviewer and
+  the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → PASS, "22 file(s), 2258
+  line(s)". Matches.
+- **Coordinator, re-run:** the kills the rework claims: X1, X4, X5, X6 each
+  KILLED (1 failed, 790 passed). Matches the reviewer and the implementer.
+- **Coordinator, re-run:** survivors B1b, B2b each SURVIVED (791 passed).
+  Matches the reviewer.
+
+**Reviewer, verified:** HEAD 1d79fe9; the diff scope (3 files; nothing in
+`src/` or `evals/`; spec.md and metadata.yml unchanged); verify,
+check:intent, sampling, `owes-run`; the 15 mutants; no upstream; `main`
+untouched.
+
+**Taken on trust:** the P2, P4, P6 kills (round 4); the owner's
+2026-11-21 live check as `metadata.yml` records it; round 3's recount of
+validation.md, judgements and labels; that the §16 commits on `main` are
+intent bookkeeping only (round 4).
+# Round 4 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 53a491d0d3869afb38cb8eed186f7c71a8f7d2d9
+- round: 4
+- sampled: no
+- run: manual
+- live-check: owed
 
 Tier: Reviewed, never lowered; set by the path table (`src/advisor/tracing.py`
 in the branch diff, Reviewed by meaning) and `review_tier: reviewed`.
@@ -23,7 +160,7 @@ and `tests/test_judge.py`. **No `src/` and no `evals/` file changed** (`git
 diff --name-only 241dfd9..HEAD -- src evals` is empty); README.md and
 CLAUDE.md unchanged.
 
-## Resolution of round 3
+### Resolution of round 3
 | Round 3 | Finding | Resolution | Evidence |
 | --- | --- | --- | --- |
 | F1 MEDIUM | AC7: `20261116T094558Z` judgements from the pre-amendment prompt | accepted by the owner ("1. accept old files"); AC7 read as met | `plan.md:214`; file untouched since 241dfd9 |
@@ -33,7 +170,7 @@ CLAUDE.md unchanged.
 | F5 LOW | stale hashes after the 2026-11-18 rebase | fixed (spec.md edit approved: "3. update them") | spec.md: exactly 4 lines (`:7, :13, :223, :230`) `403b4b5`→`aad9a13` (ancestor, same subject); metadata.yml `:9` comment only, `60635df`→`9f46347` (ancestor, same subject), gate values unchanged; plan.md `:156` five hashes, all ancestors with matching subjects. The only non-ancestor hashes left are the old→new mapping at `plan.md:218` (intended history) |
 | Proposed footgun | stale cited hashes after a rebase | open, the owner's call (a policy edit is Reviewed tier) | — |
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass: the F3/F4 tests, the F5 hash edits, a Progress entry with the owner's decisions; nothing else |
@@ -46,7 +183,7 @@ CLAUDE.md unchanged.
 | 8 | Guardrails and hygiene | pass: ruff, format, mypy strict clean; no dependency, secret, user data or owner label text in the diff |
 | 9 | Repository-specific footguns | pass (list empty); the round-3 proposal is open |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -55,7 +192,7 @@ type-check: PASS (intent 16, feature)
   note:  22 file(s), 2245 line(s) changed outside intents/.
 ```
 
-## Findings
+### Findings
 - **F6 MEDIUM** `tests/test_judge.py:140, :151, :156, :157` (AC9, B3; the
   same class as round-3 F3, which round 3's list missed): four `_RULES`
   entries are still prefixes of their template line, so dropping a B3 clause
@@ -100,7 +237,7 @@ product suite `uv run pytest -q`, no `-x`):
 
 The rework must kill X1, X4, X5, X6.
 
-## Not checked
+### Not checked
 - Clause drops inside `judge-no-fit.md:20` ((b), beyond its two examples)
   and `:23` ((e)); `:20` is covered by F6's fix.
 - Judge output on real input: the owner's live check (2026-11-21); no model
@@ -114,7 +251,7 @@ The rework must kill X1, X4, X5, X6.
   bookkeeping in `intents/16-llm-judge/` only.
 - Remote state (no upstream; not checked over the network).
 
-## Live check
+### Live check
 - owed: rule 1 (the branch diff touches `src/advisor/tracing.py`).
 - recorded: `live_checked: 2026-11-21 by-agent` (owner: "live check
   passed") at 241dfd9. Since then only `tests/test_judge.py` and
@@ -122,11 +259,11 @@ The rework must kill X1, X4, X5, X6.
   reviewed runtime content**. A test-only F6 rework keeps it covered; a
   prompt edit would not.
 
-## Eval run
+### Eval run
 not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
 "not owed (no listed path changed)".
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (in the worktree at 53a491d; `git status --short`
 clean before and after):
