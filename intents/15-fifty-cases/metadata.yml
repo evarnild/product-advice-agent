@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-21 by-agent    # owner: "/auto 15"
 auto_round: 1
-auto_stopped:
+auto_stopped: decision needed
 follows_up:
 links:
   - intents/8-offline-evals    the case format and code checks
