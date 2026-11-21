@@ -110,6 +110,20 @@ def _norm(text: str) -> str:
     return text.lower().replace("-", " ")
 
 
+def keyword_set(keywords: Sequence[str] | None) -> list[str]:
+    """The distinct, normalised, non-blank keywords: "in-ear" and "in ear" are one (§22 B3)."""
+    return list(dict.fromkeys(w for w in (_norm(k) for k in keywords or []) if w.strip()))
+
+
+def keywords_matched(product: Product, words: Sequence[str]) -> int:
+    """How many of `words` (from `keyword_set`) the product's name, brand or description has.
+
+    A keyword counts once however often it appears in the text (§22 B3, B11).
+    """
+    haystack = _norm(f"{product.name} {product.brand} {product.description}")
+    return sum(1 for w in words if w in haystack)
+
+
 def search_products(
     catalogue: Sequence[Product],
     category: str | None = None,
@@ -128,8 +142,7 @@ def search_products(
     keywords and product text alike, so 'noise-cancelling' finds 'noise cancelling' (§7).
     """
     limit = max(MIN_LIMIT, min(MAX_LIMIT, limit))
-    # Distinct after normalising, blanks dropped: "in-ear" and "in ear" are one keyword.
-    words = list(dict.fromkeys(w for w in (_norm(k) for k in keywords or []) if w.strip()))
+    words = keyword_set(keywords)
 
     def passes(p: Product) -> bool:
         if category is not None and p.category != category:
@@ -142,15 +155,10 @@ def search_products(
             return False
         return True
 
-    def matched(p: Product) -> int:
-        # A keyword counts once however often it appears in the text.
-        haystack = _norm(f"{p.name} {p.brand} {p.description}")
-        return sum(1 for w in words if w in haystack)
-
     # Any keyword is enough (OR), not all of them: a model that adds one keyword too many
     # (tv sound: ["soundbar", "external"]) used to get nothing back. Precision comes back
     # through the ranking below, not through excluding products.
-    scored = [(matched(p), p) for p in catalogue if passes(p)]
+    scored = [(keywords_matched(p, words), p) for p in catalogue if passes(p)]
     hits = [(n, p) for n, p in scored if n > 0 or not words]
     hits.sort(key=lambda t: (-t[0], t[1].price_eur, t[1].id))
     return [p for _, p in hits][:limit]

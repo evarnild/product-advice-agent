@@ -349,7 +349,9 @@ labels are not redone.
 
 The agent's `search_products` tool matches a product when any keyword appears
 (name, brand or description) and ranks by distinct keywords matched, then
-price, then id; it returns 10 products by default. The consistency check ranks
+price, then id; it returns 10 products by default. With keywords, each row carries
+`keywords_matched`; when no product matches any keyword the tool returns the rows for the
+other filters with `keywords_matched` 0 (§22 B11). The consistency check ranks
 the same way.
 
 The catalogue has 500 products (63 in laptop, phone, headphones and monitor,

@@ -347,6 +347,9 @@ def test_schema_text_says_any_keyword_matches_and_default_ten():
     assert "Any one keyword can match" in kw and "more of the keywords come first" in kw
     assert "all appear" not in kw
     assert "default 10" in props["limit"]["description"]
+    desc = " ".join(search_tool(ARG_CAT).spec.description.split())
+    assert "each row has keywords_matched" in desc
+    assert "no product matches any keyword" in desc and "keywords_matched 0" in desc
 
 
 def test_prompt_tells_the_model_to_put_distinguishing_words_in_keywords():
@@ -377,3 +380,78 @@ def test_committed_catalogue_student_laptop_under_700_finds_p009():
     ids = [i["id"] for i in json.loads(res.content)]
     assert len(ids) == 10
     assert "P-009" in ids
+
+
+# --- §22 B11 / AC9: keyword fallback and keywords_matched in the tool ---
+
+
+def _rows(args, catalogue=ARG_CAT):
+    fake = ScriptedModelClient([call(args), final("ok")])
+    run_agent("q", fake, [search_tool(catalogue)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    assert not res.is_error
+    return json.loads(res.content)
+
+
+def test_no_match_keyword_search_falls_back_to_filter_only_rows_with_count_zero():
+    rows = _rows({"category": "phone", "keywords": ["student"]})
+    assert [r["id"] for r in rows] == ["P-010", "P-011", "P-012", "P-013"]
+    assert all(r["keywords_matched"] == 0 for r in rows)
+    # same rows as the filter-only search, in the normal order
+    assert [r["id"] for r in rows] == _ids_for({"category": "phone"})
+
+
+def test_fallback_respects_category_price_stock_and_limit():
+    kw = ["nothing-like-this"]
+    assert [r["id"] for r in _rows({"category": "phone", "min_price": 200, "keywords": kw})] == [
+        "P-012",
+        "P-013",
+    ]
+    assert [r["id"] for r in _rows({"max_price": 160, "keywords": kw})] == ["P-010", "P-011"]
+    assert [r["id"] for r in _rows({"in_stock_only": True, "keywords": kw})] == [
+        "P-010",
+        "P-012",
+        "P-013",
+    ]
+    assert [r["id"] for r in _rows({"limit": 2, "keywords": kw})] == ["P-010", "P-011"]
+    assert _rows({"category": "laptop", "keywords": kw}) == []
+    assert _rows({"min_price": 9999, "keywords": kw}) == []
+
+
+def test_search_with_matches_has_no_fallback_rows_and_counts_each_row():
+    rows = _rows({"keywords": ["zoom", "lens", "nothing"]})
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-012", 2), ("P-011", 1)]
+
+
+def test_duplicate_and_spelling_variant_keywords_count_once():
+    cat = [
+        Product("P-020", "Quiet Phone", "Acme", "phone", 10.0, True, {}, "in-ear noise cancelling")
+    ]
+    rows = _rows({"keywords": ["in-ear", "in ear", "IN-EAR", "noise-cancelling"]}, cat)
+    assert rows[0]["keywords_matched"] == 2
+
+
+def test_blank_only_keywords_have_no_field_and_no_fallback_change():
+    for kws in ([" "], [""], ["-", " "], []):
+        rows = _rows({"category": "phone", "keywords": kws})
+        assert [r["id"] for r in rows] == ["P-010", "P-011", "P-012", "P-013"]
+        assert all("keywords_matched" not in r for r in rows)
+    assert _rows({"category": "laptop", "keywords": [" "]}) == []
+
+
+def test_search_without_keywords_has_no_keywords_matched_field():
+    rows = _rows({"category": "phone"})
+    assert rows and all("keywords_matched" not in r for r in rows)
+
+
+def test_blank_keywords_alongside_real_ones_still_count():
+    rows = _rows({"keywords": ["", "zoom"]})
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-011", 1), ("P-012", 1)]
+
+
+def test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "A row with `keywords_matched` 0 does not have the features asked for: say so, "
+        "and do not present it as a fit."
+    ) in text

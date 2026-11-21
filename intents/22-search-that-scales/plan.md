@@ -247,3 +247,13 @@ Commits: the `Merge main (§15) into feat/22-search-that-scales` merge commit, t
 - Conflicts: `_expected_results` in `src/advisor/evals/cases.py` now uses §15's `fits` for the category, price and stock constraints and keeps §22's any-of keywords (distinct, normalised, blanks dropped, `words and matched(p) == 0` guard, brand in the haystack) and ranking (distinct keywords, price, id); it still equals `search_products`. `fits` keeps its any-of keyword test, with its comment updated. `tests/test_evals_consistency.py` keeps both sides' tests. CLAUDE.md and README merged cleanly and read consistently.
 - "Whichever merges second fixes it": under any-of search §15's two no-match probes matched products. `headphones-ldac-balanced-200` is now `["ldac", "balanced cable"]` (was `ldac`, `balanced`, `in-ear`) and `smartwatch-gps-apps-minimalist` is `["third-party apps", "minimalist"]` (was `GPS`, ...), in `expect_search` and in the note's probe. No product contains any of these words. Question texts unchanged. All 35 probes in the committed cases pass `check_coverage`; `catalogue_problems` is empty.
 - Tests: 851 passed in verify.
+
+### Round 4 rework (F11 option c, B11 / AC9), 2026-11-21
+
+Commits: the `§22: B11 keyword fallback and keywords_matched in the tool` commit, then this entry.
+
+- `catalogue.py`: `keyword_set` and `keywords_matched` extracted from `search_products` (B3's normalisation and count, one place); `search_products` results unchanged.
+- `agent.py` tool: with a non-blank keyword and no rows, the same search without keywords (same category, prices, stock, limit); every row of a keyword search carries `keywords_matched` (0 on fallback rows); no field without non-blank keywords. Tool description says so (pinned in `test_schema_text_says_any_keyword_matches_and_default_ten`).
+- `prompts/system.md`: third sentence, pinned by `test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit`. README and CLAUDE.md say the fallback and the field.
+- Failed before the change (7): the fallback, fallback-filters, counts, spelling-variant, blank-alongside-real, prompt tests, and the schema-text test. Passed before (guards): blank-only keywords and no keywords have no field.
+- Tests: 859 passed in verify. No eval run (no model calls). Spec's AC order nit (AC9 before AC7) left for the coordinator.

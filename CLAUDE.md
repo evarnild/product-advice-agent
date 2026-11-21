@@ -156,7 +156,9 @@ Langfuse stack in `infra/langfuse/`.
 - `catalogue.py`: `Product`, `load_catalogue` (validates, names product and
   field), `search_products` (AND of the category, price and stock filters; any keyword
   matches; order by distinct keywords matched, then price, then id; limit
-  clamped to 1..10; keywords case-insensitive, a hyphen counts as a space). Data: `data/catalogue.json`, synthetic.
+  clamped to 1..10; keywords case-insensitive, a hyphen counts as a space). The agent's tool, not
+  `search_products`, falls back to the filters alone when no row matches a keyword and adds
+  `keywords_matched` to each row of a keyword search (§22 B11). Data: `data/catalogue.json`, synthetic.
   `catalogue_build.py` is the seeded generator behind the 500 products (the first 32
   are hand-written); `build_products` is pure and not imported at runtime (not in
   `CORE_CODE`; its `main` reads and writes the file, so it is I/O); `python -m advisor.catalogue_build`

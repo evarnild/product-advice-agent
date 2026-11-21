@@ -8,7 +8,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from advisor.catalogue import CATEGORIES, Product, search_products
+from advisor.catalogue import (
+    CATEGORIES,
+    Product,
+    keyword_set,
+    keywords_matched,
+    search_products,
+)
 from advisor.guardrails import REFUSAL_TEXT, check_input, check_output
 from advisor.models.base import (
     Message,
@@ -114,22 +120,30 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
         limit = args.get("limit", 10)
         if isinstance(limit, bool) or not isinstance(limit, int):
             raise ToolError("'limit' must be an integer")
-        found = search_products(
-            catalogue,
-            category=category,
-            min_price=_number(args, "min_price"),
-            max_price=_number(args, "max_price"),
-            keywords=keywords,
-            in_stock_only=in_stock_only,
-            limit=limit,
-        )
-        return [_product_json(p) for p in found]
+        filters: dict[str, Any] = {
+            "category": category,
+            "min_price": _number(args, "min_price"),
+            "max_price": _number(args, "max_price"),
+            "in_stock_only": in_stock_only,
+            "limit": limit,
+        }
+        words = keyword_set(keywords)
+        found = search_products(catalogue, keywords=keywords, **filters)
+        if not words:
+            return [_product_json(p) for p in found]
+        # B11: keywords that match nothing must not empty the answer; the same search
+        # without them still returns rows, each marked as matching none of the keywords.
+        if not found:
+            found = search_products(catalogue, keywords=None, **filters)
+        return [{**_product_json(p), "keywords_matched": keywords_matched(p, words)} for p in found]
 
     spec = ToolSpec(
         name="search_products",
         description=(
             "Search the shop's product catalogue. The category, price and stock filters must "
-            "all hold. Results are ordered by keywords matched, then price, cheapest first."
+            "all hold. Results are ordered by keywords matched, then price, cheapest first. When "
+            "keywords are given, each row has keywords_matched; if no product matches any "
+            "keyword, the rows for the other filters are returned with keywords_matched 0."
         ),
         parameters=_SEARCH_SCHEMA,
     )
