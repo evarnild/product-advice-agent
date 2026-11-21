@@ -305,3 +305,28 @@ Mutants (backup by copy, restored by copy):
 
 Tests: kit 379 (378 before); pytest 658. `npm run stats -- 19` (numbers
 only): total agent work 1h15m, coord work 11m, unchanged from before.
+
+### Round-5 rework (2026-11-21)
+
+Owner's words: "19 rework". Test-only; the one code change is a comment at
+the B5a join in `scripts/stats-lib.mjs` ("Equal starts: the shorter run
+books first").
+
+- F1: two tests added beside the B5a overlap test: reverse input order
+  (review 8-9, implement 7.5-8.5: build 1 h, review 0.5 h, total 1.5 h) and a
+  contained run (implement 7-10, review 8-9, rework 9.5-11: build 3 h, review
+  1 h, total 4 h; rework maps to the review phase).
+- F2: "on equal starts, the shorter run books first" (implement 8-10, review
+  8-9: review 1 h, build 1 h).
+
+Mutants (backup by copy, restored by copy; run on `scripts/stats-lib.test.mjs`
+alone for speed, all other kit tests unaffected by the join):
+- N2 (drop the sort): killed by "joins agent work whatever the input order of
+  the runs (B5a)" and the equal-starts test.
+- N3 (sort on start only): killed by "on equal starts, the shorter run books
+  first (B5a)".
+- N5 (drop `if (part > 0)`): killed by "books nothing for a run contained in
+  an earlier one, and only the tail of a later one (B5a)".
+- N6 (`covered = to`): killed by the same contained-run test.
+
+Tests: kit 382 (379 before), all green via `npm run verify`.
