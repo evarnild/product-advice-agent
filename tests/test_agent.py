@@ -11,7 +11,7 @@ from advisor.agent import (
     run_agent,
     search_tool,
 )
-from advisor.catalogue import Product
+from advisor.catalogue import Product, load_catalogue, search_products
 from advisor.models.base import ModelError, ModelTurn, ToolCall, Usage
 from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import NoopTracer
@@ -347,3 +347,25 @@ def test_schema_text_says_any_keyword_matches_and_default_ten():
     assert "Any one keyword can match" in kw and "more of the keywords come first" in kw
     assert "all appear" not in kw
     assert "default 10" in props["limit"]["description"]
+
+
+def test_prompt_tells_the_model_to_put_distinguishing_words_in_keywords():
+    text = " ".join(load_system_prompt().split())
+    assert (
+        "Put the words that distinguish what the customer wants (a use such as "
+        '"student" or "running", a feature such as "noise-cancelling") into '
+        "`keywords`; extra keywords no longer empty a search."
+    ) in text
+
+
+def test_committed_catalogue_student_laptop_under_700_finds_p009():
+    # §22 AC4, no fake: P-009 was the 10th cheapest of {laptop, max_price 700}.
+    catalogue = load_catalogue()
+    found = search_products(catalogue, category="laptop", max_price=700, keywords=["student"])
+    assert found[0].id == "P-009"
+    fake = ScriptedModelClient([call({"category": "laptop", "max_price": 700}), final("ok")])
+    run_agent("q", fake, [search_tool(catalogue)], NoopTracer())
+    (res,) = tool_results_sent(fake.requests[1])
+    ids = [i["id"] for i in json.loads(res.content)]
+    assert len(ids) == 10
+    assert "P-009" in ids
