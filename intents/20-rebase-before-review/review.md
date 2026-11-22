@@ -1,13 +1,175 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §20 review — Bring a branch that is behind main up to date before each review round
 
-verdict: rework
+verdict: escalate
 tier: reviewed
-reviewed-commit: 68cc7dc
-round: 2
+reviewed-commit: b0d0ab0
+round: 3
 sampled: no
 run: auto
 live-check: owed
+
+Tier: Reviewed, by the path table (`REVIEW-POLICY.md`, `scripts/ship-lib.mjs`,
+`.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`). Never
+lowered; this round's rework touches tests only. `main`'s policy and review
+skill applied.
+
+HEAD 5f1164f differs from b0d0ab0 only in `metadata.yml` (`auto_round: 3`).
+The branch is 0 behind `main` (03a5bdb). `status: in-review`.
+
+No finding needs rework or a decision: F6 and F7 are resolved; F4, F5, F8
+and F9 are worth a look. Verdict `escalate`: the owner reads the diff.
+
+Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 20` → "nth
+attested auto change = 6, every 3, sampled: yes"; applies only to `attest`,
+so `sampled: no`.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the rework does F6 and F7 and nothing more; `plan.md` changes only below Progress (+4, LF) |
+| 2 | Type check | pass (FAIL only on the owed live check, the owner's) |
+| 3 | Behaviour against the spec | pass: B2 holds end to end for the apply backend; B7's "a conflict needs `MERGE_HEAD`" pinned; eval run not owed |
+| 4 | Tests prove the behaviour, not only pass | pass: L19, U04 KILLED; the 11 remaining survivors are equivalent, unreachable by design, proven by reading, or F8/F9 (round 2's classification, re-run unchanged) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass: 438 kit tests (437 + 1 E2E; the F6 assert is in an existing test); check:intent "1072 line(s)" (1059 + 13) |
+| 7 | Documentation | findings (1): F4 carried (worth a look) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repository-specific footguns | pass (list empty) |
+
+## Type check
+```
+> product-advice-agent@0.0.0 check:intent
+> node scripts/check-intent.mjs
+
+type-check: FAIL (intent 20, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/20-rebase-before-review/review.md → ## Live check, then set live_checked: <date> in intents/20-rebase-before-review/metadata.yml.
+  note:  23 file(s), 1072 line(s) changed outside intents/.
+```
+The only error is the owed live check: the owner's, not rework.
+
+## Resolution of round 2
+| # | Round 2 | At b0d0ab0 | Evidence |
+| --- | --- | --- | --- |
+| F6 LOW | L19 survived | resolved: `scripts/update-branch-lib.test.mjs:113` `classifyMerge({ ...h, status: 1, headAfter: 'b', unmerged: ['f'] })` is `'unexpected'` | L19 KILLED by "reads the facts, not the message" |
+| F7 LOW | U04 survived | resolved: `scripts/update-branch.test.mjs:288-298` "a rebase in progress, apply backend" (exit 1, "rebase is in progress", state unchanged) | U04 KILLED by that case |
+| F4 LOW | CLAUDE.md `/auto` stop list | open, worth a look | — |
+| F5 LOW | A2 and "branch is main" unit-only | open, worth a look | — |
+| F8 LOW | `unexpected` dispatch untested end to end | open, worth a look | U20, U21, U33 survive |
+| F9 LOW | K10: the step-5 stop text unpinned | open, worth a look | K10 survives |
+
+The F6 assert differs from round 2's suggestion, which was wrong as written
+(with `HEAD` unchanged and no `MERGE_HEAD` it is `'refused'`). The
+implementer moved `HEAD` so the facts reach `'unexpected'`, and recorded why
+in Progress; it differs from a conflict only by the missing `MERGE_HEAD`, so
+it pins B7.
+
+## Findings
+- **F4 LOW** (carried) `CLAUDE.md` `/auto` paragraph: the stop list does not
+  name `main merge conflict` or `branch update refused`. Worth a look.
+- **F5 LOW** (carried) AC2: the two-worktrees refusal (A2) and the "branch
+  is `main`" guard are unit-tested only. Worth a look.
+- **F8 LOW** (carried) `scripts/update-branch.mjs:99-109`: the `unexpected`
+  merge dispatch is untested end to end (U20, U21, U33 survive; U33 would
+  skip the abort and go on to `verify`). The plan says the path cannot be
+  reached in a real repo; `classifyMerge` and `classifyAbort` are
+  unit-tested. Worth a look: read these lines in the diff.
+- **F9 LOW** (carried) `.claude/skills/auto/SKILL.md:202`: K10 survives; the
+  required phrase also occurs at `:104` and `:325`. Worth a look.
+
+Nit: the round-2 Progress heading uses a hyphen where earlier entries use an
+em dash.
+
+**Mutants** (`mut20/run.mjs`: copy backup, one replace, `git diff --quiet`
+check, full `npm run test:kit`, restore, `git diff --quiet` check):
+
+| Mutant | Result | Killed by / why it survives |
+| --- | --- | --- |
+| L19 | KILLED | "classifyMerge › reads the facts, not the message" |
+| U04 | KILLED | "refusals change nothing › a rebase in progress, apply backend" |
+| U01 | SURVIVED | equivalent: `git rev-parse --git-path` prints an absolute path for a linked worktree |
+| U13 | SURVIVED | equivalent without a terminal (no editor opens) |
+| U20, U21, U33 | SURVIVED | the `unexpected` path, unreachable end to end by the plan's design: F8 |
+| U29 | SURVIVED | a null status only from a signal-killed git |
+| SS1, SS2 | SURVIVED | `sessions.mjs` call site; no test runs it; AC5 allows a read, read correct in round 1 |
+| K10 | SURVIVED | F9 |
+| K11, K13 | SURVIVED | by design (A3: the grep test rejects the old wordings only) |
+
+All other mutants (L01-L18, L20-L38, U02, U03, U05-U12, U14-U19, U22-U28,
+U30-U32, S01, S02, SL1-SL6, K01-K09, K12, F1M) were killed in rounds 1-2 on
+code unchanged since.
+
+## Not checked
+- `update-branch` against a real worktree with the real `npm run verify`,
+  and the coordinator flow in `/auto` and `/review` (the live check).
+- A merge of `main` that changes `uv.lock`, leaving the worktree's
+  environment stale (carried).
+- The script runs git with the inherited environment (carried).
+- The `unexpected` merge path end to end (F8).
+- Rounds 2 and 3 did not re-read the round-1 diff beyond confirming that
+  only the reworks changed since 2ed67a3; the owner's diff read covers it.
+
+## Live check
+- owed: rule 3 (AC9), unchanged from rounds 1 and 2 (the reworks added only
+  tests and texts).
+- steps (Git Bash, in the main checkout `C:/Users/eric/src/product-advice-agent`):
+  1. With a spawned worktree behind `main` (`npm run sessions` shows
+     "Behind main (update before review): §n (-N)"), run
+     `npm run update-branch -- <id>; echo $?`.
+  2. Run it again.
+  3. Commit anything on `main`, then run `/review <branch>` in the
+     coordinator.
+  4. Optional, in a scratch intent whose branch and `main` edit the same
+     line: `npm run update-branch -- <id>; echo $?`, then
+     `git -C <worktree> status --porcelain --untracked-files=no` and
+     `git -C <worktree> rev-parse -q --verify MERGE_HEAD`.
+- you should see: (1) one block after `verify` finishes: "behind main by N;
+  merged main (now <head>, main <main>)", "verify green", exit 0;
+  `git -C <worktree> rev-parse HEAD^2` equals `git rev-parse main`. (2)
+  "branch contains main at <short main>", no verify, exit 0. (3)
+  `npm run update-branch` runs before any pass and the new `review.md`
+  header has `main: <hash>` equal to `git rev-parse --short main`. (4) exit
+  2, the file under "conflicted files:", both git commands print nothing.
+
+## Eval run
+not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
+"not owed (no listed path changed)".
+
+## Verified myself vs. taken on trust
+
+**Coordinator, re-run** (worktree at 5f1164f; `git status --short` clean
+before and after):
+- **Coordinator, re-run:** `npm run verify` → "tests 438", "pass 438",
+  "fail 0"; "All checks passed!"; "181 files already formatted"; mypy
+  "Success: no issues found in 31 source files"; "859 passed". Matches the
+  reviewer and the implementer.
+- **Coordinator, re-run:** `npm run check:intent` → FAIL only on the owed
+  live check, "23 file(s), 1072 line(s)". Matches the reviewer.
+- **Coordinator, re-run:** L19, U04 KILLED, each by the test the reviewer
+  and the implementer named. Matches.
+- **Coordinator, re-run:** every survivor this review lists (U01, U13, U20,
+  U21, U29, U33, SS1, SS2, K10, K11, K13): SURVIVED, as in round 2; no
+  restore failure.
+
+**Reviewer (agent), read-only:** the rework diff `68cc7dc..b0d0ab0`;
+`git diff --name-only 68cc7dc..5f1164f` (5 files); `plan.md` line endings
+and hunk position; verify, check:intent; L19, U04; `owes-run`; sampling;
+nothing pushed.
+
+**Taken on trust:** round 1's L01-L17 and its AC6 grep classification, and
+round 2's kills, on code unchanged since; the equivalence readings of U13
+and U29 (U01's was checked: the git-path is absolute).
+
+# Round 2 (history)
+
+
+- verdict: rework
+- tier: reviewed
+- reviewed-commit: 68cc7dc
+- round: 2
+- sampled: no
+- run: auto
+- live-check: owed
 
 Tier: Reviewed, by the path table (`REVIEW-POLICY.md`, `scripts/ship-lib.mjs`,
 `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; the rework
@@ -27,7 +189,7 @@ Sampling: `npm run sdlc:scan -- --sample-due auto --exclude 20` → "nth
 attested auto change = 6, every 3, sampled: yes"; applies only to `attest`,
 so `sampled: no`.
 
-## Passes
+### Passes
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass: the rework does F1-F3 and nothing more; `plan.md` changes only below Progress (4 lines) |
@@ -40,7 +202,7 @@ so `sampled: no`.
 | 8 | Guardrails and hygiene | pass |
 | 9 | Repository-specific footguns | pass (list empty) |
 
-## Type check
+### Type check
 ```
 > product-advice-agent@0.0.0 check:intent
 > node scripts/check-intent.mjs
@@ -51,7 +213,7 @@ type-check: FAIL (intent 20, feature)
 ```
 The only error is the owed live check: the owner's, not rework.
 
-## Resolution of round 1
+### Resolution of round 1
 | # | Round 1 | At 68cc7dc | Evidence |
 | --- | --- | --- | --- |
 | F1 MEDIUM | Codex "never merges." contradicts B14 | resolved: `.codex/agents/product-advice-agent-implementer.toml:22` "…; an implementer never merges into `main`."; `scripts/kit-texts.test.mjs:40-44` | F1M KILLED |
@@ -64,7 +226,7 @@ The only error is the owed live check: the owner's, not rework.
 restored LF (0 CR in the blob, as at 2ed67a3) and the text. Net change: 4
 lines appended under Progress.
 
-## Findings
+### Findings
 - **F6 LOW** `scripts/update-branch-lib.mjs:61`, `classifyMerge`: mutant
   L19 (`if (mergeHead && unmerged.length > 0)` → `if (unmerged.length > 0)`)
   survives, so "a conflict needs `MERGE_HEAD`" (B7, reading facts only) is
@@ -118,7 +280,7 @@ those three and ran the 77 round 1 left. All 94 apply exactly once.
 | K10 | SURVIVED: F9 |
 | K11, K13 (a new rebase instruction in other words) | SURVIVED by design (A3: the grep test rejects old wordings only) |
 
-## Not checked
+### Not checked
 - `update-branch` against a real worktree with the real `npm run verify`
   (the live check).
 - The coordinator flow in `/auto` and `/review` (agent instructions; read
@@ -130,7 +292,7 @@ those three and ran the 77 round 1 left. All 94 apply exactly once.
 - Round 2's reviewer did not re-read the round-1 diff beyond confirming
   nothing outside the rework changed since 2ed67a3.
 
-## Live check
+### Live check
 - owed: rule 3 (AC9), unchanged from round 1.
 - steps (Git Bash, in the main checkout `C:/Users/eric/src/product-advice-agent`):
   1. With a spawned worktree behind `main` (`npm run sessions` shows
@@ -151,11 +313,11 @@ those three and ran the 77 round 1 left. All 94 apply exactly once.
   header has `main: <hash>` equal to `git rev-parse --short main`. (4) exit
   2, the file under "conflicted files:", both git commands print nothing.
 
-## Eval run
+### Eval run
 not owed (no listed path): `uv run advisor-analysis owes-run --base main` →
 "not owed (no listed path changed)".
 
-## Verified myself vs. taken on trust
+### Verified myself vs. taken on trust
 
 **Coordinator, re-run** (worktree at b8ea50a; `git status --short` clean
 before and after):
