@@ -194,6 +194,30 @@ branch** instead (decision Q4 below), so this spec says "bring up to date" and
   `README.md` lists no kit command (`npm run ship`, `sessions`) at `d6fb88c`,
   so it gains none.
 
+## Amendment (2026-11-22): six gaps the plan found
+
+The owner answered the six gaps the plan reported (d443da1) with "20 gaos as
+as suggested /auto 20", that is, as suggested:
+
+- **A1 (B1, B2).** The script finds §id's worktree by its branch; when no
+  branch matches, a worktree whose folder name starts with `<id>-` and has
+  no branch is the target, and B2 refuses it as "HEAD is detached". So the
+  detached-HEAD refusal is reachable.
+- **A2 (B2).** Two worktrees for one id: refused, exit 1, naming both,
+  nothing changed (as `npm run sessions` refuses two branches for one id).
+- **A3 (AC6).** "No remaining instruction to rebase a branch" is read as an
+  instruction, not every occurrence of the word: comments and test
+  descriptions that mention a rebase are not instructions. It is checked by
+  a test that rejects the old wordings (`scripts/kit-texts.test.mjs`) plus
+  the review's read of the full grep.
+- **A4 (B23).** `CLAUDE.md:126`, a spawned session "never merges", becomes
+  "never merges into `main`", so it does not contradict B22's brief.
+- **A5 (B14).** The Claude implementer definition's description ("Never
+  pushes, merges, …") is narrowed to "never merges into `main`", so it does
+  not contradict B14's rule in the same file.
+- **A6 (AC2).** The variable that stands in for `npm run verify` in tests
+  is `SDLC_UPDATE_BRANCH_VERIFY`, following `SDLC_SHIP_VERIFY`.
+
 ## Interpretations
 
 - **I1. "Abort the merge cleanly (worktree as before)"** is read as: same
