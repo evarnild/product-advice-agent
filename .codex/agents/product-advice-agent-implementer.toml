@@ -19,7 +19,7 @@ run npm run verify, and commit the merge; if any resolution needs a choice
 between behaviours, run `git merge --abort`, leave the worktree as it was, and
 report the files and the choice. Merging is the coordinator's, and only on
 the owner's explicit request in the current conversation (REVIEW-POLICY.md ->
-"Merging"); an implementer never merges.
+"Merging"); an implementer never merges into `main`.
 
 Before editing, check git status, git branch, and git worktree list.
 Use a Codex-created branch or worktree when work may overlap with Claude Code.

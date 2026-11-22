@@ -52,6 +52,16 @@ describe('findTarget', () => {
     expect(r.reason).toContain('/r/a');
     expect(r.reason).toContain('/r/b');
   });
+  it('does not call a worktree detached when it has a branch of another intent, whatever its folder', () => {
+    const r = findTarget([wtree('/r/product-advice-agent-wt/20-x', 'feat/21-y')], '20');
+    expect(r.ok).toBe(false);
+    expect(r.reason).toContain('no worktree');
+  });
+  it('reads a Windows folder path with backslashes for the detached refusal', () => {
+    const r = findTarget([wtree('C:\\r\\product-advice-agent-wt\\20-x', null)], '20');
+    expect(r.ok).toBe(false);
+    expect(r.reason).toContain('HEAD is detached');
+  });
   it('reports a detached worktree whose folder is <id>-..., else no worktree', () => {
     const r = findTarget([wtree('/r/repo', 'main'), wtree('/r/product-advice-agent-wt/20-x', null)], '20');
     expect(r).toEqual({ ok: false, reason: 'HEAD is detached in /r/product-advice-agent-wt/20-x', detachedPath: '/r/product-advice-agent-wt/20-x' });

@@ -37,6 +37,11 @@ describe('kit texts: the update flow is written down', () => {
       expect(read(f), f).toContain('git merge --abort');
     }
   });
+  it('the Codex implementer never-merges sentence is narrowed to main', () => {
+    const text = read('.codex/agents/product-advice-agent-implementer.toml');
+    expect(text).toContain('an implementer never merges into `main`');
+    expect(text).not.toContain('an implementer never merges.');
+  });
   it('the reviewers and the review skill name the three-dot diff', () => {
     for (const f of [...REVIEWERS, REVIEW]) expect(read(f), f).toContain('main...');
   });
