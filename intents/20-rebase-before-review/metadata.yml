@@ -2,7 +2,7 @@
 id: 20
 slug: rebase-before-review
 type: feature
-status: accepted
+status: in-review
 title: Rebase a branch that is behind main before each review round
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent

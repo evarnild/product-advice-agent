@@ -433,3 +433,13 @@ and the live check (AC9) prove the flow.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-22 — subtasks 1-6
+
+Commits: 83b1e5f (pure decisions), b7bec3a (the command, E2E), e6aef2a (ship messages, `main:` header tests), 1873299 (sessions line, brief), 79c685e (policy, skills, agents, CLAUDE.md, grep test); this entry and `status: in-review` follow in the sixth commit.
+
+Shipped: `scripts/update-branch-lib.mjs` and `scripts/update-branch.mjs`, `npm run update-branch`; new `ship-lib.mjs` messages; `behindLine` in `session-lib.mjs` and the brief's update wording; the policy, `/auto`, `/review`, `/sessions`, both implementer and both reviewer definitions, `CLAUDE.md`; `scripts/kit-texts.test.mjs`.
+
+Tests (kit): 434 pass, 0 fail, up from 382 at the start. New: `update-branch-lib.test.mjs` 20, `update-branch.test.mjs` 17 (E2E, sandbox repos, `SDLC_UPDATE_BRANCH_VERIFY`), `kit-texts.test.mjs` 7; added cases: `ship-lib.test.mjs` 2, `intent-check-lib.test.mjs` 1, `scan-lib.test.mjs` 1, `session-lib.test.mjs` 3 (brief 1, `behindLine` 2), `ship.test.mjs` 1 (id 53). pytest 859 passed, ruff and mypy clean. `check:intent` PASS.
+
+Divergences: (1) `findTarget(worktrees, id)` takes no `mainPath` (only `preflight` needs it) and returns `detachedPath` on the detached refusal, so `update-branch.mjs` can name a rebase in progress (HEAD is detached then) as "a rebase is in progress", as the plan's assumption says. (2) `formatReport` prints "behind main by N" itself, after the merge, with the result; the script prints nothing before the merge, and `verify`'s output is shown only as the tail on red (not streamed), so the live check's "then verify's output" is the tail on a red run only. (3) The E2E "id checked out in the main checkout" case commits on that branch in the sandbox. (4) No mutation testing was run.
