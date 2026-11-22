@@ -38,6 +38,18 @@ describe('checkPreconditions', () => {
     expect(checkPreconditions({ ...good, reviewHeader: { verdict: 'attest' } })).toMatchObject({ failed: 'reviewed-commit' });
   });
 
+  it('says why a rewrite and a merge of main since the review each mean a new round', () => {
+    expect(checkPreconditions({ ...good, isAncestor: false }).message).toContain('rewritten since the review, by a rebase or an amend');
+    const merged = checkPreconditions({ ...good, changedFiles: [...good.changedFiles, 'docs/main-moved.md'] });
+    expect(merged.message).toContain('docs/main-moved.md');
+    expect(merged.message).toContain('a merge of main since the review counts');
+  });
+
+  it('reads a header with a main: line like one without', () => {
+    const withMain = { ...good.reviewHeader, main: 'abc1234' };
+    expect(checkPreconditions({ ...good, reviewHeader: withMain })).toEqual(checkPreconditions(good));
+  });
+
   it('allows only review.md and metadata.yml of the intent after the reviewed commit', () => {
     expect(checkPreconditions({ ...good, changedFiles: [] }).ok).toBe(true);
     const third = checkPreconditions({ ...good, changedFiles: [...good.changedFiles, 'src/x.ts'] });

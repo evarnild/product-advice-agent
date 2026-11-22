@@ -292,6 +292,16 @@ describe('parseReviewHeader', () => {
     expect(parseReviewHeader(report)).toEqual({ verdict: 'attest', tier: 'attested', 'live-check': 'not-needed' });
   });
 
+  it('keeps a main: line between reviewed-commit: and round: and changes no other field', () => {
+    const text = 'verdict: attest\ntier: attested\nreviewed-commit: abc1234\nmain: def5678\nround: 2\nlive-check: not-needed\nrun: auto\n\n## Findings\n';
+    const without = parseReviewHeader(text.replace('main: def5678\n', ''));
+    const withMain = parseReviewHeader(text);
+    expect(withMain).toEqual({ ...without, main: 'def5678' });
+    expect(withMain['reviewed-commit']).toBe('abc1234');
+    expect(withMain['live-check']).toBe('not-needed');
+    expect(withMain.run).toBe('auto');
+  });
+
   it('ignores everything from the first ## section or # Round heading on', () => {
     const h = parseReviewHeader(report.replace('live-check: not-needed\n', ''));
     expect(h['live-check']).toBeUndefined();

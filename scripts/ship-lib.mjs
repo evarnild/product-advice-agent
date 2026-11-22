@@ -95,13 +95,13 @@ export function checkPreconditions({ reviewHeader, isAncestor, changedFiles, int
   if (!isAncestor) {
     return fail(
       'reviewed-commit',
-      `reviewed-commit ${reviewHeader['reviewed-commit']} is not an ancestor of the branch (rebased since the review: a new round is needed).`,
+      `reviewed-commit ${reviewHeader['reviewed-commit']} is not an ancestor of the branch (rewritten since the review, by a rebase or an amend: a new round is needed).`,
     );
   }
   const allowed = new Set([`${intentDir}/review.md`, `${intentDir}/metadata.yml`]);
   const stray = changedFiles.filter((f) => !allowed.has(f));
   if (stray.length) {
-    return fail('unreviewed-changes', `changed since the reviewed commit besides review.md and metadata.yml: ${stray.join(', ')}.`);
+    return fail('unreviewed-changes', `changed since the reviewed commit besides review.md and metadata.yml: ${stray.join(', ')} (a merge of main since the review counts: a new round is needed).`);
   }
   if (!checkIntent) return { ok: true };
   if (checkIntent.verdict === 'FAIL') return fail('check-intent', 'npm run check:intent reports FAIL for the branch.');
