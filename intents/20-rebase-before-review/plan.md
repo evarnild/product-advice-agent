@@ -58,7 +58,7 @@ today's rule (Q3) and `check:intent` is unchanged (Q6).
 - **A grep test that proves less than it looks.** The docs test in subtask 5
   is a denylist of the old phrasings plus required phrases; it cannot prove
   that no *new* rebase instruction exists. The review's full grep (AC6)
-  stays the proof.
+  stays the proof (the spec's amendment A3 reads AC6 this way).
 - **Doc-only rules.** B9-B13, B15-B17, B20, B22-B23 and B14 are agent
   instructions; nothing executes them in `verify`. They are proven by
   reading (passes 1 and 3), by the cheap grep test, and by the live check
@@ -223,7 +223,8 @@ Each ends with `npm run verify` green and is its own commit (`§20: …`).
      `git diff main...<branch>`".
    - `CLAUDE.md`: `npm run update-branch -- <id>` in Commands after
      `npm run ship` (`:26`), with a one-line comment; `:121` "main moved,
-     update"; `:142` "add updates" (B23).
+     update"; `:126` "never merges into `main`" (amendment A4); `:142` "add
+     updates" (B23).
    - Add `scripts/kit-texts.test.mjs`, the grep test below.
 6. **Progress entry and `status: in-review`** (the implementer's own
    bookkeeping; no gate).
@@ -393,7 +394,8 @@ and the live check (AC9) prove the flow.
 
 ## Assumptions I made
 
-- **The detached refusal (B2) is reached by folder name.** B1 finds the
+- **The detached refusal (B2) is reached by folder name** (the spec's
+  amendment A1). B1 finds the
   worktree by branch, and a detached worktree has none. When no branch
   matches, a worktree whose folder name starts with `<id>-` (the name
   `npm run spawn` gives, `session-lib.mjs:31-35`) and has no branch is
@@ -403,30 +405,28 @@ and the live check (AC9) prove the flow.
   lists the branch during a rebase instead, the same reason comes from the
   branch match. Either way exit 1, nothing changed.
 - **Two worktrees for one id are refused** (exit 1, naming both), as
-  `session-io.mjs:58-61` refuses two branches for one id. The spec does not
-  list it; a refusal changes nothing.
+  `session-io.mjs:58-61` refuses two branches for one id: the spec's
+  amendment A2.
 - **"Its branch is `main`" is a guard** proven by a `preflight` unit case
   only: an id lookup can never select `main`.
 - **In progress means** `MERGE_HEAD`, `rebase-merge`, `rebase-apply` or
   `CHERRY_PICK_HEAD` under the worktree's git dir (`git rev-parse
   --git-path`), the three operations B2 names. A revert in progress is not
   named by B2; a conflicted one is caught by the tracked-changes check.
-- **The verify override is `SDLC_UPDATE_BRANCH_VERIFY`**, by analogy with
-  `SDLC_SHIP_VERIFY`; the spec names none.
+- **The verify override is `SDLC_UPDATE_BRANCH_VERIFY`**: the spec's
+  amendment A6.
 - **The red-verify tail is 25 lines**, as `ship.mjs:240`.
 - **No session-log event** is appended: the spec's "Data" line says nothing
   is written outside the target worktree's git state.
 - **The sessions line moves into `session-lib.mjs`** so AC5 has a test
   rather than a read (the AC allows either).
 - **The Claude implementer's description** (`:3`, "Never pushes, merges,
-  …") is narrowed to "never merges into main" so it does not contradict
-  B14's rule in the same file. The Codex description names no merge.
+  …") is narrowed to "never merges into main" (the spec's amendment A5). The Codex description names no merge.
 - **No skill version bump**: no earlier skill edit bumped one.
 - **The grep test file is new** (`scripts/kit-texts.test.mjs`) rather than
   part of an existing test, since it reads texts no script owns.
-- **CLAUDE.md:126** ("never merges", about a spawned session) is left as
-  is: B23 does not name it, and it reads as "never merges into `main`". See
-  the report's spec gaps.
+- **CLAUDE.md:126** ("never merges", about a spawned session) becomes
+  "never merges into `main`": the spec's amendment A4 (2026-11-22).
 
 ## Progress
 
