@@ -7,12 +7,12 @@ title: Rebase a branch that is behind main before each review round
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
 spec_accepted: 2026-11-21 by-agent    # owner: "yes" to the drafted spec
-plan_approved:
+plan_approved: 2026-11-22 by-agent    # auto: owner "/auto 20" (auto_authorized 2026-11-22)
 live_checked:
 merged:
 auto_authorized: 2026-11-22 by-agent    # owner: "20 gaos as as suggested /auto 20"
 auto_round:
-auto_stopped: plan found the spec incomplete
+auto_stopped:
 follows_up:
 links:
   - intents/18-intent-dependencies    a branch built on an unmerged blocker (spawn --base) rebases onto main once the blocker merges
