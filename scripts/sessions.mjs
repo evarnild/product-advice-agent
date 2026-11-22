@@ -10,6 +10,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { eventLogPath, git, mainCheckout, readIntentMetadata } from './session-io.mjs';
 import {
+  behindLine,
   formatEvent,
   formatStatusTable,
   latestEventByWorktree,
@@ -59,10 +60,10 @@ function rowFor(wt, latest) {
 
 function printTable(rows) {
   console.log(formatStatusTable(rows, Date.now()));
-  const behind = rows.filter((r) => r.id && r.behind > 0 && r.session.state !== 'closed');
-  if (behind.length) {
+  const behind = behindLine(rows);
+  if (behind) {
     console.log(`
-Behind main (rebase before review): ${behind.map((r) => `§${r.id} (-${r.behind})`).join(', ')}`);
+${behind}`);
   }
   const ready = rows.filter((r) => r.status === 'in-review');
   if (ready.length) console.log(`Ready for /review: ${ready.map((r) => `§${r.id} ${r.branch}`).join(', ')}`);

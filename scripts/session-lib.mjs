@@ -332,6 +332,16 @@ export function sessionBrief({ id, slug, type, branch, intentDir, port, coordina
 - **Do not merge into \`main\`** and do not rebase other branches.
 - When \`npm run verify\` is green and the work is done, set \`status: in-review\` in
   \`metadata.yml\`, commit, and say so. The coordinator runs \`/review\` and the owner merges.
-- If you are told \`main\` moved, rebase this branch on it and re-run \`npm run verify\`.
+- If you are told \`main\` moved, bring this branch up to date: \`npm run update-branch -- ${id}\` (merges main, never rebases), then resolve any conflict and re-run \`npm run verify\`.
 `;
+}
+
+/**
+ * The "Behind main" line of `npm run sessions`, or null when no open session
+ * is behind. Rows are `{id, behind, session: {state}}`.
+ */
+export function behindLine(rows) {
+  const behind = rows.filter((r) => r.id && r.behind > 0 && r.session.state !== 'closed');
+  if (!behind.length) return null;
+  return `Behind main (update before review): ${behind.map((r) => `§${r.id} (-${r.behind})`).join(', ')}`;
 }
