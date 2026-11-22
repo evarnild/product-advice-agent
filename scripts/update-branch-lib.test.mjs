@@ -110,6 +110,7 @@ describe('classifyMerge', () => {
     expect(classifyMerge({ ...h, status: 1 })).toBe('refused');
     expect(classifyMerge({ ...h, status: 1, headAfter: 'b' })).toBe('unexpected');
     expect(classifyMerge({ ...h, status: 1, mergeHead: true })).toBe('unexpected');
+    expect(classifyMerge({ ...h, status: 1, headAfter: 'b', unmerged: ['f'] })).toBe('unexpected');
   });
 });
 

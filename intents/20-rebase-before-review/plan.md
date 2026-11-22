@@ -447,3 +447,7 @@ Divergences: (1) `findTarget(worktrees, id)` takes no `mainPath` (only `prefligh
 ### 2026-11-22 — round 1 rework
 
 Commit: the `§20: review round 1 rework` commit after 3323fd4. F1: `.codex/agents/product-advice-agent-implementer.toml` now says "an implementer never merges into `main`", and `kit-texts.test.mjs` requires it (1 case). F2 and F3: two `findTarget` cases in `update-branch-lib.test.mjs` (a worktree on another intent's branch in a folder `20-x` is "no worktree"; a backslash folder path ending in 20-x with no branch is "HEAD is detached"). Mutants, applied by edit (the first by sed, restored from a backup copy; the backslash one restored by reversing the edit, and the file then matched the committed one): dropping `!w.branch &&` fails the F2 case; dropping the backslash normalisation fails the F3 case. Kit tests 437 pass, 0 fail. F4 and F5 left to the owner. No divergence.
+
+### 2026-11-22 - round 2 rework
+
+F6: one more assert in the classifyMerge case (status 1, HEAD moved, unmerged files, no MERGE_HEAD is unexpected); the review suggested the same facts with HEAD unchanged, which classifies as refused, so HEAD is moved to reach unexpected. F7: a second E2E case, a rebase in progress with git rebase --apply. Mutants, each backed up by copy and restored by copying back: dropping the mergeHead test in classifyMerge fails the F6 assert (1 failure in the full kit run); dropping the rebase-apply check fails the new F7 case (1 failure). Kit tests 438 pass, 0 fail. F4, F5, F8 and F9 left to the owner.

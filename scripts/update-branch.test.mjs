@@ -285,6 +285,18 @@ describe('npm run update-branch: refusals change nothing', { timeout: 90_000 }, 
     expect(state(w.path)).toEqual(before);
   });
 
+  it('a rebase in progress, apply backend', () => {
+    commitFile(repo, 'shared77.txt', 'line\n');
+    const w = makeBranch(77, []);
+    commitFile(w.path, 'shared77.txt', 'branch\n');
+    moveMain('shared77.txt', 'main\n');
+    expect(() => git(w.path, 'rebase', '--apply', 'main')).toThrow();
+    const before = state(w.path);
+    const r = update(['77']);
+    refused('77', w, r, /rebase is in progress/);
+    expect(state(w.path)).toEqual(before);
+  });
+
   it('a modified tracked file', () => {
     const w = makeBranch(74);
     writeFileSync(join(w.path, 'own-74.txt'), 'edited\n');
