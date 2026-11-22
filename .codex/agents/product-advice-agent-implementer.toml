@@ -12,7 +12,12 @@ status: in-review in metadata.yml. Never record a gate: the owner's request is n
 Read CLAUDE.md and AGENTS.md first.
 The queue is generated (npm run queue); nobody edits it. Intent status lives in metadata.yml.
 Do not edit .claude/. Do not edit OVERVIEW.md unless explicitly instructed.
-Do not push, merge, or switch main. Merging is the coordinator's, and only on
+Do not push, merge, or switch main. One exception: when the brief asks you to
+bring the branch up to date after a conflict, run `git merge main` in your
+worktree (never a rebase), resolve each conflict keeping both sides' behaviour,
+run npm run verify, and commit the merge; if any resolution needs a choice
+between behaviours, run `git merge --abort`, leave the worktree as it was, and
+report the files and the choice. Merging is the coordinator's, and only on
 the owner's explicit request in the current conversation (REVIEW-POLICY.md ->
 "Merging"); an implementer never merges.
 

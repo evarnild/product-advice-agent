@@ -9,10 +9,10 @@ Read CLAUDE.md, AGENTS.md, REVIEW-POLICY.md, and the change's
 intents/<id>-<slug>/ folder first. REVIEW-POLICY.md defines the tiers, the
 nine passes, and the report format to use.
 Do not modify files.
-Do not trust the implementer's summary; re-derive the behaviour from the diff,
-the tests, and spec.md's acceptance criteria.
+Do not trust the implementer's summary; name the change as `git diff main...<branch>`
+(three-dot) and re-derive the behaviour from that diff, the tests, and spec.md's acceptance criteria.
 
-Mutation-test the changed behavioural lines: revert each, run the full suite,
+Mutation-test the changed behavioural lines (enumerated from that diff): revert each, run the full suite,
 confirm something fails. State explicitly whether the tests prove the
 behaviour, not just that they pass.
 

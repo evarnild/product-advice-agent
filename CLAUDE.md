@@ -24,6 +24,7 @@ npm run queue         # the intent queue, generated from metadata.yml (--next-id
 npm run spawn -- <id> # parallel session for an intent (see "Parallel sessions")
 npm run sessions      # what every worktree/session is doing (--json for data, --log for the event tail)
 npm run ship -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /ship skill)
+npm run update-branch -- <id>  # merge main into a behind intent branch in its worktree, then verify (never a rebase; exit 0/1/2/3)
 npm run stats -- <id>|--all  # elapsed time, owner wait and tokens per phase (--json; the stats.md /ship commits)
 npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
@@ -118,13 +119,13 @@ npm run sessions -- --log 30    # the raw event tail
   reminder shows as `idle`, but never hides a prompt still waiting on you:
   only your next prompt, the turn ending or the session ending clears it.
 - **Only the coordinator** runs `/spawn`, `/sessions`, `/review` and
-  `/auto`, and sends "main moved, rebase" notices. The owner merges (or
+  `/auto`, and sends "main moved, update" notices. The owner merges (or
   asks the coordinator to, per "Merging"), one branch at a time, running
   `npm run verify` on `main` after each merge.
 - **A spawned session** works only on its branch and its intent. Its
   `CLAUDE.local.md` (gitignored, written by spawn) says which intent, branch
   and port it has. It never edits the queue (it is generated), never
-  merges, and sets `status: in-review` when done.
+  merges into `main`, and sets `status: in-review` when done.
 - **`/spawn` launches the implementer itself** when `metadata.yml` already
   records the gate the type needs (`plan_approved` for feature/fix/refactor,
   `intent_accepted` for adjustment/experiment): a background
@@ -139,7 +140,7 @@ npm run sessions -- --log 30    # the raw event tail
   Progress shows in the worktree's `status`, `dirty` and `ahead` columns
   (the implementer commits early), and `in-review` means it finished.
 - Keep it to about three intent sessions (or launched implementers) at
-  once. Merges and reviews are serial, so more sessions mostly add rebases.
+  once. Merges and reviews are serial, so more sessions mostly add updates.
 - Spawned worktrees live outside the repo on purpose, so the project's
   tools never pick up a nested checkout. Each worktree installs its own
   dependencies: `npm run setup:worktree` (`uv sync --frozen`), which spawn
