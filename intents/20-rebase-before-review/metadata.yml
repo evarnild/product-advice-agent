@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-22 by-agent    # owner: "20 gaos as as suggested /auto 20"
 auto_round: 3
-auto_stopped:
+auto_stopped: escalate, owner reads the diff
 follows_up:
 links:
   - intents/18-intent-dependencies    a branch built on an unmerged blocker (spawn --base) rebases onto main once the blocker merges
