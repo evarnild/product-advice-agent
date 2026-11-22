@@ -10,7 +10,7 @@ spec_accepted: 2026-11-21 by-agent    # owner: "yes" to the drafted spec
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-21 by-agent    # owner: "push /auto 20"
+auto_authorized: 2026-11-22 by-agent    # owner: "20 gaos as as suggested /auto 20"
 auto_round:
 auto_stopped: plan found the spec incomplete
 follows_up:
