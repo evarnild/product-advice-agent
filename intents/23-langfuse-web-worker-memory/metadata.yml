@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
 auto_round: 1
-auto_stopped:
+auto_stopped: live check owed
 follows_up:
 links:
   - intents/21-clickhouse-low-memory    capped ClickHouse; put web and worker out of scope
