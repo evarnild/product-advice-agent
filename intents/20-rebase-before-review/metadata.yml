@@ -12,7 +12,7 @@ live_checked: 2026-11-23 by-agent    # owner: "live checked and clean up afterwa
 merged:
 auto_authorized: 2026-11-23 by-agent    # owner: "/auto 20" (diff read, after the escalate stop)
 auto_round: 3
-auto_stopped:
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/18-intent-dependencies    a branch built on an unmerged blocker (spawn --base) rebases onto main once the blocker merges
