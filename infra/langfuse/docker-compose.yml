@@ -60,7 +60,10 @@ services:
         condition: service_healthy
     ports:
       - 127.0.0.1:3030:3030
-    environment: *langfuse-env
+    mem_limit: 1g
+    environment:
+      <<: *langfuse-env
+      NODE_OPTIONS: --max-old-space-size=512
 
   langfuse-web:
     image: docker.io/langfuse/langfuse:4.78.0
@@ -68,8 +71,10 @@ services:
     depends_on: *langfuse-depends-on
     ports:
       - 127.0.0.1:3000:3000
+    mem_limit: 1g
     environment:
       <<: *langfuse-env
+      NODE_OPTIONS: --max-old-space-size=512
 
   clickhouse:
     image: docker.io/clickhouse/clickhouse-server:26.3.62.3

@@ -126,3 +126,14 @@ def test_low_memory_config_trims_logs_and_caps_memory() -> None:
     memory = root.find("max_server_memory_usage")
     assert memory is not None and memory.text == "1073741824"
     assert root.find("background_pool_size") is None  # owner's decision (21 F1)
+
+
+def test_langfuse_web_and_worker_are_capped_per_service() -> None:
+    lines = _lines()
+    worker = lines[lines.index("  langfuse-worker:") + 1 : lines.index("  langfuse-web:")]
+    web = lines[lines.index("  langfuse-web:") + 1 : lines.index("  clickhouse:")]
+    shared = lines[lines.index("x-langfuse-env: &langfuse-env") + 1 : lines.index("services:")]
+    for block in (worker, web):
+        assert "    mem_limit: 1g" in block
+        assert "      NODE_OPTIONS: --max-old-space-size=512" in block
+    assert not any("NODE_OPTIONS" in line for line in shared)

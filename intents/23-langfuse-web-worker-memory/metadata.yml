@@ -2,17 +2,17 @@
 id: 23
 slug: langfuse-web-worker-memory
 type: adjustment
-status: accepted
+status: in-review
 title: Memory caps for the local Langfuse web and worker containers
 review_tier:
 intent_accepted: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
 spec_accepted:
 plan_approved:
-live_checked:
+live_checked: 2026-11-23 by-agent    # owner: "23 live checked"
 merged:
 auto_authorized: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
-auto_round:
-auto_stopped:
+auto_round: 1
+auto_stopped: ready for /ship
 follows_up:
 links:
   - intents/21-clickhouse-low-memory    capped ClickHouse; put web and worker out of scope
