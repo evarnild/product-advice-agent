@@ -200,6 +200,10 @@ describe('parseReviewFields', () => {
     expect(f).toEqual({ verdict: 'attest', tier: 'attested', round: '2', sampled: 'yes', run: 'auto' });
     expect(parseReviewFields(review('verdict: attest', 'run: manual')).run).toBe('manual');
   });
+  it('a main: line in the header changes no field', () => {
+    const f = parseReviewFields(review('verdict: attest', 'tier: attested', 'reviewed-commit: abc1234', 'main: def5678', 'round: 2', 'sampled: yes', 'run: auto'));
+    expect(f).toEqual({ verdict: 'attest', tier: 'attested', round: '2', sampled: 'yes', run: 'auto' });
+  });
   it('reads CRLF text', () => {
     expect(parseReviewFields(review('verdict: attest', 'run: auto').replace(/\n/g, '\r\n')).run).toBe('auto');
   });

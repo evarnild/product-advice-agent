@@ -31,10 +31,11 @@ Run from the main checkout. This skill reads; it changes nothing.
 2. **Ready for review.** `status: in-review` rows. Suggest `/review <branch>`
    for each. When several are ready, suggest merging in this order: fewest
    files touched first, then the lower review tier. Each merge makes the
-   others rebase, so the cheap ones go first.
+   others update, so the cheap ones go first.
 3. **Behind main.** Rows with `-N` in `±main` and an open session. Write the
-   rebase notice: *"main moved (§<merged id> merged). Rebase `<branch>` on
-   main and re-run `npm run verify`."* If your harness can message other
+   update notice: *"main moved (§<merged id> merged). Bring `<branch>` up to
+   date: `npm run update-branch -- <id>` (merges main, never rebases), then
+   resolve any conflict and re-run `npm run verify`."* If your harness can message other
    local sessions (ListAgents / SendMessage), send it to that session.
    Otherwise give the owner the text to paste.
 4. **Stale.** Sessions idle or closed for more than a day with work not
@@ -45,6 +46,6 @@ Keep it short: one line per session unless something is wrong.
 
 ## After a merge
 
-When the owner says they merged §N: run step 1, send or draft the rebase
+When the owner says they merged §N: run step 1, send or draft the update
 notice for every open session now behind `main`, and suggest
 `/spawn N --remove`.

@@ -1,6 +1,6 @@
 ---
 name: product-advice-agent-implementer
-description: Implements one approved product-advice-agent intent (intents/<id>-<slug>/plan.md) on its own branch. Writes tests first, keeps npm run verify green, and commits early and often. Never pushes, merges, touches main, or records a gate.
+description: Implements one approved product-advice-agent intent (intents/<id>-<slug>/plan.md) on its own branch. Writes tests first, keeps npm run verify green, and commits early and often. Never pushes, merges into main, touches main, or records a gate.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -30,7 +30,13 @@ Rules:
    conventions. Never commit secrets, tokens or real user data, including
    in fixtures.
 6. **What you may edit.**
-   - Do NOT push, merge, touch `main`, or edit `OVERVIEW.md`. The queue is
+   - Do NOT push, merge, touch `main`, or edit `OVERVIEW.md`. One exception:
+     when the brief asks you to bring the branch up to date after a conflict,
+     run `git merge main` in your worktree (never a rebase), resolve each
+     conflict keeping both sides' behaviour, run `npm run verify`, and commit
+     the merge; if any resolution needs a choice between behaviours, run
+     `git merge --abort`, leave the worktree as it was, and report the files
+     and the choice. The queue is
      generated (`npm run queue`); nobody edits it. Merging is the
      coordinator's, and only on the owner's explicit request
      (`REVIEW-POLICY.md` → "Merging").

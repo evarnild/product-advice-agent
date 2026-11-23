@@ -23,6 +23,7 @@ import {
   pathKey,
   portFor,
   sessionBrief,
+  behindLine,
   sessionState,
   skillOf,
   sortRows,
@@ -411,6 +412,26 @@ describe('sessionBrief', () => {
     expect(brief).toContain('main checkout at `C:/Users/me/src/product-advice-agent`');
     expect(brief).toContain('set `status: in-review` in');
     expect(brief).toContain('`intents/28-ticket-intake/` (type: feature)');
+  });
+
+  it('tells the session to update with the script, never to rebase', () => {
+    const brief = sessionBrief({ id: '28', slug: 's', type: 'feature', branch: 'feat/28-s', intentDir: 'intents/28-s', port: 5228, coordinatorPath: '/c' });
+    expect(brief).toContain('`npm run update-branch -- 28`');
+    expect(brief).toContain('never rebases');
+    expect(brief).not.toContain('rebase this branch');
+  });
+});
+
+describe('behindLine', () => {
+  const row = (id, behind, state = 'active') => ({ id, behind, session: { state } });
+  it('lists open rows that are behind, with the update wording', () => {
+    const line = behindLine([row('27', 2), row('28', 0), row('29', 3, 'closed')]);
+    expect(line).toBe('Behind main (update before review): §27 (-2)');
+    expect(line).not.toMatch(/rebase/i);
+  });
+  it('is null when nothing is behind, and skips rows with no id', () => {
+    expect(behindLine([])).toBeNull();
+    expect(behindLine([row('27', 0), row(null, 4)])).toBeNull();
   });
 });
 

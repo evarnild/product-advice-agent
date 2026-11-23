@@ -62,8 +62,8 @@ reported "green" without seeing it happen yourself.
    or the reproduction in a fix's `intent.md`. Quote what the code does.
 2. **Whether the tests prove the behaviour, or only pass.** This is the
    highest-value thing you do.
-   - **Enumerate mutations from `git diff`, one per changed behavioural
-     line**, not from a mental list of what the feature does.
+   - **Enumerate mutations from `git diff main...<branch>`, one per changed
+     behavioural line**, not from a mental list of what the feature does.
    - For each one: revert it, run the FULL suite, and confirm that something
      fails.
    - Guard your own harness: assert that the file actually changed

@@ -100,6 +100,8 @@ the build step, then round 1.
 | out of rounds | report the open findings again; the intent continues by hand |
 | ready for /ship | run the dry-run (step 8) again and report |
 | critical finding | like a decision: give the implementer the owner's answer, wait, then **a new round** (never a re-review of an unchanged branch) |
+| main merge conflict | give the implementer the owner's answer (resolve the merge as decided), wait, then step 5 at item 1 for round `auto_round` + 1, which runs the update again; **no round consumed** |
+| red verify after merging main, branch update refused | once the owner says the cause is cleared, step 5 at item 1 for round `auto_round` + 1; **no round consumed** |
 | red verify, red check:intent, agent error, worktree held, too many sessions | clear the cause (the owner says it is), then redo the step that stopped; a failed implementer is relaunched, a failed review is redone as the same round |
 
 A new round always passes the cap in step 5, item 1. Never redo a recorded
@@ -174,23 +176,48 @@ table marks "no new round" does not come through here):
    `auto_stopped: out of rounds, open findings below` and list the open
    findings. The intent continues by hand. `auto_round` stays at 3 (the
    most `check:intent` accepts): at this stop, step 9 writes 3, never 4.
-2. Write `auto_round: <n>` into the branch's `metadata.yml` and commit it
+2. **Bring the branch up to date.** With no implementer running in the
+   worktree, run `npm run update-branch -- <id>` from the main checkout. It
+   merges local `main` into the branch when the branch is behind, so the
+   round's reviewed commit contains the merge, and runs `verify`. This is not
+   a round: it consumes none and counts against no cap, and a stop here
+   leaves `auto_round` unchanged (the last finished round, empty before round
+   1, never `0`). By exit status:
+   - **0**: go on to the round-start write (item 3).
+   - **2** (conflict, merge aborted, the branch as it was): read the
+     conflicted files' two sides, read-only (`git diff <merge-base> main --
+     <files>` and `git diff main...<branch> -- <files>`), and decide the kind
+     as for a finding (step 7). **Mechanical** (keeping both sides' behaviour
+     resolves it, and the tests decide): resume or launch the implementer
+     with a brief to run `git merge main`, resolve and commit the merge, wait,
+     then run the script again (it must now exit 0, else this list again).
+     **Needs a behaviour choice, in doubt, or the implementer aborted the
+     merge and reported a choice:** stop with `auto_stopped: main merge
+     conflict`.
+   - **3** (merged, `verify` red): if the failure follows mechanically from
+     `main`'s change meeting the branch's (a test or the spec says what is
+     right), resume the implementer with the failure, wait, and go on to the
+     round-start write (the re-check runs `verify`); otherwise stop with
+     `auto_stopped: red verify after merging main`.
+   - **1** (refused): stop with `auto_stopped: branch update refused`.
+3. Write `auto_round: <n>` into the branch's `metadata.yml` and commit it
    (the implementer has finished; the worktree is yours). Writing it at
    each round start means a closed session resumes at the right round. The
    same commit clears
    `auto_stopped` if a resume left it set (step 1, item 3).
-3. Delegate `/review` to `product-advice-agent-reviewer`, telling it `run: auto` and
+4. Delegate `/review` to `product-advice-agent-reviewer`, telling it `run: auto` and
    that every finding needing rework must say "Needs rework:" or "Needs
    decision:" (`REVIEW-POLICY.md` → "The report").
-4. **Re-check (step 6) before writing `review.md`.** Then read
+5. **Re-check (step 6) before writing `review.md`.** Then read
    `.claude/skills/review/SKILL.md` and write `review.md` as its step 4 does:
    its stamp line as the first line (`<!-- generated-by:
    product-advice-agent/review@<the version that skill states> -->`, copied from the
    skill, never remembered), the format of `REVIEW-POLICY.md` → "The report",
    including `## Type check` with the pasted `npm run check:intent` output and
-   the `## Verified myself vs. taken on trust` heading, with `run: auto`.
-   Commit it on the branch.
-5. Act on the verdict:
+   the `## Verified myself vs. taken on trust` heading, with `run: auto` and
+   `main: <hash>` (`git rev-parse --short main`, taken once the update is
+   done and before the passes). Commit it on the branch.
+6. Act on the verdict:
    - **`escalate`**: always stop, `auto_stopped: escalate, owner reads the
      diff`. The Reviewed tier needs the owner's diff read. The owner's next
      `/auto <id>` means "diff read" and goes on to the live-check or ship
@@ -292,7 +319,10 @@ red `verify` or `check:intent` you cannot trace to a finding the implementer
 is fixing (`red verify` or `red check:intent`); an agent error or a stopped
 agent (`agent error`); a worktree held by a session you didn't start
 (`worktree held by another session`); a fourth open intent session or run
-(`too many sessions`).
+(`too many sessions`). At the branch update (step 5, item 2): a conflict that
+needs a behaviour choice (`main merge conflict`), a red `verify` after the
+merge that does not trace to `main` meeting the branch (`red verify after
+merging main`), a refused update (`branch update refused`).
 
 ## 8. The ship stop
 
@@ -320,7 +350,8 @@ only a `/ship <id>` message does.
 On each stop, before you report:
 
 1. Write `auto_round: <n>` (the number of the round in progress or just
-   finished, never above 3) and `auto_stopped: <reason>` into the branch's
+   finished, never above 3; a stop at the branch update leaves it unchanged,
+   empty before round 1, never `0`) and `auto_stopped: <reason>` into the branch's
    `metadata.yml` (on `main` before the branch exists) and commit it,
    subject `§<id>: auto stopped: <reason>`. **No `#` in the reason**: a `#`
    starts a comment in `metadata.yml` and would cut the reason short. Keep it
@@ -345,7 +376,10 @@ round 2`); `npm run stats` attributes tokens and time by that prefix.
 Safety rules:
 
 - never run `npm run ship` (the coordinator alone runs `--dry-run` at step
-  8), never merge, push, rebase or delete a branch or worktree;
+  8), never merge into `main`, push, rebase or delete a branch or worktree;
+  the implementer merges `main` into its own branch only when the
+  coordinator's brief asks for it, and the coordinator brings a branch up to
+  date only through `npm run update-branch`;
 - never record a gate: only this skill's coordinator writes `plan_approved`
   (step 3), `auto_authorized`, `auto_round` and `auto_stopped`;
 - never touch real user data or a live external system;

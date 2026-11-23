@@ -184,7 +184,9 @@ naming the check that failed:
    - The branch's **committed** `review.md` (`git show
      <branch>:intents/<id>-<slug>/review.md`) says `attest` or `escalate`.
    - Its `reviewed-commit` is an ancestor of the branch (`git merge-base
-     --is-ancestor`). A rebase since the review means a new round.
+     --is-ancestor`). A rewrite of the branch (a rebase, an amend) fails this
+     check, and a merge of `main` into the branch since the review fails the
+     next one; either means a new round.
    - Nothing but that intent's `review.md` or `metadata.yml` differs between
      `reviewed-commit` and the branch (`git diff --name-only`).
 2. `npm run check:intent <branch>` reports PASS, or ROUTE with the reason
@@ -195,6 +197,12 @@ naming the check that failed:
 Then it merges with `--no-ff`, runs `npm run verify` on `main`, and does the
 bookkeeping: `merged:` and `status: done` in `metadata.yml`. There is no
 queue row to move: `npm run queue` is generated.
+
+A branch that is behind `main` is not refused for that. Before each review
+round it is brought up to date with `npm run update-branch -- <id>`, which
+merges `main` into the branch in its worktree (never a rebase), so the round
+reviews the combination that will merge and no earlier `reviewed-commit` is
+rewritten.
 
 ## Passes
 
@@ -254,6 +262,7 @@ separate store.
 verdict: attest | escalate | rework
 tier: automated | attested | reviewed
 reviewed-commit: <hash>
+main: <hash>
 round: <n>
 sampled: no
 run: auto | manual
@@ -296,6 +305,11 @@ live-check: owed | not-needed
 
 `run:` says how the change was driven: `auto` when `/auto` called the
 review, otherwise `manual`.
+
+`main:` is the short hash of local `main` when the round's passes started,
+after the branch was brought up to date (`git rev-parse --short main`). On a
+branch brought up to date it is an ancestor of `reviewed-commit`. No script
+requires it.
 
 A finding that needs rework says which kind. **"Needs rework:"** is
 mechanical: the spec, the plan or a test determines the fix. **"Needs

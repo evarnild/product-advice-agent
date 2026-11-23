@@ -68,7 +68,7 @@ const metadataText = (id, eol, live = '', noMerged = false) =>
  * extra file in the work commit and the review text.
  */
 function makeIntent(id, extra = {}) {
-  const { verdict = 'escalate', liveCheck = 'not-needed', file = `docs/t${id}.md`, body = '', eol = '\n', live = '', afterReview, reviewedCommit, noMerged = false } = extra;
+  const { verdict = 'escalate', main, liveCheck = 'not-needed', file = `docs/t${id}.md`, body = '', eol = '\n', live = '', afterReview, reviewedCommit, noMerged = false } = extra;
   const branch = `feat/${id}-t${id}`;
   const path = wt(`${id}-t${id}`);
   git(repo, 'worktree', 'add', '-q', '-b', branch, path, 'main');
@@ -86,7 +86,7 @@ function makeIntent(id, extra = {}) {
   else if (reviewedCommit) reviewed = reviewedCommit;
   writeFileSync(
     join(dir, 'review.md'),
-    `# §${id} review\n\nverdict: ${verdict}\ntier: reviewed\nreviewed-commit: ${reviewed}\nround: 2\nsampled: no\nlive-check: ${liveCheck}\n\n## Type check\nPASS\n\n## Findings\n- none\n${body}`,
+    `# §${id} review\n\nverdict: ${verdict}\ntier: reviewed\nreviewed-commit: ${reviewed}\n${main ? `main: ${main}\n` : ''}round: 2\nsampled: no\nlive-check: ${liveCheck}\n\n## Type check\nPASS\n\n## Findings\n- none\n${body}`,
   );
   git(path, 'add', '.');
   git(path, 'commit', '-q', '-m', `§${id}: review`);
@@ -333,6 +333,24 @@ describe('npm run ship: preconditions, wiring and refusals', { timeout: 90_000 }
     const r2 = ship(['30']);
     expect(r2.stdout).toMatch(/STOPPED\s+preconditions\s+reviewed-commit/);
     expect(existsSync(bogus.path)).toBe(true);
+  });
+
+  it('refuses a branch that merged main in after the review: unreviewed-changes naming main\'s file, nothing merged', () => {
+    const w = makeIntent(53, { main: git(repo, 'rev-parse', '--short', 'main') });
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(join(repo, 'docs', 'main-moved.md'), 'main moved\n');
+    git(repo, 'add', '.');
+    git(repo, 'commit', '-q', '-m', 'main moved');
+    git(repo, 'push', '-q', 'origin', 'main');
+    git(w.path, 'merge', '--no-edit', 'main');
+    const before = snapshot(w);
+    const r = ship(['53']);
+    expect(r.status, out(r)).toBe(1);
+    expect(r.stdout).toMatch(/STOPPED\s+preconditions\s+unreviewed-changes/);
+    expect(r.stdout).toContain('docs/main-moved.md');
+    expect(r.stdout).toContain('a merge of main since the review counts');
+    expect(snapshot(w)).toEqual(before);
+    expect(existsSync(w.path)).toBe(true);
   });
 
   it('stops when the intent folder on main has uncommitted changes', () => {

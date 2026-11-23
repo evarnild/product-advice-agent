@@ -27,8 +27,22 @@ line of `review.md`.
   review it there, or use `git checkout --detach <branch>` in a scratch
   worktree. Never `git checkout` in the main checkout: another session may
   be working there.
-- **Read-only:** no commits, resets, stashes, merges, or edits to code. The
-  only file you write is `review.md`.
+- **Bring the branch up to date first.** If the branch is behind local
+  `main` (`git rev-list --count <branch>..main` above 0), the coordinator
+  runs `npm run update-branch -- <id>` before any pass. This is the one write
+  `/review` makes besides `review.md`, made by the script before the review
+  starts; under `/auto` it is already done and the script exits 0 with "contains
+  main". Exit 0: review. Exit 2, 3 or 1: no passes and no `review.md`; tell
+  the owner the branch is behind `main` by N, the script's report (the
+  conflicted files, the red output, or the refusal), and what to do next:
+  "send the conflict to the implementer session (or resolve it), then
+  `/review` again". A reviewer agent stays read-only and never runs the
+  script. Once the update is done and before pass 1, record
+  `git rev-parse --short main` for the `main:` header line.
+- **The reviewed diff** is `git diff main...<branch>` (three-dot), so
+  `main`'s changes stay out of it; mutations are enumerated from that diff.
+- **Read-only:** after that, no commits, resets, stashes, merges, or edits to
+  code. The only file you write is `review.md`.
 - **The intent:** find `intents/<id>-*/` from the branch id. Read
   `intent.md`, `spec.md` (if any), `plan.md` including `## Progress`,
   `metadata.yml`, and any previous `review.md`. If there is one, this run is
@@ -92,7 +106,8 @@ and its `compare` output shows the other cases as "removed", as expected.
 
 ## 4. Write `review.md`
 
-Use exactly the format in `REVIEW-POLICY.md` → "The report".
+Use exactly the format in `REVIEW-POLICY.md` → "The report", with
+`main: <hash>` from step 0.
 
 - **Findings** carry a severity, `file:line`, what is wrong, and one of:
   - "Needs rework: <minimal fix>" (mechanical: the spec, the plan or a test
