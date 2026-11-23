@@ -1,0 +1,20 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 23
+slug: langfuse-web-worker-memory
+type: adjustment
+status: accepted
+title: Memory caps for the local Langfuse web and worker containers
+review_tier:
+intent_accepted: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/21-clickhouse-low-memory    capped ClickHouse; put web and worker out of scope
+  - intents/4-langfuse-v4    the compose file this tunes
+blocked_by:
