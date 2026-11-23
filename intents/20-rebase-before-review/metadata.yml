@@ -2,14 +2,14 @@
 id: 20
 slug: rebase-before-review
 type: feature
-status: in-review
+status: done
 title: Rebase a branch that is behind main before each review round
 review_tier:
 intent_accepted: 2026-11-13 by-agent    # owner: "yes" to the drafted intent
 spec_accepted: 2026-11-21 by-agent    # owner: "yes" to the drafted spec
 plan_approved: 2026-11-22 by-agent    # auto: owner "/auto 20" (auto_authorized 2026-11-22)
 live_checked: 2026-11-23 by-agent    # owner: "live checked and clean up afterwards" (steps 1, 2, 4 run by the coordinator, step 3 after the merge)
-merged:
+merged: 2e2c600    # 2026-11-23, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-23 by-agent    # owner: "/auto 20" (diff read, after the escalate stop)
 auto_round: 3
 auto_stopped: ready for /ship
