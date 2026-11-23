@@ -73,3 +73,19 @@ which is the whole VM.
   `review_tier` left empty.
 - No `blocked_by`: §21 is merged.
 - An adjustment needs no spec or plan: `intent_accepted` is its gate.
+
+## Progress
+
+### 2026-11-23 — build
+- Commit: see `git log` (one commit, "§23: cap langfuse web and worker memory").
+- `docker-compose.yml`: web and worker each `mem_limit: 1g` and
+  `NODE_OPTIONS: --max-old-space-size=512`; the worker moved to the
+  `<<: *langfuse-env` merge form. The shared anchor is untouched.
+- Files vs main: 3 outside intents/ (compose +6/-1, README +2, test +11), 19 insertions, 1 deletion.
+- Image finding: `docker image inspect` on langfuse/langfuse:4.78.0 and langfuse-worker:4.78.0 shows neither sets NODE_OPTIONS; nothing to preserve.
+- Verify green: 860 pytest passed; `check:pins` ok (minio "behind" is informational).
+- Mutants (compose copy removed/restored by copy), all killed by
+  `test_langfuse_web_and_worker_are_capped_per_service`: web mem_limit,
+  worker mem_limit, web NODE_OPTIONS, worker NODE_OPTIONS, and NODE_OPTIONS
+  added to the shared anchor.
+- Not done: the live check (stack not touched), owner's.

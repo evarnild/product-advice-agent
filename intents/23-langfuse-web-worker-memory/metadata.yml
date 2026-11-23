@@ -2,7 +2,7 @@
 id: 23
 slug: langfuse-web-worker-memory
 type: adjustment
-status: accepted
+status: in-review
 title: Memory caps for the local Langfuse web and worker containers
 review_tier:
 intent_accepted: 2026-11-23 by-agent    # owner: "accept 23 /auto 23"
