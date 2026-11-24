@@ -16,6 +16,7 @@
     "spawn": "node scripts/spawn-intent.mjs",
     "sessions": "node scripts/sessions.mjs",
     "deliver": "node scripts/deliver.mjs",
+    "reserve-id": "node scripts/reserve-id.mjs",
     "update-branch": "node scripts/update-branch.mjs",
     "stats": "node scripts/stats.mjs",
     "verify": "npm run test:kit && npm run verify:product",
