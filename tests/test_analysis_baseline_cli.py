@@ -157,3 +157,20 @@ def test_owes_run_owed_when_a_file_moves_out_of_a_listed_path(tmp_path, monkeypa
     monkeypatch.chdir(repo)
     code, said, _ = run(["owes-run", "--base", "main"])
     assert code == 0 and said.startswith("owed") and "prompts/system.md" in said
+
+
+def test_baseline_cli_copies_hash_form_and_compare_names_mixed_forms(tmp_path):
+    base = tmp_path / "baseline.json"
+    old = write(tmp_path / "old.json", report([("a", "PASS")]))
+    run(["baseline", str(old), "--out", str(base)])
+    assert "hash_form" not in json.loads(base.read_text(encoding="utf-8"))
+    new = write(
+        tmp_path / "new.json",
+        report([("a", "PASS")], hash_form="lf", cases_sha256="x", prompt_sha256="y"),
+    )
+    code, said, _ = run(["compare", str(new), "--baseline", str(base)])
+    assert code == 0
+    assert said.count("hashed differently") == 2
+    lf_base = tmp_path / "lf.json"
+    run(["baseline", str(new), "--out", str(lf_base)])
+    assert json.loads(lf_base.read_text(encoding="utf-8"))["hash_form"] == "lf"

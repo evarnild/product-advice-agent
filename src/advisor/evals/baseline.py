@@ -60,6 +60,8 @@ def baseline_from(report: Mapping[str, Any], source: str) -> dict[str, Any]:
         value = report.get(key)
         if isinstance(value, str):
             out[key] = value
+    if isinstance(report.get("hash_form"), str):
+        out["hash_form"] = report["hash_form"]
     out["cases"] = {c["id"]: c["status"] for c in report["cases"]}
     return out
 
@@ -90,6 +92,16 @@ class Comparison:
     warnings: list[str] = field(default_factory=list)
 
 
+def _form(source: Mapping[str, Any]) -> str:
+    """The hash form a report or baseline records; none means raw bytes (before §29)."""
+    form = source.get("hash_form")
+    return form if isinstance(form, str) else "raw"
+
+
+def _form_name(form: str) -> str:
+    return "raw bytes, before §29" if form == "raw" else form
+
+
 def compare(report: Mapping[str, Any], baseline: Mapping[str, Any]) -> Comparison:
     """The report against the baseline; it decides nothing (the owner does)."""
     new = {c["id"]: c["status"] for c in report["cases"]}
@@ -101,10 +113,18 @@ def compare(report: Mapping[str, Any], baseline: Mapping[str, Any]) -> Compariso
         (i, old[i], s) for i, s in new.items() if i in old and old[i] != "PASS" and s == "PASS"
     ]
     warnings = []
+    form_a, form_b = _form(baseline), _form(report)
     for key in SOURCE_FIELDS:
         a, b = baseline.get(key), report.get(key)
         if a != b:
-            warnings.append(f"{key} differs: baseline {a or '(none)'}, report {b or '(none)'}")
+            text = f"{key} differs: baseline {a or '(none)'}, report {b or '(none)'}"
+            if key in HASH_FIELDS and form_a != form_b:
+                text += (
+                    f"; hashed differently (baseline: {_form_name(form_a)}, "
+                    f"report: {_form_name(form_b)}), so this does not show whether the "
+                    "content changed"
+                )
+            warnings.append(text)
     return Comparison(
         baseline_source=str(baseline.get("source", "(unnamed)")),
         new_passed=sum(1 for s in new.values() if s == "PASS"),

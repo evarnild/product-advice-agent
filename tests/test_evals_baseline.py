@@ -166,3 +166,41 @@ def test_content_sha256_still_sees_other_whitespace():
     base = content_sha256(b"a\nb\n")
     for other in (b"a \nb\n", b"a\n\nb\n", b"a\nb", b"a\rb\n", b"a\nb\n\n"):
         assert content_sha256(other) != base
+
+
+def test_baseline_copies_hash_form():
+    assert baseline_from(rep([("a", "PASS")], hash_form="lf"), "r.json")["hash_form"] == "lf"
+    assert "hash_form" not in baseline_from(rep([("a", "PASS")]), "r.json")
+
+
+def test_compare_same_form_still_warns_when_content_changed():
+    base = baseline_from(rep([("a", "PASS")], hash_form="lf"), "r.json")
+    new = rep([("a", "PASS")], hash_form="lf", cases_sha256="other")
+    warnings = compare(new, base).warnings
+    assert warnings == ["cases_sha256 differs: baseline c, report other"]
+
+
+def test_compare_identical_lf_run_has_no_warnings():
+    base = baseline_from(rep([("a", "PASS")], hash_form="lf"), "r.json")
+    assert compare(rep([("a", "PASS")], hash_form="lf"), base).warnings == []
+
+
+def test_compare_names_mixed_hash_forms():
+    base = baseline_from(rep([("a", "PASS")]), "r.json")
+    new = rep(
+        [("a", "PASS")],
+        hash_form="lf",
+        cases_sha256="x",
+        prompt_sha256="y",
+        catalogue_sha256="z",
+    )
+    warnings = compare(new, base).warnings
+    assert len(warnings) == 3
+    for w in warnings:
+        assert "hashed differently" in w and "before §29" in w
+    assert warnings[0].startswith("cases_sha256 differs: baseline c, report x; ")
+
+
+def test_compare_mixed_forms_with_equal_hashes_do_not_warn():
+    base = baseline_from(rep([("a", "PASS")]), "r.json")
+    assert compare(rep([("a", "PASS")], hash_form="lf"), base).warnings == []
