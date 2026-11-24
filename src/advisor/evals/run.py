@@ -11,7 +11,6 @@ module is loaded lazily, so an untraced run never imports `advisor.tracing`.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 import traceback
@@ -24,6 +23,7 @@ from typing import Any, TextIO
 from advisor.agent import SYSTEM_PROMPT_PATH, answer_question, search_tool
 from advisor.catalogue import DEFAULT_CATALOGUE_PATH, CatalogueError, load_catalogue
 from advisor.config import DEFAULT_MODELS, ConfigError, load_env, load_settings
+from advisor.evals.baseline import HASH_FORM, content_sha256
 from advisor.evals.cases import Case, CaseFileError, parse_cases
 from advisor.evals.score import Check, score
 from advisor.models import KNOWN_PROVIDERS, make_client
@@ -35,6 +35,16 @@ from advisor.models.base import (
     Usage,
 )
 from advisor.tracer import NoopTracer, Tracer
+
+
+def content_hashes(cases: bytes) -> dict[str, str]:
+    """The report's three content hashes: the given case bytes, the catalogue, the prompt."""
+    return {
+        "cases_sha256": content_sha256(cases),
+        "catalogue_sha256": content_sha256(DEFAULT_CATALOGUE_PATH.read_bytes()),
+        "prompt_sha256": content_sha256(SYSTEM_PROMPT_PATH.read_bytes()),
+    }
+
 
 DEFAULT_CASES = Path("evals") / "cases.jsonl"
 DEFAULT_REPORT_DIR = Path("evals") / "runs"
@@ -307,11 +317,11 @@ def main(
     report = {
         "provider": settings.provider,
         "model": settings.model,
-        "cases_sha256": hashlib.sha256(raw).hexdigest(),
-        # The catalogue file load_catalogue() read above (the default path; there is
-        # no catalogue option). Bytes, so a whitespace-only edit changes it (§13 B6).
-        "catalogue_sha256": hashlib.sha256(DEFAULT_CATALOGUE_PATH.read_bytes()).hexdigest(),
-        "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT_PATH.read_bytes()).hexdigest(),
+        # The catalogue is the file load_catalogue() read above (the default path; there
+        # is no catalogue option). CRLF is read as LF, so a checkout's line endings do not
+        # change a hash; any other whitespace edit still does (§13 B6, §29).
+        **content_hashes(raw),
+        "hash_form": HASH_FORM,
         "started": started.isoformat(),
         "cases": results,
         "totals": {

@@ -1,3 +1,5 @@
+import hashlib
+
 import pytest
 
 from advisor.evals.baseline import (
@@ -6,6 +8,7 @@ from advisor.evals.baseline import (
     baseline_from,
     check_baseline,
     compare,
+    content_sha256,
     format_comparison,
     owes_run,
 )
@@ -151,3 +154,15 @@ def test_report_format_has_eval_run_after_live_check():
 
     policy = (Path(__file__).resolve().parents[1] / "REVIEW-POLICY.md").read_text(encoding="utf-8")
     assert policy.index("\n## Live check\n") < policy.index("\n## Eval run\n")
+
+
+def test_content_sha256_is_the_same_for_lf_crlf_and_mixed():
+    want = hashlib.sha256(b"a\nb\nc\n").hexdigest()
+    for data in (b"a\nb\nc\n", b"a\r\nb\r\nc\r\n", b"a\r\nb\nc\r\n"):
+        assert content_sha256(data) == want
+
+
+def test_content_sha256_still_sees_other_whitespace():
+    base = content_sha256(b"a\nb\n")
+    for other in (b"a \nb\n", b"a\n\nb\n", b"a\nb", b"a\rb\n", b"a\nb\n\n"):
+        assert content_sha256(other) != base

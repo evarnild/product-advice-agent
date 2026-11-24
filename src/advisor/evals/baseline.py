@@ -7,6 +7,7 @@ ends in `/` is a prefix; any other entry is one exact file.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -26,6 +27,16 @@ EVAL_PATHS: tuple[str, ...] = (
 
 HASH_FIELDS = ("cases_sha256", "prompt_sha256", "catalogue_sha256")
 SOURCE_FIELDS = ("provider", "model", *HASH_FIELDS)
+HASH_FORM = "lf"
+
+
+def content_sha256(data: bytes) -> str:
+    """sha256 of the bytes with every CRLF read as LF (§29).
+
+    Only the two-byte sequence is folded, so a checkout's line endings do not change the
+    hash but any other whitespace edit still does (§13 B6).
+    """
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
 
 
 class BaselineError(ValueError):
