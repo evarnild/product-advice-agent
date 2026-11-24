@@ -1,4 +1,4 @@
-// End-to-end tests for `npm run ship`, against throwaway git repositories (a
+// End-to-end tests for `npm run deliver`, against throwaway git repositories (a
 // main checkout, a bare `origin` and the worktree folder beside it) in the OS temp
 // dir. Never the real repository: the script merges and pushes.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -10,7 +10,7 @@ import { after as afterAll, before as beforeAll, describe, it } from 'node:test'
 import { expect } from './expect.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const SHIP = join(here, 'ship.mjs');
+const SHIP = join(here, 'deliver.mjs');
 
 // No inherited GIT_* variable may point the sandbox's git at the real repository.
 const GIT_ENV = {
@@ -123,7 +123,7 @@ afterAll(() => {
   rmSync(sandbox, { recursive: true, force: true });
 });
 
-describe('npm run ship', { timeout: 90_000 }, () => {
+describe('npm run deliver', { timeout: 90_000 }, () => {
   it('refuses to run without an id', () => {
     const r = ship([]);
     expect(r.status).toBe(1);
@@ -242,7 +242,7 @@ describe('npm run ship', { timeout: 90_000 }, () => {
     const r = ship(['16']);
     expect(r.status, out(r)).toBe(0);
     expect(r.stdout).toMatch(/LEFT\s+remove\s+could not remove/);
-    expect(r.stdout).toContain(`npm run ship -- 16 --cleanup`);
+    expect(r.stdout).toContain(`npm run deliver -- 16 --cleanup`);
     expect(git(origin, 'rev-parse', 'main')).toBe(git(repo, 'rev-parse', 'main')); // everything before it was done
     expect(branchExists(w.branch)).toBe(true);
     expect(existsSync(w.path)).toBe(true);
@@ -302,7 +302,7 @@ const snapshot = (w) => ({
   branch: w ? git(repo, 'rev-parse', w.branch) : null,
 });
 
-describe('npm run ship: preconditions, wiring and refusals', { timeout: 90_000 }, () => {
+describe('npm run deliver: preconditions, wiring and refusals', { timeout: 90_000 }, () => {
   it('refuses a commit added after the reviewed commit, naming the file, and changes nothing', () => {
     const w = makeIntent(28, {
       afterReview: (p) => {
@@ -542,7 +542,7 @@ describe('npm run ship: preconditions, wiring and refusals', { timeout: 90_000 }
   });
 });
 
-describe('npm run ship: failures after the merge', { timeout: 90_000 }, () => {
+describe('npm run deliver: failures after the merge', { timeout: 90_000 }, () => {
   const hook = () => join(repo, '.git', 'hooks', 'pre-commit');
   const marker = () => join(repo, '.git', 'reject-commit');
 
@@ -643,7 +643,7 @@ describe('npm run ship: failures after the merge', { timeout: 90_000 }, () => {
   });
 });
 
-describe('npm run ship: leftovers and what a commit may hold', { timeout: 90_000 }, () => {
+describe('npm run deliver: leftovers and what a commit may hold', { timeout: 90_000 }, () => {
   const slashes = (t) => t.replace(/\\/g, '/').toLowerCase();
 
   it('reports a folder left behind after git unregistered the worktree, until the folder is gone', () => {

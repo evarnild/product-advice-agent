@@ -10,7 +10,7 @@ metadata:
   ported-from: heraklios/auto@0.1.0
 ---
 
-# /auto — one intent, from acceptance to "ready: /ship"
+# /auto — one intent, from acceptance to "ready: /deliver"
 
 You are the **coordinator** (the main checkout, on `main`). This skill runs
 the existing steps in order: `/spec`, the plan, `/spawn`, the implementer,
@@ -27,9 +27,9 @@ to another id, and it covers none of these, which stay the owner's:
 - `intent_accepted` (the run starts from an accepted intent);
 - `spec_accepted` (a feature stops once for it, step 2);
 - `live_checked` (the owner runs the check, step 7);
-- `/ship` and every merge, push, branch deletion and worktree removal.
+- `/deliver` and every merge, push, branch deletion and worktree removal.
 
-You never run `/ship` or `npm run ship` except `npm run ship -- <id>
+You never run `/deliver` or `npm run deliver` except `npm run deliver -- <id>
 --dry-run` at step 8. A subagent never records a gate: you write the one gate
 this skill allows, in this conversation.
 
@@ -98,7 +98,7 @@ the build step, then round 1.
 | escalate | the owner's `/auto <id>` means "diff read": go on to the live-check stop (step 7) or the ship stop (step 8) from that review's `live-check:`; **no new round** |
 | live check owed | step 7: if the owner says it passed and `live_checked` is recorded, step 8; a defect they describe goes to the implementer, then a new round |
 | out of rounds | report the open findings again; the intent continues by hand |
-| ready for /ship | run the dry-run (step 8) again and report |
+| ready for /deliver | run the dry-run (step 8) again and report |
 | critical finding | like a decision: give the implementer the owner's answer, wait, then **a new round** (never a re-review of an unchanged branch) |
 | main merge conflict | give the implementer the owner's answer (resolve the merge as decided), wait, then step 5 at item 1 for round `auto_round` + 1, which runs the update again; **no round consumed** |
 | red verify after merging main, branch update refused | once the owner says the cause is cleared, step 5 at item 1 for round `auto_round` + 1; **no round consumed** |
@@ -281,7 +281,7 @@ After the re-check above and before writing `review.md`:
    <flipped ids>` in the worktree. Only you, the coordinator, make this
    re-run; a reviewer agent never calls a model. A case is a regression
    only if it fails again. The full run stays the report that `## Eval run`
-   names and the source of the baseline `/ship` writes. The `--only` re-run
+   names and the source of the baseline `/deliver` writes. The `--only` re-run
    is cited as evidence only, never compared as a whole and never written
    as the baseline; its `compare` output shows the other cases as
    "removed", which is expected.
@@ -308,7 +308,7 @@ amendment needed`). If you doubt a finding's kind, treat it as a decision.
 check owed`, and give the owner the report's `## Live check` steps. The
 owner runs them.
 - Pass: the owner says so, and `live_checked` is recorded as today, on the
-  owner's request (`ship` also takes it with `--live-checked`). Then
+  owner's request (`deliver` also takes it with `--live-checked`). Then
   continue to step 8.
 - Defect: the owner describes it and says to rework. Resume the implementer
   with that description and continue the loop at step 5 (it is the next
@@ -329,21 +329,21 @@ merging main`), a refused update (`branch update refused`).
 The run ends at a merge-ready branch: the verdict is `attest`, or
 `escalate` after the owner's diff read (`/auto <id>` after an escalate
 stop), the live
-check is recorded or `not-needed`, and `npm run ship -- <id> --dry-run`
+check is recorded or `not-needed`, and `npm run deliver -- <id> --dry-run`
 (run from the main checkout) shows nothing in the way. It changes nothing
 and does not even fetch. Report:
 
-> ready: `/ship <id>`
+> ready: `/deliver <id>`
 
 with the verdict, tier, round count, the dry-run's report, and the
 sampling line (`sampled: yes` means a post-merge full read is due). If the
 dry-run shows something in the way, stop with `auto_stopped: ship dry-run
-blocked` and relay it. Set `auto_stopped: ready for /ship` and commit it, so
+blocked` and relay it. Set `auto_stopped: ready for /deliver` and commit it, so
 `npm run sessions` shows the end state.
 
-Never run `/ship`, `npm run ship` without `--dry-run`, or any merge, push,
+Never run `/deliver`, `npm run deliver` without `--dry-run`, or any merge, push,
 branch deletion or worktree removal, even if the owner seems to imply it:
-only a `/ship <id>` message does.
+only a `/deliver <id>` message does.
 
 ## 9. Every stop is visible
 
@@ -375,7 +375,7 @@ round 2`); `npm run stats` attributes tokens and time by that prefix.
 
 Safety rules:
 
-- never run `npm run ship` (the coordinator alone runs `--dry-run` at step
+- never run `npm run deliver` (the coordinator alone runs `--dry-run` at step
   8), never merge into `main`, push, rebase or delete a branch or worktree;
   the implementer merges `main` into its own branch only when the
   coordinator's brief asks for it, and the coordinator brings a branch up to

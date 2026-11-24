@@ -283,7 +283,7 @@ describe('owner wait (B6)', () => {
   });
   it('counts a blocked ship dry-run and ready-for-ship (until merged) as owner wait (F3)', () => {
     expect(gapsOf([1, '§9: auto stopped: ship dry-run blocked, changes after the reviewed commit'], [2, '§9: auto run resumed'])).toEqual([[1, 2]]);
-    expect(gapsOf([1, '§9: auto stopped: ready for /ship'], [6, '§9: merged (abc1234); status done'])).toEqual([[1, 6]]);
+    expect(gapsOf([1, '§9: auto stopped: ready for /deliver'], [6, '§9: merged (abc1234); status done'])).toEqual([[1, 6]]);
   });
   it('does not count a dependency stop (F3)', () => {
     expect(gapsOf([1, '§9: auto stopped: blocked by 14'], [5, '§9: auto run resumed'])).toEqual([]);
@@ -425,7 +425,7 @@ describe('computeStats', () => {
   });
 
   describe('waits count only inside the intent life (F2)', () => {
-    const life = () => log([2, '§7: intent drafted (owner: x)'], [3, '§7: intent accepted'], [4, '§7: auto stopped: ready for /ship'], [6, '§7: merged (abc1234); status done']);
+    const life = () => log([2, '§7: intent drafted (owner: x)'], [3, '§7: intent accepted'], [4, '§7: auto stopped: ready for /deliver'], [6, '§7: merged (abc1234); status done']);
     const run = (events, commits = life(), now = at(100)) => computeStats({ commits, events, coordinators: [], agents: [], now }).intents.find((i) => i.id === 7);
     it('books no in-session wait from before the first commit or after the merge', () => {
       const before = [ev(0, 'UserPromptSubmit', { skillId: 7 }), ev(0.5, 'Stop'), ev(1.5, 'UserPromptSubmit', { skillId: 7 })];
@@ -440,7 +440,7 @@ describe('computeStats', () => {
       expect(run([ev(1, 'UserPromptSubmit', { skillId: 7 }), ev(1, 'Stop'), ev(2.5, 'UserPromptSubmit', { skillId: 7 })]).totals.sessionWaitMs).toBe(0.5 * H);
     });
     it('caps a gate wait that ends at the merge, and lets an unmerged intent wait up to now, none of it idle', () => {
-      const c = log([0, '§7: intent accepted'], [1, '§7: auto stopped: ready for /ship'], [20, '§7: merged (abc1234)']);
+      const c = log([0, '§7: intent accepted'], [1, '§7: auto stopped: ready for /deliver'], [20, '§7: merged (abc1234)']);
       const r = run([], c, at(30));
       expect(r.totals.gateWaitMs).toBe(2 * H);
       expect(r.totals.idleMs).toBe(17 * H);

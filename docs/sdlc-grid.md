@@ -19,7 +19,7 @@ example.
 | **Design** | L0 | No spec yet; the `/spec` skill exists | L1: §1's `spec.md`, accepted at its gate (L2 when `/spec` produced it) |
 | **Build** | L1 (kit only) | `CLAUDE.md`; plans are approved before code (enforced by `check:intent`); versioned implementer agent (Claude + Codex); `/build-plan`, `/spawn` + `/sessions` (worktree per intent, session hooks), `/auto` | L2: hooks that block unsafe actions (push, `git checkout` in the main checkout) |
 | **Test** | L0 for product, L1 for kit | `npm run verify` runs the kit's 254 tests; there is no product suite | L1: §1 adds the product's tests to `verify`, plus a dependency and secret check |
-| **Deploy** | L1 (policy only) | Written `REVIEW-POLICY.md` with tiers; `/review` and the reviewer agent; `/ship` checks the merge preconditions as tested code | L2: every merge goes through `/review` with a stamped `review.md` |
+| **Deploy** | L1 (policy only) | Written `REVIEW-POLICY.md` with tiers; `/review` and the reviewer agent; `/deliver` checks the merge preconditions as tested code | L2: every merge goes through `/review` with a stamped `review.md` |
 | **Maintain** | L0 | Nothing runs, so there is nothing to observe | L1: findings written as fix intents once the agent handles real conversations |
 
 **Production release stays human by design**: any deployment and any push

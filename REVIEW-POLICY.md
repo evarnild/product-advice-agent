@@ -27,7 +27,7 @@ You may escalate by hand at any time without giving a reason.
 | --- | --- | --- | --- |
 | **Automated** | `npm run verify` and `npm run check:intent` are green, then merge | nothing beyond merging | `intents/**` artefacts only; `docs/**`; `README.md` wording |
 | **Attested** | `/review` runs every pass and writes `review.md` | read the report, not the diff; merge if you agree with its scope | `src/**` not listed below, tests-only changes, `scripts/**` not listed below, build config |
-| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/ship-lib.mjs`, `scripts/ship.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning:** model prompts and agent instructions the product ships (`src/advisor/prompts/**`), anything that sends text to a user or an external system without a human in between (`src/advisor/guardrails.py`, `src/advisor/cli.py`), credential handling (`src/advisor/config.py`, `.env.example` and `infra/langfuse/.env.example`), and storage or logging of users' personal data (`src/advisor/tracing.py`, which decides what is sent to Langfuse) |
+| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/deliver-lib.mjs`, `scripts/deliver.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning:** model prompts and agent instructions the product ships (`src/advisor/prompts/**`), anything that sends text to a user or an external system without a human in between (`src/advisor/guardrails.py`, `src/advisor/cli.py`), credential handling (`src/advisor/config.py`, `.env.example` and `infra/langfuse/.env.example`), and storage or logging of users' personal data (`src/advisor/tracing.py`, which decides what is sent to Langfuse) |
 
 **Approving means:** "I read what the checker did, I accept its scope,
 including the Not-checked list, and I take responsibility for this change."
@@ -147,21 +147,21 @@ shows up in the review and not afterwards.
   (`advisor-analysis compare <report>`) and lists every case that flipped
   and the change in pass rate. A case that went from PASS to FAIL or ERROR
   is a "Needs decision: accept the regressions or rework" finding: the
-  owner decides, no threshold blocks, and nothing in `ship` or
+  owner decides, no threshold blocks, and nothing in `deliver` or
   `check:intent` enforces the rule.
 - **A single run is noisy.** A model's answers vary between runs of the same
   content, so a case that flipped is re-run before it is called a
   regression. Only the coordinator re-runs it (a reviewer agent never calls
   a model), with `uv run advisor-eval --only <flipped ids>`, and the case is
   a regression only if it fails again. The full run stays the report that
-  `## Eval run` names and the source of the baseline `/ship` writes. The
+  `## Eval run` names and the source of the baseline `/deliver` writes. The
   `--only` re-run is cited as evidence only, never compared as a whole and
   never written as the baseline; its `compare` output shows the other cases
   as "removed", which is expected.
-- **The baseline moves after the merge.** After `/ship` for a change whose
+- **The baseline moves after the merge.** After `/deliver` for a change whose
   review names a run, the coordinator writes `evals/baseline.json` from
   that report (`advisor-analysis baseline <report>`) and commits it on
-  `main`. It cannot be committed on the branch: `ship` refuses files
+  `main`. It cannot be committed on the branch: `deliver` refuses files
   changed after the reviewed commit.
 
 ## Merging

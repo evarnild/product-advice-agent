@@ -11,7 +11,7 @@ context, but keep Claude-specific and Codex-specific files separate.
   lives in `intents/<id>-<slug>/` (see `intents/README.md`).
 - Apply `REVIEW-POLICY.md` when reviewing. The procedures in
   `.claude/skills/*/SKILL.md` (`intent`, `spec`, `build-plan`, `review`,
-  `grid`, `ship`) are plain markdown and apply to Codex sessions too.
+  `grid`, `deliver`) are plain markdown and apply to Codex sessions too.
 - Do not edit `OVERVIEW.md` unless the user explicitly asks for an overview
   update.
 

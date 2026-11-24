@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// `npm run ship -- <id> [--live-checked "<owner's words>"] [--dry-run] [--cleanup] [--trailer "<line>"]...`
+// `npm run deliver -- <id> [--live-checked "<owner's words>"] [--dry-run] [--cleanup] [--trailer "<line>"]...`
 //
 // Ships a reviewed intent the way REVIEW-POLICY.md → "Merging" says: record the
 // live check (only on the owner's word), check the merge preconditions from
@@ -7,7 +7,7 @@
 // the bookkeeping commit, push, then remove the worktree and delete the
 // branch. It stops at the first step that fails and names it; run again and
 // it resumes (every step first checks whether it is already done). The
-// decisions live in ship-lib.mjs; this file is the git half. A repository
+// decisions live in deliver-lib.mjs; this file is the git half. A repository
 // with no remote named `origin` is shipped without the push (the step reads
 // "skipped"); with one, main must not be behind origin/main.
 //
@@ -15,7 +15,7 @@
 // -D, stages anything but the files a step wrote, or stops a process.
 //
 // SDLC_SHIP_VERIFY, when set, is a command line that runs in place of
-// `npm run verify` (ship.test.mjs sets it in a throwaway repository).
+// `npm run verify` (deliver.test.mjs sets it in a throwaway repository).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,7 +34,7 @@ import {
   mergeMessage,
   planSteps,
   routeReasonStated,
-} from './ship-lib.mjs';
+} from './deliver-lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CHECK_INTENT = join(here, 'check-intent.mjs');
@@ -325,7 +325,7 @@ function leftoverFolder(root, id, loc) {
   return existsSync(path) ? path : null;
 }
 
-const folderLeft = (path, id) => `${path} is still on disk (something held it open); delete it by hand, then run: npm run ship -- ${id} --cleanup`;
+const folderLeft = (path, id) => `${path} is still on disk (something held it open); delete it by hand, then run: npm run deliver -- ${id} --cleanup`;
 
 /** Step 7. Returns report text and what, if anything, is left for the owner. */
 function cleanup(root, id, loc) {
@@ -335,7 +335,7 @@ function cleanup(root, id, loc) {
     const r = spawnSync(process.execPath, [SPAWN, String(id), '--remove'], { cwd: root, encoding: 'utf8' });
     if (r.status !== 0) {
       const why = (r.stderr || r.stdout || '').trim();
-      return { text: `could not remove ${wt.path}: ${why}`, left: `exit any session or program using ${wt.path}, then run: npm run ship -- ${id} --cleanup` };
+      return { text: `could not remove ${wt.path}: ${why}`, left: `exit any session or program using ${wt.path}, then run: npm run deliver -- ${id} --cleanup` };
     }
     parts.push(`removed worktree ${wt.path}`);
   }
@@ -428,7 +428,7 @@ function main() {
     process.exit(1);
   }
   if (!opts.id) {
-    console.error('usage: npm run ship -- <id> [--live-checked "<owner\'s words>"] [--dry-run] [--cleanup] [--trailer "<line>"]...');
+    console.error('usage: npm run deliver -- <id> [--live-checked "<owner\'s words>"] [--dry-run] [--cleanup] [--trailer "<line>"]...');
     process.exit(1);
   }
   const root = mainCheckout(process.cwd());

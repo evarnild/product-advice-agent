@@ -1,4 +1,4 @@
-// The git/fs half of `npm run stats` (§19), shared by stats.mjs and ship.mjs.
+// The git/fs half of `npm run stats` (§19), shared by stats.mjs and deliver.mjs.
 // Reads git history, the session log and the Claude Code transcripts in
 // place; writes nothing. The computation is stats-lib.mjs.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -87,7 +87,7 @@ export function statsCutover(root) {
 }
 
 /**
- * Everything `npm run stats` and `/ship` report, for `only` (intent ids, or
+ * Everything `npm run stats` and `/deliver` report, for `only` (intent ids, or
  * all when null). Throws on a git failure; unreadable transcripts and log
  * lines are skipped and counted, never thrown.
  */
@@ -105,7 +105,7 @@ export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscr
 export const STATS_STAMP = 'product-advice-agent/ship@0.2.0';
 
 /**
- * The `stats.md` text for intent `id` as `/ship` commits it (B9): collected
+ * The `stats.md` text for intent `id` as `/deliver` commits it (B9): collected
  * at `now`, with the merge commit that is about to be made counted as the
  * end of the ship phase. Throws when collection fails; the caller decides
  * that a failure never blocks a ship.

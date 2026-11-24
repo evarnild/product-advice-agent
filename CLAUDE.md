@@ -23,9 +23,9 @@ npm run sdlc:scan     # the evidence behind docs/sdlc-grid.md
 npm run queue         # the intent queue, generated from metadata.yml (--next-id, --json); nobody edits it
 npm run spawn -- <id> # parallel session for an intent (see "Parallel sessions")
 npm run sessions      # what every worktree/session is doing (--json for data, --log for the event tail)
-npm run ship -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /ship skill)
+npm run deliver -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /deliver skill)
 npm run update-branch -- <id>  # merge main into a behind intent branch in its worktree, then verify (never a rebase; exit 0/1/2/3)
-npm run stats -- <id>|--all  # elapsed time, owner wait and tokens per phase (--json; the stats.md /ship commits)
+npm run stats -- <id>|--all  # elapsed time, owner wait and tokens per phase (--json; the stats.md /deliver commits)
 npm run test:kit      # node --test over scripts/*.test.mjs
 npm run verify:product  # the product half of verify (uv run ruff/mypy/pytest)
 npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
@@ -56,7 +56,7 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
 - `/intent` drafts an intent, `/spec` a feature's spec, `/build-plan` a
   plan, `/review` runs `REVIEW-POLICY.md` and writes `review.md`, `/grid`
   refreshes `docs/sdlc-grid.md`, `/spawn` and `/sessions` run parallel work
-  (below), and `/ship <id>` merges a reviewed intent when the owner asks
+  (below), and `/deliver <id>` merges a reviewed intent when the owner asks
   (`REVIEW-POLICY.md` → "Merging").
 - The `product-advice-agent-implementer` agent builds an approved plan, and the
   `product-advice-agent-reviewer` agent does the adversarial passes for `/review`.
@@ -72,7 +72,7 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
   that exists unapproved, a ship dry-run that is blocked, a worktree held by
   another session, a fourth open session, an eval run that fails or an
   agent error, and ends at
-  "ready: `/ship <id>`". It never ships, and never records `spec_accepted`
+  "ready: `/deliver <id>`". It never ships, and never records `spec_accepted`
   or `live_checked` without the owner's yes; the `/auto` authorisation
   covers neither. A stop shows in `npm run sessions` as
   `auto · r<n> · <reason>`.

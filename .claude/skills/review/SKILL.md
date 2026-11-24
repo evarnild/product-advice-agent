@@ -169,6 +169,6 @@ Give one short block:
 An owed live check comes before the merge: "do the live check, record
 `live_checked:`, then merge".
 
-If they ask you to merge, use `/ship <id>`, which applies
+If they ask you to merge, use `/deliver <id>`, which applies
 `REVIEW-POLICY.md` → "Merging": its preconditions, then `verify` on `main`,
 then the bookkeeping.

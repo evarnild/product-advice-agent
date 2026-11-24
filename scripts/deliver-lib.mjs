@@ -1,7 +1,7 @@
-// Pure logic behind `npm run ship`: the merge preconditions of
+// Pure logic behind `npm run deliver`: the merge preconditions of
 // REVIEW-POLICY.md → "Merging", the metadata.yml bookkeeping edit,
 // the resumable step plan and the merge message. No git, no fs: tested in
-// ship-lib.test.mjs. The git half is scripts/ship.mjs.
+// deliver-lib.test.mjs. The git half is scripts/deliver.mjs.
 
 /** The seven steps of a ship run, in order. */
 export const STEPS = [
@@ -42,7 +42,7 @@ export function planSteps(s) {
   });
 }
 
-/** Ways a line that mentions a reason says there is none (one alternative each; ship-lib.test.mjs has a phrase per entry). */
+/** Ways a line that mentions a reason says there is none (one alternative each; deliver-lib.test.mjs has a phrase per entry). */
 const NO_REASON = [
   /\b(?:no|not|without|missing)\s+(?:\w+\s+)?reason\b/i, // "no reason found"
   /\breason\s+(?:not|unknown|missing|unclear)\b/i, // "reason unclear"

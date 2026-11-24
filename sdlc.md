@@ -89,9 +89,9 @@ Merging goes in this order:
 5. `npm run spawn -- <id> --remove`, if you used a worktree.
 
 You can ask Claude to do the merge, the push or the removal, each only when
-you ask for it, for that change, in the current conversation. `/ship <id>`
+you ask for it, for that change, in the current conversation. `/deliver <id>`
 does all of it in order and stops at the first step that fails
-(`/ship <id> --dry-run`, or "can §N ship?", only reports). If you ran the
+(`/deliver <id> --dry-run`, or "can §N ship?", only reports). If you ran the
 live check, say so in the same message. Run it from the main checkout, on
 `main`. It first checks that nothing but the review and the metadata changed
 after the reviewed commit, that `check:intent` passes, and that any owed
@@ -105,7 +105,7 @@ to 5 without a prompt between them, and ends at step 6's door:
 
 - **Your message is a request to record one gate.** `/auto <id>` is your
   request to record that intent's `plan_approved` (as `by-agent`, with a
-  comment naming it). `spec_accepted`, `live_checked` and `/ship` stay yours.
+  comment naming it). `spec_accepted`, `live_checked` and `/deliver` stay yours.
 - **A feature stops once, at the spec**, for your `spec_accepted`; a yes
   continues the run. A fix or refactor has no spec; an adjustment or
   experiment has no plan.
@@ -125,7 +125,7 @@ to 5 without a prompt between them, and ends at step 6's door:
   `auto_stopped` into `metadata.yml`, shows in `npm run sessions` and
   `npm run queue` as `auto · r<n> · <reason>`, and sends a push notification
   when the session has the tool.
-- **It ends at "ready: `/ship <id>`"**, after `npm run ship -- <id>
+- **It ends at "ready: `/deliver <id>`"**, after `npm run deliver -- <id>
   --dry-run` shows nothing in the way, and never ships. Closing the session
   pauses it; `/auto <id>` in a new one resumes from the recorded round.
 - Reviews of auto runs say `run: auto`, and every third attested one is
@@ -150,7 +150,7 @@ to 5 without a prompt between them, and ends at step 6's door:
   needs you.
 - `npm run stats -- <id>` (or `--all`) shows where an intent's time, your
   waiting and its tokens went, per phase, from git, the session log and the
-  Claude Code transcripts. `/ship` keeps it as `intents/<id>/stats.md`.
+  Claude Code transcripts. `/deliver` keeps it as `intents/<id>/stats.md`.
 - `/grid` refreshes `docs/sdlc-grid.md`. Run it every few weeks.
 - A defect you hit becomes a new **fix** intent. Triaging it is one of your
   gates too.
