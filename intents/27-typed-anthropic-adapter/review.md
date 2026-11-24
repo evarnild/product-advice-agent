@@ -19,7 +19,7 @@ main as unreviewed change. The branch's own code is unchanged since round 2.
 | # | Pass | Result |
 | --- | --- | --- |
 | 1 | Intent and plan match | pass |
-| 2 | Type check | ROUTE only, the same explained one as rounds 1 and 2 |
+| 2 | Type check | ROUTE, reason stated: only the fake's construction lines in tests/test_models.py were replaced, no assertion changed (as in rounds 1 and 2) |
 | 3 | Behaviour against intent | pass (unchanged since round 2) |
 | 4 | Tests prove the behaviour | pass |
 | 5 | Conventions | pass |
