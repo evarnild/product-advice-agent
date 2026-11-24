@@ -1,6 +1,113 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §23 review — Type the Anthropic adapter against the SDK's own types
 
+verdict: attest
+tier: attested
+reviewed-commit: 8fddf12
+main: 5f7a773
+round: 2
+sampled: yes
+run: auto
+live-check: owed
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass |
+| 2 | Type check | FAIL only on the owed live check; the ROUTE is the same as round 1's, explained there |
+| 3 | Behaviour against intent | pass: round 1's MEDIUM is resolved |
+| 4 | Tests prove the behaviour | pass (M4 from round 1 is an equivalent survivor; no action) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (862 passed, reproduced) |
+| 7 | Documentation | findings (1 LOW) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass (list empty) |
+
+## Type check
+```
+type-check: FAIL (intent 23, refactor)
+  error: A live check is owed and not recorded. Do the steps in intents/23-typed-anthropic-adapter/review.md → ## Live check, then set live_checked: <date> in intents/23-typed-anthropic-adapter/metadata.yml.
+  route: Declared refactor, but existing tests lost lines (tests/test_models.py). Behaviour may have changed — check, or route to feature.
+  note:  2 file(s), 106 line(s) changed outside intents/.
+```
+- The only error is the owed live check, which is the owner's to clear.
+- The ROUTE is round 1's. The rework (2ec8c95..8fddf12) removed no test line; it only added two tests.
+
+Round 1's finding is resolved. `anthropic_model.py:91,93` now pair the
+`isinstance` with the tag check (`and block.type == "text"` / `"tool_use"`).
+The unknown-tag probes now give `'answer'` for both shapes, the same as
+`main`. Two new tests pin this:
+- `test_adapter_ignores_text_shaped_blocks_with_an_unknown_tag` (tests/test_models.py:239);
+- `test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag` (tests/test_models.py:247). It is defensive: SDK 2.6.0 builds unknown blocks as `TextBlock`, but the test keeps the tool-side tag check.
+
+## Findings
+- **LOW** `intents/23-typed-anthropic-adapter/plan.md` (round-1 rework
+  Progress entry) — it says the SDK "falls back to
+  `TextBlock`/`ToolUseBlock`". In 2.6.0 it falls back only to `TextBlock`.
+  A wording slip in the implementer's own section. Worth a look; no rework.
+
+## Not checked
+- The real Anthropic API response path. Responses are built in memory
+  with the SDK's constructors; the live check covers the real API.
+- The judge path (`evals/judging.py`) through this adapter against the
+  real API. No model was called.
+
+## Live check
+- owed: rule 1 (`src/advisor/models/`), covering the "real API response
+  path" item. Run it in the worktree
+  `C:/Users/eric/src/product-advice-agent-wt/23-typed-anthropic-adapter`,
+  in PowerShell, with `ANTHROPIC_API_KEY` in `.env`. It costs a few
+  Anthropic calls.
+- steps:
+  1. `$env:ADVISOR_MODEL_PROVIDER = "anthropic"; uv run advisor "Which noise-cancelling headphones under 200 euros do you have?"; echo "exit: $LASTEXITCODE"`
+  2. `uv run advisor "Hello, what can you do?"; echo "exit: $LASTEXITCODE"`
+  3. Optional, with Langfuse up: open step 1's trace.
+  4. `Remove-Item Env:ADVISOR_MODEL_PROVIDER`
+- you should see:
+  - step 1: an answer citing real ids (P-…) with prices that match `src/advisor/data/catalogue.json` (the tool round trip works), then `exit: 0`, with no traceback and no "model error" line;
+  - step 2: a plain-text answer and `exit: 0`;
+  - step 3: one generation per model turn with token usage and the served model name, a `search_products` span between them, and no separate Anthropic SDK traces (§5).
+
+## Eval run
+- Report `evals/runs/20261124T183001Z-ollama.json` (copied to the main
+  checkout). Provider ollama, model qwen3:8b, made in the worktree at
+  33276bc.
+  - That commit differs from the reviewed 8fddf12 only in
+    `metadata.yml` (`auto_stopped`), so the content is the same.
+  - Its `cases_sha256` a81f06ad, `prompt_sha256` c2a38987 and
+    `catalogue_sha256` c2e56cb2 equal the worktree's files.
+- `advisor-analysis compare`: baseline 38/50, this run **38/50**.
+  - Regressed 1: `headphones-ldac-balanced-200`. Re-run with
+    `advisor-eval --only headphones-ldac-balanced-200`
+    (`20261124T185936Z-ollama.json`): **PASS**. Not a regression: a single
+    run varies.
+  - Fixed 1: `gaming-monitor`. Added 0, removed 0.
+- The `cases_sha256` warning against the baseline is the CRLF checkout of
+  the same file. `main`'s committed `evals/cases.jsonl` hashes to the
+  baseline's b7a88ce6.
+- As expected: the Ollama path does not use this adapter.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at 8fddf12:
+  - `npm run verify`: exit 0, 862 passed.
+  - `npm run check:intent`: FAIL on the live check only.
+  - The rework diff, read line by line.
+  - Unknown-tag probes.
+  - Mutants M1, M2, M3, M5, M6, M15 and M16 all killed.
+- **Coordinator, re-run**, at 8fddf12:
+  - `npm run verify`: kit 438 pass, 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **862 passed**, which matches.
+  - `npm run check:intent`: the same FAIL (live check) and ROUTE, which matches.
+  - Mutants the rework says it kills:
+    - M15 (drop `and block.type == "text"`): **killed** by `test_adapter_ignores_text_shaped_blocks_with_an_unknown_tag`.
+    - M16 (drop `and block.type == "tool_use"`): **killed** by `test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag`.
+    - Both match the reviewer and the implementer. Restored by copy; `git status --short` was clean.
+  - The eval run, `compare` and the `--only` re-run, as above.
+- Taken on trust: nothing.
+
+---
+
+# Round 1
+
 verdict: rework
 tier: attested
 reviewed-commit: d6bf4eb

@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 23"
 auto_round: 2
-auto_stopped: eval run failed
+auto_stopped: live check owed
 follows_up:
 links:
   - intents/5-anthropic-sdk-otel-off    the adapter's last change; its OTel-off tests must stay green
