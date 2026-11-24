@@ -38,7 +38,8 @@ def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, 
     """Cited known ids written next to another product's name.
 
     For each occurrence of a known id, the window is up to 80 characters on
-    each side, on the same line, never past the previous or next id. The
+    each side, on the same line, never past the previous or next id, nor
+    past a name that sits right before the next id (it belongs to that id). The
     occurrence is a mismatch when the window names another catalogue product
     and not the cited one. Names match case-insensitively with a hyphen read
     as a space, as whole names, the longer name winning on overlap. Returns
@@ -47,9 +48,9 @@ def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, 
     ids = [(m.start(), m.end(), m.group()) for m in _ID_RE.finditer(answer)]
     if not ids:
         return []
-    text = _norm(answer)
-    if len(text) != len(answer):  # case folding changed the length: do not guess
-        return []
+    # Fold case and hyphens one character at a time so positions stay put: a
+    # character whose lower() is longer than one character is kept as it is.
+    text = "".join(_norm(c) if len(c.lower()) == 1 else c for c in answer)
     names = sorted(
         {_norm(p.name): p.name for p in by_id.values()}.items(), key=lambda kv: -len(kv[0])
     )
@@ -70,6 +71,15 @@ def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, 
             lo = max(lo, ids[k - 1][1])
         if k + 1 < len(ids):
             hi = min(hi, ids[k + 1][0])
+            # A name right before the next id (only space and "(" between) is
+            # that id's own: it does not count here.
+            for a, b, _ in mentions:
+                if (
+                    a >= end
+                    and b <= ids[k + 1][0]
+                    and re.fullmatch(r"\s*\(?", text[b : ids[k + 1][0]])
+                ):
+                    hi = min(hi, a)
         near = [shown[n] for a, b, n in mentions if a >= lo and b <= hi]
         own = _norm(by_id[pid].name)
         if near and own not in {_norm(n) for n in near}:

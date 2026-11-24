@@ -192,3 +192,9 @@ this line is the implementer's to edit. -->
 - Tests: 11 added or changed in `tests/test_evals_score.py` (tests 1-10; the four name lists updated), plus one reason string in `tests/test_evals_run.py:101`. 868 passed.
 - Mutations killed: always-pass (tests 1, 5, 6, 7, 8), no window bounds, no line bound (test 6), shortest-name-first (test 7).
 - Divergences: `test_evals_run.py` asserted the old `prices` reason and was updated (not in the plan). `misnamed` returns no mismatches if lowercasing changes the answer's length (rare Unicode), rather than guessing positions. Not run: the eval run (the coordinator's).
+
+### 2026-11-24 — round-1 rework
+
+- Changed: D1 (b) (a name right before the next id, with only space and "(" between, belongs to that id and is out of the earlier id's window) and D2 (b) (length-preserving case fold, replacing the fail-open guard) in `misnamed`; README names bullet mentions D1, prices bullet re-wrapped. Tests added for findings 1-4 and for D1 and D2 (7 tests); 874 passed.
+- Mutants, each run against the full suite and restored by copy: next-id bound removed (M13) killed by `test_names_next_id_bound`; lookbehind dropped (M4) by `test_names_needs_a_word_boundary_before_a_name`; `_WINDOW = 100` (M20) and `_WINDOW = 60` (M21) by `test_names_window_width_is_80_characters`; `", "` join (M23) by `test_names_joins_several_mismatches_with_semicolons`; D1 rule dropped by `test_names_a_name_just_before_the_next_id_belongs_to_that_id` (and the join test); D2 guard restored by `test_names_folds_case_without_changing_length`.
+- Divergences: the review's example for finding 1 ("P-009 costs 649, the Auralis Home 1 is P-032.") puts the name before the next id, so the bound does not exclude it; I used "P-009 costs 649, and P-032 is the Auralis Home 1." instead. The width test measures a name wholly inside the window (starting exactly 80 before the id, or ending exactly 80 after it).

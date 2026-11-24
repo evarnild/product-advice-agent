@@ -365,3 +365,45 @@ def test_prices_reason_names_the_product():
     got = {c.name: c for c in score(Case("c", "q"), answer, [], CATALOGUE)}
     assert not got["prices"].ok
     assert got["prices"].reason == "price of P-009 (Pelagic Go 13) not stated"
+
+
+def test_names_next_id_bound():
+    # A name after the next id is not in this id's window.
+    assert names_check("P-009 costs 649, and P-032 is the Auralis Home 1.").ok
+
+
+def test_names_needs_a_word_boundary_before_a_name():
+    assert names_check("MegaAuralis Home 1 (P-009)").ok
+    assert not names_check("Mega Auralis Home 1 (P-009)").ok
+
+
+def test_names_window_width_is_80_characters():
+    other = "Auralis Home 1"
+    for gap, counts in ((80 - len(other), True), (81 - len(other), False)):
+        before = other + " " * gap  # the name starts 80 or 81 characters before the id
+        assert (not names_check(before + "P-009").ok) is counts
+        after = " " * gap + other  # the name ends 80 or 81 characters after the id
+        assert (not names_check("P-009" + after).ok) is counts
+
+
+def test_names_joins_several_mismatches_with_semicolons():
+    got = names_check("Auralis Home 1 (P-009). Norvik Slate 14 (P-001).")
+    assert not got.ok
+    assert got.reason == (
+        "P-009 is the Pelagic Go 13, cited as Auralis Home 1; "
+        "P-001 is the Auralis Calm 300, cited as Norvik Slate 14"
+    )
+
+
+def test_names_a_name_just_before_the_next_id_belongs_to_that_id():
+    assert names_check("the first one (P-001), or Norvik Slate 14 (P-007)").ok
+    assert names_check("the first one (P-001), or Norvik Slate 14 P-007").ok
+    assert not names_check("Auralis Home 1 (P-009)").ok
+    # A name after the id that is not right before the next id still counts.
+    assert not names_check("P-009 is like the Auralis Home 1, and P-032 is cheap").ok
+
+
+def test_names_folds_case_without_changing_length():
+    got = names_check("\u0130 Auralis Home 1 (P-009)")
+    assert not got.ok
+    assert got.reason == "P-009 is the Pelagic Go 13, cited as Auralis Home 1"
