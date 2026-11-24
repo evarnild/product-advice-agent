@@ -31,6 +31,53 @@ def cited_ids(answer: str) -> list[str]:
     return list(dict.fromkeys(_ID_RE.findall(answer)))
 
 
+_WINDOW = 80
+
+
+def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, list[str]]]:
+    """Cited known ids written next to another product's name.
+
+    For each occurrence of a known id, the window is up to 80 characters on
+    each side, on the same line, never past the previous or next id. The
+    occurrence is a mismatch when the window names another catalogue product
+    and not the cited one. Names match case-insensitively with a hyphen read
+    as a space, as whole names, the longer name winning on overlap. Returns
+    `(id, own name, other names)`, once per id, in order of first occurrence.
+    """
+    ids = [(m.start(), m.end(), m.group()) for m in _ID_RE.finditer(answer)]
+    if not ids:
+        return []
+    text = _norm(answer)
+    if len(text) != len(answer):  # case folding changed the length: do not guess
+        return []
+    names = sorted(
+        {_norm(p.name): p.name for p in by_id.values()}.items(), key=lambda kv: -len(kv[0])
+    )
+    pattern = re.compile(
+        r"(?<![a-z0-9])(?:" + "|".join(re.escape(n) for n, _ in names) + r")(?![a-z0-9])"
+    )
+    shown = dict(names)
+    mentions = [(m.start(), m.end(), m.group()) for m in pattern.finditer(text)]
+    out: list[tuple[str, str, list[str]]] = []
+    seen: set[str] = set()
+    for k, (start, end, pid) in enumerate(ids):
+        if pid not in by_id or pid in seen:
+            continue
+        lo = max(start - _WINDOW, answer.rfind("\n", 0, start) + 1)
+        nl = answer.find("\n", end)
+        hi = min(end + _WINDOW, len(answer) if nl < 0 else nl)
+        if k > 0:
+            lo = max(lo, ids[k - 1][1])
+        if k + 1 < len(ids):
+            hi = min(hi, ids[k + 1][0])
+        near = [shown[n] for a, b, n in mentions if a >= lo and b <= hi]
+        own = _norm(by_id[pid].name)
+        if near and own not in {_norm(n) for n in near}:
+            seen.add(pid)
+            out.append((pid, by_id[pid].name, list(dict.fromkeys(near))))
+    return out
+
+
 def price_mentioned(answer: str, price: float) -> bool:
     """The price appears as a number: a whole price as "189", "189.00" or "189,00";
     a price with cents only with its two decimals. A price of 1000 or more also
@@ -101,6 +148,17 @@ def score(
             "grounded",
             not unknown,
             f"cites unknown id {', '.join(unknown)}" if unknown else "every cited id exists",
+        )
+    )
+
+    wrong = misnamed(answer, by_id)
+    checks.append(
+        Check(
+            "names",
+            not wrong,
+            "; ".join(f"{i} is the {own}, cited as {', '.join(got)}" for i, own, got in wrong)
+            if wrong
+            else "every cited id sits with its own name or none",
         )
     )
 
