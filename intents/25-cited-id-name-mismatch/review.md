@@ -1,6 +1,112 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §25 review — Catch an answer that cites a real id under another product's name
 
+verdict: escalate
+tier: reviewed
+reviewed-commit: fca3c79
+main: c98c879
+round: 3
+sampled: no
+run: auto
+live-check: not-needed
+
+The tier stays Reviewed: round 1's and round 2's HIGH findings raised it
+(REVIEW-POLICY.md → "Tiers", rule 3), and nothing lowers it. No finding
+needs rework. **You read the diff** (`git diff main...fix/25-cited-id-name-mismatch`)
+before `/deliver 25`.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent, plan and amendment match | pass |
+| 2 | Type check | pass |
+| 3 | Behaviour against the intent | pass: a fresh eval run on the reviewed content, no regression |
+| 4 | Tests prove behaviour | pass: N9 and N11 now killed; only LOW reason-text details and equivalents survive |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass: the Progress entry says "(6 tests)" |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Footguns | pass (list empty) |
+
+## Type check
+```
+type-check: PASS (intent 25, fix)
+  note:  4 file(s), 224 line(s) changed outside intents/.
+```
+
+- **Round 2's findings are resolved.**
+  - A (N9): killed by `test_names_fold_keeps_every_position`.
+  - B (N11): killed by `test_names_fold_reads_a_hyphen_as_a_space`.
+  - C: the count is corrected.
+- **The merge 54ad86f is automatic** (merge-tree equals its tree).
+  `git diff main...HEAD` lists only §25's files, and `git diff cfe43db
+  HEAD -- src` is empty.
+- **The merge brought §26's cases** (`expect_ids` → `expect_properties` on
+  `nc-headphones-under-200`, new keywords on
+  `headphones-hifi-transparent-200`), so round 2's eval run no longer
+  matched the branch's case file. A fresh run was made (below). The
+  reviewer's re-score of round 2's answers had already shown no flip from
+  §25 itself.
+
+## Findings
+- **LOW** — M19, M24 and M25 (the reason text's join and dedup of names, the
+  passing reason's wording) and N8 (several spaces between a name and the
+  next id) survive. Worth a look.
+- **Worth a look** — D1 (b) accepts "P-009 is the Auralis Home 1 (P-032)" by
+  design: the name sits right before P-032.
+
+## Not checked
+- Unicode hyphens (U+2010, U+2011) and no-break spaces inside names: they
+  pass silently, because `_norm` folds only ASCII "-".
+- Non-ASCII letters next to a name count as a word boundary.
+- Equivalent mutants left alone: M1, M29, N2, N3.
+
+## Live check
+- not needed: the diff touches no rule-1 path and not
+  `.claude/settings.json`. How the check scores real model output is the
+  eval run below.
+
+## Eval run
+- Report `evals/runs/20261124T210400Z-ollama.json` (copied to the main
+  checkout). Provider ollama, model qwen3:8b, made in the worktree at
+  fca3c79. It started 21:04:00Z, after the commit at 20:58:00Z.
+- Content check: its `cases_sha256` d5f5e275, `prompt_sha256` c2a38987 and
+  `catalogue_sha256` c2e56cb2 equal the worktree's files at fca3c79.
+  `score.py` is unchanged since cfe43db.
+- `compare` against `evals/baseline.json` (§26's run): baseline 39/50, this
+  run **39/50**.
+  - Regressed 1: `gaming-monitor` ("does not cite P-019", the `expected`
+    check, not `names`). It passed when re-run alone (`advisor-eval
+    --only gaming-monitor`, `20261124T211514Z-ollama.json`), so it is not
+    a regression.
+  - Fixed 1: `tv-sound`. Added 0, removed 0.
+- The `cases_sha256` warning against the baseline is the line-ending
+  artefact §29 fixes.
+- The `names` check failed no case.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at fca3c79:
+  - `npm run verify`: exit 0, 880 passed.
+  - `npm run check:intent`: PASS.
+  - `ruff format --check` on the committed test file: clean. The
+    implementer's transient "would reformat" does not reproduce.
+  - Merge-tree reproduction, the empty `src` diff, the three hashes.
+  - N9 and N11 killed; M19, M24, M25 and N8 survive.
+  - Re-score of round 2's answers with HEAD's cases.
+  - Clean worktree at the end.
+- **Coordinator, re-run**, at fca3c79:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **880 passed**, which matches.
+  - `npm run check:intent`: `type-check: PASS (intent 25, fix)`, which matches.
+  - Surviving mutants against the full suite: M19, M24, M25 and N8 each **survived** (880 passed), which matches.
+  - The rework's kills, N9 and N11, were confirmed by the reviewer and by the implementer; I re-ran them in round 2 as survivors before the fix.
+  - Restored by copy; `cmp` was identical; `git status --short` was clean.
+  - The fresh eval run, `compare` and the `--only` re-run, as above.
+- Taken on trust: nothing.
+
+---
+
+# Round 2
+
 verdict: rework
 tier: reviewed
 reviewed-commit: cfe43db
