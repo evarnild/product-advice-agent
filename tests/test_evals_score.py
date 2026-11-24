@@ -358,3 +358,10 @@ def test_names_leaves_unknown_ids_to_grounded_and_reports_once():
     twice = names_check(WRONG + " Again the Auralis Home 1 (P-009).")
     assert not twice.ok
     assert twice.reason.count("P-009") == 1
+
+
+def test_prices_reason_names_the_product():
+    answer = "The Auralis Home 1 (P-009) is great."
+    got = {c.name: c for c in score(Case("c", "q"), answer, [], CATALOGUE)}
+    assert not got["prices"].ok
+    assert got["prices"].reason == "price of P-009 (Pelagic Go 13) not stated"

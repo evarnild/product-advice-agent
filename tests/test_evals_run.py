@@ -98,7 +98,7 @@ def test_a_failing_case_exits_1_and_names_the_reason(tmp_path):
     code, out, _, _ = run(tmp_path, HP_BAD + LAP_OK + OFF_OK)
     assert code == 1
     assert out.splitlines()[0].startswith("FAIL hp: ")
-    assert "price of P-001 not stated" in out
+    assert "price of P-001 (Auralis Calm 300) not stated" in out
     assert "2/3 passed" in out
 
 

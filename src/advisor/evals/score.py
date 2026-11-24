@@ -178,7 +178,9 @@ def score(
         Check(
             "prices",
             not unpriced,
-            f"price of {', '.join(unpriced)} not stated" if unpriced else "prices stated",
+            f"price of {', '.join(f'{i} ({by_id[i].name})' for i in unpriced)} not stated"
+            if unpriced
+            else "prices stated",
         )
     )
 
