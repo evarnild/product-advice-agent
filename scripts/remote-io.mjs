@@ -100,11 +100,15 @@ export function runGitBounded(root, args, { timeoutMs = remoteTimeoutMs(), env =
   });
 }
 
-/** Why a bounded git run failed: "timed out after <n> s" or git's last stderr line. */
+/**
+ * Why a bounded git run failed: "timed out after <n> s", else git's first
+ * `fatal:` or `error:` line (the last line is usually boilerplate), else the
+ * first non-empty line, else "git exited <code>".
+ */
 export function failureReason(r, timeoutMs = remoteTimeoutMs()) {
   if (r.timedOut) return `timed out after ${Math.round((timeoutMs / 1000) * 10) / 10} s`;
   const lines = (r.stderr || r.stdout || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  return lines.at(-1) ?? `git exited ${r.code}`;
+  return lines.find((l) => /^(fatal|error):/.test(l)) ?? lines[0] ?? `git exited ${r.code}`;
 }
 
 /** Fetch every branch of `origin` into refs/remotes/origin/ (no prune, no tags). */

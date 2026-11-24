@@ -76,7 +76,7 @@ describe('--next-id and origin', { timeout: 120_000 }, () => {
       s.git(a, 'remote', 'set-url', 'origin', join(s.dir, 'missing.git'));
       const r = queue(a, ['--next-id']);
       expect(r.status).toBe(0);
-      expect(r.stderr).toMatch(/could not fetch origin \(.+\): counted origin as last fetched/);
+      expect(r.stderr).toMatch(/could not fetch origin \(fatal: .+\): counted origin as last fetched/);
       expect(r.out).toBe('31');
     }),
   );
@@ -145,7 +145,7 @@ describe('--next-id and origin', { timeout: 120_000 }, () => {
       s.git(b, 'push', '-q', 'origin', 'main');
       const r = queue(a, ['--next-id']);
       expect(r.status).toBe(0);
-      expect(r.stderr).toContain('§23 clash: intents/23-a here, intents/23-b on origin (origin/main)');
+      expect(r.stderr.split(/\r?\n/).filter(Boolean)).toEqual(['§23 clash: intents/23-a here, intents/23-b on origin (origin/main)']);
       expect(r.out).toBe('24');
     }),
   );

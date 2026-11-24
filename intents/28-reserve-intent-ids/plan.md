@@ -564,3 +564,28 @@ Divergences from the plan:
   re-wrapped so the phrase sits on one line; wording unchanged.
 - `deliver.test.mjs` keeps its existing `GIT_ENV` (no empty global config) for
   the two new tests; the new reserve/queue tests use the isolated environment.
+
+### 2026-11-25: rework after review round 1 (implementer)
+
+Commit: see the log (subject "§28: rework round 1"). Kit tests 490 pass, product 880
+pass (main's merge added to the 863 reported above; correcting that figure).
+
+Shipped: failureReason now returns git's first `fatal:` or `error:` line, else
+the first non-empty line, else `git exited <code>` (the owner's D1 b); a timeout
+is unchanged. New tests: runGitBounded with an env lacking the two prompt
+variables (alias prints `0 never`), an orphan that survives the tree kill and
+holds stderr (return within the bound plus 1.5 s) and a harness process that
+must exit by itself while the orphan lives, failureReason unit tests and the
+AC4 reason pinned to `fatal:`, AC7 stderr exactly one clash line, AC14 and AC15
+messages. Mutants (each against `node --test scripts/*.test.mjs`): M7 killed by the
+runGitBounded test, M9 by the failureReason tests and AC4, M6 by the harness
+test, Q6 by AC7, S2 by AC15, S4 by AC14. M5 (no finish on `exit` after a
+timeout) alone is an equivalent mutant: destroying the streams makes `close`
+fire at once, so behaviour is identical; M5 together with M6 is killed by both
+orphan tests.
+
+Divergences:
+- Divergence 7 (missing above): a reservation branch that exists but holds no
+  intent folder counts as taken (exit 1); the spec does not cover it. The
+  `<id>-?` placeholder in that message is left as it is.
+- `check:intent` fails only on the owed live check, which is the owner's gate.

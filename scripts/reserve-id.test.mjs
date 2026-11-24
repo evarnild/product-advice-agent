@@ -196,6 +196,7 @@ describe('npm run reserve-id', { timeout: 120_000 }, () => {
       s.git(a, 'remote', 'set-url', 'origin', join(s.dir, 'missing.git'));
       const unreachable = reserve(a, 16);
       expect(unreachable.status).toBe(3);
+      expect(unreachable.all).toContain('could not fetch origin');
       expect(s.git(a, 'for-each-ref', 'refs/remotes/origin/intent')).toBe('');
       s.git(a, 'remote', 'set-url', 'origin', url);
       s.git(a, 'remote', 'remove', 'origin');
@@ -209,7 +210,9 @@ describe('npm run reserve-id', { timeout: 120_000 }, () => {
     'AC15: no folder for the id, or a metadata.yml of another id, pushes nothing',
     withSandbox(({ s, a, reserve, remoteRefs }) => {
       const before = remoteRefs();
-      expect(reserve(a, 40).status).toBe(1);
+      const none40 = reserve(a, 40);
+      expect(none40.status).toBe(1);
+      expect(none40.all).toContain('no folder intents/40-*');
       s.write(a, 'intents/98-x/metadata.yml', s.meta(99, 'x'));
       expect(reserve(a, 98).status).toBe(1);
       expect(remoteRefs()).toBe(before);
