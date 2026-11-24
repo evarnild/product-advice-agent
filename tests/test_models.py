@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import anthropic
 import httpx
 import pytest
+from anthropic.types import ToolUseBlock
 
 from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
 from advisor.models.anthropic_model import AnthropicClient
@@ -216,3 +217,13 @@ def test_adapter_reports_the_model_the_response_names():
     turn = AnthropicClient("k", "configured-model", sdk_client=sdk).complete("s", [], [])
     assert sdk.calls[0]["model"] == "configured-model"
     assert turn.model == "served-model-9"
+
+
+def test_adapter_non_dict_tool_input_gives_empty_arguments():
+    # `model_construct` skips validation, so a block can carry an input the SDK would refuse.
+    bad = ToolUseBlock.model_construct(
+        type="tool_use", id="tu_1", name="search_products", input=["x"]
+    )
+    sdk = FakeSdk(_response([bad]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.tool_calls == (ToolCall("tu_1", "search_products", {}),)
