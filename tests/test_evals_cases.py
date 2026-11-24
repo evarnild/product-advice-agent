@@ -41,7 +41,8 @@ def test_committed_file_covers_budget_nothing_matches_stock_offtopic_and_section
     assert sum(c.must_decline for c in cases.values()) >= 2
     nc = cases["nc-headphones-under-200"]
     assert nc.question == "I need noise-cancelling headphones under 200 euros"
-    assert set(nc.expect_ids) == {"P-005", "P-001"}
+    assert not nc.expect_ids
+    assert set(nc.expect_properties) == {"cites_a_match", "cites_only_matches"}
 
 
 def test_blank_lines_are_ignored_and_defaults_apply():
