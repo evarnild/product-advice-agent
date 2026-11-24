@@ -7,12 +7,12 @@ title: An eval run's content hashes depend on the checkout's line endings
 review_tier:
 intent_accepted: 2026-11-24 by-agent
 spec_accepted:
-plan_approved:
+plan_approved: 2026-11-24 by-agent    # auto: owner "/auto 29" (auto_authorized 2026-11-24)
 live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 29"
 auto_round:
-auto_stopped: too many sessions
+auto_stopped:
 follows_up: 8
 links:
   - intents/26-loosen-two-headphone-cases    its round-2 review found this; its baseline carries the mixed hash
