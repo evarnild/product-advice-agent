@@ -10,9 +10,9 @@ spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized:
+auto_authorized: 2026-11-24 by-agent    # owner: "/auto 24"
 auto_round:
-auto_stopped:
+auto_stopped: spec questions
 follows_up:
 links:
   - intents/16-llm-judge    the judge, its prompt and parse_verdict
