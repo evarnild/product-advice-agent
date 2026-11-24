@@ -1,6 +1,110 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §24 review — Constrain the LLM judge's reply to its verdict schema
 
+verdict: escalate
+tier: reviewed
+reviewed-commit: 04292f4
+main: c98c879
+round: 2
+sampled: no
+run: auto
+live-check: owed
+
+The tier stays Reviewed (round 1's HIGH, rule 3). No finding needs rework.
+**You read the diff** (`git diff main...feat/24-judge-structured-output`),
+then run the live check below.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the rework (6775d96) changes tests only, plus a Progress entry |
+| 2 | Type check | FAIL only on the owed live check, which is yours to clear |
+| 3 | Behaviour against the spec | pass: same code as round 1; AC11 owed; AC12 covered by round 1's run |
+| 4 | Tests prove the behaviour | pass: all 34 round-1 mutants are now killed |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass (885) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass |
+
+## Type check
+```
+type-check: FAIL (intent 24, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/24-judge-structured-output/review.md → ## Live check, then set live_checked: <date> in intents/24-judge-structured-output/metadata.yml.
+  note:  16 file(s), 332 line(s) changed outside intents/.
+```
+
+- **Round 1 resolved:**
+  - A5 and A16 are killed by the two `max_tokens` assertions
+    (`tests/test_models.py:187`, `:199`);
+  - J8 is killed by the bare-fence case.
+- `git diff 63211c5 HEAD -- src` is empty.
+- **The merge ffae26b is automatic** (merge-tree equals its tree). It
+  brings only §28's metadata and plan from main.
+
+## Findings
+None open.
+
+## Not checked
+- Whether `claude-haiku-5-5` accepts `output_config.format` with `tools=[]`,
+  the property order the API generates, and the real `stop_reason` for a
+  structured refusal. Only the live check shows these (rule 1; rule 3 for
+  this item).
+
+## Live check
+- owed: rule 1 (`src/advisor/models/`), and the Not-checked item above. In
+  the worktree `C:/Users/eric/src/product-advice-agent-wt/24-judge-structured-output`,
+  with `ANTHROPIC_API_KEY` set. It costs about 35 Haiku calls plus one
+  `advisor` run.
+- steps:
+  1. `uv run advisor-analysis judge-validate --runs-dir C:/Users/eric/src/product-advice-agent/evals/runs`
+  2. Open `evals/judge/validation.md`.
+  3. `$env:ADVISOR_MODEL_PROVIDER = "anthropic"; uv run advisor "A cheap phone that is in stock"; echo "exit: $LASTEXITCODE"; Remove-Item Env:ADVISOR_MODEL_PROVIDER`
+  4. Commit the new `evals/judge/validation.md` on the branch (or ask me
+     to). A further review round then covers it: it must be inside that
+     round's reviewed commit.
+- you should see:
+  - step 1 completes over the 35 held-out conversations. Failure looks like
+    `ERROR <ref>: Anthropic call failed: BadRequestError` on every one.
+  - in `validation.md`:
+    - no judge error reading "the model answer is not a JSON object", "the
+      JSON has no boolean 'pass'" or "the JSON has no string 'reason'";
+    - a named refusal, cut-off or API error is allowed;
+    - the prompt sha256 differs from a6cff797…;
+    - the old rates for comparison: true-positive rate 0.52 (11/21),
+      true-negative rate 0.75 (9/12), 2 judge errors.
+  - step 3: a normal answer citing real ids with prices, then `exit: 0`.
+
+## Eval run
+- Round 1's report `evals/runs/20261124T204309Z-ollama.json` (qwen3:8b,
+  made at 63211c5) still covers this commit. `src` is unchanged, and its
+  hashes (cases d5f5e275, prompt c2a38987, catalogue c2e56cb2) equal the
+  files at 04292f4.
+- `compare`: 38/50 against 39/50. The one flip, `basic-phone`, passed on
+  its `--only` re-run (`20261124T205326Z-ollama.json`), so it is not a
+  regression.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at 04292f4:
+  - `npm run verify`: exit 0, 885 passed.
+  - `npm run check:intent`: FAIL on the live check only.
+  - The empty `src` diff, merge-tree identity and the three hashes.
+  - A5, A16 and J8 killed.
+  - Clean worktree at the end.
+- **Coordinator, re-run**, at 04292f4:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **885 passed**, which matches.
+  - `npm run check:intent`: the same FAIL (live check only), which matches.
+  - Mutants the rework says it kills:
+    - A5 (`anthropic_model.py:105`): **killed**, 1 failed.
+    - A16 (`:91`): **killed**, 1 failed.
+    - J8 (`judge.py:130`): **killed**, 1 failed.
+    - All match. Restored by copy; `git status --short` was clean.
+- Taken on trust: round 1's 31 other killed mutants (`src` unchanged since).
+
+---
+
+# Round 1
+
 verdict: rework
 tier: reviewed
 reviewed-commit: 63211c5
