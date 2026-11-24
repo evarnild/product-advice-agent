@@ -2,6 +2,124 @@
 # §25 review — Catch an answer that cites a real id under another product's name
 
 verdict: rework
+tier: reviewed
+reviewed-commit: cfe43db
+main: ee14d0f
+round: 2
+sampled: no
+run: auto
+live-check: not-needed
+
+**Tier.** The paths give Attested, but REVIEW-POLICY.md → "Tiers", rule 3,
+says "Any CRITICAL or HIGH finding escalates to Reviewed". Round 1 had HIGH
+findings and wrongly recorded `tier: attested`; this round corrects
+it. The change stays Reviewed: you read the diff before the merge.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent, plan and amendment match | pass: D1 (b) and D2 (b) are implemented as the amendment words them |
+| 2 | Type check | pass |
+| 3 | Behaviour against the intent | pass: the eval run re-scores identically with the committed code |
+| 4 | Tests prove behaviour | findings (2 HIGH) |
+| 5 | Conventions | pass: `score.py` stays pure |
+| 6 | Numbers in prose | findings (1 LOW) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Footguns | pass (list empty) |
+
+## Type check
+```
+type-check: PASS (intent 25, fix)
+  note:  4 file(s), 214 line(s) changed outside intents/.
+```
+
+- **The merge e6d8fad is the automatic one.** `git merge-tree --write-tree
+  bf50a8c ee14d0f` equals its tree, and `git diff main...HEAD` is §25's
+  files only.
+- **Round 1 resolved**:
+  - the next-id bound (M13);
+  - the lookbehind (M4);
+  - the 80-character width (M20, M21; also 79 and 81, and M14/M15);
+  - the `"; "` join (M23);
+  - D1 (b): "the first one (P-001), or Norvik Slate 14 (P-007)" passes, and real mismatches still fail P-009 ("Auralis Home 1 (P-009) and P-032", "Auralis Home 1 P-009", "P-009: Auralis Home 1, P-032: Pelagic Go 13");
+  - D2 (b): "İ Auralis Home 1 (P-009)" now fails, with the P-009 reason.
+- **The implementer's divergences are sound.**
+  - (a) Round 1's example could not kill M13; theirs does.
+  - (b) The width test bounds a name wholly inside the window.
+- **A shape D1 (b) accepts by design:** "P-009 is the Auralis Home 1
+  (P-032)" passes, because the name sits right before P-032. Worth a look.
+
+## Findings
+- **HIGH** `tests/test_evals_score.py`
+  (`test_names_folds_case_without_changing_length`) — D2's "every
+  character keeps its position" is not proven. Mutant N9 (`text =
+  _norm(answer)` in place of the per-character fold, `score.py:53`)
+  survives the full suite. Needs rework: add an assertion where a
+  one-character shift matters, e.g. `"İ P-009" + " " * 66 + "Auralis
+  Home 1"` fails `names`. Here the name ends exactly 80 characters after
+  the id: the committed code flags it, N9 does not.
+- **HIGH** `tests/test_evals_score.py`
+  (`test_names_reads_after_the_id_ignoring_case_and_hyphen`) — the hyphen
+  half of the fold is unproven. Mutant N11 (`_norm(c)` → `c.lower()`)
+  survives. The only hyphen assertion ("auralis-home 1 (P-032)" passes)
+  also holds when nothing matches. Needs rework: add `"auralis-home 1
+  (P-009)"` fails `names` (plan test 5, "a hyphen read as a space").
+- **LOW** `intents/25-cited-id-name-mismatch/plan.md` (round-1 rework
+  Progress entry) — "(7 tests)" should be 6. Needs rework: correct it
+  (below the marker, the implementer's own).
+- **LOW** — M19 and M24 (the join of several names, duplicate names) and M25
+  (the passing reason text) still survive. Worth a look.
+- Nit: README.md:161-162, one short wrapped line.
+
+## Not checked
+- Unicode hyphens (U+2010, U+2011) and no-break spaces inside names: `_norm`
+  folds only ASCII "-", so such answers pass silently.
+- Non-ASCII letters next to a name count as a word boundary ("éAuralis Home
+  1" matches): the lookarounds are `[a-z0-9]`.
+- Equivalent mutants left alone: M1 (early return), M29 (`re.escape`), N2
+  and N3 (redundant D1 guards).
+
+## Live check
+- not needed: the diff touches no rule-1 path and not
+  `.claude/settings.json`. How the check scores real model output is the
+  eval run below.
+
+## Eval run
+- Report `evals/runs/20261124T202335Z-ollama.json` (copied to the main
+  checkout). Provider ollama, model qwen3:8b, made in the worktree at
+  cfe43db. It started 20:23:35Z, after the commit at 20:23:17Z.
+- Content check: its `cases_sha256` a81f06ad, `prompt_sha256` c2a38987 and
+  `catalogue_sha256` c2e56cb2 equal the worktree's files at cfe43db.
+- `compare` against the branch's baseline (§27's run, 38/50): this run
+  **40/50**. Regressed 0. Fixed 2 (`tv-sound`,
+  `headphones-ldac-balanced-200`).
+- The `names` check failed no case. The reviewer re-scored all 50 answers
+  with the committed `score.py`, and they equal the stored checks, so the
+  run used D1 and D2 even though a mutation run overlapped it.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at cfe43db:
+  - `npm run verify`: exit 0, 878 passed.
+  - `npm run check:intent`: PASS.
+  - Merge-tree reproduction.
+  - D1 and D2 probes.
+  - 26 mutants against the full suite (results above).
+  - In-process proof that the proposed assertions kill N9 and N11.
+  - Re-score of both eval reports.
+  - It also deleted a 0-byte file it had created by accident; clean.
+- **Coordinator, re-run**, at cfe43db:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **878 passed**, which matches.
+  - `npm run check:intent`: `type-check: PASS (intent 25, fix)`, which matches.
+  - Every mutant the review lists as surviving, against the full suite (878 tests each): M1, M19, M24, M25, M29, N2, N3, N8, N9 and N11 all **survived**, which matches. Restored by copy; `cmp` was identical; `git status --short` was clean.
+  - The eval run and `compare`, as above.
+- Taken on trust: nothing from the implementer. Its kills all hold, and its "874 passed" is pre-merge.
+
+---
+
+# Round 1
+
+verdict: rework
 tier: attested
 reviewed-commit: 703921b
 main: 5f7a773
