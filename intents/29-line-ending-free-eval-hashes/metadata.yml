@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 29"
 auto_round: 2
-auto_stopped:
+auto_stopped: escalate, owner reads the diff
 follows_up: 8
 links:
   - intents/26-loosen-two-headphone-cases    its round-2 review found this; its baseline carries the mixed hash

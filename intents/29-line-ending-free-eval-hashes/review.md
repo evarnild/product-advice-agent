@@ -1,6 +1,92 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §29 review — An eval run's content hashes depend on the checkout's line endings
 
+verdict: escalate
+tier: reviewed
+reviewed-commit: daaa924
+main: 0e61f5f
+round: 2
+sampled: yes
+run: auto
+live-check: not-needed
+
+No finding needs rework. The tier is Reviewed (it edits two skills and
+REVIEW-POLICY.md), so **you read the diff**
+(`git diff main...fix/29-line-ending-free-eval-hashes`) before `/deliver 29`.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the rework (cf444aa) adds two tests, a one-line `rehash` change and a Progress entry |
+| 2 | Type check | pass |
+| 3 | Behaviour against the intent | pass: round 1's checks hold; the baseline was re-checked |
+| 4 | Tests prove the behaviour | pass: M10 and M19 are now killed; no survivor remains |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass: Progress now says 880 → 902; HEAD runs 926 (924 + 2) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass |
+
+## Type check
+```
+type-check: PASS (intent 29, fix)
+  note:  13 file(s), 525 line(s) changed outside intents/.
+```
+
+- **Round 1 resolved:**
+  - M10 is killed by `test_rehash_accepts_a_report_made_on_mixed_ending_bytes`;
+  - M19 is killed by `test_compare_model_difference_is_not_blamed_on_hash_forms`;
+  - `rehash` now writes `content_sha256(data)`, the one shared definition;
+  - Progress records the baseline's provenance: from the merge cb627b7,
+    byte-identical to `--rehash` of §24's run.
+- **The committed `evals/baseline.json` is still byte-identical** (`cmp`) to
+  `baseline …/20261124T215703Z-ollama.json --rehash --out <scratch>`, and
+  `hashes evals/baseline.json` exits 0.
+
+## Findings
+None open. Round 1's nits remain, worth a look only:
+- `content_check` treats an unknown `hash_form` as raw;
+- `hashes` with no file prints its fields out of `HASH_FIELDS` order;
+- `baseline --cases` is accepted silently without `--rehash`;
+- `baseline` is missing from `tests/test_boundaries.py`'s pure-module list
+  (this predates §29).
+
+## Not checked
+- A real `advisor-eval` report carrying `hash_form: "lf"`: only the fake-model
+  test covers that path.
+- An LF-only checkout (`core.autocrlf=false`).
+- The historical hashes quoted in intent.md.
+
+## Live check
+- not needed: no rule-1 path and not `.claude/settings.json`.
+
+## Eval run
+- not owed (no listed path): `uv run advisor-analysis owes-run --base main`
+  prints "not owed (no listed path changed)".
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at daaa924:
+  - `npm run verify`: exit 0, 926 passed.
+  - `npm run check:intent`: PASS.
+  - A full read of the cf444aa diff.
+  - Mutants M10, M11–M15 and M19 all killed.
+  - The baseline `cmp` and `hashes` exit 0.
+  - Clean worktree at the end.
+- **Coordinator, re-run**, at daaa924:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **926 passed**, which matches.
+  - `npm run check:intent`: `type-check: PASS (intent 29, fix)`, which matches.
+  - Mutants the rework says it kills, against the full suite:
+    - M10 (`baseline.py:91`): **killed**, 1 failed.
+    - M19 (`:177`): **killed**, 1 failed.
+    - Both match. Restored by copy; `git status --short` was clean.
+  - `uv run advisor-analysis hashes evals/baseline.json`: 3 × matches, exit 0.
+  - `npm run sdlc:scan -- --sample-due auto --exclude 29`: "nth attested auto change = 9, every 3, sampled: yes".
+- Taken on trust: that the §24 run report in the main checkout is the run main's baseline names (its hashes match).
+
+---
+
+# Round 1
+
 verdict: rework
 tier: reviewed
 reviewed-commit: 039f878
