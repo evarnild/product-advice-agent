@@ -3,6 +3,144 @@
 
 verdict: escalate
 tier: reviewed
+reviewed-commit: 4ec3673
+main: 40b3da7
+round: 3
+sampled: yes
+run: auto
+live-check: owed
+
+The live check is recorded. No finding needs rework on the branch. The tier
+stays Reviewed, so you read the diff again. Since your last read, only
+`evals/judge/validation.md` and metadata changed, plus main's merge.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: since round 2 the branch adds only the committed re-validation (subtask 6) and metadata |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | pass: AC11 met for the 9 conversations that could be judged; AC12 is the fresh eval run below |
+| 4 | Tests prove the behaviour | pass: the branch's src and tests are unchanged since round 2, where all 34 mutants were killed |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass: `validation.md` re-rendered byte-identical |
+| 7 | Documentation | pass (this report states the shortfall; see below) |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass |
+
+## Type check
+```
+type-check: PASS (intent 24, feature)
+  note:  17 file(s), 408 line(s) changed outside intents/.
+```
+
+- **The merge 7f5a3d9 is automatic.** `git merge-tree --write-tree` of its
+  parents gives `9a2a4d0c…`, equal to its tree.
+- `git diff 04292f4 HEAD -- src tests` is exactly main's §25 patch.
+  `src/advisor/models`, `judge.py`, `judging.py` and the judge prompt are
+  unchanged since 63211c5.
+
+## The re-validation (`evals/judge/validation.md`, committed at 8d64656)
+- **Only 9 of the 35 held-out conversations were judged.** The other 26
+  were skipped because their run reports are not in `evals/runs/` on this
+  machine (the folder is gitignored):
+  - `20261116T094326Z-ollama.json`, 20 conversations;
+  - `20261116T094558Z-ollama.json`, 6 conversations.
+
+  So the file's rates are on 9 conversations, **not comparable** with the
+  old 35-conversation rates.
+- **Full-set figures, for the record:**
+  - old: true-positive rate 0.52 (11/21), true-negative rate 0.75 (9/12),
+    2 judge errors, on 35;
+  - new: 0.60 (3/5), 1.00 (4/4), 0 judge errors, on 9.
+
+  The file says "not trusted": 9 is below the 30 it needs.
+- **Like-for-like on the same 9 conversations** (old verdicts from the
+  round-2 `validation.md`):
+
+  | | old judge, prompt a6cff797 | new judge, prompt d007ff8c |
+  | --- | --- | --- |
+  | true-positive rate | 2/4 | 3/5 |
+  | true-negative rate | 4/4 | 4/4 |
+  | judge errors | 1 | 0 |
+
+  - The old error `20261113T070516Z-anthropic.jsonl#gen-budget-too-low-3`
+    ("holds no JSON object") is now a verdict that agrees with your label.
+  - The other old error (`gen-no-match-4`) is among the skipped, so it is
+    untested.
+- **Faithful:** the reviewer re-rendered the file offline from `split.json`,
+  the labels, the run reports and the judge's verdicts, and got it
+  byte-identical. The prompt sha256 `d007ff8c…` reproduces from the
+  template and the 8 few-shot examples.
+
+## Findings
+None open. Round 3 raised three, all resolved in this report:
+- **The eval run** was compared against a moved baseline. A fresh run was
+  made (below).
+- **The skipped conversations:** this report states them, above.
+- **Who ran the live check:** this report says it, below.
+
+## Not checked
+- The judge on the 26 skipped conversations. A full 35-conversation
+  re-validation needs those two run reports restored or regenerated: a
+  possible follow-up, not a finding against this branch.
+- The judge's verdicts and reasons themselves (model output).
+
+## Live check
+- owed: rule 1 (`src/advisor/models/`). **Recorded:** `live_checked:
+  2026-11-24 by-agent    # owner: "24 live checked, accept the
+  9-conversation validation"`.
+- **The coordinator made the run, with your key and at your request, and
+  you accepted it.** REVIEW-POLICY.md "Live checks" says an agent's own run
+  is evidence, not the gate. You gave the gate after reading the evidence.
+- What it covered:
+  - `judge-validate` on `claude-haiku-5-5` completed with the verdict
+    schema: 9 judged, 0 judge errors. So Haiku accepted `output_config` with
+    `tools=[]`.
+  - One `ADVISOR_MODEL_PROVIDER=anthropic uv run advisor "A cheap phone that
+    is in stock"` run answered with 5 in-stock phones (P-489, P-016, P-226,
+    P-466, P-015), whose names, prices (€129–€249) and stock match the
+    catalogue, then `exit: 0`.
+
+## Eval run
+- Report `evals/runs/20261124T215703Z-ollama.json` (copied to the main
+  checkout). Provider ollama, model qwen3:8b, made in the worktree at
+  4ec3673. It started 21:57:03Z, after the commit at 21:52:13Z.
+- Content check: its `cases_sha256` d5f5e275, `prompt_sha256` c2a38987 and
+  `catalogue_sha256` c2e56cb2 equal the worktree's files.
+- `compare` against `evals/baseline.json` (§25's run, 39/50): this run
+  **38/50**.
+  - Regressed 1: `tv-sound`. It passed when re-run alone (`advisor-eval
+    --only tv-sound`, `20261124T220941Z-ollama.json`), so it is not a
+    regression.
+  - Fixed 0, added 0, removed 0.
+- No hash warning: the baseline and this run both hash this machine's CRLF
+  checkout.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at 4ec3673:
+  - `npm run verify`: exit 0, 902 passed.
+  - `npm run check:intent`: PASS.
+  - The merge-tree identity.
+  - The `src`/`tests` diff equals main's §25 patch.
+  - The offline re-render of `validation.md`.
+  - The like-for-like table.
+  - The eval hashes, and the round-1 report re-scored with the merged
+    scorer (identical statuses).
+  - No mutation; clean.
+- **Coordinator, re-run**, at 4ec3673:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **902 passed**, which matches.
+  - `npm run check:intent`: `type-check: PASS (intent 24, feature)`, which matches.
+  - Merge-tree of 7f5a3d9's parents: `9a2a4d0c1d7eace687ba692772e9503d3128f1e1`, equal to its tree, which matches.
+  - The fresh eval run, `compare` and the `--only` re-run, as above.
+  - `npm run sdlc:scan -- --sample-due auto --exclude 24`: "nth attested auto change = 9, every 3, sampled: yes".
+- Taken on trust: the judge's verdicts and reasons.
+
+---
+
+# Round 2
+
+verdict: escalate
+tier: reviewed
 reviewed-commit: 04292f4
 main: c98c879
 round: 2
