@@ -1,6 +1,132 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §28 review — Two machines can give two intents the same number
 
+verdict: escalate
+tier: reviewed
+reviewed-commit: 6d2ae42
+main: 13f13dd
+round: 2
+sampled: yes
+run: auto
+live-check: owed
+
+No finding needs rework. The tier is Reviewed (REVIEW-POLICY.md, the intent
+skill, the deliver scripts), so **you read the diff**
+(`git diff main...feat/28-reserve-intent-ids`), then run the live check.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the rework matches the D1 b amendment; divergence 7 is now documented |
+| 2 | Type check | FAIL only on the owed live check, which is yours to clear |
+| 3 | Behaviour against the spec | pass: B1–B24 and AC1–AC21; AC22 is the live check |
+| 4 | Tests prove the behaviour | pass: every round-1 rework mutant is killed; M5 is equivalent; S7, S9 and S11 accepted as in round 1 |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass, one count stale again after the merge (LOW) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass |
+
+## Type check
+```
+type-check: FAIL (intent 28, feature)
+  error: A live check is owed and not recorded. Do the steps in intents/28-reserve-intent-ids/review.md → ## Live check, then set live_checked: <date> in intents/28-reserve-intent-ids/metadata.yml.
+  note:  24 file(s), 1378 line(s) changed outside intents/.
+```
+
+- **Round 1 resolved:**
+  - M7 (prompt env) is killed by the new `runGitBounded` env test.
+  - M6 (streams) is killed by the harness test.
+  - Q6 (symref) is killed by AC7's exact clash lines.
+  - S4 is killed by AC14's `could not fetch origin`.
+  - S2 is killed by AC15's `no folder intents/40-*`.
+  - Your D1 b: `failureReason` is now `lines.find(/^(fatal|error):/) ?? lines[0] ?? "git exited <code>"`, and a timeout is unchanged. AC4 requires `(fatal: …)`. M9, plus two variants (first line only; `error:` not recognised), are killed.
+- **M5** (no `finish` on `exit` after a timeout) **is equivalent.** The
+  streams are destroyed in the same callback, so `close` follows `exit` at
+  once and resolves `null` the same way, with a 2-s fallback behind it.
+  Measured on copies outside the repo: original 1996 / 1912 ms, M5 1865 /
+  1850 ms. M5 and M6 applied together are killed by both orphan tests.
+- **The orphan and harness tests are robust here:** 5 sequential and 4
+  concurrent runs passed, and no stray processes were left. They kill only
+  pids they started.
+- **The merge 3be0ebe is automatic.** `git merge-tree --write-tree` gives
+  `b4e327e…`, equal to its tree. §28's policy-text changes against main are
+  byte-identical to round 1's, so B19–B24 are still word for word. §29's
+  edits to the same files sit in separate hunks.
+
+## Findings
+- **LOW** `scripts/remote-io.test.mjs:76-78` — the orphan test needs its
+  middle process to exit (800 ms) before the kill (1500 ms), about 0.5 s of
+  slack. Under heavy load it could fail falsely, never pass falsely. Worth a
+  look. If it flakes, signal the middle's exit through a file.
+- **LOW** `plan.md` Progress — "product 880 pass" was true at ebbfaf0; after
+  main's merge it is 926. Worth a look.
+- **LOW, carried over** — worth a look in your diff read:
+  - the skill's exit 2 only reports, while REVIEW-POLICY.md's exception
+    says "asks the owner" on "no remote" (both verbatim from the spec, B7
+    and B19);
+  - `sdlc.md`'s step-1 lines are ragged;
+  - divergence 7's `<id>-?` placeholder.
+
+## Not checked
+- The POSIX path of `runBounded` (this machine is Windows).
+- A real GitHub fetch and push, Git Credential Manager with
+  `GCM_INTERACTIVE=never`, a real network outage, and how GitHub shows a
+  parentless `intent/<n>` branch. These are the live check (rule 3).
+- Whether a real `/intent` session follows the skill's step 5.
+
+## Live check
+- owed: rule 3 (the real-origin items above; spec AC22). In the main
+  checkout after the merge, or in the worktree
+  `C:/Users/eric/src/product-advice-agent-wt/28-reserve-intent-ids` before
+  it.
+- steps:
+  1. Online: `npm run queue -- --next-id`
+  2. With Wi-Fi off (or the cable out): `npm run queue -- --next-id`
+  3. Network back on. On the first real `/intent` after the merge, let it
+     reserve, then look at GitHub.
+- you should see:
+  - step 1: one number (30 or more), no credential prompt or window, no
+    "could not fetch" line, no `§n clash` line, within a few seconds.
+  - step 2: within about 10 s, `could not fetch origin (fatal: …): counted
+    origin as last fetched` (e.g. "unable to access … Could not resolve
+    host"), and still one number on stdout.
+  - step 3: "reserved on origin as `intent/<n>`" without being asked. On
+    GitHub, `intent/<n>` has no parent and holds exactly
+    `intents/<n>-<slug>/intent.md` and `metadata.yml`, and GitHub's `main`
+    did not move.
+- Steps 1 and 2 can be done before `/deliver 28`. Step 3 needs the merge,
+  so record `live_checked` on steps 1–2 and treat step 3 as the first use.
+
+## Eval run
+- not owed (no listed path): `uv run advisor-analysis owes-run --base main`
+  prints "not owed (no listed path changed)".
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at 6d2ae42:
+  - `npm run verify`: exit 0; kit 490/490; pytest 926.
+  - `npm run check:intent`: FAIL on the live check only.
+  - Merge-tree identity, and the md5 of §28's policy-text lines.
+  - 10 mutants against the full kit suite.
+  - The M5 timing comparison.
+  - The flakiness runs and the leftover-process check.
+  - No GitHub contact.
+- **Coordinator, re-run**, at 6d2ae42:
+  - `npm run verify`: kit **490 pass, 0 fail**; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **926 passed**, which matches.
+  - `npm run check:intent`: the same FAIL (live check only), which matches.
+  - Merge-tree of 3be0ebe's parents: `b4e327eeb61b5756d0c8951005775c4c5e5b3ba9`, equal to its tree, which matches.
+  - The surviving mutant and the mutants the rework says it kills, against the full kit suite:
+    - M5: **survived** (equivalent).
+    - Killed: M6, M7, Q6, S2, S4, M9, M9b, M9c, and M5+M6 together, each by the tests the reviewer named.
+    - All match. Restored by byte copy; `git status --short` was clean.
+  - `npm run sdlc:scan -- --sample-due auto --exclude 28`: "sampled: yes".
+  - No real remote was contacted.
+- Taken on trust: the POSIX tree-kill branch.
+
+---
+
+# Round 1
+
 verdict: rework
 tier: reviewed
 reviewed-commit: 89b665f
