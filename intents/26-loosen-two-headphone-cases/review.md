@@ -3,6 +3,109 @@
 
 verdict: attest
 tier: attested
+reviewed-commit: e65b324
+main: 6ebf3c6
+round: 2
+sampled: no
+run: auto
+live-check: not-needed
+
+This is a short round. Main was merged into the branch after round 1:
+§27 delivered, origin's §23, a new `evals/baseline.json`, and intent
+bookkeeping. The branch's own change is byte-identical to round 1's.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent match | pass: same change as round 1 |
+| 2 | Type check | pass |
+| 3 | Behaviour, plus the eval run | findings (1 MEDIUM, about the eval run's hash) |
+| 4 | Tests prove the behaviour | pass, as round 1 (survivors M5, M7 and M9 still stand as LOW) |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass |
+| 7 | Documentation | pass |
+| 8 | Hygiene | pass |
+| 9 | Footguns | finding: a candidate for the list (the MEDIUM) |
+
+## Type check
+```
+type-check: PASS (intent 26, adjustment)
+  note:  2 file(s), 7 line(s) changed outside intents/.
+```
+
+- **The change is round 1's.** `git diff main...HEAD` has the same
+  `evals/cases.jsonl` blob pair (`14918ef..f804951`, lines 1 and 28) and the
+  same test blob pair (`854f1c6..23940ab`, lines 44-45).
+- **ccb4793 is the automatic merge.** `git merge-tree --write-tree` on its
+  parents gives `34632eed…`, which equals its tree, and `git show --cc` is
+  empty.
+- **Nothing merged from main touches the cases**, the scorer, the catalogue
+  or the prompt.
+- **Both cases pass the new baseline's run** (§27's,
+  `20261124T183001Z`) under the old and the new definitions. So after the
+  merge, a qwen run flips neither case because of this edit.
+
+## Findings
+- **MEDIUM** `evals/cases.jsonl` (the worktree's working copy) and the
+  run `20261124T195935Z-ollama.json` — `git ls-files --eol` reports `i/lf
+  w/mixed`: the two edited lines end in LF and the other 48 in CRLF
+  (`core.autocrlf=true`, no `.gitattributes`). The run hashes raw bytes
+  (`run.py:310`), so it recorded `cases_sha256` 20ba79fc. `main`'s CRLF
+  checkout of the same blob hashes to d5f5e275. A baseline written from
+  this run makes later `compare` runs on `main` warn "cases_sha256
+  differs" although the cases are the same.
+  - Not new: the §22 and §27 baselines differ only by line endings too.
+  - The committed blob is right, so no rework on this branch. Worth a
+    look: the cure is a separate change (hash normalised text in
+    `run.py`, or a `.gitattributes` for `evals/*.jsonl`) and a footgun-list
+    entry.
+- Round 1's four LOW findings stand unchanged.
+
+## Not checked
+- Round 1's mutants, not re-run: the change is byte-identical (same blobs).
+- §27's adapter behaviour, which came in through the merge: it was
+  reviewed, live-checked and delivered as §27.
+
+## Live check
+- not needed: the branch's own diff touches no rule-1 path and not
+  `.claude/settings.json`. `anthropic_model.py` arrived only through the
+  merge of main (§27, already live-checked).
+
+## Eval run
+- Report `evals/runs/20261124T195935Z-ollama.json` (round 1), ollama /
+  qwen3:8b, made at c924ad5.
+  - The changed files' content is the same at e65b324.
+  - `prompt_sha256` c2a38987 and `catalogue_sha256` c2e56cb2 equal the
+    files at e65b324.
+  - `cases_sha256` 20ba79fc equals the worktree file's bytes. Those are
+    mixed line endings (see the MEDIUM).
+- `compare` (round 1): 39/50 against 38/50. Regressed 0, fixed 1
+  (`gaming-monitor`).
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at e65b324:
+  - `npm run verify`: exit 0, 863 passed.
+  - `npm run check:intent`: PASS.
+  - The diff's blob pairs, the merge-tree reproduction and the empty `--cc`.
+  - `git diff --stat 40c447d 6ebf3c6`.
+  - Re-scores of four run reports under the old and new definitions.
+  - The line-ending hashes.
+  - No mutation; clean.
+- **Coordinator, re-run**, at e65b324:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **863 passed**, which matches.
+  - `npm run check:intent`: `type-check: PASS (intent 26, adjustment)`, which matches.
+  - `git merge-tree --write-tree` on ccb4793's parents: `34632eed42ed5ce8279b040d6843edea98560785`, equal to `ccb4793^{tree}`, which matches.
+  - Content hashes at e65b324: cases 20ba79fc, prompt c2a38987, catalogue c2e56cb2.
+  - `npm run sdlc:scan -- --sample-due auto --exclude 26`: "nth attested auto change = 8, every 3, sampled: no".
+  - No surviving mutant is new this round, and the change is unchanged, so there are no mutants to re-run.
+- Taken on trust: that the run files are unmodified model outputs.
+
+---
+
+# Round 1
+
+verdict: attest
+tier: attested
 reviewed-commit: c924ad5
 main: 40c447d
 round: 1
