@@ -142,7 +142,7 @@ def _examples(split: jg.Split, by_ref: Mapping[str, Label], paths: Paths) -> lis
 
 def _ask(client: ModelClient, prompt: str) -> jg.Verdict | jg.JudgeError:
     try:
-        reply = client.complete("", [Message("user", prompt)], [])
+        reply = client.complete("", [Message("user", prompt)], [], schema=jg.VERDICT_SCHEMA)
     except ModelError as e:
         return jg.JudgeError(str(e))
     return jg.parse_verdict(reply.text or "")

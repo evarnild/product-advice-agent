@@ -6,8 +6,9 @@ actually sent, not only on what came back.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from advisor.models.base import Message, ModelTurn, ToolSpec
 
@@ -17,6 +18,7 @@ class Request:
     system: str
     messages: tuple[Message, ...]
     tools: tuple[ToolSpec, ...]
+    schema: Mapping[str, Any] | None = None
 
 
 class ScriptedModelClient:
@@ -33,9 +35,14 @@ class ScriptedModelClient:
         self.requests: list[Request] = []
 
     def complete(
-        self, system: str, messages: Sequence[Message], tools: Sequence[ToolSpec]
+        self,
+        system: str,
+        messages: Sequence[Message],
+        tools: Sequence[ToolSpec],
+        *,
+        schema: Mapping[str, Any] | None = None,
     ) -> ModelTurn:
-        self.requests.append(Request(system, tuple(messages), tuple(tools)))
+        self.requests.append(Request(system, tuple(messages), tuple(tools), schema))
         index = len(self.requests) - 1
         if index >= len(self._script):
             if not (self._repeat_last and self._script):

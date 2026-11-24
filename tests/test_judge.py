@@ -186,32 +186,61 @@ def test_the_shipped_template_states_each_rule_of_b3(phrase):
     [
         ('{"pass": true, "reason": "Says nothing fits."}', Verdict(True, "Says nothing fits.")),
         ('{"pass": false, "reason": "Offers watches."}', Verdict(False, "Offers watches.")),
-        ('<think>hmm {"pass": true}</think>{"pass": false, "reason": "r"}', Verdict(False, "r")),
-        (
-            'Here you go:\n```json\n{"pass": true, "reason": " ok "}\n```\nDone.',
-            Verdict(True, "ok"),
-        ),
+        ('{"reason": "Offers watches.", "pass": false}', Verdict(False, "Offers watches.")),
+        ('  \n{"reason": " ok ", "pass": true}\n', Verdict(True, "ok")),
+        ('{"reason": "r", "pass": true, "extra": 1}', Verdict(True, "r")),
     ],
 )
 def test_valid_verdicts(text, expected):
     assert parse_verdict(text) == expected
 
 
+_NOT_OBJECT = "the model answer is not a JSON object"
+_NO_PASS = "the JSON has no boolean 'pass'"
+_NO_REASON = "the JSON has no string 'reason'"
+
+
 @pytest.mark.parametrize(
-    "text",
+    ("text", "expected"),
     [
-        '{"pass": "yes", "reason": "r"}',
-        '{"pass": 1, "reason": "r"}',
-        '{"reason": "no pass key"}',
-        '{"pass": true}',  # B4: a verdict has a reason
-        '{"pass": false, "reason": 3}',
-        "I think it passes.",
-        "",
-        "[true]",
+        ('{"pass": "yes", "reason": "r"}', _NO_PASS),
+        ('{"reason": "r", "pass": "yes"}', _NO_PASS),
+        ('{"pass": 1, "reason": "r"}', _NO_PASS),
+        ('{"reason": "no pass key"}', _NO_PASS),
+        ('{"pass": true}', _NO_REASON),  # B4: a verdict has a reason
+        ('{"pass": false, "reason": 3}', _NO_REASON),
+        ('{"reason": 3, "pass": false}', _NO_REASON),
+        ("I think it passes.", _NOT_OBJECT),
+        ("", _NOT_OBJECT),
+        ("[true]", _NOT_OBJECT),
+        ('Here you go: {"pass": true, "reason": "r"}', _NOT_OBJECT),
+        ('```json\n{"pass": true, "reason": "r"}\n```', _NOT_OBJECT),
+        ('```\n{"reason": "r", "pass": true}\n```', _NOT_OBJECT),
+        ('<think>hmm</think>{"pass": false, "reason": "r"}', _NOT_OBJECT),
     ],
 )
-def test_anything_else_is_a_judge_error(text):
-    assert isinstance(parse_verdict(text), JudgeError)
+def test_anything_else_is_a_judge_error(text, expected):
+    assert parse_verdict(text) == JudgeError(expected)
+
+
+def test_verdict_schema_asks_for_a_reason_then_a_boolean_pass():
+    schema = judge.VERDICT_SCHEMA
+    assert schema["type"] == "object"
+    assert list(schema["properties"]) == ["reason", "pass"]
+    assert schema["properties"]["reason"] == {"type": "string"}
+    assert schema["properties"]["pass"] == {"type": "boolean"}
+    assert set(schema["required"]) == {"reason", "pass"}
+    assert schema["additionalProperties"] is False
+
+
+def test_the_shipped_template_ends_with_the_reply_line_reason_first():
+    lines = judge.PROMPT_PATH.read_text(encoding="utf-8").splitlines()
+    while lines and not lines[-1].strip():
+        lines.pop()
+    assert lines[-2:] == [
+        "Reply with one JSON object and nothing else:",
+        '{"reason": "<one sentence>", "pass": true or false}',
+    ]
 
 
 # --- B9 ---------------------------------------------------------------------

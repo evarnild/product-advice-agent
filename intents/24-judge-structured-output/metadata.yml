@@ -2,17 +2,17 @@
 id: 24
 slug: judge-structured-output
 type: feature
-status: accepted
+status: done
 title: Constrain the LLM judge's reply to its verdict schema
 review_tier:
 intent_accepted: 2026-11-24 by-agent
 spec_accepted: 2026-11-24 by-agent
 plan_approved: 2026-11-24 by-agent    # auto: owner "accept the §24 spec /auto 24" (auto_authorized 2026-11-24)
-live_checked:
-merged:
-auto_authorized: 2026-11-24 by-agent    # owner: "accept the §24 spec /auto 24"
-auto_round:
-auto_stopped:
+live_checked: 2026-11-24 by-agent    # owner: "24 live checked, accept the 9-conversation validation"
+merged: c0ee554    # 2026-11-24, merged by Claude on the owner's explicit request in chat
+auto_authorized: 2026-11-24 by-agent    # owner: "24 diff read /auto 24 /deliver 24"
+auto_round: 3
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/16-llm-judge    the judge, its prompt and parse_verdict
