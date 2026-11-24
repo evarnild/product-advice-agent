@@ -196,7 +196,16 @@ files and git only; none calls a model:
 uv run advisor-analysis owes-run [--base main]     # "owed" with the paths, or "not owed"
 uv run advisor-analysis baseline evals/runs/<report>.json   # write evals/baseline.json
 uv run advisor-analysis compare evals/runs/<report>.json [--baseline evals/baseline.json]
+uv run advisor-analysis hashes [<report or baseline>]   # the files' content hashes; with a file, does it match them (exit 1 names the field)
 ```
+
+A report's `cases_sha256`, `prompt_sha256` and `catalogue_sha256` read every
+CRLF as LF (`"hash_form": "lf"`), so a checkout's line endings do not change
+them; any other whitespace edit still does. A report without `hash_form`
+(before §29) hashed the raw bytes: `hashes` checks it against raw bytes and
+says so, `compare` says "hashed differently" when the two forms meet, and
+`baseline <old report> --rehash` writes the baseline in the `lf` form after
+proving the run saw the files on disk.
 
 `compare` prints both pass rates, the cases that went PASS to FAIL or ERROR
 ("regressed"), the ones that went to PASS ("fixed"), cases only in one of the

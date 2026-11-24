@@ -136,7 +136,8 @@ shows up in the review and not afterwards.
   names no run report, or names one not made on the reviewed commit's
   content, has a HIGH finding "Needs rework: make the eval run". The
   content is read through the report's `prompt_sha256`, `cases_sha256` and
-  `catalogue_sha256`, which must match the branch's files; the run itself
+  `catalogue_sha256`, which must match the branch's files
+  (`advisor-analysis hashes <report>` checks them); the run itself
   is made in the worktree at the reviewed commit.
 - **Who runs it.** The coordinator, on the local model (Ollama), in an
   `/auto` round or a `/review` it runs; a paid run only when the owner

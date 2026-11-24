@@ -326,3 +326,21 @@ its rule ("must match the branch's files") is unchanged. The code alone
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — implementation (all five subtasks)
+
+Commits: 19efe0a (helper, `run.content_hashes`, `hash_form`), the `baseline_from`/`compare`
+commit, the `hashes` and `--rehash` commit, the `evals/baseline.json` rehash commit, and the
+docs/skills/policy commit (see `git log`).
+
+Shipped: `content_sha256`, `HASH_FORM`, `content_check`, `rehash`, `raw_sha256` in
+`baseline.py`; `content_files` and `content_hashes` in `run.py`; `advisor-analysis hashes`
+and `baseline --rehash [--cases]`; `evals/baseline.json` rewritten by `--rehash` from
+`20261124T210400Z-ollama.json` (only the three hashes and `hash_form` changed; `hashes
+evals/baseline.json` exits 0); README, CLAUDE.md, ADR 0003, the two skills and the one
+REVIEW-POLICY.md parenthesis. Tests: 883 -> 902 passing.
+
+Divergence: `run.py` gained `content_files` (the bytes of the three files) beside
+`content_hashes`, because `mypy --strict` rejects `analysis.py` reading `run`'s imported
+path globals; the path globals are still read at call time. AGENTS.md has no matching line,
+so it is untouched.

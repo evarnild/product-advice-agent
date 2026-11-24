@@ -2,7 +2,7 @@
 id: 29
 slug: line-ending-free-eval-hashes
 type: fix
-status: accepted
+status: in-review
 title: An eval run's content hashes depend on the checkout's line endings
 review_tier:
 intent_accepted: 2026-11-24 by-agent
