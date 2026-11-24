@@ -215,6 +215,7 @@ _NO_REASON = "the JSON has no string 'reason'"
         ("[true]", _NOT_OBJECT),
         ('Here you go: {"pass": true, "reason": "r"}', _NOT_OBJECT),
         ('```json\n{"pass": true, "reason": "r"}\n```', _NOT_OBJECT),
+        ('```\n{"reason": "r", "pass": true}\n```', _NOT_OBJECT),
         ('<think>hmm</think>{"pass": false, "reason": "r"}', _NOT_OBJECT),
     ],
 )

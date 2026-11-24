@@ -8,7 +8,7 @@ from anthropic.types import TextBlock, ToolUseBlock
 from anthropic.types import Usage as SdkUsage
 
 from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
-from advisor.models.anthropic_model import AnthropicClient
+from advisor.models.anthropic_model import MAX_TOKENS, AnthropicClient
 from advisor.models.base import (
     Message,
     ModelError,
@@ -184,6 +184,7 @@ def test_adapter_sends_the_schema_as_output_config_format():
     assert set(sent) == {"model", "max_tokens", "system", "messages", "tools", "output_config"}
     assert sent["output_config"] == {"format": {"type": "json_schema", "schema": SCHEMA}}
     assert sent["model"] == "m-1"
+    assert sent["max_tokens"] == MAX_TOKENS
     assert sent["system"] == "sys"
     assert sent["messages"] == [{"role": "user", "content": "q"}]
     assert sent["tools"] == [
@@ -195,6 +196,7 @@ def test_adapter_without_a_schema_sends_exactly_todays_arguments():
     sdk = FakeSdk(_response([TextBlock(type="text", text="hi")]))
     AnthropicClient("k", "m-1", sdk_client=sdk).complete("sys", [Message("user", "q")], [TOOL])
     assert set(sdk.calls[0]) == {"model", "max_tokens", "system", "messages", "tools"}
+    assert sdk.calls[0]["max_tokens"] == MAX_TOKENS
 
 
 def _text_turn(stop_reason, schema):
