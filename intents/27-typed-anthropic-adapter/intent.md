@@ -1,5 +1,5 @@
 <!-- generated-by: product-advice-agent/intent@0.2.0 -->
-# §23 — Type the Anthropic adapter against the SDK's own types
+# §27 — Type the Anthropic adapter against the SDK's own types
 
 **Type:** refactor
 **Originator:** the owner ("why any as return type?", on

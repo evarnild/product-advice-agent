@@ -1,8 +1,8 @@
 {
-  "source": "20261121T165658Z-ollama.json",
+  "source": "20261124T183001Z-ollama.json",
   "provider": "ollama",
   "model": "qwen3:8b",
-  "cases_sha256": "b7a88ce6db45f391ca8caad37df80eaa3f0635b2fdaaf88bbc9f35613ee1d2bf",
+  "cases_sha256": "a81f06ad471e9a7b3744ce1a939d43b41ad667350bc064e0a3493683b445f14f",
   "prompt_sha256": "c2a38987f5c879cb89d2e790e4ad4c0fad437b7536d125d708900bfc58ec2479",
   "catalogue_sha256": "c2e56cb2ffcd1262717dd3065bf95792410a571015f9145ef57e20637107efab",
   "cases": {
@@ -12,7 +12,7 @@
     "video-editing-laptop": "PASS",
     "no-laptop-under-200": "PASS",
     "basic-phone": "PASS",
-    "gaming-monitor": "FAIL",
+    "gaming-monitor": "PASS",
     "drawing-tablet": "PASS",
     "gps-watch": "PASS",
     "waterproof-camera": "PASS",
@@ -34,7 +34,7 @@
     "camera-wildlife-zoom": "PASS",
     "camera-underwater-pink-200": "PASS",
     "headphones-hifi-transparent-200": "PASS",
-    "headphones-ldac-balanced-200": "PASS",
+    "headphones-ldac-balanced-200": "FAIL",
     "monitor-curved-tuner-300": "PASS",
     "laptop-bathrom-projector": "FAIL",
     "smartwatch-gps-apps-minimalist": "PASS",

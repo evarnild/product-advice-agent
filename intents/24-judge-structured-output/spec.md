@@ -235,7 +235,7 @@ turns into a named `JudgeError`.
   imports no SDK. `ModelClient` in `models/base.py` changes (B1): every
   implementation (`AnthropicClient`, `OllamaClient`, `ScriptedModelClient`,
   and the tests' `RoutedClient`) accepts the keyword. **This touches the
-  same `complete` that §23 (`refactor/23-typed-anthropic-adapter`) is
+  same `complete` that §27 (`refactor/27-typed-anthropic-adapter`) is
   typing**; see Q1.
 - **Data:** no new data. Judged conversations and reasons are eval data
   (§19); nothing in logs or the review quotes session transcripts.
@@ -301,21 +301,15 @@ turns into a named `JudgeError`.
 - **No test calls a model**: the adapter is tested through `FakeSdk`, the
   judge through `ScriptedModelClient` / `RoutedClient`; the only real calls
   are the owner's (AC11).
-- **No `blocked_by`.** §24 is buildable on `main` as it is; the overlap
-  with §23 is a merge, not a prerequisite (Q1).
+- **`blocked_by: 27`** (Q1, owner's answer). §27 is merged on `main`
+  (40c5ccc, 2026-11-24), so the blocker is already cleared: the plan builds
+  on the typed adapter.
 
-## Open questions for the owner
+## Owner's answers (2026-11-24: "24 Q1 yes block it Q2 refuse for now")
 
-- **Q1. Build §24 after §23 merges?** Both change
-  `AnthropicClient.complete` and `tests/test_models.py` (`FakeSdk`). §23
-  types the `messages.create` call against the SDK (`MessageParam`,
-  `anthropic.types.Message`); §24 adds `output_config` and reads
-  `stop_reason` in the same call. Recommended: yes, build §24 on top of
-  §23 (record `23` in `blocked_by`), because `output_config` then gets the
-  SDK's `OutputConfigParam` type for free and `stop_reason` is a typed
-  field instead of an `Any` attribute; the alternative is a hand merge of
-  the same twenty lines.
-- **Q2. Should Ollama map a schema to its `format` field instead of
-  refusing it?** Recommended: refuse now (B5), map it in the later intent
-  that brings structured output to `generate` / `taxonomy`, where an Ollama
-  caller exists and a live run can check it.
+- **Q1. Build §24 after §27 merges?** Yes: `27` is recorded in
+  `blocked_by`. §27 merged the same day, so §24 builds on the typed
+  adapter (`OutputConfigParam`, the typed `stop_reason`).
+- **Q2. Ollama: map a schema to `format`, or refuse it?** Refuse for now
+  (B5). Mapping waits for the later intent that brings structured output
+  to `generate` / `taxonomy`.
