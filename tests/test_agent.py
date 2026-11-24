@@ -44,6 +44,7 @@ def test_tool_call_then_final_text():
     assert result.answer == "Try P-002."
     assert not result.fallback
     assert len(fake.requests) == 2
+    assert [r.schema for r in fake.requests] == [None, None]
     first = fake.requests[0]
     assert first.messages[0].text == "cheap phone?"
     assert [t.name for t in first.tools] == ["search_products"]

@@ -103,6 +103,13 @@ def test_fake_records_requests_and_plays_script():
         fake.complete("s", [], [])
 
 
+def test_fake_records_the_schema_it_was_given():
+    fake = ScriptedModelClient([ModelTurn(text="a"), ModelTurn(text="b")])
+    fake.complete("s", [], [], schema={"type": "object"})
+    fake.complete("s", [], [])
+    assert [r.schema for r in fake.requests] == [{"type": "object"}, None]
+
+
 def test_fake_raises_exceptions_and_repeats_last():
     fake = ScriptedModelClient([ModelTurn(text="x"), RuntimeError("boom")], repeat_last=True)
     fake.complete("s", [], [])
@@ -125,13 +132,13 @@ class FakeSdk:
         return self._response
 
 
-def _response(content, model="m-1", usage=(11, 7)):
+def _response(content, model="m-1", usage=(11, 7), stop_reason="end_turn"):
     return SdkMessage(
         id="msg_1",
         type="message",
         role="assistant",
         model=model,
-        stop_reason="end_turn",
+        stop_reason=stop_reason,
         stop_sequence=None,
         content=content,
         usage=SdkUsage(input_tokens=usage[0], output_tokens=usage[1]),
@@ -163,6 +170,31 @@ def test_adapter_maps_tool_use_and_usage():
     assert sent["tools"] == [
         {"name": "search_products", "description": "Search.", "input_schema": TOOL.parameters}
     ]
+
+
+SCHEMA = {"type": "object", "properties": {"a": {"type": "string"}}}
+
+
+def test_adapter_sends_the_schema_as_output_config_format():
+    sdk = FakeSdk(_response([TextBlock(type="text", text="{}")]))
+    AnthropicClient("k", "m-1", sdk_client=sdk).complete(
+        "sys", [Message("user", "q")], [TOOL], schema=SCHEMA
+    )
+    sent = sdk.calls[0]
+    assert set(sent) == {"model", "max_tokens", "system", "messages", "tools", "output_config"}
+    assert sent["output_config"] == {"format": {"type": "json_schema", "schema": SCHEMA}}
+    assert sent["model"] == "m-1"
+    assert sent["system"] == "sys"
+    assert sent["messages"] == [{"role": "user", "content": "q"}]
+    assert sent["tools"] == [
+        {"name": "search_products", "description": "Search.", "input_schema": TOOL.parameters}
+    ]
+
+
+def test_adapter_without_a_schema_sends_exactly_todays_arguments():
+    sdk = FakeSdk(_response([TextBlock(type="text", text="hi")]))
+    AnthropicClient("k", "m-1", sdk_client=sdk).complete("sys", [Message("user", "q")], [TOOL])
+    assert set(sdk.calls[0]) == {"model", "max_tokens", "system", "messages", "tools"}
 
 
 def test_adapter_maps_text_only_response():
