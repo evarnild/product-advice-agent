@@ -1,5 +1,5 @@
 {
-  "source": "20261124T210400Z-ollama.json",
+  "source": "20261124T215703Z-ollama.json",
   "provider": "ollama",
   "model": "qwen3:8b",
   "cases_sha256": "d5f5e27571dd16a859b4fd8a7332928ba17756606d79ca051b03fc6f0d4ea13d",
@@ -16,7 +16,7 @@
     "drawing-tablet": "PASS",
     "gps-watch": "PASS",
     "waterproof-camera": "PASS",
-    "tv-sound": "PASS",
+    "tv-sound": "FAIL",
     "out-of-stock-quiet-pro": "FAIL",
     "voice-speaker": "PASS",
     "off-topic-weather": "PASS",
