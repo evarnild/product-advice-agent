@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 23
+slug: typed-anthropic-adapter
+type: refactor
+status: accepted
+title: Type the Anthropic adapter against the SDK's own types
+review_tier:
+intent_accepted: 2026-11-16 by-agent
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/5-anthropic-sdk-otel-off    the adapter's last change; its OTel-off tests must stay green
+blocked_by:
