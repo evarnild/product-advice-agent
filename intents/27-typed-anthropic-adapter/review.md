@@ -1,5 +1,5 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
-# §23 review — Type the Anthropic adapter against the SDK's own types
+# §27 review — Type the Anthropic adapter against the SDK's own types
 
 verdict: attest
 tier: attested
@@ -26,7 +26,7 @@ live-check: owed
 ## Type check
 ```
 type-check: FAIL (intent 23, refactor)
-  error: A live check is owed and not recorded. Do the steps in intents/23-typed-anthropic-adapter/review.md → ## Live check, then set live_checked: <date> in intents/23-typed-anthropic-adapter/metadata.yml.
+  error: A live check is owed and not recorded. Do the steps in intents/27-typed-anthropic-adapter/review.md → ## Live check, then set live_checked: <date> in intents/27-typed-anthropic-adapter/metadata.yml.
   route: Declared refactor, but existing tests lost lines (tests/test_models.py). Behaviour may have changed — check, or route to feature.
   note:  2 file(s), 106 line(s) changed outside intents/.
 ```
@@ -41,7 +41,7 @@ The unknown-tag probes now give `'answer'` for both shapes, the same as
 - `test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag` (tests/test_models.py:247). It is defensive: SDK 2.6.0 builds unknown blocks as `TextBlock`, but the test keeps the tool-side tag check.
 
 ## Findings
-- **LOW** `intents/23-typed-anthropic-adapter/plan.md` (round-1 rework
+- **LOW** `intents/27-typed-anthropic-adapter/plan.md` (round-1 rework
   Progress entry) — it says the SDK "falls back to
   `TextBlock`/`ToolUseBlock`". In 2.6.0 it falls back only to `TextBlock`.
   A wording slip in the implementer's own section. Worth a look; no rework.
@@ -55,7 +55,7 @@ The unknown-tag probes now give `'answer'` for both shapes, the same as
 ## Live check
 - owed: rule 1 (`src/advisor/models/`), covering the "real API response
   path" item. Run it in the worktree
-  `C:/Users/eric/src/product-advice-agent-wt/23-typed-anthropic-adapter`,
+  `C:/Users/eric/src/product-advice-agent-wt/27-typed-anthropic-adapter`,
   in PowerShell, with `ANTHROPIC_API_KEY` in `.env`. It costs a few
   Anthropic calls.
 - steps:
@@ -181,7 +181,7 @@ characterisation test. The refactor type holds.
 ## Live check
 - owed: rule 1 (`src/advisor/models/`), covering the "real API response
   path" item above. Run it after the rework, in the worktree
-  `C:/Users/eric/src/product-advice-agent-wt/23-typed-anthropic-adapter`,
+  `C:/Users/eric/src/product-advice-agent-wt/27-typed-anthropic-adapter`,
   in PowerShell, with `ANTHROPIC_API_KEY` in `.env`. It costs a few
   Anthropic calls.
 - steps:
@@ -212,5 +212,5 @@ characterisation test. The refactor type holds.
   - `npm run check:intent`: the same ROUTE text as above, which matches.
   - Surviving mutant M4 (`dict(block.input)` → `block.input`): **860 passed, survived**, which matches the reviewer. Restored by copy; `git status --short` was clean.
   - The MEDIUM finding, confirmed: a `construct_type` probe gives `[('TextBlock', 'text'), ('TextBlock', 'futuristic')]`, and `complete(...).text == 'answerleak'` on the branch.
-  - `npm run sdlc:scan -- --sample-due auto --exclude 23`: "nth attested auto change = 6, every 3, sampled: yes".
+  - `npm run sdlc:scan -- --sample-due auto --exclude 27`: "nth attested auto change = 6, every 3, sampled: yes".
 - Taken on trust: nothing from the implementer's report. Its four mutants match the reviewer's M1, M3, M5 and M6.

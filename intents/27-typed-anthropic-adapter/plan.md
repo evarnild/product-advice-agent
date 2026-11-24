@@ -1,5 +1,5 @@
 <!-- generated-by: product-advice-agent/build-plan@0.2.0 -->
-# §23 plan — Type the Anthropic adapter against the SDK's own types
+# §27 plan — Type the Anthropic adapter against the SDK's own types
 
 Intent: [intent.md](intent.md)
 
@@ -203,8 +203,8 @@ this line is the implementer's to edit. -->
 ### 2026-11-24 — implementation (all subtasks)
 
 - Commits: characterisation test, SDK-built fake responses, typed adapter
-  (subjects "§23: characterise non-dict tool input…", "§23: build real SDK
-  responses…", "§23: type the Anthropic adapter…").
+  (subjects "§27: characterise non-dict tool input…", "§27: build real SDK
+  responses…", "§27: type the Anthropic adapter…").
 - Shipped: `anthropic_model.py` has no `Any`, uses `anthropic.Anthropic`, the
   SDK param TypedDicts and `isinstance` narrowing; the non-dict guard and
   `open_telemetry=False` are kept. The test fake builds `Message`,
