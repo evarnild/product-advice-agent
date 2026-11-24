@@ -103,6 +103,8 @@ exec clickhouse sh -c 'clickhouse-client --user clickhouse --password
 "$CLICKHOUSE_PASSWORD" -q "TRUNCATE TABLE system.trace_log"'` (repeat for
 `text_log`, `metric_log`, `asynchronous_metric_log`, `part_log`,
 `processors_profile_log`); not automated.
+`langfuse-web` and `langfuse-worker` are each capped at 1 GB, with a 512 MB Node heap
+(`NODE_OPTIONS`), so they collect garbage before the container limit.
 
 **Coming from the v3 stack.** v4 replaces v3; it is not upgraded in place.
 Run `docker compose -f infra/langfuse/docker-compose.yml down -v` first (this
