@@ -16,5 +16,5 @@ auto_stopped: spec questions
 follows_up:
 links:
   - intents/16-llm-judge    the judge, its prompt and parse_verdict
-  - intents/23-typed-anthropic-adapter    edits the same adapter; whichever merges second rebases
+  - intents/27-typed-anthropic-adapter    edits the same adapter; whichever merges second rebases
 blocked_by:

@@ -1,5 +1,5 @@
 <!-- generated-by: product-advice-agent/build-plan@0.2.0 -->
-# §23 plan — Type the Anthropic adapter against the SDK's own types
+# §27 plan — Type the Anthropic adapter against the SDK's own types
 
 Intent: [intent.md](intent.md)
 

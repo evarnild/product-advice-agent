@@ -96,7 +96,7 @@ a given shape, so nothing today can prevent this.
 - **The 2 judge errors are format errors.** I read only the count in
   `validation.md`, not the reasons (which may quote conversations). The
   spec should confirm their reasons before promising "0 format errors".
-- **Not blocked by §23** (typed Anthropic adapter, accepted, not built).
+- **Not blocked by §27** (typed Anthropic adapter, accepted, not built).
   Both edit `models/anthropic_model.py`; whichever merges second rebases.
   Recorded as a link, not `blocked_by`. If you'd rather type the adapter
   first, say so and I'll add `23` to `blocked_by`.
