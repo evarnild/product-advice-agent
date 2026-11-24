@@ -235,7 +235,7 @@ turns into a named `JudgeError`.
   imports no SDK. `ModelClient` in `models/base.py` changes (B1): every
   implementation (`AnthropicClient`, `OllamaClient`, `ScriptedModelClient`,
   and the tests' `RoutedClient`) accepts the keyword. **This touches the
-  same `complete` that §23 (`refactor/23-typed-anthropic-adapter`) is
+  same `complete` that §27 (`refactor/27-typed-anthropic-adapter`) is
   typing**; see Q1.
 - **Data:** no new data. Judged conversations and reasons are eval data
   (§19); nothing in logs or the review quotes session transcripts.
@@ -302,16 +302,16 @@ turns into a named `JudgeError`.
   judge through `ScriptedModelClient` / `RoutedClient`; the only real calls
   are the owner's (AC11).
 - **No `blocked_by`.** §24 is buildable on `main` as it is; the overlap
-  with §23 is a merge, not a prerequisite (Q1).
+  with §27 is a merge, not a prerequisite (Q1).
 
 ## Open questions for the owner
 
-- **Q1. Build §24 after §23 merges?** Both change
-  `AnthropicClient.complete` and `tests/test_models.py` (`FakeSdk`). §23
+- **Q1. Build §24 after §27 merges?** Both change
+  `AnthropicClient.complete` and `tests/test_models.py` (`FakeSdk`). §27
   types the `messages.create` call against the SDK (`MessageParam`,
   `anthropic.types.Message`); §24 adds `output_config` and reads
   `stop_reason` in the same call. Recommended: yes, build §24 on top of
-  §23 (record `23` in `blocked_by`), because `output_config` then gets the
+  §27 (record `27` in `blocked_by`), because `output_config` then gets the
   SDK's `OutputConfigParam` type for free and `stop_reason` is a typed
   field instead of an `Any` attribute; the alternative is a hand merge of
   the same twenty lines.
