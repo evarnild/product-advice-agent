@@ -88,9 +88,9 @@ class AnthropicClient:
         texts: list[str] = []
         calls: list[ToolCall] = []
         for block in response.content:
-            if isinstance(block, TextBlock):
+            if isinstance(block, TextBlock) and block.type == "text":
                 texts.append(block.text)
-            elif isinstance(block, ToolUseBlock):
+            elif isinstance(block, ToolUseBlock) and block.type == "tool_use":
                 args = dict(block.input) if isinstance(block.input, dict) else {}
                 calls.append(ToolCall(id=block.id, name=block.name, arguments=args))
         return ModelTurn(

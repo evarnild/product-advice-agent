@@ -234,3 +234,21 @@ def test_adapter_non_dict_tool_input_gives_empty_arguments():
     sdk = FakeSdk(_response([bad]))
     turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
     assert turn.tool_calls == (ToolCall("tu_1", "search_products", {}),)
+
+
+def test_adapter_ignores_text_shaped_blocks_with_an_unknown_tag():
+    # The SDK falls back to TextBlock for a tag it does not know and keeps the tag.
+    foreign = TextBlock.model_construct(type="futuristic", text="leak")
+    sdk = FakeSdk(_response([TextBlock(type="text", text="answer"), foreign]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.text == "answer"
+
+
+def test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag():
+    foreign = ToolUseBlock.model_construct(
+        type="futuristic", id="x_1", name="search_products", input={"a": 1}
+    )
+    sdk = FakeSdk(_response([TextBlock(type="text", text="answer"), foreign]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.text == "answer"
+    assert turn.tool_calls == ()

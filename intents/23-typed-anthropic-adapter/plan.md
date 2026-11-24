@@ -215,3 +215,17 @@ this line is the implementer's to edit. -->
   non-dict guard (1 failed), `is_error` -> False (1 failed),
   `open_telemetry=True` (4 failed). All killed.
 - Divergences: none. The eval run and live check remain owed.
+
+### 2026-11-24 — review round 1 rework
+
+- Finding (MEDIUM): `isinstance` narrowing alone accepted blocks whose tag
+  the SDK does not know (it falls back to `TextBlock`/`ToolUseBlock` and
+  keeps the foreign `type`). Fixed by also checking `block.type == "text"` /
+  `"tool_use"`, as on main.
+- Tests: two new, a text-shaped and a tool-shaped block with tag
+  `"futuristic"` next to a real text block. Both failed before the fix.
+  860 -> 862 passed.
+- Mutants: dropping the text tag check is killed by
+  `test_adapter_ignores_text_shaped_blocks_with_an_unknown_tag`; dropping the
+  tool tag check by `test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag`.
+- LOW (`dict(block.input)`, equivalent mutant): no action, as instructed.
