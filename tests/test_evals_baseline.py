@@ -204,3 +204,9 @@ def test_compare_names_mixed_hash_forms():
 def test_compare_mixed_forms_with_equal_hashes_do_not_warn():
     base = baseline_from(rep([("a", "PASS")]), "r.json")
     assert compare(rep([("a", "PASS")], hash_form="lf"), base).warnings == []
+
+
+def test_compare_model_difference_is_not_blamed_on_hash_forms():
+    base = baseline_from(rep([("a", "PASS")]), "r.json")
+    new = rep([("a", "PASS")], hash_form="lf", model="other")
+    assert compare(new, base).warnings == ["model differs: baseline m, report other"]

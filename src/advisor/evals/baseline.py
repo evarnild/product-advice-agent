@@ -94,7 +94,7 @@ def rehash(report: Mapping[str, Any], files: Mapping[str, bytes]) -> dict[str, A
         }
         if report.get(key) not in accepted:
             raise BaselineError(f"{key}: the report was not made on these files")
-        out[key] = raw_sha256(folded)
+        out[key] = content_sha256(data)
     out["hash_form"] = HASH_FORM
     return out
 

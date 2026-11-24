@@ -316,6 +316,18 @@ def test_rehash_writes_lf_hashes_when_the_report_saw_these_files(
     assert run(["hashes", str(out), "--cases", str(cases)])[0] == 0
 
 
+def test_rehash_accepts_a_report_made_on_mixed_ending_bytes(tmp_path, monkeypatch):
+    mixed = b'{"id": "a"}\r\n{"id": "b"}\n'
+    cases = working_files(tmp_path, monkeypatch, cases=mixed)
+    src = raw_report(tmp_path, lambda d: d, cases_sha256=hashlib.sha256(mixed).hexdigest())
+    out = tmp_path / "baseline.json"
+    code, _, err = run(["baseline", str(src), "--rehash", "--cases", str(cases), "--out", str(out)])
+    assert code == 0, err
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["cases_sha256"] == content_sha256(CASES_LF)
+    assert data["hash_form"] == "lf"
+
+
 def test_rehash_refuses_a_report_of_other_content(tmp_path, monkeypatch):
     cases = working_files(tmp_path, monkeypatch)
     mixed = hashlib.sha256(b'{"id": "a"}\r\n{"id": "b"}\n').hexdigest()
