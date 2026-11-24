@@ -152,7 +152,7 @@ describe('npm run deliver', { timeout: 90_000 }, () => {
     // §19 B9: the bookkeeping commit holds stats.md next to metadata.yml, stamped, numbers and ids only
     expect(git(repo, 'show', '--name-only', '--format=', 'HEAD').split(/\r?\n/).sort()).toEqual(['intents/11-t11/metadata.yml', 'intents/11-t11/stats.md']);
     const stats = read('intents', '11-t11', 'stats.md');
-    expect(stats).toMatch(/^<!-- generated-by: product-advice-agent\/ship@[\d.]+ -->/);
+    expect(stats).toMatch(/^<!-- generated-by: product-advice-agent\/deliver@[\d.]+ -->/);
     expect(stats).toContain('# §11 stats');
     expect(r.stdout).toContain('intents/11-t11/stats.md written');
     const events = readFileSync(join(repo, '.git', 'product-advice-agent-sessions.jsonl'), 'utf8').split(/\r?\n/);

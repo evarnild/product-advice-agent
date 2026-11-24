@@ -147,7 +147,7 @@ describe('renderStatsFile (B9)', () => {
   it('renders the stamped file, counting the pending merge as the end of the ship phase', () => {
     const md = renderStatsFile(repo, 7, 'abc1234', { now: Date.parse('2026-11-01T12:30:00Z') });
     expect(md).toContain('# §7 stats');
-    expect(md).toContain('generated-by: product-advice-agent/ship@');
+    expect(md).toContain('generated-by: product-advice-agent/deliver@');
     expect(md).not.toContain(SENTINEL);
   });
 

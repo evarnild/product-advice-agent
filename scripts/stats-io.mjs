@@ -102,7 +102,7 @@ export function collectStats({ cwd = process.cwd(), transcripts = defaultTranscr
 }
 
 /** The `generated-by` stamp of a committed stats.md. */
-export const STATS_STAMP = 'product-advice-agent/ship@0.2.0';
+export const STATS_STAMP = 'product-advice-agent/deliver@0.2.0';
 
 /**
  * The `stats.md` text for intent `id` as `/deliver` commits it (B9): collected

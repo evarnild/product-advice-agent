@@ -623,8 +623,8 @@ describe('output (B8, B10)', () => {
   });
 
   it('writes a stamped stats.md of numbers and ids only', () => {
-    const md = statsMarkdown(stats().intents[0], 'product-advice-agent/ship@0.2.0');
-    expect(md.startsWith('<!-- generated-by: product-advice-agent/ship@0.2.0 -->')).toBe(true);
+    const md = statsMarkdown(stats().intents[0], 'product-advice-agent/deliver@0.2.0');
+    expect(md.startsWith('<!-- generated-by: product-advice-agent/deliver@0.2.0 -->')).toBe(true);
     expect(md).toContain('# §7 stats');
   });
 
