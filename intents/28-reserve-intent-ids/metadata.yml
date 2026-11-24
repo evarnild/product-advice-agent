@@ -2,7 +2,7 @@
 id: 28
 slug: reserve-intent-ids
 type: feature
-status: accepted
+status: in-review
 title: Two machines can give two intents the same number
 review_tier: reviewed
 intent_accepted: 2026-11-24 by-agent

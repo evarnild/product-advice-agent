@@ -520,3 +520,38 @@ contains `intent@0.3.0` and not `intent@0.2.0`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24: subtasks 1 to 6 (implementer)
+
+Commits: 21bc30e (bounded runner), 6a909a6 (`--next-id` reads origin), 4239ce6
+(`reserve-id`), 2891a1d (`/deliver` clash and note, spawn test), 3026f28 (policy
+texts and the intent skill), and this hand-over commit. Kit tests 485 pass,
+product 863 pass, `npm run check:intent` PASS.
+
+Shipped: `scripts/remote-io.mjs` (`runBounded` kills the process tree and resolves
+on `exit`, never `close`, after a timeout), `scripts/reserve-id.mjs` and
+`reserve-id-lib.mjs`, `--next-id` (fetch, reservations, clash lines,
+`--no-fetch`), `/deliver` stop and note, the policy texts and the intent skill
+(`0.3.0`). Tests: remote-io (4), queue-lib (+5), queue.test AC3, new
+queue-origin.test (AC1, 2, 4 to 8), reserve-id-lib (11), reserve-id.test (AC9 to
+AC16, 11 tests), deliver-lib (+2), deliver.test AC17 and AC18, spawn AC19,
+kit-texts AC20 (3). Not done here: the owner's post-merge step for §24 to §29.
+
+Divergences from the plan:
+- The tree-kill test's grandchild is spawned `detached` on Windows. Without it
+  libuv's job object kills a node grandchild with its parent, so removing
+  `/T` from `taskkill` did not fail the test (checked by mutation); with it,
+  it does. (git's real ssh grandchild is not in that job.)
+- AC1, 2, 4 to 8 live in a new `scripts/queue-origin.test.mjs` (AC3 is in
+  `queue.test.mjs`) and share `scripts/test-git-sandbox.mjs`, a non-test helper
+  with the update-branch environment, instead of a new `describe` in
+  `queue.test.mjs` (whose sandbox has no remote).
+- `reserve-id` also keeps its own `git update-ref refs/remotes/origin/intent/<id>`
+  (B3.8), although git's push already updates it; a mutation removing it
+  survives. Kept, since B3.8 asks for it and a different fetch refspec would
+  not.
+- `sdlc.md` step 1 also names `npm run reserve-id` (B23 gives no command there;
+  AC20 requires the phrase in `sdlc.md`). REVIEW-POLICY.md's paragraph is
+  re-wrapped so the phrase sits on one line; wording unchanged.
+- `deliver.test.mjs` keeps its existing `GIT_ENV` (no empty global config) for
+  the two new tests; the new reserve/queue tests use the isolated environment.
