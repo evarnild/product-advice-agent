@@ -3,6 +3,99 @@
 
 verdict: attest
 tier: attested
+reviewed-commit: 192ccc2
+main: 40c447d
+round: 3
+sampled: no
+run: auto
+live-check: owed
+
+This round exists because main was merged into the branch since round 2.
+That merge brought origin's §23 (Langfuse memory caps) and the renumber
+of this intent from §23 to §27. The deliver preconditions count a merge of
+main as unreviewed change. The branch's own code is unchanged since round 2.
+
+## Passes
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass |
+| 2 | Type check | ROUTE only, the same explained one as rounds 1 and 2 |
+| 3 | Behaviour against intent | pass (unchanged since round 2) |
+| 4 | Tests prove the behaviour | pass |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | findings (1 LOW) |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass |
+| 9 | Repo footguns | pass (list empty) |
+
+## Type check
+```
+type-check: ROUTE (intent 27, refactor)
+  route: Declared refactor, but existing tests lost lines (tests/test_models.py). Behaviour may have changed — check, or route to feature.
+  note:  2 file(s), 106 line(s) changed outside intents/.
+```
+The ROUTE is round 1's, explained there: only the fake's construction
+lines were removed, and no assertion changed. The live-check error is gone,
+because the check is recorded.
+
+- **The branch's own change is unchanged.** `git diff 5f7a773...8fddf12 --
+  src tests` (round 2) and `git diff main...HEAD -- src tests` (now) are
+  byte-identical.
+- **The merge (bc795e2) is the automatic one.** `git merge-tree
+  --write-tree 6e272e5 40c447d` gives exactly its tree, and `git show --cc
+  bc795e2` is empty.
+- **The renumber is complete.** The only §23 leftovers are on purpose: the
+  pasted check:intent output in the rounds below, and the owner's quotes
+  in `metadata.yml`.
+
+## Findings
+- **LOW** `intents/27-typed-anthropic-adapter/plan.md:206-207` — the
+  renumber rewrote the quoted commit subjects in the Progress entry to
+  "§27: …". The commits (994e273, 1cb69f2, 30ffd4a) still say "§23: …".
+  Worth a look; it doesn't block.
+
+## Not checked
+- The real Anthropic API response path, and the judge path through the
+  adapter. The recorded live check covers the first; no model was called.
+- main's merged content beyond its tests passing. §23 (memory caps) was
+  reviewed and live-checked on its own branch on the other machine.
+
+## Live check
+- owed: rule 1 (`src/advisor/models/`). **Recorded:** `live_checked:
+  2026-11-24 by-agent    # owner: "23 live checked"` (b992942). It was given
+  while this intent was still §23 on this machine. The code is unchanged
+  since, so the check still covers it.
+
+## Eval run
+- Report `evals/runs/20261124T183001Z-ollama.json` (round 2, in the main
+  checkout), ollama / qwen3:8b. It still covers this commit's content: its
+  `cases_sha256` a81f06ad, `prompt_sha256` c2a38987 and `catalogue_sha256`
+  c2e56cb2 equal the sha256 of the files at 192ccc2.
+- Comparison as in round 2: 38/50 against 38/50.
+  `headphones-ldac-balanced-200` flipped and passed again on its `--only`
+  re-run, so it isn't a regression. Fixed 1: `gaming-monitor`.
+
+## Verified myself vs. taken on trust
+- Reviewer (product-advice-agent-reviewer), at 192ccc2:
+  - `npm run verify`: exit 0, 863 passed.
+  - `npm run check:intent`: ROUTE only.
+  - Merge-tree recomputation, `--cc` and the byte-identical diff, as above.
+  - Renumber diffs, file by file.
+  - Mutants M1, M3, M15 and M16 all killed. Restored by copy; `git status --short` was clean.
+- **Coordinator, re-run**, at 192ccc2:
+  - `npm run verify`: kit 0 fail; ruff "All checks passed!"; mypy "Success: no issues found in 31 source files"; pytest **863 passed**, which matches.
+  - `npm run check:intent`: `type-check: ROUTE (intent 27, refactor)`, which matches.
+  - No mutant survives this round, and the code is unchanged, so there are no mutants to re-run.
+  - Content hashes of `evals/cases.jsonl`, `src/advisor/prompts/system.md` and `src/advisor/data/catalogue.json` at 192ccc2: a81f06ad, c2a38987, c2e56cb2. These match the eval report.
+  - `npm run sdlc:scan -- --sample-due auto --exclude 27`: "nth attested auto change = 7, every 3, sampled: no".
+- Taken on trust: nothing.
+
+---
+
+# Round 2
+
+verdict: attest
+tier: attested
 reviewed-commit: 8fddf12
 main: 5f7a773
 round: 2
