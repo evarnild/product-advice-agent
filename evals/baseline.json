@@ -2,9 +2,10 @@
   "source": "20261124T210400Z-ollama.json",
   "provider": "ollama",
   "model": "qwen3:8b",
-  "cases_sha256": "d5f5e27571dd16a859b4fd8a7332928ba17756606d79ca051b03fc6f0d4ea13d",
-  "prompt_sha256": "c2a38987f5c879cb89d2e790e4ad4c0fad437b7536d125d708900bfc58ec2479",
-  "catalogue_sha256": "c2e56cb2ffcd1262717dd3065bf95792410a571015f9145ef57e20637107efab",
+  "cases_sha256": "90a614f9697db20aa9c2d1f4c4b504698fb79904ad59ada68ecc3f7fe3ab038a",
+  "prompt_sha256": "071fd576d51a3dcb10229b6af2fd51dd0de3eb7cc52741fb7a2ca63fe0b4a533",
+  "catalogue_sha256": "b3640395856eb6f8154fe086d7ac4d9232feda35f539137a377995cb6b47d857",
+  "hash_form": "lf",
   "cases": {
     "nc-headphones-under-200": "PASS",
     "sport-earbuds": "FAIL",
