@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 25"
 auto_round: 1
-auto_stopped: decision needed
+auto_stopped:
 follows_up: 8
 links:
   - intents/8-offline-evals    the grounded and prices checks

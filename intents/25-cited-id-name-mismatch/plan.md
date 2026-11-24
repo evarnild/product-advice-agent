@@ -52,6 +52,32 @@ Cube 86). So the rule gives no false positive on the committed runs.
 None of the flagged answers is from a 50-case run, so the baseline is not
 expected to move.
 
+## Amendment after review round 1 (owner, 2026-11-24: "25 D1(b) D2(b)")
+
+Two decisions from `review.md` round 1, findings 5 and 6, change the
+design above:
+
+- **D1 (b): the window after an id stops at the next id's own name.** When
+  a catalogue name is followed, after only whitespace and an opening `(`,
+  by the next cited id, that name belongs to the next id. It doesn't count
+  in the earlier id's window. Other names after the id still count, as
+  before. So "the first one (P-001), or Norvik Slate 14 (P-007)" passes:
+  Norvik Slate 14 belongs to P-007, and P-001's window has no other name.
+  But "Auralis Home 1 (P-009)" still fails P-009, because that name sits
+  before P-009 and belongs to it.
+- **D2 (b): fold case without changing the text's length.** Replace the
+  "lengths differ: do not guess" guard with a lowercase that keeps every
+  character's position. A character whose `lower()` is longer than one
+  character is kept as it is. All 500 catalogue names are ASCII, so no
+  name match is lost, and an answer containing "İ" is still checked.
+
+Tests for both are part of the rework (below the Progress marker, the
+implementer's entry says which). Each must kill the mutant that undoes it:
+- D1: dropping the next-id-name rule makes the "first one … Norvik Slate
+  14" test fail.
+- D2: restoring the fail-open guard makes the "İ Auralis Home 1 (P-009)"
+  test fail.
+
 ## Risks
 
 - **A false failure** on a correct answer. Possible shapes are a comparison
