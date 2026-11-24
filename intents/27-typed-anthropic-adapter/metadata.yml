@@ -2,14 +2,14 @@
 id: 27
 slug: typed-anthropic-adapter
 type: refactor
-status: in-review
+status: done
 title: Type the Anthropic adapter against the SDK's own types
 review_tier:
 intent_accepted: 2026-11-16 by-agent
 spec_accepted:
 plan_approved: 2026-11-24 by-agent    # auto: owner "/auto 23" (auto_authorized 2026-11-24)
 live_checked: 2026-11-24 by-agent    # owner: "23 live checked"
-merged:
+merged: 40c5ccc    # 2026-11-24, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 23"
 auto_round: 3
 auto_stopped: ready for /deliver
