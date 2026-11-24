@@ -52,6 +52,32 @@ Cube 86). So the rule gives no false positive on the committed runs.
 None of the flagged answers is from a 50-case run, so the baseline is not
 expected to move.
 
+## Amendment after review round 1 (owner, 2026-11-24: "25 D1(b) D2(b)")
+
+Two decisions from `review.md` round 1, findings 5 and 6, change the
+design above:
+
+- **D1 (b): the window after an id stops at the next id's own name.** When
+  a catalogue name is followed, after only whitespace and an opening `(`,
+  by the next cited id, that name belongs to the next id. It doesn't count
+  in the earlier id's window. Other names after the id still count, as
+  before. So "the first one (P-001), or Norvik Slate 14 (P-007)" passes:
+  Norvik Slate 14 belongs to P-007, and P-001's window has no other name.
+  But "Auralis Home 1 (P-009)" still fails P-009, because that name sits
+  before P-009 and belongs to it.
+- **D2 (b): fold case without changing the text's length.** Replace the
+  "lengths differ: do not guess" guard with a lowercase that keeps every
+  character's position. A character whose `lower()` is longer than one
+  character is kept as it is. All 500 catalogue names are ASCII, so no
+  name match is lost, and an answer containing "İ" is still checked.
+
+Tests for both are part of the rework (below the Progress marker, the
+implementer's entry says which). Each must kill the mutant that undoes it:
+- D1: dropping the next-id-name rule makes the "first one … Norvik Slate
+  14" test fail.
+- D2: restoring the fail-open guard makes the "İ Auralis Home 1 (P-009)"
+  test fail.
+
 ## Risks
 
 - **A false failure** on a correct answer. Possible shapes are a comparison
@@ -158,3 +184,22 @@ model. The failing-first tests are 1 and 2.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — implementation (all subtasks)
+
+- Commits: `86b55b3` names check, `5d2ccb8` prices reason, then docs and this entry.
+- Shipped: `misnamed()` and the `names` check right after `grounded` in `score.py`; the `prices` reason names each product; README check list gains **names**. CLAUDE.md and AGENTS.md do not name the checks, so unchanged.
+- Tests: 11 added or changed in `tests/test_evals_score.py` (tests 1-10; the four name lists updated), plus one reason string in `tests/test_evals_run.py:101`. 868 passed.
+- Mutations killed: always-pass (tests 1, 5, 6, 7, 8), no window bounds, no line bound (test 6), shortest-name-first (test 7).
+- Divergences: `test_evals_run.py` asserted the old `prices` reason and was updated (not in the plan). `misnamed` returns no mismatches if lowercasing changes the answer's length (rare Unicode), rather than guessing positions. Not run: the eval run (the coordinator's).
+
+### 2026-11-24 — round-1 rework
+
+- Changed: D1 (b) (a name right before the next id, with only space and "(" between, belongs to that id and is out of the earlier id's window) and D2 (b) (length-preserving case fold, replacing the fail-open guard) in `misnamed`; README names bullet mentions D1, prices bullet re-wrapped. Tests added for findings 1-4 and for D1 and D2 (6 tests); 874 passed.
+- Mutants, each run against the full suite and restored by copy: next-id bound removed (M13) killed by `test_names_next_id_bound`; lookbehind dropped (M4) by `test_names_needs_a_word_boundary_before_a_name`; `_WINDOW = 100` (M20) and `_WINDOW = 60` (M21) by `test_names_window_width_is_80_characters`; `", "` join (M23) by `test_names_joins_several_mismatches_with_semicolons`; D1 rule dropped by `test_names_a_name_just_before_the_next_id_belongs_to_that_id` (and the join test); D2 guard restored by `test_names_folds_case_without_changing_length`.
+- Divergences: the review's example for finding 1 ("P-009 costs 649, the Auralis Home 1 is P-032.") puts the name before the next id, so the bound does not exclude it; I used "P-009 costs 649, and P-032 is the Auralis Home 1." instead. The width test measures a name wholly inside the window (starting exactly 80 before the id, or ending exactly 80 after it).
+
+### 2026-11-24 — round-2 rework
+
+- Changed: tests only. `test_names_fold_keeps_every_position` ("İ P-009" + 66 spaces + "Auralis Home 1": the name ends exactly 80 characters after the id) and `test_names_fold_reads_a_hyphen_as_a_space` ("auralis-home 1 (P-009)"). Corrected "7 tests" to 6 in the round-1 entry. 880 tests passed.
+- Mutants, run against the full suite and restored by copy: N9 (`text = _norm(answer)`) killed by `test_names_fold_keeps_every_position`; N11 (`c.lower()` in place of `_norm(c)`) killed by `test_names_fold_reads_a_hyphen_as_a_space`.

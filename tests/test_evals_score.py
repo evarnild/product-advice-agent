@@ -116,10 +116,10 @@ def test_expected_and_forbidden():
 
 def test_checks_only_apply_when_the_case_asks():
     names = [c.name for c in score(Case("c", "q"), GOOD, [], CATALOGUE)]
-    assert names == ["grounded", "prices", "stock"]
+    assert names == ["grounded", "names", "prices", "stock"]
     with_search = Case("c", "q", expect_search={"category": "laptop"})
     names = [c.name for c in score(with_search, GOOD, [], CATALOGUE)]
-    assert names == ["grounded", "prices", "stock", "search"]
+    assert names == ["grounded", "names", "prices", "stock", "search"]
 
 
 def test_declines():
@@ -283,6 +283,137 @@ def test_unknown_cited_ids_are_ignored_by_both_property_checks():
 
 def test_property_checks_appear_only_with_their_property():
     one = [c.name for c in score(prop_case("cites_a_match"), GOOD, [], CATALOGUE)]
-    assert one == ["grounded", "prices", "stock", "search", "a-match"]
+    assert one == ["grounded", "names", "prices", "stock", "search", "a-match"]
     other = [c.name for c in score(prop_case("cites_only_matches"), GOOD, [], CATALOGUE)]
-    assert other == ["grounded", "prices", "stock", "search", "only-matches"]
+    assert other == ["grounded", "names", "prices", "stock", "search", "only-matches"]
+
+
+# --- names: a cited id next to another product's name (§25) ---
+
+WRONG = "You could check the product page for the Auralis Home 1 (P-009) for any updates."
+
+
+def names_check(answer):
+    return {c.name: c for c in score(Case("c", "q"), answer, [], CATALOGUE)}["names"]
+
+
+def test_names_catches_a_real_id_under_another_products_name():
+    got = names_check(WRONG)
+    assert not got.ok
+    assert "P-009" in got.reason
+    assert "Pelagic Go 13" in got.reason
+    assert "Auralis Home 1" in got.reason
+    assert names_check(WRONG).reason == "P-009 is the Pelagic Go 13, cited as Auralis Home 1"
+
+
+def test_names_passes_the_right_id():
+    got = names_check(WRONG.replace("P-009", "P-032"))
+    assert got.ok
+
+
+def test_names_passes_with_no_name_nearby_or_own_name():
+    assert names_check("P-009 costs 649 euros.").ok
+    assert names_check(GOOD).ok
+
+
+def test_names_passes_with_own_name_and_another_name_in_the_window():
+    assert names_check("Unlike the Auralis Home 1, the Pelagic Go 13 (P-009) is in stock.").ok
+
+
+def test_names_reads_after_the_id_ignoring_case_and_hyphen():
+    assert not names_check("P-009 - auralis home 1").ok
+    assert names_check("auralis-home 1 (P-032)").ok
+
+
+def test_names_window_bounds():
+    other = "Auralis Home 1"
+    # More than 80 characters before the id: not counted.
+    assert names_check(other + " " + "x" * 90 + " P-009").ok
+    # Within 80: counted.
+    assert not names_check(other + " " + "x" * 40 + " P-009").ok
+    # More than 80 after the id: not counted.
+    assert names_check("P-009 " + "x" * 90 + " " + other).ok
+    # On the previous line: not counted.
+    assert names_check(other + "\nP-009 costs 649 euros.").ok
+    assert names_check("P-009 costs 649 euros.\n" + other).ok
+    # Before an earlier id: not counted for the later id.
+    assert names_check("Auralis Home 1 P-032 then P-009 costs 649.").ok
+
+
+def test_names_longest_name_wins():
+    by_name = {p.name: p.id for p in CATALOGUE}
+    one, mx = by_name["Zephra One"], by_name["Zephra One Max"]
+    assert names_check(f"Zephra One Max ({mx})").ok
+    got = names_check(f"Zephra One ({mx})")
+    assert not got.ok
+    assert "cited as Zephra One" in got.reason
+    assert "Zephra One Max" not in got.reason.split("cited as")[1]
+    assert names_check(f"Zephra One ({one})").ok
+    assert names_check("Pelagic Go 130 (P-032)").ok
+
+
+def test_names_leaves_unknown_ids_to_grounded_and_reports_once():
+    got = verdicts(Case("c", "q"), "Auralis Home 1 (P-999) is nice.")
+    assert got["names"] and not got["grounded"]
+    twice = names_check(WRONG + " Again the Auralis Home 1 (P-009).")
+    assert not twice.ok
+    assert twice.reason.count("P-009") == 1
+
+
+def test_prices_reason_names_the_product():
+    answer = "The Auralis Home 1 (P-009) is great."
+    got = {c.name: c for c in score(Case("c", "q"), answer, [], CATALOGUE)}
+    assert not got["prices"].ok
+    assert got["prices"].reason == "price of P-009 (Pelagic Go 13) not stated"
+
+
+def test_names_next_id_bound():
+    # A name after the next id is not in this id's window.
+    assert names_check("P-009 costs 649, and P-032 is the Auralis Home 1.").ok
+
+
+def test_names_needs_a_word_boundary_before_a_name():
+    assert names_check("MegaAuralis Home 1 (P-009)").ok
+    assert not names_check("Mega Auralis Home 1 (P-009)").ok
+
+
+def test_names_window_width_is_80_characters():
+    other = "Auralis Home 1"
+    for gap, counts in ((80 - len(other), True), (81 - len(other), False)):
+        before = other + " " * gap  # the name starts 80 or 81 characters before the id
+        assert (not names_check(before + "P-009").ok) is counts
+        after = " " * gap + other  # the name ends 80 or 81 characters after the id
+        assert (not names_check("P-009" + after).ok) is counts
+
+
+def test_names_joins_several_mismatches_with_semicolons():
+    got = names_check("Auralis Home 1 (P-009). Norvik Slate 14 (P-001).")
+    assert not got.ok
+    assert got.reason == (
+        "P-009 is the Pelagic Go 13, cited as Auralis Home 1; "
+        "P-001 is the Auralis Calm 300, cited as Norvik Slate 14"
+    )
+
+
+def test_names_a_name_just_before_the_next_id_belongs_to_that_id():
+    assert names_check("the first one (P-001), or Norvik Slate 14 (P-007)").ok
+    assert names_check("the first one (P-001), or Norvik Slate 14 P-007").ok
+    assert not names_check("Auralis Home 1 (P-009)").ok
+    # A name after the id that is not right before the next id still counts.
+    assert not names_check("P-009 is like the Auralis Home 1, and P-032 is cheap").ok
+
+
+def test_names_folds_case_without_changing_length():
+    got = names_check("\u0130 Auralis Home 1 (P-009)")
+    assert not got.ok
+    assert got.reason == "P-009 is the Pelagic Go 13, cited as Auralis Home 1"
+
+
+def test_names_fold_keeps_every_position():
+    # The name ends exactly 80 characters after the id; a fold that grew the
+    # text by one character (U+0130 lowercases to two) would push it out.
+    assert not names_check("\u0130 P-009" + " " * 66 + "Auralis Home 1").ok
+
+
+def test_names_fold_reads_a_hyphen_as_a_space():
+    assert not names_check("auralis-home 1 (P-009)").ok
