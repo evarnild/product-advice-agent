@@ -6,11 +6,11 @@ status: accepted
 title: Constrain the LLM judge's reply to its verdict schema
 review_tier:
 intent_accepted: 2026-11-24 by-agent
-spec_accepted:
+spec_accepted: 2026-11-24 by-agent
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-24 by-agent    # owner: "/auto 24"
+auto_authorized: 2026-11-24 by-agent    # owner: "accept the §24 spec /auto 24"
 auto_round:
 auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
