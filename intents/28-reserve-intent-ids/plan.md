@@ -23,6 +23,15 @@ on request", and the `/intent` skill runs the reservation for a new draft.
 The 2026-11-24 collision, replayed in a kit test, gives the second machine
 §24 or reports the clash at `--next-id` time (spec AC9).
 
+## Amendment after review round 1 (owner, 2026-11-24: "28 D1 b")
+
+Subtask 1 said a failed fetch's reason is "git's last stderr line". For
+common failures that line is boilerplate ("and the repository exists.").
+**The reason is git's first `fatal:` or `error:` stderr line; if there is
+none, the first non-empty line; if there is no output, "git exited <code>".**
+A timeout stays "timed out after <n> s". A test pins the AC4 reason, and
+the mutant that takes the last line must fail it.
+
 ## Risks
 
 - **Bug classes named in `REVIEW-POLICY.md` pass 9.** None yet: the list
