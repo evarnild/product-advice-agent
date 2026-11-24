@@ -197,6 +197,32 @@ def test_adapter_without_a_schema_sends_exactly_todays_arguments():
     assert set(sdk.calls[0]) == {"model", "max_tokens", "system", "messages", "tools"}
 
 
+def _text_turn(stop_reason, schema):
+    sdk = FakeSdk(_response([TextBlock(type="text", text="partial")], stop_reason=stop_reason))
+    return AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [], schema=schema)
+
+
+def test_with_a_schema_a_refusal_is_a_model_error():
+    with pytest.raises(ModelError) as e:
+        _text_turn("refusal", SCHEMA)
+    assert "refusal" in str(e.value)
+
+
+def test_with_a_schema_a_cut_off_is_a_model_error():
+    with pytest.raises(ModelError) as e:
+        _text_turn("max_tokens", SCHEMA)
+    assert "token limit" in str(e.value)
+
+
+def test_with_a_schema_end_turn_returns_the_text():
+    assert _text_turn("end_turn", SCHEMA).text == "partial"
+
+
+@pytest.mark.parametrize("stop_reason", ["max_tokens", "refusal"])
+def test_without_a_schema_a_stop_reason_returns_its_text_as_today(stop_reason):
+    assert _text_turn(stop_reason, None).text == "partial"
+
+
 def test_adapter_maps_text_only_response():
     sdk = FakeSdk(_response([TextBlock(type="text", text="Hello")]))
     turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])

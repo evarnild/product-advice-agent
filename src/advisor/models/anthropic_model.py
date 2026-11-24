@@ -110,6 +110,16 @@ class AnthropicClient:
                 )
         except anthropic.AnthropicError as e:
             raise ModelError(f"Anthropic call failed: {type(e).__name__}") from e
+        # I3: only with a schema; a call without one behaves as it always did.
+        if schema is not None:
+            if response.stop_reason == "refusal":
+                raise ModelError(
+                    "Anthropic refused to give the structured reply (stop_reason: refusal)"
+                )
+            if response.stop_reason == "max_tokens":
+                raise ModelError(
+                    f"Anthropic reply cut off at the token limit ({MAX_TOKENS} tokens)"
+                )
         texts: list[str] = []
         calls: list[ToolCall] = []
         for block in response.content:
