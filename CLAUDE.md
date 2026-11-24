@@ -174,7 +174,11 @@ Langfuse stack in `infra/langfuse/`.
   scripted fake for tests and evals (`fake.py`), and `make_client` with the
   provider registry. `models/anthropic_model.py` is the Anthropic adapter and
   `models/ollama_model.py` the Ollama adapter (the local default, keyless,
-  over `/api/chat` with `httpx`, imported only there).
+  over `/api/chat` with `httpx`, imported only there). `complete` takes an
+  optional keyword-only `schema` (a JSON Schema the reply must fit): the
+  Anthropic adapter sends it as `output_config.format` and, with a schema
+  only, turns a `refusal` or `max_tokens` stop into `ModelError`; the Ollama
+  adapter refuses it with `ModelError`; the agent never passes one.
 
 **Offline evals** (`src/advisor/evals/`, console script `advisor-eval`):
 `cases.py` (the case model and file validation) and `score.py` (the
@@ -226,7 +230,9 @@ key check, `Annotations`). The score `judge-no-fit` is written by
 `LangfuseAnnotations.write_scores` in `tracing.py` with a deterministic id,
 never in a queue and never named `pass`. Committed data: `evals/judge/split.json`,
 `evals/judge/validation.md`, `evals/judgements/*.jsonl`. The prompt is
-`src/advisor/evals/prompts/judge-no-fit.md`.
+`src/advisor/evals/prompts/judge-no-fit.md`. Every judge call passes
+`judge.VERDICT_SCHEMA`, and `parse_verdict` reads the reply strictly with
+`json.loads`; `extract_json` serves `generate` and `taxonomy` only.
 
 **Conventions worth knowing before editing**
 

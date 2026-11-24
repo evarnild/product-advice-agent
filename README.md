@@ -320,8 +320,11 @@ uv run advisor-analysis judge-validate
   from the run report `evals/runs/<labels file name>.json`.
 - **judge** prints `PASS|FAIL|ERROR <case>: <reason>` and a total, and
   writes `evals/judgements/<report name>.jsonl` (`case_id`, `pass`, `reason`,
-  `model`, `prompt_sha256` (of the prompt with the examples filled in and the conversation left open, so one value per run), `judged_at`; a model failure or an answer that is
-  not the JSON verdict is an `ERROR`, never a pass or fail). With the three
+  `model`, `prompt_sha256` (of the prompt with the examples filled in and the conversation left open, so one value per run), `judged_at`; the judge asks the model for the verdict
+  schema (Anthropic structured output) and reads the reply as one JSON
+  object; a model failure, a refusal or a reply cut off at the token limit
+  (each named), or an answer that is not the JSON verdict is an `ERROR`,
+  never a pass or fail). With the three
   `LANGFUSE_*` variables set, it also writes a boolean score
   `judge-no-fit` on each judged case's trace, the reason as the comment
   (`N scored, k no trace`). The score has a fixed id per run and case, so

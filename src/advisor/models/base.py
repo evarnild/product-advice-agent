@@ -9,7 +9,7 @@ a small later intent. Nothing outside `advisor.models` imports a provider SDK.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
@@ -82,7 +82,16 @@ class ModelTurn:
 
 class ModelClient(Protocol):
     def complete(
-        self, system: str, messages: Sequence[Message], tools: Sequence[ToolSpec]
+        self,
+        system: str,
+        messages: Sequence[Message],
+        tools: Sequence[ToolSpec],
+        *,
+        schema: Mapping[str, Any] | None = None,
     ) -> ModelTurn:
-        """Return the model's next turn for this conversation."""
+        """Return the model's next turn for this conversation.
+
+        `schema`, when given, is a JSON Schema the reply's text must fit; an
+        adapter that cannot ask its provider for one raises `ModelError`.
+        """
         ...

@@ -5,11 +5,13 @@ The only module that imports the `anthropic` SDK.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import anthropic
 from anthropic.types import (
     MessageParam,
+    OutputConfigParam,
     TextBlock,
     TextBlockParam,
     ToolParam,
@@ -73,18 +75,51 @@ class AnthropicClient:
         )
 
     def complete(
-        self, system: str, messages: Sequence[Message], tools: Sequence[ToolSpec]
+        self,
+        system: str,
+        messages: Sequence[Message],
+        tools: Sequence[ToolSpec],
+        *,
+        schema: Mapping[str, Any] | None = None,
     ) -> ModelTurn:
+        api_messages = [_to_api_message(m) for m in messages]
+        api_tools = [_to_api_tool(t) for t in tools]
         try:
-            response = self._sdk.messages.create(
-                model=self._model,
-                max_tokens=MAX_TOKENS,
-                system=system,
-                messages=[_to_api_message(m) for m in messages],
-                tools=[_to_api_tool(t) for t in tools],
-            )
+            if schema is None:
+                response = self._sdk.messages.create(
+                    model=self._model,
+                    max_tokens=MAX_TOKENS,
+                    system=system,
+                    messages=api_messages,
+                    tools=api_tools,
+                )
+            else:
+                # I1: the provider's structured output (`output_config.format`), not a
+                # forced tool. Two calls, not `omit`, so a call without a schema sends
+                # exactly the keywords it always did.
+                output_config: OutputConfigParam = {
+                    "format": {"type": "json_schema", "schema": dict(schema)}
+                }
+                response = self._sdk.messages.create(
+                    model=self._model,
+                    max_tokens=MAX_TOKENS,
+                    system=system,
+                    messages=api_messages,
+                    tools=api_tools,
+                    output_config=output_config,
+                )
         except anthropic.AnthropicError as e:
             raise ModelError(f"Anthropic call failed: {type(e).__name__}") from e
+        # I3: only with a schema; a call without one behaves as it always did.
+        if schema is not None:
+            if response.stop_reason == "refusal":
+                raise ModelError(
+                    "Anthropic refused to give the structured reply (stop_reason: refusal)"
+                )
+            if response.stop_reason == "max_tokens":
+                raise ModelError(
+                    f"Anthropic reply cut off at the token limit ({MAX_TOKENS} tokens)"
+                )
         texts: list[str] = []
         calls: list[ToolCall] = []
         for block in response.content:

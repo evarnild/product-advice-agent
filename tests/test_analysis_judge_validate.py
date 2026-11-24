@@ -2,6 +2,8 @@
 
 import json
 
+from advisor.evals.judge import VERDICT_SCHEMA
+from advisor.models.base import ModelError
 from tests.judge_world import (
     LABELS_FILE,
     RoutedClient,
@@ -52,6 +54,24 @@ def test_the_report_has_the_table_both_rates_and_the_disagreements(tmp_path):
     assert f"{LABELS_FILE}#h1" not in text.split("## Disagreements")[1]
     assert "- Model: claude-haiku-5-5" in text
     assert "not trusted: wrote" in out
+
+
+def test_every_validation_call_asks_for_the_verdict_schema(tmp_path):
+    w = write_world(tmp_path)
+    client = RoutedClient({"h1": verdict(True), "h2": verdict(False), "h3": verdict(False)})
+    run(validate_argv(w), client=client)
+    assert client.schemas == [VERDICT_SCHEMA] * 3
+
+
+def test_a_refusal_is_a_judge_error_row_naming_it(tmp_path):
+    w = write_world(tmp_path)
+    refusal = ModelError("Anthropic refused to give the structured reply (stop_reason: refusal)")
+    client = RoutedClient({"h1": verdict(True), "h2": refusal, "h3": verdict(False)})
+    code, _, err, _ = run(validate_argv(w), client=client)
+    assert code == 0, err
+    text = w["validation"].read_text(encoding="utf-8")
+    assert f"- {LABELS_FILE}#h2: owner fail, judge ERROR" in text
+    assert "stop_reason: refusal" in text
 
 
 def test_it_judges_only_held_out_conversations_with_the_few_shot_prompt(tmp_path):

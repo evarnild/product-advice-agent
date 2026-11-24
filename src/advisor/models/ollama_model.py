@@ -16,7 +16,7 @@ which the CLI shows as the generic "unavailable" message.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -109,8 +109,17 @@ class OllamaClient:
         )
 
     def complete(
-        self, system: str, messages: Sequence[Message], tools: Sequence[ToolSpec]
+        self,
+        system: str,
+        messages: Sequence[Message],
+        tools: Sequence[ToolSpec],
+        *,
+        schema: Mapping[str, Any] | None = None,
     ) -> ModelTurn:
+        if schema is not None:
+            # Owner's Q2 (§24): refuse for now rather than send a format Ollama
+            # may or may not honour; checked before any request is built.
+            raise ModelError("structured output is not supported for Ollama")
         body = {
             "model": self._model,
             "messages": _to_api_messages(system, messages),

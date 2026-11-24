@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 from advisor.evals.annotate import JUDGE_SCORE_NAME
-from advisor.evals.modeljson import extract_json
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "judge-no-fit.md"
 
@@ -112,11 +111,28 @@ class JudgeError:
     reason: str
 
 
+# `reason` comes first so the model writes it before the verdict.
+VERDICT_SCHEMA: Mapping[str, Any] = {
+    "type": "object",
+    "properties": {"reason": {"type": "string"}, "pass": {"type": "boolean"}},
+    "required": ["reason", "pass"],
+    "additionalProperties": False,
+}
+
+
 def parse_verdict(text: str) -> Verdict | JudgeError:
-    """B4: `{"pass": true|false, "reason": "..."}`; anything else is a `JudgeError`."""
-    value = extract_json(text)
+    """B8: the whole reply is one JSON object `{"reason": "...", "pass": true|false}`.
+
+    Read strictly (no scan for an object inside prose, a fence or a think block);
+    anything else is a `JudgeError`.
+    """
+    try:
+        value = json.loads(text)
+    except ValueError:
+        value = None
     if not isinstance(value, dict):
-        return JudgeError("the model answer holds no JSON object")
+        return JudgeError("the model answer is not a JSON object")
+    # I2: the provider constrains the shape, but it is still checked by hand.
     passed = value.get("pass")
     if not isinstance(passed, bool):
         return JudgeError("the JSON has no boolean 'pass'")
