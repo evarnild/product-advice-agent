@@ -11,8 +11,8 @@ plan_approved: 2026-11-24 by-agent    # auto: owner "/auto 23" (auto_authorized 
 live_checked: 2026-11-24 by-agent    # owner: "23 live checked"
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 23"
-auto_round: 2
-auto_stopped: ship dry-run blocked
+auto_round: 3
+auto_stopped:
 follows_up:
 links:
   - intents/5-anthropic-sdk-otel-off    the adapter's last change; its OTel-off tests must stay green
