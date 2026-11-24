@@ -95,6 +95,24 @@ describe('npm run spawn', { timeout: 60_000 }, () => {
     expect(exclude.match(/^CLAUDE\.local\.md$/gm)).toHaveLength(1);
   });
 
+  it('AC19: ignores a reservation: intent/<id> remote-tracking and local refs are not intent branches and are left as they were', () => {
+    writeIntent(repo, 89, 'reserved');
+    const head = git(repo, 'rev-parse', 'HEAD');
+    git(repo, 'update-ref', 'refs/remotes/origin/intent/89', head);
+    git(repo, 'branch', 'intent/89');
+    try {
+      const r = run(SPAWN, ['89', '--no-install']);
+      expect(r.status, r.stderr).toBe(0);
+      expect(`${r.stdout}${r.stderr}`).not.toMatch(/more than one branch/);
+      expect(git(wt('89-reserved'), 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('fix/89-reserved');
+      expect(git(repo, 'rev-parse', 'refs/remotes/origin/intent/89')).toBe(head);
+      expect(git(repo, 'rev-parse', 'refs/heads/intent/89')).toBe(head);
+    } finally {
+      git(repo, 'branch', '-D', 'intent/89');
+      git(repo, 'update-ref', '-d', 'refs/remotes/origin/intent/89');
+    }
+  });
+
   it('refuses to spawn over an existing worktree with the right message', () => {
     const r = run(SPAWN, ['98', '--no-install']);
     expect(r.status).toBe(1);

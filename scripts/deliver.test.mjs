@@ -503,6 +503,63 @@ describe('npm run deliver: preconditions, wiring and refusals', { timeout: 90_00
     }
   });
 
+  it('AC17: stops at start when origin/main holds another folder with the number, on the dry run too, before the ancestry check', () => {
+    const w = makeIntent(61);
+    const clone = join(sandbox, 'clash61');
+    git(sandbox, 'clone', '-q', origin, clone);
+    mkdirSync(join(clone, 'intents', '61-other'), { recursive: true });
+    writeFileSync(join(clone, 'intents', '61-other', 'metadata.yml'), 'id: 61\nslug: other\n');
+    git(clone, 'add', '.');
+    git(clone, 'commit', '-q', '-m', 'another machine takes 61');
+    git(clone, 'push', '-q', 'origin', 'main');
+    git(repo, 'fetch', '-q', 'origin');
+    const before = snapshot(w);
+    try {
+      for (const args of [['61', '--dry-run'], ['61']]) {
+        const r = ship(args);
+        expect(r.status, out(r)).toBe(1);
+        expect(r.stdout).toMatch(/STOPPED\s+start\s+§61 is also intents\/61-other on origin\/main/);
+        expect(r.stdout).not.toMatch(/origin\/main has commits that main lacks/);
+        expect(snapshot(w)).toEqual(before);
+      }
+    } finally {
+      catchUpWithOrigin();
+    }
+  });
+
+  it('AC18: a foreign reservation is a note and the ship goes on; its own reservation is left alone', () => {
+    const reserveFrom = (name, id, folder) => {
+      const clone = join(sandbox, name);
+      git(sandbox, 'clone', '-q', origin, clone);
+      git(clone, 'checkout', '-q', '--orphan', 'tmp');
+      git(clone, 'rm', '-rf', '-q', '.');
+      mkdirSync(join(clone, 'intents', folder), { recursive: true });
+      writeFileSync(join(clone, 'intents', folder, 'metadata.yml'), `id: ${id}\n`);
+      git(clone, 'add', '.');
+      git(clone, 'commit', '-q', '-m', 'reservation');
+      git(clone, 'push', '-q', 'origin', `tmp:refs/heads/intent/${id}`);
+    };
+    makeIntent(62);
+    reserveFrom('reserve62', 62, '62-other');
+    git(repo, 'fetch', '-q', 'origin');
+    const dry = ship(['62', '--dry-run']);
+    expect(dry.status, out(dry)).toBe(0);
+    expect(dry.stdout).toMatch(/note\s+reservation\s+origin's reservation intent\/62 holds intents\/62-other/);
+    const real = ship(['62']);
+    expect(real.status, out(real)).toBe(0);
+    expect(real.stdout).toMatch(/note\s+reservation\s+origin's reservation intent\/62 holds intents\/62-other/);
+    expect(git(origin, 'rev-parse', 'main')).toBe(git(repo, 'rev-parse', 'main'));
+
+    makeIntent(63);
+    reserveFrom('reserve63', 63, '63-t63');
+    const x = git(origin, 'rev-parse', 'refs/heads/intent/63');
+    const own = ship(['63']);
+    expect(own.status, out(own)).toBe(0);
+    expect(own.stdout).not.toMatch(/reservation/);
+    expect(git(origin, 'rev-parse', 'refs/heads/intent/63')).toBe(x);
+    expect(git(origin, 'rev-parse', 'refs/heads/intent/62')).not.toBe(''); // positive control: deliver kept it
+  });
+
   it('names an existing merge of the branch when its tip moved after a red verify', () => {
     const w = makeIntent(46);
     expect(ship(['46'], VERIFY_RED).status).toBe(1);

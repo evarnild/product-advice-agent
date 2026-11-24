@@ -168,3 +168,23 @@ export function commitMessage(subject, trailers = []) {
 export function mergeMessage(id, title, trailers = []) {
   return commitMessage(`Merge §${id}: ${title}`, trailers);
 }
+
+/**
+ * The first folder in `dirs` (names like `61-other`) that carries intent `id`'s
+ * number but is not the intent's own (`ownDir`, `intents/61-t61` or `61-t61`);
+ * null when there is none. The prefix must be `<id>-`, so §6 does not match 61-x.
+ */
+export function otherFolder({ id, ownDir, dirs = [] }) {
+  const own = String(ownDir).split('/').at(-1);
+  return dirs.find((d) => d.startsWith(`${id}-`) && d !== own) ?? null;
+}
+
+/** The stop when origin/main already holds another folder with the intent's number. */
+export function originClashMessage(id, other) {
+  return `§${id} is also intents/${other} on origin/main (another machine's intent). Renumber this intent before shipping.`;
+}
+
+/** The note when origin's reservation branch for the number holds another folder. */
+export function reservationNote(id, other) {
+  return `origin's reservation intent/${id} holds intents/${other}`;
+}

@@ -9,7 +9,10 @@
 // it resumes (every step first checks whether it is already done). The
 // decisions live in deliver-lib.mjs; this file is the git half. A repository
 // with no remote named `origin` is shipped without the push (the step reads
-// "skipped"); with one, main must not be behind origin/main.
+// "skipped"); with one, main must not be behind origin/main, and origin/main must
+// not already hold another folder with the intent's number (a clash with another
+// machine's intent: a stop). A foreign reservation `intent/<id>` is a note.
+// Deliver never moves or deletes a reservation.
 //
 // Run it from the main checkout, on main. It never forces, resets, deletes with
 // -D, stages anything but the files a step wrote, or stops a process.
@@ -32,7 +35,10 @@ import {
   markLiveChecked,
   markMerged,
   mergeMessage,
+  originClashMessage,
+  otherFolder,
   planSteps,
+  reservationNote,
   routeReasonStated,
 } from './deliver-lib.mjs';
 
@@ -74,6 +80,14 @@ const gitOk = (cwd, ...args) => {
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+/** git's stdout, or '' when it fails (a missing path in a tree). */
+const tryGitOut = (cwd, ...args) => {
+  try {
+    return git(cwd, ...args);
+  } catch {
+    return '';
+  }
 };
 const hasOrigin = (root) => gitOk(root, 'remote', 'get-url', 'origin');
 const errText = (e) => (e.stderr?.toString().trim() || e.stdout?.toString().trim() || e.message).trim();
@@ -139,6 +153,12 @@ function checkStart(root, loc, dryRun) {
   if (!hasOrigin(root)) return; // nothing to push to, so nothing to be behind: the push step is skipped
   // --dry-run does not fetch (it changes nothing, remote-tracking refs included): origin/main is as last fetched.
   if (!dryRun) gitOk(root, 'fetch', '-q', 'origin');
+  const id = loc.metadata.id;
+  const foldersOn = (ref) => (gitOk(root, 'rev-parse', '--verify', '-q', ref) ? tryGitOut(root, 'ls-tree', '--name-only', `${ref}:intents`).split(/\r?\n/).filter(Boolean) : []);
+  const clash = otherFolder({ id, ownDir: loc.dir, dirs: foldersOn('origin/main') });
+  if (clash) throw new Stop('start', originClashMessage(id, clash));
+  const reserved = otherFolder({ id, ownDir: loc.dir, dirs: foldersOn(`refs/remotes/origin/intent/${id}`) });
+  if (reserved) say('note', 'reservation', reservationNote(id, reserved));
   if (gitOk(root, 'rev-parse', '--verify', '-q', 'origin/main') && !gitOk(root, 'merge-base', '--is-ancestor', 'origin/main', 'main')) {
     throw new Stop('start', 'origin/main has commits that main lacks, so the push would be rejected. Bring main up to date with origin first, then re-run.');
   }
