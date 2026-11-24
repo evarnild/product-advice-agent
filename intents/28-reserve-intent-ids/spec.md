@@ -422,3 +422,16 @@ test:kit`), each against throwaway repositories in the OS temp dir with a
 - **`OVERVIEW.md`'s `§`-numbers stay counted** (from the intent).
 - **Nothing blocks this**: no open intent changes `scripts/queue*.mjs`,
   `scripts/deliver*.mjs`, `scripts/spawn-intent.mjs` or the intent skill.
+
+## Owner's answers (2026-11-24: "28 1. permanent intent 2. yes 3. yes")
+
+- **Q1. One permanent `intent/<n>` branch per intent on origin.** Yes:
+  reservation branches stay for good, and nothing deletes them (B6).
+- **Q2. The rule against pushing "anything else" is judged by the
+  reservation commit's own content.** Yes: a parentless commit holding only
+  the draft's two files can't carry `main`'s unpushed commits, so local
+  `main` being ahead doesn't block the reservation (I1).
+- **Q3. Reserve §24–§28 once this lands.** Yes. Their folders are already
+  on `origin/main`, pushed by §27's `/deliver` on 2026-11-24. The plan adds
+  a step to create their `intent/<n>` reservation branches as well, as an
+  ordinary push the owner asks for.
