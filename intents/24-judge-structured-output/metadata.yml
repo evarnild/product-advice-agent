@@ -12,9 +12,10 @@ live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 24"
 auto_round:
-auto_stopped: spec questions
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
 links:
   - intents/16-llm-judge    the judge, its prompt and parse_verdict
   - intents/27-typed-anthropic-adapter    edits the same adapter; whichever merges second rebases
 blocked_by:
+  - 27    the typed Anthropic adapter: output_config and stop_reason build on its SDK types (owner, Q1)
