@@ -170,3 +170,47 @@ export function nextId({ overviewText = '', ids = [] } = {}) {
   for (const id of ids) max = Math.max(max, Number(id));
   return max + 1;
 }
+
+/** The id of an intent folder name (`28-slug` gives `28`), or null when it has no `<digits>-` prefix. */
+export function idOfDir(dir) {
+  const m = /^(\d+)-/.exec(dir ?? '');
+  return m ? m[1] : null;
+}
+
+/** The `<n>` of every `refs/remotes/origin/intent/<n>` in `refNames` (a reservation); other refs are ignored. */
+export function reservationIds(refNames = []) {
+  const ids = [];
+  for (const ref of refNames) {
+    const m = /^refs\/remotes\/origin\/intent\/(\d+)$/.exec(ref);
+    if (m) ids.push(m[1]);
+  }
+  return ids;
+}
+
+/**
+ * Same number, different folder: `local` is the folder names here (main, local
+ * branches, disk), `remote` is `{ ref, dir }` for each folder found on origin
+ * (`ref` as shown, `origin/main`). One entry per distinct (here, there, ref),
+ * sorted by id.
+ */
+export function findClashes({ local = [], remote = [] } = {}) {
+  const seen = new Set();
+  const out = [];
+  for (const here of new Set(local)) {
+    const id = idOfDir(here);
+    if (id === null) continue;
+    for (const { ref, dir: there } of remote) {
+      if (idOfDir(there) !== id || there === here) continue;
+      const key = `${here}|${there}|${ref}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ id, here, there, ref });
+    }
+  }
+  return out.sort((a, b) => Number(a.id) - Number(b.id) || a.here.localeCompare(b.here) || a.there.localeCompare(b.there) || a.ref.localeCompare(b.ref));
+}
+
+/** One stderr line for a clash. */
+export function clashLine(c) {
+  return `§${c.id} clash: intents/${c.here} here, intents/${c.there} on origin (${c.ref})`;
+}

@@ -1,6 +1,44 @@
 import { describe, it } from 'node:test';
 import { expect } from './expect.mjs';
-import { formatQueue, groupIntents, nextId, pickSource, queueData, queueLine } from './queue-lib.mjs';
+import { clashLine, findClashes, formatQueue, groupIntents, idOfDir, nextId, pickSource, queueData, queueLine, reservationIds } from './queue-lib.mjs';
+
+describe('origin reservations and clashes', () => {
+  it('idOfDir takes the digits before the first dash', () => {
+    expect(idOfDir('28-reserve')).toBe('28');
+    expect(idOfDir('x-28')).toBe(null);
+    expect(idOfDir('28')).toBe(null);
+  });
+
+  it('reservationIds reads only refs/remotes/origin/intent/<digits>', () => {
+    expect(
+      reservationIds([
+        'refs/remotes/origin/intent/40',
+        'refs/remotes/origin/intent/abc',
+        'refs/remotes/origin/main',
+        'refs/heads/intent/41',
+        'refs/remotes/origin/intent/42/x',
+      ]),
+    ).toEqual(['40']);
+  });
+
+  it('findClashes: same id and different names is a clash, the same name is not', () => {
+    const c = findClashes({ local: ['23-a', '5-z'], remote: [{ ref: 'origin/main', dir: '23-b' }, { ref: 'origin/main', dir: '5-z' }, { ref: 'origin/main', dir: '230-q' }] });
+    expect(c).toEqual([{ id: '23', here: '23-a', there: '23-b', ref: 'origin/main' }]);
+    expect(findClashes({ local: ['23-a'], remote: [{ ref: 'origin/main', dir: '23-a' }] })).toEqual([]);
+  });
+
+  it('findClashes: a pair on two refs gives one entry per ref, a repeated local name none twice', () => {
+    const c = findClashes({
+      local: ['23-a', '23-a'],
+      remote: [{ ref: 'origin/main', dir: '23-b' }, { ref: 'origin/intent/23', dir: '23-b' }, { ref: 'origin/main', dir: '23-b' }],
+    });
+    expect(c.map((x) => x.ref)).toEqual(['origin/intent/23', 'origin/main']);
+  });
+
+  it('clashLine has the spec text', () => {
+    expect(clashLine({ id: '23', here: '23-a', there: '23-b', ref: 'origin/main' })).toBe('§23 clash: intents/23-a here, intents/23-b on origin (origin/main)');
+  });
+});
 
 const entry = (id, status, extra = {}, mergeRank = null, source = 'main') => ({
   id: String(id),

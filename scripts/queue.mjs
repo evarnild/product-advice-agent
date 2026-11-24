@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// `npm run queue [-- --json | --next-id]`
+// `npm run queue [-- --json | --next-id [--no-fetch]]`
 //
 // The intent queue, generated on demand from each intent's
 // metadata.yml and git; nothing is written to disk and nobody edits a queue
@@ -8,14 +8,20 @@
 // implementer sets `in-review` there), else from main. `--next-id` prints the
 // id `/intent` should take next: one more than the highest §N in
 // OVERVIEW.md (main's copy and the working copy), the intents/ of main and of
-// every local branch, and the intents/ folders on disk here (a draft /intent
-// has not committed yet). The listing shows committed intents only (those on
+// every local branch, the intents/ folders on disk here (a draft /intent
+// has not committed yet) and, from `origin`, the intents/ folders of every
+// branch and each reservation branch `intent/<n>` (see reserve-id.mjs).
+// `--next-id` first fetches origin, bounded at 10 s (`--no-fetch` skips it);
+// no origin or a failed fetch is a warning on stderr, never an error, and a
+// number with a different folder here and on origin is a clash line on
+// stderr. The listing and `--json` never fetch. The listing shows committed intents only (those on
 // main). `--json` prints the groups as data. The pure half is queue-lib.mjs.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isMerged } from './blockers-lib.mjs';
 import { parseMetadata } from './intent-check-lib.mjs';
-import { formatQueue, nextId, pickSource, queueData } from './queue-lib.mjs';
+import { clashLine, findClashes, formatQueue, idOfDir, nextId, pickSource, queueData, reservationIds } from './queue-lib.mjs';
+import { fetchOrigin, hasOrigin } from './remote-io.mjs';
 import { git, readIntentMetadataFromBranch } from './session-io.mjs';
 
 const args = process.argv.slice(2);
@@ -77,21 +83,58 @@ function collectEntries() {
   return entries;
 }
 
-function allIntentIds() {
+/** Folder names (`47-slug`) of main, every local branch and the disk here. */
+function localIntentDirs() {
   const refs = (tryGit('for-each-ref', '--format=%(refname:short)', 'refs/heads') ?? '').split(/\r?\n/).filter(Boolean);
-  const ids = new Set();
+  const dirs = new Set();
   for (const ref of new Set([MAIN, ...refs])) {
-    for (const dir of intentDirs(ref)) ids.add(dir.slice(0, dir.indexOf('-')));
+    for (const dir of intentDirs(ref)) dirs.add(dir);
   }
   const onDisk = join(root, 'intents');
   if (existsSync(onDisk)) {
-    for (const dir of readdirSync(onDisk)) if (/^[0-9]+-/.test(dir)) ids.add(dir.slice(0, dir.indexOf('-')));
+    for (const dir of readdirSync(onDisk)) if (/^[0-9]+-/.test(dir)) dirs.add(dir);
   }
-  return [...ids];
+  return [...dirs];
+}
+
+function allIntentIds() {
+  return [...new Set(localIntentDirs().map((d) => idOfDir(d)))];
+}
+
+/** Every ref under refs/remotes/origin/ (full names; the origin/HEAD symref skipped). */
+function originRefs() {
+  const out = tryGit('for-each-ref', '--format=%(refname) %(symref)', 'refs/remotes/origin') ?? '';
+  return out
+    .split(/\r?\n/)
+    .map((l) => l.trim().split(' '))
+    .filter((parts) => parts[0] && parts.length === 1)
+    .map((parts) => parts[0]);
+}
+
+/** The ids and clashes `origin` adds (as fetched, or as last fetched); warnings go to stderr first. */
+async function originView() {
+  if (!hasOrigin(root)) {
+    console.error('no remote named origin: counted local intents only');
+    return { ids: [], clashes: [] };
+  }
+  if (!args.includes('--no-fetch')) {
+    const f = await fetchOrigin(root);
+    if (!f.ok) console.error(`could not fetch origin (${f.reason}): counted origin as last fetched`);
+  }
+  const refs = originRefs();
+  const remote = [];
+  for (const ref of refs) {
+    const shown = ref.replace(/^refs\/remotes\//, '');
+    for (const dir of intentDirs(ref)) remote.push({ ref: shown, dir });
+  }
+  const ids = [...reservationIds(refs), ...remote.map((r) => idOfDir(r.dir))];
+  return { ids, clashes: findClashes({ local: localIntentDirs(), remote }) };
 }
 
 if (args.includes('--next-id')) {
-  console.log(nextId({ overviewText: textOf('OVERVIEW.md'), ids: allIntentIds() }));
+  const origin = await originView();
+  for (const c of origin.clashes) console.error(clashLine(c));
+  console.log(nextId({ overviewText: textOf('OVERVIEW.md'), ids: [...allIntentIds(), ...origin.ids] }));
 } else if (args.includes('--json')) {
   console.log(JSON.stringify(queueData(collectEntries(), { knownIds: allIntentIds() }), null, 2));
 } else {
