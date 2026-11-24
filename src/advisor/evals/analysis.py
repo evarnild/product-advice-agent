@@ -28,6 +28,7 @@ from typing import Any, TextIO
 from advisor.catalogue import CatalogueError, load_catalogue
 from advisor.config import ConfigError, load_env, load_settings
 from advisor.evals import judging
+from advisor.evals import run as eval_run
 from advisor.evals import taxonomy as tax
 from advisor.evals.annotate import (
     AnnotationError,
@@ -44,8 +45,11 @@ from advisor.evals.baseline import (
     baseline_from,
     check_baseline,
     compare,
+    content_check,
     format_comparison,
     owes_run,
+    raw_sha256,
+    rehash,
 )
 from advisor.evals.cases import CaseFileError, parse_cases
 from advisor.evals.counts import counts_markdown
@@ -134,10 +138,23 @@ def _parser() -> argparse.ArgumentParser:
     b = sub.add_parser("baseline", help="write evals/baseline.json from a run report (§17)")
     b.add_argument("report", type=Path)
     b.add_argument("--out", type=Path, default=DEFAULT_BASELINE)
+    b.add_argument(
+        "--rehash",
+        action="store_true",
+        help="rewrite a pre-§29 report's hashes in the line-ending-free form, after proving "
+        "the run saw the files on disk (§29)",
+    )
+    b.add_argument("--cases", type=Path, default=eval_run.DEFAULT_CASES, help="with --rehash")
 
     k = sub.add_parser("compare", help="compare a run report with the baseline; never blocks (§17)")
     k.add_argument("report", type=Path)
     k.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
+
+    h = sub.add_parser(
+        "hashes", help="the content hashes of the files, checked against a run (§29)"
+    )
+    h.add_argument("file", type=Path, nargs="?", default=None, help="a run report or baseline")
+    h.add_argument("--cases", type=Path, default=eval_run.DEFAULT_CASES)
 
     o = sub.add_parser("owes-run", help="does this branch's diff owe an eval run? (§17)")
     o.add_argument("--base", default="main", help="the branch to diff against (default main)")
@@ -332,7 +349,7 @@ def main(
             args, env, annotations_factory or _default_annotations_factory, say, fail, err
         )
 
-    if args.command in ("baseline", "compare", "owes-run"):
+    if args.command in ("baseline", "compare", "owes-run", "hashes"):
         return _eval_run_command(args, say, fail)
 
     # counts
@@ -378,6 +395,41 @@ def _changed_paths(base: str) -> list[str]:
     return [line for line in done.stdout.splitlines() if line.strip()]
 
 
+def _hash_files(cases: Path) -> dict[str, bytes]:
+    """The bytes of the three files a run hashes, by report field (§29)."""
+    return eval_run.content_files(cases.read_bytes())
+
+
+def _hashes_command(
+    args: argparse.Namespace,
+    say: Callable[[str], None],
+    fail: Callable[[str, int], int],
+) -> int:
+    """`hashes` (§29): the three files' content hashes, or a check of a run's against them."""
+    try:
+        files = _hash_files(args.cases)
+    except OSError as e:
+        return fail(f"Cannot read {e.filename or args.cases}: {e.strerror or e}", 2)
+    lf = eval_run.content_hashes(files["cases_sha256"])
+    if args.file is None:
+        for key, value in lf.items():
+            say(f"{key} {value}")
+        return 0
+    try:
+        recorded = json.loads(args.file.read_text(encoding="utf-8"))
+    except OSError as e:
+        return fail(f"Cannot read {e.filename or args.file}: {e.strerror or e}", 2)
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        return fail(f"Input error in {args.file}: {e}", 2)
+    if not isinstance(recorded, dict):
+        return fail(f"Input error in {args.file}: expected a JSON object", 2)
+    raw = {key: raw_sha256(data) for key, data in files.items()}
+    lines, ok = content_check(recorded, lf, raw)
+    for line in lines:
+        say(line)
+    return 0 if ok else 1
+
+
 def _eval_run_command(
     args: argparse.Namespace,
     say: Callable[[str], None],
@@ -397,6 +449,9 @@ def _eval_run_command(
             say(f"  {path}")
         return 0
 
+    if args.command == "hashes":
+        return _hashes_command(args, say, fail)
+
     try:
         report = parse_report(args.report.read_text(encoding="utf-8"))
     except OSError as e:
@@ -405,6 +460,14 @@ def _eval_run_command(
         return fail(f"Input error: {e}", 2)
 
     if args.command == "baseline":
+        if args.rehash:
+            try:
+                files = _hash_files(args.cases)
+                report = rehash(report, files)
+            except OSError as e:
+                return fail(f"Cannot read {e.filename or args.cases}: {e.strerror or e}", 2)
+            except BaselineError as e:
+                return fail(f"Cannot rehash {args.report.name}: {e}", 2)
         text = json.dumps(baseline_from(report, args.report.name), indent=2) + "\n"
         try:
             _write(args.out, text)

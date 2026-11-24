@@ -13,7 +13,7 @@ supersedes nothing.
 | Retiring a product | Delete it from `src/advisor/data/catalogue.json`. Its id is retired for good. There is no tombstone or `retired` field. |
 | Size of a change | A change to a few products' price, stock, specs or wording is an **adjustment**. Adding many products, a category or a field is a **feature** (a category or a field touches core code). |
 | Cases | The change that breaks a case fixes the case in the same branch. `tests/test_evals_cases.py::test_committed_cases_are_consistent_with_the_catalogue` runs `catalogue_problems` and fails `npm run verify` naming the case and the product. |
-| Old records | Run reports, labels and taxonomies are records of their run and are not redone. A report's `catalogue_sha256` (bytes of the catalogue file) says which catalogue it saw; reports without it predate this rule. |
+| Old records | Run reports, labels and taxonomies are records of their run and are not redone. A report's `catalogue_sha256` (bytes of the catalogue file) says which catalogue it saw; reports without it predate this rule. Since §29 the hash reads CRLF as LF (`hash_form: "lf"` in the report); older reports hashed the raw bytes. |
 | Eval run | A catalogue change owes an `advisor-eval` run whose report the review names. Enforcing it is intent §17 (evals on every change); until then the reviewer checks. |
 
 ## Consequences

@@ -270,10 +270,11 @@ After the re-check above and before writing `review.md`:
    `evals/baseline.json` (`--baseline <path>` for another file). Put the
    report's name, provider and model, the comparison, and the commit the
    run was made at in the `## Eval run` section and under "Verified myself".
-   To check the report is a run of the reviewed content, compare its
-   `cases_sha256`, `prompt_sha256` and `catalogue_sha256` with the sha256 of
-   `evals/cases.jsonl`, `src/advisor/prompts/system.md` and
-   `src/advisor/data/catalogue.json` in the worktree at the reviewed commit.
+   To check the report is a run of the reviewed content, run
+   `uv run advisor-analysis hashes <report>` in the worktree at the reviewed
+   commit; it hashes `evals/cases.jsonl`, `src/advisor/prompts/system.md` and
+   `src/advisor/data/catalogue.json` as the run does and exits 1 naming a
+   field that differs.
    `compare`'s hash warnings are against the baseline: expected
    differences, not this check.
 4. A single run varies, so re-run each case in "regressed" (PASS to FAIL

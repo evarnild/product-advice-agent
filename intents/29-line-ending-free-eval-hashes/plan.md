@@ -326,3 +326,34 @@ its rule ("must match the branch's files") is unchanged. The code alone
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — implementation (all five subtasks)
+
+Commits: 19efe0a (helper, `run.content_hashes`, `hash_form`), the `baseline_from`/`compare`
+commit, the `hashes` and `--rehash` commit, the `evals/baseline.json` rehash commit, and the
+docs/skills/policy commit (see `git log`).
+
+Shipped: `content_sha256`, `HASH_FORM`, `content_check`, `rehash`, `raw_sha256` in
+`baseline.py`; `content_files` and `content_hashes` in `run.py`; `advisor-analysis hashes`
+and `baseline --rehash [--cases]`; `evals/baseline.json` rewritten by `--rehash` from
+`20261124T210400Z-ollama.json` (only the three hashes and `hash_form` changed; `hashes
+evals/baseline.json` exits 0); README, CLAUDE.md, ADR 0003, the two skills and the one
+REVIEW-POLICY.md parenthesis. Tests: 883 -> 902 passing.
+
+Divergence: `run.py` gained `content_files` (the bytes of the three files) beside
+`content_hashes`, because `mypy --strict` rejects `analysis.py` reading `run`'s imported
+path globals; the path globals are still read at call time. AGENTS.md has no matching line,
+so it is untouched.
+
+### 2026-11-24 — review round 1 rework
+
+Added `test_rehash_accepts_a_report_made_on_mixed_ending_bytes` (kills the mutant that drops
+`raw_sha256(data)` from `rehash`'s accepted set) and
+`test_compare_model_difference_is_not_blamed_on_hash_forms` (kills the mutant that widens the
+form note to every field). `rehash` now writes `content_sha256(data)`.
+
+Corrections to the first entry: the test count went 880 -> 902 (+22; 924 after main's merge).
+The committed `evals/baseline.json` came from the automatic merge cb627b7 (main's §24
+baseline plus the rehash); it is byte-identical to
+`uv run advisor-analysis baseline C:/Users/eric/src/product-advice-agent/evals/runs/20261124T215703Z-ollama.json --rehash --out <tmp>`.
+Commit 8b02d8a names §25's run; the file itself was not rewritten.

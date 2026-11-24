@@ -93,10 +93,11 @@ Eval-run check (`REVIEW-POLICY.md` → "Eval runs", part of pass 3): run
 change must name an eval run made on the reviewed content. Without one, write
 a HIGH finding "Needs rework: make the eval run". When the coordinator runs
 this review, it makes the run as `/auto` step 6 describes. A reviewer agent
-only checks that the run is named and that its `cases_sha256`, `prompt_sha256`
-and `catalogue_sha256` equal the sha256 of `evals/cases.jsonl`,
-`src/advisor/prompts/system.md` and `src/advisor/data/catalogue.json` in the
-worktree at the reviewed commit. `compare`'s hash warnings are against the
+only checks that the run is named and that `uv run advisor-analysis hashes
+<report>`, run in the worktree at the reviewed commit, exits 0 (it hashes
+`evals/cases.jsonl`, `src/advisor/prompts/system.md` and
+`src/advisor/data/catalogue.json` as the run does and names a field that
+differs). `compare`'s hash warnings are against the
 baseline: expected differences, not this check. A single run varies: the
 coordinator (never a reviewer agent, which calls no model) re-runs a flipped
 case with `uv run advisor-eval --only <flipped ids>` and calls it a
