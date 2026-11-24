@@ -10,9 +10,9 @@ spec_accepted:
 plan_approved: 2026-11-24 by-agent
 live_checked:
 merged:
-auto_authorized: 2026-11-24 by-agent    # owner: "/auto 25"
+auto_authorized: 2026-11-24 by-agent    # owner: "25 diff read /auto 25 /deliver 25"
 auto_round: 3
-auto_stopped: escalate, owner reads the diff
+auto_stopped: ready for /deliver
 follows_up: 8
 links:
   - intents/8-offline-evals    the grounded and prices checks
