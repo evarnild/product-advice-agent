@@ -2,7 +2,7 @@
 id: 24
 slug: judge-structured-output
 type: feature
-status: accepted
+status: in-review
 title: Constrain the LLM judge's reply to its verdict schema
 review_tier:
 intent_accepted: 2026-11-24 by-agent

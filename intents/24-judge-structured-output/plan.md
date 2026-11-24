@@ -214,3 +214,17 @@ Expected count: 863 today, about 880 after (the parametrised additions dominate)
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — subtasks 1-5 (implementer)
+
+Commits: `06a8c76` (schema keyword through the interface, Anthropic
+`output_config.format`, Ollama refuses), `0b9b8be` (refusal / `max_tokens`
+are `ModelError` with a schema), `3a463da` (`VERDICT_SCHEMA`, strict
+`parse_verdict`, reason-first reply line), `798c5e1` (`_ask` passes the
+schema; `RoutedClient` records it), `a9419e9` (README and CLAUDE.md).
+Tests: 863 -> 884 passed (`npm run verify` green after each commit).
+Subtask 6 (re-validation, B11) is the owner's live check, not run; no
+`evals/judge/validation.md` change. No model call made.
+Divergences: none. Test names follow the plan's table; the AC7 tests were
+added to both `test_analysis_judge.py` and `test_analysis_judge_validate.py`
+with a refusal-naming test in each.
