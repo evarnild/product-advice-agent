@@ -37,13 +37,18 @@ from advisor.models.base import (
 from advisor.tracer import NoopTracer, Tracer
 
 
-def content_hashes(cases: bytes) -> dict[str, str]:
-    """The report's three content hashes: the given case bytes, the catalogue, the prompt."""
+def content_files(cases: bytes) -> dict[str, bytes]:
+    """The bytes the report hashes, by field: the given case bytes, the catalogue, the prompt."""
     return {
-        "cases_sha256": content_sha256(cases),
-        "catalogue_sha256": content_sha256(DEFAULT_CATALOGUE_PATH.read_bytes()),
-        "prompt_sha256": content_sha256(SYSTEM_PROMPT_PATH.read_bytes()),
+        "cases_sha256": cases,
+        "catalogue_sha256": DEFAULT_CATALOGUE_PATH.read_bytes(),
+        "prompt_sha256": SYSTEM_PROMPT_PATH.read_bytes(),
     }
+
+
+def content_hashes(cases: bytes) -> dict[str, str]:
+    """The report's three content hashes (CRLF read as LF, §29)."""
+    return {key: content_sha256(data) for key, data in content_files(cases).items()}
 
 
 DEFAULT_CASES = Path("evals") / "cases.jsonl"

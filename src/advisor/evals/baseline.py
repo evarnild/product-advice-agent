@@ -43,6 +43,62 @@ class BaselineError(ValueError):
     """The baseline file is not a usable baseline."""
 
 
+def raw_sha256(data: bytes) -> str:
+    """sha256 of the bytes as they are: the form of a report made before §29."""
+    return hashlib.sha256(data).hexdigest()
+
+
+def content_check(
+    recorded: Mapping[str, Any], lf: Mapping[str, str], raw: Mapping[str, str]
+) -> tuple[list[str], bool]:
+    """Compare the hashes a report or baseline records with the files' (§29).
+
+    A file with `hash_form: "lf"` is checked against the `lf` hashes; one without it
+    (made before §29) against the raw-byte hashes. Returns one line per field and whether
+    all three match.
+    """
+    is_lf = recorded.get("hash_form") == HASH_FORM
+    now = lf if is_lf else raw
+    lines = [] if is_lf else ["(raw bytes: recorded before §29)"]
+    ok = True
+    for key in HASH_FIELDS:
+        got = recorded.get(key)
+        if not isinstance(got, str):
+            lines.append(f"{key} not recorded")
+            ok = False
+        elif got == now[key]:
+            lines.append(f"{key} matches")
+        else:
+            lines.append(f"{key} differs: recorded {got}, files {now[key]}")
+            ok = False
+    return lines, ok
+
+
+def rehash(report: Mapping[str, Any], files: Mapping[str, bytes]) -> dict[str, Any]:
+    """The raw-form report with its hashes in the `lf` form, proved against the files.
+
+    `files` maps each hash field to the bytes of the file it names. Each recorded hash must
+    equal the sha256 of those bytes as they are, in LF form or in CRLF form; otherwise the
+    run did not see this content and `BaselineError` names the field.
+    """
+    if report.get("hash_form") == HASH_FORM:
+        raise BaselineError("the report is already line-ending free (hash_form lf)")
+    out = dict(report)
+    for key in HASH_FIELDS:
+        data = files[key]
+        folded = data.replace(b"\r\n", b"\n")
+        accepted = {
+            raw_sha256(data),
+            raw_sha256(folded),
+            raw_sha256(folded.replace(b"\n", b"\r\n")),
+        }
+        if report.get(key) not in accepted:
+            raise BaselineError(f"{key}: the report was not made on these files")
+        out[key] = raw_sha256(folded)
+    out["hash_form"] = HASH_FORM
+    return out
+
+
 def owes_run(paths: Iterable[str]) -> list[str]:
     """The changed paths that make an eval run owed (empty: none is owed)."""
     owed: list[str] = []
