@@ -6,11 +6,11 @@ status: accepted
 title: Two machines can give two intents the same number
 review_tier: reviewed
 intent_accepted: 2026-11-24 by-agent
-spec_accepted:
+spec_accepted: 2026-11-24 by-agent
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-24 by-agent    # owner: "accept 28 /auto 28"
+auto_authorized: 2026-11-24 by-agent    # owner: "accept the §28 spec /auto 28"
 auto_round:
 auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
