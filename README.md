@@ -156,8 +156,14 @@ Checks (a product is cited by its id, `P-` and three digits, as the prompt
 asks):
 
 - **grounded**: every cited id is in the catalogue.
+- **names**: a cited id is not written under another product's name. Each
+  occurrence of a known id looks at up to 80 characters either side, on its
+  line, up to the neighbouring ids; it fails when that window names another
+  catalogue product and not the cited one. No name nearby passes (longest
+  name wins, case and hyphens ignored). Its reason reads "P-009 is the
+  Pelagic Go 13, cited as Auralis Home 1".
 - **prices**: each cited product's price appears as a number (not which
-  product it sits next to); a cited out-of-stock product needs none when
+  product it sits next to; the reason names each product); a cited out-of-stock product needs none when
   the answer says "out of stock".
 - **expected** / **forbidden**: the case's `expect_ids` are cited, its
   `forbid_ids` are not.

@@ -2,7 +2,7 @@
 id: 25
 slug: cited-id-name-mismatch
 type: fix
-status: accepted
+status: in-review
 title: Catch an answer that cites a real id under another product's name
 review_tier:
 intent_accepted: 2026-11-24 by-agent

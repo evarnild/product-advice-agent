@@ -158,3 +158,11 @@ model. The failing-first tests are 1 and 2.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — implementation (all subtasks)
+
+- Commits: `86b55b3` names check, `5d2ccb8` prices reason, then docs and this entry.
+- Shipped: `misnamed()` and the `names` check right after `grounded` in `score.py`; the `prices` reason names each product; README check list gains **names**. CLAUDE.md and AGENTS.md do not name the checks, so unchanged.
+- Tests: 11 added or changed in `tests/test_evals_score.py` (tests 1-10; the four name lists updated), plus one reason string in `tests/test_evals_run.py:101`. 868 passed.
+- Mutations killed: always-pass (tests 1, 5, 6, 7, 8), no window bounds, no line bound (test 6), shortest-name-first (test 7).
+- Divergences: `test_evals_run.py` asserted the old `prices` reason and was updated (not in the plan). `misnamed` returns no mismatches if lowercasing changes the answer's length (rare Unicode), rather than guessing positions. Not run: the eval run (the coordinator's).
