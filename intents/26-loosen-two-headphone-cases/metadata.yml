@@ -2,7 +2,7 @@
 id: 26
 slug: loosen-two-headphone-cases
 type: adjustment
-status: accepted
+status: in-review
 title: Two headphone cases fail correct answers
 review_tier:
 intent_accepted: 2026-11-24 by-agent
@@ -11,8 +11,8 @@ plan_approved:
 live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "accept 26 /auto 26"
-auto_round:
-auto_stopped:
+auto_round: 2
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/15-fifty-cases    the 50 cases these two belong to
