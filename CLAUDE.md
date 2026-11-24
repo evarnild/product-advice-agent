@@ -20,10 +20,11 @@ reasons are in `docs/decisions/0001-stack.md`.
 npm run verify        # THE check before a change is done: kit tests, then ruff check, ruff format --check, mypy, pytest
 npm run check:intent  # does this branch's change match its intent? (intents/README.md)
 npm run sdlc:scan     # the evidence behind docs/sdlc-grid.md
-npm run queue         # the intent queue, generated from metadata.yml (--next-id, --json); nobody edits it
+npm run queue         # the intent queue, generated from metadata.yml (--next-id [--no-fetch], --json); nobody edits it
 npm run spawn -- <id> # parallel session for an intent (see "Parallel sessions")
 npm run sessions      # what every worktree/session is doing (--json for data, --log for the event tail)
 npm run deliver -- <id>  # merge a reviewed intent, bookkeep, push, remove worktree and branch (the /deliver skill)
+npm run reserve-id -- <id>  # reserve a new intent's number on origin (the one push /intent makes unasked)
 npm run update-branch -- <id>  # merge main into a behind intent branch in its worktree, then verify (never a rebase; exit 0/1/2/3)
 npm run stats -- <id>|--all  # elapsed time, owner wait and tokens per phase (--json; the stats.md /deliver commits)
 npm run test:kit      # node --test over scripts/*.test.mjs
@@ -82,7 +83,10 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
 - Merges into `main` are local. An agent merges, pushes, deletes a branch
   or removes a worktree only when the owner explicitly asks for that action
   in the current conversation, never on its own initiative, and only after
-  the preconditions in `REVIEW-POLICY.md` → "Merging".
+  the preconditions in `REVIEW-POLICY.md` → "Merging". The one standing
+  exception, also there: `/intent` reserves a new intent's number with
+  `npm run reserve-id -- <id>` (a branch `intent/<id>` on `origin` holding
+  only that draft), and asks the owner when that fails.
 - **Never `git checkout` a branch in the main checkout.** It belongs to the
   coordinator session. Implementers and reviewers work in their own
   worktrees.
