@@ -2,7 +2,7 @@
 id: 23
 slug: typed-anthropic-adapter
 type: refactor
-status: accepted
+status: in-review
 title: Type the Anthropic adapter against the SDK's own types
 review_tier:
 intent_accepted: 2026-11-16 by-agent

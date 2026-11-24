@@ -199,3 +199,19 @@ models are built in memory.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24 — implementation (all subtasks)
+
+- Commits: characterisation test, SDK-built fake responses, typed adapter
+  (subjects "§23: characterise non-dict tool input…", "§23: build real SDK
+  responses…", "§23: type the Anthropic adapter…").
+- Shipped: `anthropic_model.py` has no `Any`, uses `anthropic.Anthropic`, the
+  SDK param TypedDicts and `isinstance` narrowing; the non-dict guard and
+  `open_telemetry=False` are kept. The test fake builds `Message`,
+  `TextBlock`, `ToolUseBlock` and `Usage`. No `type: ignore` added in `src/`.
+- Tests: 859 -> 860 passed (one new characterisation test); existing
+  assertions unchanged.
+- Mutations (tests/test_models.py): TextBlock->ToolUseBlock (3 failed), drop
+  non-dict guard (1 failed), `is_error` -> False (1 failed),
+  `open_telemetry=True` (4 failed). All killed.
+- Divergences: none. The eval run and live check remain owed.
