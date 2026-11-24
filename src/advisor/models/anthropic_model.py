@@ -6,9 +6,17 @@ The only module that imports the `anthropic` SDK.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
 
 import anthropic
+from anthropic.types import (
+    MessageParam,
+    TextBlock,
+    TextBlockParam,
+    ToolParam,
+    ToolResultBlockParam,
+    ToolUseBlock,
+    ToolUseBlockParam,
+)
 
 from advisor.models.base import (
     Message,
@@ -22,9 +30,9 @@ from advisor.models.base import (
 MAX_TOKENS = 1024
 
 
-def _to_api_message(m: Message) -> dict[str, Any]:
+def _to_api_message(m: Message) -> MessageParam:
     if m.role == "assistant":
-        blocks: list[dict[str, Any]] = []
+        blocks: list[TextBlockParam | ToolUseBlockParam] = []
         if m.text:
             blocks.append({"type": "text", "text": m.text})
         blocks.extend(
@@ -33,32 +41,32 @@ def _to_api_message(m: Message) -> dict[str, Any]:
         )
         return {"role": "assistant", "content": blocks}
     if m.tool_results:
-        return {
-            "role": "user",
-            "content": [
-                {
-                    "type": "tool_result",
-                    "tool_use_id": r.call_id,
-                    "content": r.content,
-                    "is_error": r.is_error,
-                }
-                for r in m.tool_results
-            ],
-        }
+        results: list[ToolResultBlockParam] = [
+            {
+                "type": "tool_result",
+                "tool_use_id": r.call_id,
+                "content": r.content,
+                "is_error": r.is_error,
+            }
+            for r in m.tool_results
+        ]
+        return {"role": "user", "content": results}
     return {"role": "user", "content": m.text}
 
 
-def _to_api_tool(t: ToolSpec) -> dict[str, Any]:
+def _to_api_tool(t: ToolSpec) -> ToolParam:
     return {"name": t.name, "description": t.description, "input_schema": t.parameters}
 
 
 class AnthropicClient:
-    def __init__(self, api_key: str, model: str, sdk_client: Any | None = None) -> None:
+    def __init__(
+        self, api_key: str, model: str, sdk_client: anthropic.Anthropic | None = None
+    ) -> None:
         self._model = model
         # The SDK's own spans would become separate Langfuse traces, because the
         # advisor's observations are not the current OTel context (§5). The explicit
         # option also overrides the ANTHROPIC_OPEN_TELEMETRY* variables.
-        self._sdk: Any = (
+        self._sdk: anthropic.Anthropic = (
             sdk_client
             if sdk_client is not None
             else anthropic.Anthropic(api_key=api_key, open_telemetry=False)
@@ -68,7 +76,7 @@ class AnthropicClient:
         self, system: str, messages: Sequence[Message], tools: Sequence[ToolSpec]
     ) -> ModelTurn:
         try:
-            response: Any = self._sdk.messages.create(
+            response = self._sdk.messages.create(
                 model=self._model,
                 max_tokens=MAX_TOKENS,
                 system=system,
@@ -80,10 +88,10 @@ class AnthropicClient:
         texts: list[str] = []
         calls: list[ToolCall] = []
         for block in response.content:
-            if block.type == "text":
+            if isinstance(block, TextBlock):
                 texts.append(block.text)
-            elif block.type == "tool_use":
-                args = block.input if isinstance(block.input, dict) else {}
+            elif isinstance(block, ToolUseBlock):
+                args = dict(block.input) if isinstance(block.input, dict) else {}
                 calls.append(ToolCall(id=block.id, name=block.name, arguments=args))
         return ModelTurn(
             text="".join(texts) if texts else None,
