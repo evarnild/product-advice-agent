@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.2.0
+id: 28
+slug: reserve-intent-ids
+type: feature
+status: accepted
+title: Two machines can give two intents the same number
+review_tier: reviewed
+intent_accepted: 2026-11-24 by-agent
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized: 2026-11-24 by-agent    # owner: "accept 28 /auto 28"
+auto_round:
+auto_stopped: spec questions
+follows_up:
+links:
+  - intents/27-typed-anthropic-adapter    the intent renumbered from §23 after the clash
+  - intents/23-langfuse-web-worker-memory    the other machine's §23
+  - intents/18-intent-dependencies    the last change to queue.mjs
+blocked_by:

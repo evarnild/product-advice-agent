@@ -3,6 +3,9 @@ from types import SimpleNamespace
 import anthropic
 import httpx
 import pytest
+from anthropic.types import Message as SdkMessage
+from anthropic.types import TextBlock, ToolUseBlock
+from anthropic.types import Usage as SdkUsage
 
 from advisor.models import KNOWN_PROVIDERS, UnknownProviderError, make_client
 from advisor.models.anthropic_model import AnthropicClient
@@ -123,10 +126,15 @@ class FakeSdk:
 
 
 def _response(content, model="m-1", usage=(11, 7)):
-    return SimpleNamespace(
-        content=content,
+    return SdkMessage(
+        id="msg_1",
+        type="message",
+        role="assistant",
         model=model,
-        usage=SimpleNamespace(input_tokens=usage[0], output_tokens=usage[1]),
+        stop_reason="end_turn",
+        stop_sequence=None,
+        content=content,
+        usage=SdkUsage(input_tokens=usage[0], output_tokens=usage[1]),
     )
 
 
@@ -134,8 +142,8 @@ def test_adapter_maps_tool_use_and_usage():
     sdk = FakeSdk(
         _response(
             [
-                SimpleNamespace(type="text", text="Let me look."),
-                SimpleNamespace(
+                TextBlock(type="text", text="Let me look."),
+                ToolUseBlock(
                     type="tool_use", id="tu_1", name="search_products", input={"category": "phone"}
                 ),
             ]
@@ -158,14 +166,14 @@ def test_adapter_maps_tool_use_and_usage():
 
 
 def test_adapter_maps_text_only_response():
-    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="Hello")]))
+    sdk = FakeSdk(_response([TextBlock(type="text", text="Hello")]))
     turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
     assert turn.text == "Hello"
     assert turn.tool_calls == ()
 
 
 def test_adapter_translates_tool_round_trip_messages():
-    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="ok")]))
+    sdk = FakeSdk(_response([TextBlock(type="text", text="ok")]))
     history = [
         Message("user", "q"),
         Message("assistant", "hm", (ToolCall("tu_1", "search_products", {"a": 1}),)),
@@ -198,7 +206,7 @@ def test_adapter_wraps_sdk_errors():
 
 
 def test_adapter_assistant_with_empty_text_sends_no_text_block():
-    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="ok")]))
+    sdk = FakeSdk(_response([TextBlock(type="text", text="ok")]))
     history = [
         Message("user", "q"),
         Message("assistant", "", (ToolCall("tu_1", "search_products", {}),)),
@@ -212,7 +220,35 @@ def test_adapter_assistant_with_empty_text_sends_no_text_block():
 
 
 def test_adapter_reports_the_model_the_response_names():
-    sdk = FakeSdk(_response([SimpleNamespace(type="text", text="hi")], model="served-model-9"))
+    sdk = FakeSdk(_response([TextBlock(type="text", text="hi")], model="served-model-9"))
     turn = AnthropicClient("k", "configured-model", sdk_client=sdk).complete("s", [], [])
     assert sdk.calls[0]["model"] == "configured-model"
     assert turn.model == "served-model-9"
+
+
+def test_adapter_non_dict_tool_input_gives_empty_arguments():
+    # `model_construct` skips validation, so a block can carry an input the SDK would refuse.
+    bad = ToolUseBlock.model_construct(
+        type="tool_use", id="tu_1", name="search_products", input=["x"]
+    )
+    sdk = FakeSdk(_response([bad]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.tool_calls == (ToolCall("tu_1", "search_products", {}),)
+
+
+def test_adapter_ignores_text_shaped_blocks_with_an_unknown_tag():
+    # The SDK falls back to TextBlock for a tag it does not know and keeps the tag.
+    foreign = TextBlock.model_construct(type="futuristic", text="leak")
+    sdk = FakeSdk(_response([TextBlock(type="text", text="answer"), foreign]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.text == "answer"
+
+
+def test_adapter_ignores_tool_shaped_blocks_with_an_unknown_tag():
+    foreign = ToolUseBlock.model_construct(
+        type="futuristic", id="x_1", name="search_products", input={"a": 1}
+    )
+    sdk = FakeSdk(_response([TextBlock(type="text", text="answer"), foreign]))
+    turn = AnthropicClient("k", "m", sdk_client=sdk).complete("s", [], [])
+    assert turn.text == "answer"
+    assert turn.tool_calls == ()
