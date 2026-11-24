@@ -407,3 +407,13 @@ def test_names_folds_case_without_changing_length():
     got = names_check("\u0130 Auralis Home 1 (P-009)")
     assert not got.ok
     assert got.reason == "P-009 is the Pelagic Go 13, cited as Auralis Home 1"
+
+
+def test_names_fold_keeps_every_position():
+    # The name ends exactly 80 characters after the id; a fold that grew the
+    # text by one character (U+0130 lowercases to two) would push it out.
+    assert not names_check("\u0130 P-009" + " " * 66 + "Auralis Home 1").ok
+
+
+def test_names_fold_reads_a_hyphen_as_a_space():
+    assert not names_check("auralis-home 1 (P-009)").ok

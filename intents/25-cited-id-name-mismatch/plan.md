@@ -195,6 +195,11 @@ this line is the implementer's to edit. -->
 
 ### 2026-11-24 — round-1 rework
 
-- Changed: D1 (b) (a name right before the next id, with only space and "(" between, belongs to that id and is out of the earlier id's window) and D2 (b) (length-preserving case fold, replacing the fail-open guard) in `misnamed`; README names bullet mentions D1, prices bullet re-wrapped. Tests added for findings 1-4 and for D1 and D2 (7 tests); 874 passed.
+- Changed: D1 (b) (a name right before the next id, with only space and "(" between, belongs to that id and is out of the earlier id's window) and D2 (b) (length-preserving case fold, replacing the fail-open guard) in `misnamed`; README names bullet mentions D1, prices bullet re-wrapped. Tests added for findings 1-4 and for D1 and D2 (6 tests); 874 passed.
 - Mutants, each run against the full suite and restored by copy: next-id bound removed (M13) killed by `test_names_next_id_bound`; lookbehind dropped (M4) by `test_names_needs_a_word_boundary_before_a_name`; `_WINDOW = 100` (M20) and `_WINDOW = 60` (M21) by `test_names_window_width_is_80_characters`; `", "` join (M23) by `test_names_joins_several_mismatches_with_semicolons`; D1 rule dropped by `test_names_a_name_just_before_the_next_id_belongs_to_that_id` (and the join test); D2 guard restored by `test_names_folds_case_without_changing_length`.
 - Divergences: the review's example for finding 1 ("P-009 costs 649, the Auralis Home 1 is P-032.") puts the name before the next id, so the bound does not exclude it; I used "P-009 costs 649, and P-032 is the Auralis Home 1." instead. The width test measures a name wholly inside the window (starting exactly 80 before the id, or ending exactly 80 after it).
+
+### 2026-11-24 — round-2 rework
+
+- Changed: tests only. `test_names_fold_keeps_every_position` ("İ P-009" + 66 spaces + "Auralis Home 1": the name ends exactly 80 characters after the id) and `test_names_fold_reads_a_hyphen_as_a_space` ("auralis-home 1 (P-009)"). Corrected "7 tests" to 6 in the round-1 entry. 880 tests passed.
+- Mutants, run against the full suite and restored by copy: N9 (`text = _norm(answer)`) killed by `test_names_fold_keeps_every_position`; N11 (`c.lower()` in place of `_norm(c)`) killed by `test_names_fold_reads_a_hyphen_as_a_space`.
