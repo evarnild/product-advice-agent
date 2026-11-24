@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 from advisor.agent import SYSTEM_PROMPT_PATH, search_tool
 from advisor.catalogue import load_catalogue
+from advisor.evals.baseline import content_sha256
 from advisor.evals.run import RecordingTracer, main
 from advisor.models.base import (
     ModelError,
@@ -129,7 +130,7 @@ def test_a_failing_case_totals_and_case_file_hash_in_the_report(tmp_path):
     assert code == 1
     report = report_of(tmp_path)
     assert report["totals"] == {"total": 3, "passed": 2, "failed": 1, "errors": 0}
-    expected = hashlib.sha256((tmp_path / "cases.jsonl").read_bytes()).hexdigest()
+    expected = content_sha256((tmp_path / "cases.jsonl").read_bytes())
     assert report["cases_sha256"] == expected
 
 
@@ -374,10 +375,7 @@ def test_dimensions_are_recorded_only_for_cases_that_have_them(tmp_path):
 
 def test_prompt_sha256_is_the_hash_of_the_shipped_system_prompt(tmp_path):
     run(tmp_path, HP_OK + LAP_OK + OFF_OK)
-    assert (
-        report_of(tmp_path)["prompt_sha256"]
-        == hashlib.sha256(SYSTEM_PROMPT_PATH.read_bytes()).hexdigest()
-    )
+    assert report_of(tmp_path)["prompt_sha256"] == content_sha256(SYSTEM_PROMPT_PATH.read_bytes())
 
 
 def test_a_bad_tool_call_is_recorded_as_an_error(tmp_path):
@@ -708,10 +706,47 @@ def test_report_records_the_sha256_of_the_catalogue_file_it_loaded(tmp_path):
     code, _, _, _ = run(tmp_path, HP_OK + LAP_OK + OFF_OK)
     assert code == 0
     report = report_of(tmp_path)
-    assert (
-        report["catalogue_sha256"]
-        == hashlib.sha256(DEFAULT_CATALOGUE_PATH.read_bytes()).hexdigest()
-    )
+    assert report["catalogue_sha256"] == content_sha256(DEFAULT_CATALOGUE_PATH.read_bytes())
     assert len(report["catalogue_sha256"]) == 64
     assert report["catalogue_sha256"] != report["cases_sha256"]
     assert report["catalogue_sha256"] != report["prompt_sha256"]
+
+
+def test_report_hashes_ignore_line_endings(tmp_path, monkeypatch):
+    from advisor.evals import run as runner
+
+    lf_cases = ("\n".join(json.dumps(c) for c in CASES) + "\n").encode("utf-8")
+    prompt_lf = b"You advise.\nBe brief.\n"
+    catalogue_lf = (SYSTEM_PROMPT_PATH.parent.parent / "data" / "catalogue.json").read_bytes()
+    catalogue_lf = catalogue_lf.replace(b"\r\n", b"\n")
+    reports = []
+    for name, nl in (("lf", b"\n"), ("crlf", b"\r\n")):
+        d = tmp_path / name
+        d.mkdir()
+        cases = d / "cases.jsonl"
+        cases.write_bytes(lf_cases.replace(b"\n", nl))
+        prompt = d / "system.md"
+        prompt.write_bytes(prompt_lf.replace(b"\n", nl))
+        catalogue = d / "catalogue.json"
+        catalogue.write_bytes(catalogue_lf.replace(b"\n", nl))
+        monkeypatch.setattr(runner, "SYSTEM_PROMPT_PATH", prompt)
+        monkeypatch.setattr(runner, "DEFAULT_CATALOGUE_PATH", catalogue)
+        code = main(
+            ["--cases", str(cases), "--report-dir", str(d / "runs")],
+            env=ENV,
+            client_factory=Factory(HP_OK + LAP_OK + OFF_OK),
+            out=io.StringIO(),
+            err=io.StringIO(),
+            now=lambda: CLOCK_TIME,
+        )
+        assert code == 0
+        (path,) = list((d / "runs").iterdir())
+        reports.append(json.loads(path.read_text(encoding="utf-8")))
+    lf, crlf = reports
+    for key, data in (
+        ("cases_sha256", lf_cases),
+        ("prompt_sha256", prompt_lf),
+        ("catalogue_sha256", catalogue_lf),
+    ):
+        assert lf[key] == crlf[key] == hashlib.sha256(data).hexdigest()
+    assert lf["hash_form"] == crlf["hash_form"] == "lf"

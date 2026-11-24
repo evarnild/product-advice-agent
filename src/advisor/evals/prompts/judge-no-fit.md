@@ -32,4 +32,4 @@ Now judge this conversation.
 [[conversation]]
 
 Reply with one JSON object and nothing else:
-{"pass": true or false, "reason": "<one sentence>"}
+{"reason": "<one sentence>", "pass": true or false}

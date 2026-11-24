@@ -33,7 +33,7 @@ npm run setup:worktree  # uv sync --frozen: installs the product's dependencies
 uv run advisor "<question>"  # run the agent (local Ollama by default; ANTHROPIC_API_KEY only for anthropic, see README.md)
 uv run advisor-analysis generate|view|taxonomy|counts|queue|import|judge|judge-validate  # error analysis on top of the evals (README.md; generate, taxonomy, judge and judge-validate call a model; queue and import need the three LANGFUSE_* variables)
 uv run advisor-eval  # score the agent on evals/cases.jsonl with a real model (README.md "Evaluating answers"; not part of verify)
-uv run advisor-analysis owes-run|baseline|compare  # does a change owe an eval run; the committed baseline; flips against it (no model; README.md "Eval runs")
+uv run advisor-analysis owes-run|baseline|compare|hashes  # does a change owe an eval run; the committed baseline; flips against it; do a report's hashes match the files (no model; README.md "Eval runs")
 ```
 
 The kit itself needs Node ≥ 22 and nothing else: no `npm install`. The
@@ -178,7 +178,11 @@ Langfuse stack in `infra/langfuse/`.
   scripted fake for tests and evals (`fake.py`), and `make_client` with the
   provider registry. `models/anthropic_model.py` is the Anthropic adapter and
   `models/ollama_model.py` the Ollama adapter (the local default, keyless,
-  over `/api/chat` with `httpx`, imported only there).
+  over `/api/chat` with `httpx`, imported only there). `complete` takes an
+  optional keyword-only `schema` (a JSON Schema the reply must fit): the
+  Anthropic adapter sends it as `output_config.format` and, with a schema
+  only, turns a `refusal` or `max_tokens` stop into `ModelError`; the Ollama
+  adapter refuses it with `ModelError`; the agent never passes one.
 
 **Offline evals** (`src/advisor/evals/`, console script `advisor-eval`):
 `cases.py` (the case model and file validation) and `score.py` (the
@@ -208,7 +212,8 @@ Committed data: `evals/cases.jsonl` (the 50 cases, §15), `evals/labels/*.jsonl`
 is a generated pool, not committed (the 35 new cases were rewritten from it).
 
 **Eval runs on changes** (§17): `evals/baseline.py` is pure (`EVAL_PATHS` and `owes_run`, the baseline
-and `compare`); `analysis.py` adds `baseline`, `compare` and `owes-run` (files and git, no model).
+and `compare`); `analysis.py` adds `baseline`, `compare`, `owes-run` and `hashes` (files and git, no model).
+A report's content hashes read CRLF as LF (`content_sha256`, `hash_form: "lf"`, §29).
 `REVIEW-POLICY.md` -> "Eval runs" is the rule, the skills the procedure.
 
 **Shared protocol** (neither core nor I/O): `tracer.py` holds the `Tracer`
@@ -230,7 +235,9 @@ key check, `Annotations`). The score `judge-no-fit` is written by
 `LangfuseAnnotations.write_scores` in `tracing.py` with a deterministic id,
 never in a queue and never named `pass`. Committed data: `evals/judge/split.json`,
 `evals/judge/validation.md`, `evals/judgements/*.jsonl`. The prompt is
-`src/advisor/evals/prompts/judge-no-fit.md`.
+`src/advisor/evals/prompts/judge-no-fit.md`. Every judge call passes
+`judge.VERDICT_SCHEMA`, and `parse_verdict` reads the reply strictly with
+`json.loads`; `extract_json` serves `generate` and `taxonomy` only.
 
 **Conventions worth knowing before editing**
 

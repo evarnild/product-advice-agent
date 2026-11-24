@@ -50,6 +50,14 @@ def ok(message, **extra):
     return httpx.Response(200, json=body)
 
 
+def test_a_schema_is_refused_before_any_request():
+    server = Server()
+    with pytest.raises(ModelError) as e:
+        server.client().complete("s", [Message("user", "q")], [], schema={"type": "object"})
+    assert "not supported for Ollama" in str(e.value)
+    assert server.requests == []
+
+
 def test_request_shape():
     server = Server(ok({"content": "hi"}))
     server.client().complete("SYSTEM PROMPT", [Message("user", "I want a phone")], [TOOL])

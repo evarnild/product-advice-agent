@@ -6,8 +6,8 @@ from datetime import timedelta
 import pytest
 
 from advisor.evals.annotate import AnnotationError, RunTrace
-from advisor.evals.judge import score_id
-from advisor.models.base import ModelUnreachableError
+from advisor.evals.judge import VERDICT_SCHEMA, score_id
+from advisor.models.base import ModelError, ModelUnreachableError
 from tests.fake_langfuse_api import T0
 from tests.judge_world import (
     ENV,
@@ -92,7 +92,7 @@ def test_without_langfuse_it_judges_in_scope_cases_writes_the_file_and_says_so(t
         "FAIL f1: implies a fit",
         "PASS p1: plainly says none",
         "PASS h1: ok",
-        "ERROR h2: the model answer holds no JSON object",
+        "ERROR h2: the model answer is not a JSON object",
         "FAIL h3: wrong kind",
     ]
     assert "judged 5: 2 pass, 2 fail, 1 error" in lines
@@ -156,6 +156,21 @@ def test_labels_are_byte_identical_after_a_run(tmp_path):
     before = (w["labels_dir"] / LABELS_FILE).read_bytes()
     run(judge_argv(w), client=RoutedClient(ANSWERS))
     assert (w["labels_dir"] / LABELS_FILE).read_bytes() == before
+
+
+def test_every_judge_call_asks_for_the_verdict_schema(tmp_path):
+    w = write_world(tmp_path)
+    client = RoutedClient(ANSWERS)
+    run(judge_argv(w), client=client)
+    assert client.schemas == [VERDICT_SCHEMA] * 5
+
+
+def test_a_refusal_is_an_error_line_naming_it(tmp_path):
+    w = write_world(tmp_path)
+    refusal = ModelError("Anthropic refused to give the structured reply (stop_reason: refusal)")
+    code, out, _, _ = run(judge_argv(w), client=RoutedClient({**ANSWERS, "h1": refusal}))
+    assert code == 0
+    assert "ERROR h1: Anthropic refused to give the structured reply (stop_reason: refusal)" in out
 
 
 def test_a_model_failure_is_an_error_line_not_a_verdict(tmp_path):

@@ -3,6 +3,7 @@
 import io
 import json
 from pathlib import Path
+from typing import Any
 
 from advisor.evals.analysis import main
 from advisor.models.base import Message, ModelTurn, ToolSpec
@@ -97,8 +98,17 @@ class RoutedClient:
     def __init__(self, answers):
         self.answers = answers  # case id -> model text, or an Exception
         self.prompts: list[str] = []
+        self.schemas: list[Any] = []
 
-    def complete(self, system: str, messages: list[Message], tools: list[ToolSpec]) -> ModelTurn:
+    def complete(
+        self,
+        system: str,
+        messages: list[Message],
+        tools: list[ToolSpec],
+        *,
+        schema: Any = None,
+    ) -> ModelTurn:
+        self.schemas.append(schema)
         prompt = messages[0].text
         self.prompts.append(prompt)
         judged = prompt.split("Now judge this conversation.")[1]
@@ -111,7 +121,7 @@ class RoutedClient:
 
 
 def verdict(passed, reason="because"):
-    return json.dumps({"pass": passed, "reason": reason})
+    return json.dumps({"reason": reason, "pass": passed})
 
 
 class Factory:
