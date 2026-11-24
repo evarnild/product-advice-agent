@@ -2,14 +2,14 @@
 id: 25
 slug: cited-id-name-mismatch
 type: fix
-status: in-review
+status: done
 title: Catch an answer that cites a real id under another product's name
 review_tier:
 intent_accepted: 2026-11-24 by-agent
 spec_accepted:
 plan_approved: 2026-11-24 by-agent
 live_checked:
-merged:
+merged: 569cebb    # 2026-11-24, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-24 by-agent    # owner: "25 diff read /auto 25 /deliver 25"
 auto_round: 3
 auto_stopped: ready for /deliver
