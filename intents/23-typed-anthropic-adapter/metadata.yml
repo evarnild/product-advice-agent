@@ -7,7 +7,7 @@ title: Type the Anthropic adapter against the SDK's own types
 review_tier:
 intent_accepted: 2026-11-16 by-agent
 spec_accepted:
-plan_approved:
+plan_approved: 2026-11-24 by-agent    # auto: owner "/auto 23" (auto_authorized 2026-11-24)
 live_checked:
 merged:
 auto_authorized: 2026-11-24 by-agent    # owner: "/auto 23"
