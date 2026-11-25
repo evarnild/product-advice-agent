@@ -9,9 +9,11 @@ from advisor.catalogue import (
     CatalogueError,
     Product,
     _norm,
+    failed_filters,
     keyword_set,
     keywords_matched,
     load_catalogue,
+    named_products,
     search_products,
 )
 
@@ -374,3 +376,62 @@ def test_fold_blank_and_variant_keywords():  # T5
     assert ids(search_products(cat, keywords=["-", " ", "  - "])) == ["P-002", "P-001"]
     assert keyword_set(["  - "]) == []
     assert len(keyword_set(["in ear", "in-ear", "inear"])) == 1
+
+
+# --- §30: failed_filters and named_products ---
+
+_P = Product("P-900", "Test Phone", "Acme", "phone", 100.0, False, {}, "d")
+
+
+def test_failed_filters_names_each_filter_alone_and_in_order():
+    assert failed_filters(_P) == []
+    assert failed_filters(_P, category="phone", min_price=100, max_price=100) == []
+    assert failed_filters(_P, category="tablet") == ["category"]
+    assert failed_filters(_P, min_price=100.01) == ["min_price"]
+    assert failed_filters(_P, max_price=99.99) == ["max_price"]
+    assert failed_filters(_P, in_stock_only=True) == ["in_stock_only"]
+    assert failed_filters(
+        _P, category="tablet", min_price=200, max_price=50, in_stock_only=True
+    ) == ["category", "min_price", "max_price", "in_stock_only"]
+
+
+def test_failed_filters_agrees_with_search_products_on_the_committed_catalogue():
+    cat = load_catalogue()
+    combos = [
+        {},
+        {"category": "phone"},
+        {"max_price": 200},
+        {"category": "tablet", "max_price": 200, "in_stock_only": True},
+        {"min_price": 100, "in_stock_only": True},
+        {"category": "laptop", "min_price": 500, "max_price": 900},
+    ]
+    for combo in combos:
+        found = {p.id for p in search_products(cat, limit=10, **combo)}
+        passing = [p for p in cat if failed_filters(p, **combo) == []]
+        expected = {p.id for p in sorted(passing, key=lambda p: (p.price_eur, p.id))[:10]}
+        assert found == expected
+
+
+def test_named_products_exact_whole_name_only():
+    cat = load_catalogue()
+    assert [p.id for p in named_products(cat, ["Sonavo Quiet Pro"])] == ["P-004"]
+    assert named_products(cat, ["Sonavo"]) == []
+    assert named_products(cat, ["Quiet Pro"]) == []
+    assert named_products(cat, ["Norvik"]) == []
+
+
+def test_named_products_folds_case_and_separators():
+    cat = load_catalogue()
+    for kw in ("norvik fold", "Norvik-Fold", "NORVIK FOLD", "NorvikFold"):
+        assert [p.id for p in named_products(cat, [kw])] == ["P-017"]
+
+
+def test_named_products_empty_blank_and_order_and_cap():
+    cat = load_catalogue()
+    assert named_products(cat, None) == []
+    assert named_products(cat, []) == []
+    assert named_products(cat, ["", " ", "-"]) == []
+    got = named_products(cat, ["Norvik Fold", "Sonavo Quiet Pro", "Norvik Fold"])
+    assert [p.id for p in got] == ["P-004", "P-017"]
+    many = [Product(f"P-{i:03d}", f"N{i}", "B", "phone", 1.0, True, {}, "d") for i in range(15)]
+    assert len(named_products(many, [p.name for p in many])) == 10

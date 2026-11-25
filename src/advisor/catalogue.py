@@ -133,6 +133,38 @@ def keywords_matched(product: Product, words: Sequence[str]) -> int:
     return sum(1 for w in words if w in haystack)
 
 
+def failed_filters(
+    product: Product,
+    category: str | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    in_stock_only: bool = False,
+) -> list[str]:
+    """The filters `product` fails, in the order of the arguments (§30).
+
+    The same four tests as `search_products`; `[]` means it passes them all.
+    """
+    failed: list[str] = []
+    if category is not None and product.category != category:
+        failed.append("category")
+    if min_price is not None and product.price_eur < min_price:
+        failed.append("min_price")
+    if max_price is not None and product.price_eur > max_price:
+        failed.append("max_price")
+    if in_stock_only and not product.in_stock:
+        failed.append("in_stock_only")
+    return failed
+
+
+def named_products(catalogue: Sequence[Product], keywords: Sequence[str] | None) -> list[Product]:
+    """Products whose whole name is one of `keywords`, folded alike (§30, §32).
+
+    Brand or partial names do not count. Catalogue order, at most MAX_LIMIT.
+    """
+    words = set(keyword_set(keywords))
+    return [p for p in catalogue if fold(p.name) in words][:MAX_LIMIT]
+
+
 def search_products(
     catalogue: Sequence[Product],
     category: str | None = None,
@@ -155,15 +187,7 @@ def search_products(
     words = keyword_set(keywords)
 
     def passes(p: Product) -> bool:
-        if category is not None and p.category != category:
-            return False
-        if min_price is not None and p.price_eur < min_price:
-            return False
-        if max_price is not None and p.price_eur > max_price:
-            return False
-        if in_stock_only and not p.in_stock:
-            return False
-        return True
+        return not failed_filters(p, category, min_price, max_price, in_stock_only)
 
     # Any keyword is enough (OR), not all of them: a model that adds one keyword too many
     # (tv sound: ["soundbar", "external"]) used to get nothing back. Precision comes back

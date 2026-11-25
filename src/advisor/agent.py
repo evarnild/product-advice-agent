@@ -11,8 +11,10 @@ from typing import Any
 from advisor.catalogue import (
     CATEGORIES,
     Product,
+    failed_filters,
     keyword_set,
     keywords_matched,
+    named_products,
     search_products,
 )
 from advisor.guardrails import REFUSAL_TEXT, check_input, check_output
@@ -135,7 +137,21 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
         # without them still returns rows, each marked as matching none of the keywords.
         if not found:
             found = search_products(catalogue, keywords=None, **filters)
-        return [{**_product_json(p), "keywords_matched": keywords_matched(p, words)} for p in found]
+        rows = [{**_product_json(p), "keywords_matched": keywords_matched(p, words)} for p in found]
+        # §30: a product the customer named by its whole name must not vanish because the
+        # category, price or stock filter drops it. It follows the filter rows, marked with
+        # the filters it fails, and does not count towards `limit`.
+        shown = {p.id for p in found}
+        for p in named_products(catalogue, keywords):
+            failed = failed_filters(
+                p, category, filters["min_price"], filters["max_price"], in_stock_only
+            )
+            if failed and p.id not in shown:
+                rows.append(
+                    {**_product_json(p), "keywords_matched": keywords_matched(p, words)}
+                    | {"filters_failed": failed}
+                )
+        return rows
 
     spec = ToolSpec(
         name="search_products",
@@ -143,7 +159,10 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
             "Search the shop's product catalogue. The category, price and stock filters must "
             "all hold. Results are ordered by keywords matched, then price, cheapest first. When "
             "keywords are given, each row has keywords_matched; if no product matches any "
-            "keyword, the rows for the other filters are returned with keywords_matched 0."
+            "keyword, the rows for the other filters are returned with keywords_matched 0. A row "
+            "with filters_failed is a product the customer named that fails the filters listed "
+            "there (category, min_price, max_price, in_stock_only); say what it is and which "
+            "filters it fails, and do not offer it as a fit for them."
         ),
         parameters=_SEARCH_SCHEMA,
     )
