@@ -622,6 +622,10 @@ def test_invented_replay_clean_answers():  # T19
 def test_invented_lead_in_before_the_own_name_passes():  # finding 1
     assert inv("So: Recommend Auralis Home 1 (P-032)") == []
     assert runs("So: Recommend Acme Home 1 (P-032)") == [("P-032", "Recommend Acme Home 1")]
+    assert runs("Recommend Xauralis Home 1 (P-032)") == [("P-032", "Recommend Xauralis Home 1")]
+    assert runs("Recommend Auralis Home 1 Max (P-032)") == [
+        ("P-032", "Recommend Auralis Home 1 Max")
+    ]
 
 
 def test_invented_more_slot_edges():  # review round 1, findings 2 to 5

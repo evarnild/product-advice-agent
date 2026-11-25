@@ -292,3 +292,12 @@ Correction to the earlier entry: "all 112 pairs but one" should read: the helper
 Mutants (copy-backup, apply, full suite with `-x`, restore by copy; each fails a test): remove the new ends-with-own-name clause (fails); `prev_id_bound_off` (fails); `listnum_off` (fails); own-tail by character suffix (fails); `_SLOT_TRAIL` without `[` (fails); without `*` (fails); without the quotes (fails).
 
 Divergence: the review's `assert inv("1 Kestrel Air Plus (P-005)") == []` no longer kills `listnum_off` once the ends-with-own-name rule exists (the run passes either way). I kept it and added `runs("1 Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]`, which does.
+
+### 2026-11-25 - rework, round 2
+
+Commit: see `git log` (the commit after 99bd414). Tests, the fixture note, the README and this entry only; `score.py` is unchanged.
+
+- Two tests in `test_invented_lead_in_before_the_own_name_passes`: "Recommend Xauralis Home 1 (P-032)" (whole words) and "Recommend Auralis Home 1 Max (P-032)" (ends in). Mutants by copy-backup, full suite, restored by copy: `shown.endswith(own)` fails a test; `(" " + own) in shown` fails a test.
+- README: the limitation that a word put before the real name ("Norvik Auralis Home 1 (P-032)") passes (owner's decision a); the non-alphanumeric ending characters now listed as in the docstring (`)`, `+`, `%`, `-`).
+- Fixture note: the clean answer was shortened and the euro sign written as "euros"; the original is quoted.
+- Correction to the round 1 entry: I said the README lines were rewrapped. They are not: README.md:175 is still about 152 characters. The kit test that was red in my first round 1 verify was not reproduced (the reviewer got 490/490 in 4 runs) and I did not keep its output.

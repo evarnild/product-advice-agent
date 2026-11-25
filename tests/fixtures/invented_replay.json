@@ -1,5 +1,5 @@
 {
- "note": "Model output over the synthetic catalogue (section 35 replay of evals/runs/). flagged: answers and their expected (id, run) pairs; clean: every answer of 20261124T192816Z-anthropic.json (no pair), plus one answer with the lead-in 'So: Recommend Auralis Home 1 (P-032)' (shortened from 20261124T165359Z-ollama.json, voice-speaker).",
+ "note": "Model output over the synthetic catalogue (section 35 replay of evals/runs/). flagged: answers and their expected (id, run) pairs; clean: every answer of 20261124T192816Z-anthropic.json (no pair), plus one answer with the lead-in 'So: Recommend Auralis Home 1 (P-032)' (shortened from 20261124T165359Z-ollama.json, voice-speaker, with the euro sign written as \"euros\"; the original reads \"So: Recommend Auralis Home 1 (P-032) at €119, but it's currently out of stock.\").",
  "flagged": [
   {
    "report": "20261121T125003Z-ollama.json",
