@@ -12,6 +12,12 @@ context, but keep Claude-specific and Codex-specific files separate.
 - Apply `REVIEW-POLICY.md` when reviewing. The procedures in
   `.claude/skills/*/SKILL.md` (`intent`, `spec`, `build-plan`, `review`,
   `grid`, `deliver`) are plain markdown and apply to Codex sessions too.
+- A spec or plan is drafted by spawning `product_advice_agent_spec` or
+  `product_advice_agent_plan` (the `.codex/agents` twins of the Claude
+  `product-advice-agent-spec` and `product-advice-agent-plan`), not by reading
+  the codebase inline. Each writes one file and commits nothing; the
+  coordinator keeps every gate and compares `git status --short` before and
+  after it (and `git diff --stat`).
 - Do not edit `OVERVIEW.md` unless the user explicitly asks for an overview
   update.
 

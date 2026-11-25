@@ -367,3 +367,84 @@ to an agent text -> it fails; not repeated).
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 — implementation (subtasks 1 to 4)
+
+- Commits: `c7330b7` (stats regex and AGENT_PHASE with tests; it also swept
+  in the four agent files, because a background `verify && git add -A`
+  ran while they were being written), then the commit with the kit-texts
+  pins, the skills, `CLAUDE.md` and `AGENTS.md`, then the hand-over.
+- Shipped: `agentTag` and `AGENT_PHASE` accept `spec` and `plan`; the four
+  agent files; "Who drafts" in `/spec` and `/build-plan`; `/auto` steps 2
+  and 3; the rule in `CLAUDE.md` and `AGENTS.md`.
+- Tests: kit tests now 64 in stats-lib (2 new, the agentTag cases extended) and 19 in kit-texts (8 new
+  in the §36 describe); `npm run verify` green (994 pytest). Mutations
+  tried: rename an agent `name:`, drop `Never commit` from one Codex file,
+  change the `CLAUDE.md` wording: each failed the named test, then restored
+  by copy.
+- Divergences: (1) the Codex TOMLs omit `sandbox_mode`, as the implementer
+  toml does (the brief chose the plan's fallback), so the kit-texts test
+  does not assert it; the owner's step 4 should confirm the default sandbox
+  lets the Codex agent write its file. (2) The three "Never ..." phrases
+  appear once per file (as the bold rule heading) so a deletion is caught.
+  (3) The `/auto` AC text mutation list (delete a name from `/auto`) was not
+  run by hand; the test loops over it.
+
+### 2026-11-25 — rework, review round 1
+
+- Commit: see `git log` (one rework commit after `4d7b716`).
+- Owner decisions applied: finding 2 (a), both Codex TOMLs now carry
+  `sandbox_mode = "workspace-write"` (reviewer's form), asserted in kit-texts;
+  finding 7, the before-snapshot (`git status --short` before spawning, compare
+  after) in `/spec`, `/build-plan` and `/auto`, pinned by the word `snapshot`.
+- Mechanical: (1) the AC3 regex now holds `\bEdit\b` with a real backslash (the
+  two 0x08 bytes came from an escaping layer in my shell tool; I wrote the
+  fix with `bytes([92])`); byte scan of every changed file: no control byte.
+  (3) `/auto` pins `§<id> spec`, `§<id> plan`, both git commands, `INCOMPLETE:`,
+  the snapshot and the two single-line step 2 and 3 phrases (the bare names also
+  occur in section 10 and elsewhere, so only line-specific phrases kill).
+  (4) PHRASES gained `Never decide a design point`, `options and a recommendation`
+  and the `blocked_by` sentence. (5) both stats tests assert the agents' tokens
+  per phase and that only the Explore run is unattributed. (6) `intents/README.md`
+  `blocked_by` bullet and a role bullet (not in the plan's file list: a
+  divergence, owner-approved in review finding 6). (8) `/auto` section 10 prefix
+  list. (9) `not by reading` (AGENTS.md), `keeps every gate` (both guides),
+  `Confirm that only` (both skills). (10) `[ \t]*` as escapes. (11) and (12) done.
+- Tests: kit suite 500 of 500 (kit-texts 19, stats-lib 64; assertions added, no
+  new test names); `npm run verify` green.
+- Mutants hand-run, each restored by copy: Edit added to the tools line in the
+  spec and the plan Claude file (both killed now); sandbox read-only and sandbox
+  line deleted; snapshot deleted in `/spec` and `/auto`; `Confirm that only`
+  changed; `§<id> spec`, `§<id> plan`, `(or replies INCOMPLETE:)` and `If the
+  agent replies INCOMPLETE:` in `/auto`; the git diff comparison deleted in
+  `/auto`; the `blocked_by` sentence, `options and a recommendation` and
+  `Never decide a design point` in agents; `not by reading` and `keeps every
+  gate` in the guides; spec and plan tokens routed to unattributed in
+  `stats-lib.mjs`: all killed. The first two `/auto` mutants survived with the
+  bare pins and were killed after the line-specific pins were added.
+- Note for the owner (AC8 step 4): once, spawn `product_advice_agent_spec` in
+  Codex and confirm that `sandbox_mode = "workspace-write"` is accepted in an
+  agent file and lets the agent write its one file; if rejected, use the
+  plan's fallback (omit the line and drop the assertion).
+
+### 2026-11-25 — rework, review round 2
+
+- Commit: see `git log` (one commit after `8a472c6`).
+- Findings 1 to 4 done, text only (no behaviour change in the agent files):
+  skills pin `Before spawning, run`, the diff-and-compare sentence and
+  `discard it and report`; `/auto` counts `snapshot before`, `comparison after`
+  and `git diff --stat` comparison after (2 each), and pins the section 10 prefix
+  list; the forbidden-git phrase joins `PHRASES` (all four agent files);
+  `intents/README.md` pins both phrases; the backstop-not-a-fence sentence is in
+  `/spec` and `/build-plan`; `CLAUDE.md` and `AGENTS.md` say the coordinator
+  compares `git status --short` before and after (and `git diff --stat`). The AC3
+  regex is now `/\bEdit\b|MultiEdit|NotebookEdit/` (finding 5, optional).
+- Tests: `kit-texts` and `stats-lib` together 83 of 83 (19 and 64; assertions
+  added, no new test names). Control-byte scan of every changed file: clean.
+- Mutants hand-run, restored by copy: all killed: snapshot clause, compare
+  sentence, discard sentence in both skills; the `/auto` step 2 and 3 snapshot and
+  comparison clauses; the section 10 list (drop `plan`, drop `spec` and `plan`);
+  the git list in each of the four agent files; both README phrases;
+  `MultiEdit` in a tools line. Two rounds of survivors: the "`git diff --stat` and"
+  clause in both skills and the `/auto` diff comparisons survived the first pins
+  (the neighbouring words stayed) and were killed after pinning the whole clause.

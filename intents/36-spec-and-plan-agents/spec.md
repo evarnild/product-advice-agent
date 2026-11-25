@@ -98,10 +98,15 @@ and the weak points. The brief names a word limit; the default in the
 definition is 250 words.
 
 **B10. The coordinator checks every draft.** `/spec`, `/build-plan` and
-`/auto` tell the coordinator, after the agent returns, to run
-`git status --short` and `git diff --stat`, confirm that only the one file
-changed and that `metadata.yml` is untouched, then read the draft as today.
-A draft that changed anything else is discarded and reported.
+`/auto` tell the coordinator to take `git status --short` before spawning
+the agent (a snapshot) and, after it returns, to run `git status --short`
+and `git diff --stat` and compare with the snapshot: only the one file may
+be new or changed and `metadata.yml` must be untouched; then read the draft
+as today. A draft that changed anything else is discarded and reported.
+(Amended 2026-11-25, owner: "36 a, snapshot", after round 1: a new file is
+untracked so `git diff --stat` does not show it, and the main checkout
+already has unrelated untracked files, so the check needs the snapshot.
+Writes to gitignored paths remain invisible to it.)
 
 **B11. The skills name the agent.** `/spec` and `/build-plan` say: spawn
 `product-advice-agent-spec` / `product-advice-agent-plan` with the `Agent`

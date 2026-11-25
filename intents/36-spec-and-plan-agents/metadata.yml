@@ -2,7 +2,7 @@
 id: 36
 slug: spec-and-plan-agents
 type: feature
-status: accepted
+status: in-review
 title: Dedicated spec and plan agents on Sonnet
 review_tier: reviewed    # .claude/agents/**, .codex/agents/**, .claude/skills/** are Reviewed by path
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 36, 35 defaults"
@@ -10,9 +10,9 @@ spec_accepted: 2026-11-25 by-agent    # owner: "36 defaults, accept the spec"
 plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 36" (auto_authorized 2026-11-25)
 live_checked:
 merged:
-auto_authorized: 2026-11-25 by-agent    # owner: "/auto 36"
-auto_round:
-auto_stopped:
+auto_authorized: 2026-11-25 by-agent    # owner: "36 diff read /auto 36"
+auto_round: 3
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/19-intent-stats    stats attribute agent tokens by the description prefix

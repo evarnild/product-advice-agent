@@ -13,7 +13,7 @@ const UNPHASED = 'unphased';
 /** One owner-wait gap counts at most this long; the rest is idle (B6). */
 export const WAIT_CAP_MS = 2 * 60 * 60 * 1000;
 /** The agent tag's phase, as the phase of the intent it belongs to (B2). */
-const AGENT_PHASE = { implement: 'build', rework: 'review', review: 'review' };
+const AGENT_PHASE = { implement: 'build', rework: 'review', review: 'review', spec: 'spec', plan: 'plan' };
 
 const ZERO = () => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
 
@@ -161,9 +161,9 @@ export function usageLines(text) {
   return { turns, firstTs, lastTs, skipped };
 }
 
-/** `{id, phase}` for a description starting `§<id> implement|rework|review`, else null (unattributed). */
+/** `{id, phase}` for a description starting `§<id> implement|rework|review|spec|plan`, else null (unattributed). */
 export function agentTag(description) {
-  const m = /^§(\d+)\s+(implement|rework|review)\b/.exec(String(description ?? '').trim());
+  const m = /^§(\d+)\s+(implement|rework|review|spec|plan)\b/.exec(String(description ?? '').trim());
   return m ? { id: Number(m[1]), phase: m[2] } : null;
 }
 

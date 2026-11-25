@@ -19,6 +19,29 @@ Claude Code's plan mode, and it writes `plan.md` in the intent's folder.
 Stamp: `<!-- generated-by: product-advice-agent/build-plan@0.2.0 -->` as the first line
 of `plan.md`.
 
+## Who drafts
+
+The coordinator does not read the codebase inline to draft plan.md. It spawns
+`product-advice-agent-plan` with the `Agent` tool and a description beginning `§<id> plan`
+(that prefix is what `npm run stats` books to the plan phase). The brief is
+the intent id, the `main` hash and what is already known (the owner's answers,
+prior decisions). The hand-off rules (one file, scratch folder, no commit, no
+gate, the reply) are in that agent's definition, `.claude/agents/product-advice-agent-plan.md`;
+this file says how to draft. The agent runs on Sonnet; pass a `model` for a plan that must judge a self-contradicting intent.
+
+Before spawning, run `git status --short` and keep the output (the snapshot):
+the checkout may already hold unrelated untracked files, and a new file does
+not show in `git diff --stat`. After the agent returns, run
+`git status --short` and `git diff --stat` and compare with the snapshot.
+Confirm that only `plan.md` is new or changed and that `metadata.yml` is
+untouched; if anything else changed, discard it and report. Then read the draft as the steps
+below say.
+
+The check is a backstop, not a fence: the agent's `Bash` can write anywhere, and
+writes to gitignored paths (`.env`, `CLAUDE.local.md`) or outside the checkout
+do not show in `git status`, and neither does a further change to a file that was
+already dirty or untracked when the snapshot was taken.
+
 ## 1. Check the preconditions, and stop if one fails
 
 Read `intents/<id>-*/metadata.yml`. Stop and say which is missing if:
@@ -38,7 +61,7 @@ Read `intents/<id>-*/metadata.yml`. Stop and say which is missing if:
 
 A question at plan time means the spec (or, for a fix or refactor, the
 intent) is incomplete. Report it and stop; do not decide a design point
-here.
+here. When the agent does the drafting, this stop is its `INCOMPLETE:` reply.
 
 ## 4. Write `plan.md` from the template
 
@@ -68,6 +91,7 @@ here.
 
 If the plan found a hard prerequisite (this intent cannot be built correctly
 until another is merged), add it to `blocked_by:` in `metadata.yml` as
-`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here.
+`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here (the agent reports a prerequisite; the coordinator writes
+`blocked_by:`).
 Name the folder, the weak points, and the next step: "approve by setting
 `plan_approved: <date>` in metadata.yml, or say yes".
