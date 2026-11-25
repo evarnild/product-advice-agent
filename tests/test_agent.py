@@ -217,6 +217,23 @@ def test_text_on_the_last_turn_is_kept_without_a_search():
     assert len(fake.requests) == 5
 
 
+def test_text_on_turn_four_is_asked_and_text_on_turn_five_is_returned():
+    fake = ScriptedModelClient([call({}, name="nope")] * 3 + [final("x"), final("y")])
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "y"
+    assert result.turns == 5
+    assert not result.fallback
+    assert len(fake.requests) == 5
+    assert fake.requests[4].messages[-1] == Message("user", SEARCH_FIRST_TEXT)
+
+
+def test_a_search_keeps_counting_after_later_tool_turns():
+    fake = ScriptedModelClient([call({"category": "phone"}), call({}, name="nope"), final("done")])
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "done"
+    assert len(fake.requests) == 3
+
+
 def test_the_request_shows_as_one_more_generation_in_the_trace():
     tracer = RecordingTracer()
     fake = ScriptedModelClient(
