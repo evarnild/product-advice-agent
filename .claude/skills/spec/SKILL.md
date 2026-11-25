@@ -38,7 +38,8 @@ below say.
 
 The check is a backstop, not a fence: the agent's `Bash` can write anywhere, and
 writes to gitignored paths (`.env`, `CLAUDE.local.md`) or outside the checkout
-do not show in `git status`.
+do not show in `git status`, and neither does a further change to a file that was
+already dirty or untracked when the snapshot was taken.
 
 ## 1. Check the preconditions, and stop if one fails
 
