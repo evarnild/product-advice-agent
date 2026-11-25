@@ -1,5 +1,5 @@
 {
-  "source": "20261124T215703Z-ollama.json",
+  "source": "20261125T091237Z-ollama.json",
   "provider": "ollama",
   "model": "qwen3:8b",
   "cases_sha256": "90a614f9697db20aa9c2d1f4c4b504698fb79904ad59ada68ecc3f7fe3ab038a",
@@ -13,7 +13,7 @@
     "video-editing-laptop": "PASS",
     "no-laptop-under-200": "PASS",
     "basic-phone": "PASS",
-    "gaming-monitor": "FAIL",
+    "gaming-monitor": "PASS",
     "drawing-tablet": "PASS",
     "gps-watch": "PASS",
     "waterproof-camera": "PASS",
