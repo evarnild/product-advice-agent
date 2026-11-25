@@ -261,3 +261,23 @@ Divergences:
   "tablet", "max_price": 200}` matches no row, so the expected rows are the
   B11 fallback rows (the plan's "compare to `search_products`" gives `[]` for
   that search); the test compares to the filter-only search.
+
+### 2026-11-25 — rework, review round 1
+
+Owner decision (a): a named product that passes every filter but is cut by
+`limit` is not appended (the plan's behaviour). No behaviour change.
+
+Shipped: two tests in `tests/test_agent.py`,
+`test_named_product_failing_only_min_price_is_appended` and
+`test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended`
+(pins the decision: 10 rows, no P-017, no `filters_failed`); a one-line
+comment on the defensive `shown` guard in `agent.py`.
+
+Count correction: the earlier entry's "12" is wrong. The first round added 13
+tests to `tests/test_agent.py` and 5 to `tests/test_catalogue.py`; this rework
+adds 2 more to `tests/test_agent.py` (15 in all). Suite: 957 passed.
+
+Mutants (agent.py backed up by copy, restored by copy):
+- `filters["min_price"]` -> `None`: killed by the min_price test (1 failed).
+- `if failed and p.id not in shown` -> `if p.id not in shown`: killed by the
+  limit test (1 failed).

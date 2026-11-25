@@ -614,3 +614,18 @@ def test_tool_description_explains_filters_failed():
     desc = " ".join(search_tool(NAMED).spec.description.split())
     assert "A row with filters_failed is a product the customer named" in desc
     assert "do not offer it as a fit" in desc
+
+
+def test_named_product_failing_only_min_price_is_appended():
+    rows = _real({"keywords": ["Sonavo Quiet Pro"], "min_price": 200})
+    p = _last_named(rows, "P-004")
+    assert p["filters_failed"] == ["min_price"]
+    assert (p["category"], p["price_eur"], p["in_stock"]) == ("headphones", 159, False)
+
+
+def test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended():
+    # Decision (a) of §30: only products the filters drop are added, not ones `limit` cuts.
+    rows = _real({"keywords": ["Norvik Fold", "phone", "camera"]})
+    assert len(rows) == 10
+    assert "P-017" not in [r["id"] for r in rows]
+    assert all("filters_failed" not in r for r in rows)

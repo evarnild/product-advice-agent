@@ -141,6 +141,7 @@ def search_tool(catalogue: Sequence[Product]) -> Tool:
         # §30: a product the customer named by its whole name must not vanish because the
         # category, price or stock filter drops it. It follows the filter rows, marked with
         # the filters it fails, and does not count towards `limit`.
+        # Defensive: a product that fails a filter is never in `found`; kept so a row cannot repeat.
         shown = {p.id for p in found}
         for p in named_products(catalogue, keywords):
             failed = failed_filters(
