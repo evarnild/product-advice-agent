@@ -7,12 +7,12 @@ title: A very simple chat UI with multi-turn conversation
 review_tier: reviewed    # a new user-facing surface and the core agent loop (by meaning)
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 37 /auto 37"
 spec_accepted: 2026-11-25 by-agent    # owner: "accept spec of 37" (the spec as written, with its defaults)
-plan_approved:
+plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 37" (auto_authorized 2026-11-25)
 live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 37" (resumed)
 auto_round:
-auto_stopped:
+auto_stopped: blocked by 33
 follows_up:
 links:
   - intents/1-stack-and-skeleton    listed "a UI" as a later intent; the constraints (local data, autonomy)
