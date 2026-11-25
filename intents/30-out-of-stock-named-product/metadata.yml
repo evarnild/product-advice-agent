@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35" (resumed)
 auto_round: 1
-auto_stopped:
+auto_stopped: decision needed
 follows_up:
 links:
   - intents/22-search-that-scales    B11: the keyword fallback and keywords_matched, in the tool
