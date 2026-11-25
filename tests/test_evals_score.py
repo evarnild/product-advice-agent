@@ -1,8 +1,13 @@
+import inspect
+import json
+from pathlib import Path
+
 import pytest
 
 from advisor.catalogue import load_catalogue
+from advisor.evals import score as score_module
 from advisor.evals.cases import Case
-from advisor.evals.score import cited_ids, price_mentioned, score
+from advisor.evals.score import cited_ids, invented_names, price_mentioned, score
 from advisor.guardrails import REFUSAL_TEXT
 
 CATALOGUE = load_catalogue()
@@ -116,10 +121,10 @@ def test_expected_and_forbidden():
 
 def test_checks_only_apply_when_the_case_asks():
     names = [c.name for c in score(Case("c", "q"), GOOD, [], CATALOGUE)]
-    assert names == ["grounded", "names", "prices", "stock"]
+    assert names == ["grounded", "names", "invented", "prices", "stock"]
     with_search = Case("c", "q", expect_search={"category": "laptop"})
     names = [c.name for c in score(with_search, GOOD, [], CATALOGUE)]
-    assert names == ["grounded", "names", "prices", "stock", "search"]
+    assert names == ["grounded", "names", "invented", "prices", "stock", "search"]
 
 
 def test_declines():
@@ -283,9 +288,9 @@ def test_unknown_cited_ids_are_ignored_by_both_property_checks():
 
 def test_property_checks_appear_only_with_their_property():
     one = [c.name for c in score(prop_case("cites_a_match"), GOOD, [], CATALOGUE)]
-    assert one == ["grounded", "names", "prices", "stock", "search", "a-match"]
+    assert one == ["grounded", "names", "invented", "prices", "stock", "search", "a-match"]
     other = [c.name for c in score(prop_case("cites_only_matches"), GOOD, [], CATALOGUE)]
-    assert other == ["grounded", "names", "prices", "stock", "search", "only-matches"]
+    assert other == ["grounded", "names", "invented", "prices", "stock", "search", "only-matches"]
 
 
 # --- names: a cited id next to another product's name (§25) ---
@@ -434,3 +439,200 @@ def test_names_do_not_fold_spaces():  # §32 T11
     assert not names_check("Auralis Home 1 (P-009)").ok
     # Joined, it is not the name "Auralis Home 1" (which `_norm` still keeps apart).
     assert names_check("Auralis Home1 (P-009)").ok
+
+
+# --- invented: a name the catalogue lacks next to a cited id (§35) ---
+
+
+def inv(answer):
+    return invented_names(answer, {p.id: p for p in CATALOGUE})
+
+
+def runs(answer):
+    return [(i, run) for i, _own, run in inv(answer)]
+
+
+def invented_check(answer):
+    return {c.name: c for c in score(Case("c", "q"), answer, [], CATALOGUE)}["invented"]
+
+
+def test_invented_the_four_intent_lines_fail():  # T1
+    assert inv("1. **Acme Foldable (P-004)** - 399.00") == [
+        ("P-004", "Sonavo Quiet Pro", "Acme Foldable")
+    ]
+    assert runs("2. **TechFold Pro (P-007)** - 429.00") == [("P-007", "TechFold Pro")]
+    assert runs("- **Aurelis Home 2 (P-012)** - 299.00") == [("P-012", "Aurelis Home 2")]
+    assert runs("- **Aurelis Home 3 (P-013)** - 349.00") == [("P-013", "Aurelis Home 3")]
+
+
+def test_invented_reasons():  # T2
+    got = invented_check("- Acme Foldable (P-004)\n- TechFold Pro (P-007)")
+    assert not got.ok
+    assert got.reason == (
+        "P-004 is the Sonavo Quiet Pro, cited as Acme Foldable; "
+        "P-007 is the Norvik Slate 14, cited as TechFold Pro"
+    )
+    twice = invented_check("Acme Foldable (P-004) and Zorp Max (P-004)")
+    assert twice.reason == "P-004 is the Sonavo Quiet Pro, cited as Acme Foldable"
+
+
+def test_invented_brand_with_new_model_and_other_makers_product_fail():  # T3
+    assert runs("Norvik Flex (P-123)") == [("P-123", "Norvik Flex")]
+    assert runs("Dell XPS 15 (P-009)") == [("P-009", "Dell XPS 15")]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Auralis Home 1 (P-032)",
+        "Kestrel Calm 46 (P-123)",
+        "auralis-home 1 (P-032)",
+        "AURALIS HOME 1 (P-032)",
+        "Go 13 (P-009)",
+        "a Kestrel model (P-123)",
+        "P-009 costs 649.",
+        "Zephra (P-013)",
+    ],
+)
+def test_invented_passes(answer):  # T4
+    assert inv(answer) == []
+
+
+def test_invented_whole_catalogue_name_is_not_invented():  # T5
+    assert inv("Zephra One (P-012)") == []
+
+
+def test_invented_tail_is_whole_words():  # T6
+    assert inv("Slate 14 (P-007)") == []
+    assert runs("Pelagic Go (P-009)") == [("P-009", "Pelagic Go")]
+
+
+def test_invented_misspelling_only_next_to_its_own_id():  # T7
+    assert inv("Aurelis Home 1 (P-032)") == []
+    assert runs("Aurelis Home 1 (P-012)") == [("P-012", "Aurelis Home 1")]
+
+
+def test_invented_digits_must_equal():  # T8
+    assert runs("Aurelis Home 2 (P-032)") == [("P-032", "Aurelis Home 2")]
+    assert inv("Aurelis Home 1 (P-032)") == []
+
+
+def test_invented_threshold_pinned_both_sides():  # T9
+    assert score_module._SIMILARITY == 0.85
+    assert inv("Aurelis Hume 1 (P-032)") == []
+    assert runs("Aurelis Hum 1 (P-032)") == [("P-032", "Aurelis Hum 1")]
+
+
+def test_invented_slot_edges():  # T10
+    assert inv("I recommend the Kestrel Air Plus (P-005)") == []
+    assert runs("I recommend the Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]
+    assert inv("The Norvik Fold (P-017)") == []
+    assert runs("The Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]
+    assert inv("It has GPS. The Auralis Tick S (P-025)") == []
+    assert runs("1. Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]
+    assert inv("**Price:** (P-004)") == []
+    six = runs("Alpha Beta Gamma Delta Epsilon Zeta (P-004)")
+    assert six == [("P-004", "Beta Gamma Delta Epsilon Zeta")]
+
+
+def test_invented_what_is_not_read():  # T11
+    assert inv("P-004 - Acme Foldable") == []
+    assert inv("| Acme Foldable | P-004 |") == []
+    assert inv("Acme Foldable\n(P-004)") == []
+    assert inv("Acme Foldable\nP-004") == []
+    assert [i for i, _ in runs("Acme Foldable P-007 then P-004")] == ["P-007"]
+
+
+def test_invented_markdown_and_punctuation():  # T12
+    assert inv("[Acme Foldable](P-004)") == []
+    assert runs("**Acme Foldable** (P-004)") == [("P-004", "Acme Foldable")]
+    assert runs('"Acme Foldable" (P-004)') == [("P-004", "Acme Foldable")]
+
+
+def test_invented_unknown_id_and_no_id():  # T13
+    got = {c.name: c.ok for c in score(Case("c", "q"), "Acme Foldable (P-999)", [], CATALOGUE)}
+    assert got["invented"] and not got["grounded"]
+    assert invented_check("No ids here, Acme Foldable.").ok
+
+
+def test_invented_is_independent_of_names():  # T14
+    got = {c.name: c.ok for c in score(Case("c", "q"), "Auralis Home 1 (P-009)", [], CATALOGUE)}
+    assert not got["names"] and got["invented"]
+    both = {
+        c.name: c.ok
+        for c in score(
+            Case("c", "q"), "Acme Foldable (P-004), not the Auralis Home 1", [], CATALOGUE
+        )
+    }
+    assert not both["names"] and not both["invented"]
+
+
+def test_invented_comes_right_after_names_for_every_case():  # T15
+    full = Case(
+        "c",
+        "q",
+        expect_ids=("P-001",),
+        must_decline=True,
+        expect_properties=("cites_a_match",),
+        expect_search={"category": "laptop"},
+    )
+    got = [c.name for c in score(full, GOOD, [], CATALOGUE)]
+    assert got[:3] == ["grounded", "names", "invented"]
+
+
+def test_invented_ok_reason():  # T16
+    got = invented_check(GOOD)
+    assert got.ok and got.reason == "no invented product name next to a cited id"
+
+
+def test_invented_names_is_pure_and_deterministic():  # T17
+    assert list(inspect.signature(invented_names).parameters) == ["answer", "by_id"]
+    text = "Acme Foldable (P-004)"
+    assert inv(text) == inv(text)
+
+
+def test_invented_literal_pair():  # T20
+    assert invented_check("The Auralis Calm 300 (P-001) costs 189 euros.").ok
+    assert not invented_check("The Auralis Calm 301 Max (P-001) costs 189 euros.").ok
+
+
+REPLAY = json.loads(
+    (Path(__file__).parent / "fixtures" / "invented_replay.json").read_text("utf-8")
+)
+
+
+def test_invented_replay_flagged_answers():  # T18
+    by_id = {p.id: p for p in CATALOGUE}
+    known = {p.name.lower().replace("-", " ") for p in CATALOGUE}
+    assert len(REPLAY["flagged"]) == 63
+    assert sum(len(x["expected"]) for x in REPLAY["flagged"]) == 112
+    for x in REPLAY["flagged"]:
+        got = [[i, run] for i, _own, run in invented_names(x["answer"], by_id)]
+        assert got == x["expected"], (x["report"], x["case"])
+        assert all(run.lower().replace("-", " ") not in known for _, run in got)
+
+
+def test_invented_replay_clean_answers():  # T19
+    by_id = {p.id: p for p in CATALOGUE}
+    assert len(REPLAY["clean"]) == 51
+    for x in REPLAY["clean"]:
+        assert invented_names(x["answer"], by_id) == [], (x["report"], x["case"])
+
+
+def test_invented_lead_in_before_the_own_name_passes():  # finding 1
+    assert inv("So: Recommend Auralis Home 1 (P-032)") == []
+    assert runs("So: Recommend Acme Home 1 (P-032)") == [("P-032", "Recommend Acme Home 1")]
+    assert runs("Recommend Xauralis Home 1 (P-032)") == [("P-032", "Recommend Xauralis Home 1")]
+    assert runs("Recommend Auralis Home 1 Max (P-032)") == [
+        ("P-032", "Recommend Auralis Home 1 Max")
+    ]
+
+
+def test_invented_more_slot_edges():  # review round 1, findings 2 to 5
+    assert [i for i, _ in runs("Acme Foldable P-007 Zorp P-004")] == ["P-007"]
+    assert inv("1 Kestrel Air Plus (P-005)") == []
+    assert runs("1 Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]
+    assert runs("Ic Go 13 (P-009)") == [("P-009", "Ic Go 13")]
+    assert runs("Acme Foldable [P-004]") == [("P-004", "Acme Foldable")]
+    assert runs("Acme Foldable **P-004**") == [("P-004", "Acme Foldable")]
+    assert runs('Acme Foldable "P-004"') == [("P-004", "Acme Foldable")]

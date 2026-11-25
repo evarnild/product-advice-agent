@@ -266,3 +266,38 @@ and T18-T19.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 - build (subtasks 1-5)
+
+Commits: see `git log` (97b0076 helper, check, tests, fixture; then the README, simplification and hand-over commit).
+
+Shipped: `invented_names` and `_SIMILARITY`/`_MAX_SLOT` in `score.py`, the `invented` check right after `names`, the four name lists updated, T1-T20 in `tests/test_evals_score.py`, `tests/fixtures/invented_replay.json`, the README bullet. `npm run verify` green: 972 pytest, 490 kit tests. Mutants killed by the tests: similarity 0.90 and 0.80, cap 6, no digit rule, no own-name tail. No eval run (the coordinator's).
+
+Divergences:
+- Subtasks 1 and 2 were committed together (the check is wired in the same commit as the helper).
+- `fold` from §32 exists, but `_norm` is unchanged and the helper uses `_norm` as the plan said. Line numbers shifted; no effect.
+- The word-stop set `. ! ? : ; ,` is subsumed by "a word must end in a letter or digit", which also handles `](`. The set was dropped (no behaviour change; the mutant that removed it survived for that reason).
+- Replay counts differ from the spec's 41 answers / 75 pairs. On the 35 reports now in the main checkout (4 are newer than the spec's) the helper flags 64 answers / 113 pairs in 16 reports. All 112 pairs but one are names no catalogue has (granite3.3 run `20261124T175356Z` gives 32 answers). The fixture holds 63 answers / 112 pairs. The one left out is a false positive: `20261124T165359Z-ollama.json`, `voice-speaker`, leaked reasoning text "So: Recommend Auralis Home 1 (P-032)" gives the run "Recommend Auralis Home 1" (a capitalised sentence-initial verb joins the own name). The spec's B1/B2 do not drop a capitalised lead-in verb; fixing it needs a decision. The fixture counts (63, 112, 50 clean) are asserted in T18-T19.
+
+### 2026-11-25 - rework, round 1
+
+Commit: see `git log` (the commit after 81e5689).
+
+Owner decision on review finding 1, option (a): in B2 a run that ends in the cited id's own name in whole words (`shown.endswith(" " + own)`) is not invented, so "Recommend Auralis Home 1 (P-032)" passes. Added to `invented_names`, its docstring and the README bullet. "So: Recommend Auralis Home 1 (P-032)" is in `clean` in the fixture (51 clean answers; flagged stay 63 / 112); the fixture note now says what `clean` holds (all of `20261124T192816Z-anthropic.json` plus that one answer, shortened). Literal tests: it passes; "So: Recommend Acme Home 1 (P-032)" is still invented.
+
+Mechanical items: findings 2 to 5 as tests (`test_invented_more_slot_edges`), the section sign restored in both places in `score.py` (no U+FFFD left in the diff), the "word must end in a letter or digit" rule stated in the docstring and the README (finding 7).
+
+Correction to the earlier entry: "all 112 pairs but one" should read: the helper flags 113 pairs on 35 reports, of which 112 are real inventions.
+
+Mutants (copy-backup, apply, full suite with `-x`, restore by copy; each fails a test): remove the new ends-with-own-name clause (fails); `prev_id_bound_off` (fails); `listnum_off` (fails); own-tail by character suffix (fails); `_SLOT_TRAIL` without `[` (fails); without `*` (fails); without the quotes (fails).
+
+Divergence: the review's `assert inv("1 Kestrel Air Plus (P-005)") == []` no longer kills `listnum_off` once the ends-with-own-name rule exists (the run passes either way). I kept it and added `runs("1 Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]`, which does.
+
+### 2026-11-25 - rework, round 2
+
+Commit: see `git log` (the commit after 99bd414). Tests, the fixture note, the README and this entry only; `score.py` is unchanged.
+
+- Two tests in `test_invented_lead_in_before_the_own_name_passes`: "Recommend Xauralis Home 1 (P-032)" (whole words) and "Recommend Auralis Home 1 Max (P-032)" (ends in). Mutants by copy-backup, full suite, restored by copy: `shown.endswith(own)` fails a test; `(" " + own) in shown` fails a test.
+- README: the limitation that a word put before the real name ("Norvik Auralis Home 1 (P-032)") passes (owner's decision a); the non-alphanumeric ending characters now listed as in the docstring (`)`, `+`, `%`, `-`).
+- Fixture note: the clean answer was shortened and the euro sign written as "euros"; the original is quoted.
+- Correction to the round 1 entry: I said the README lines were rewrapped. They are not: README.md:175 is still about 152 characters. The kit test that was red in my first round 1 verify was not reproduced (the reviewer got 490/490 in 4 runs) and I did not keep its output.

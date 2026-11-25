@@ -166,6 +166,18 @@ asks):
   catalogue product and not the cited one. No name nearby passes (longest
   name wins, case and hyphens ignored). Its reason reads "P-009 is the
   Pelagic Go 13, cited as Auralis Home 1".
+- **invented**: a cited id is not written under a name the catalogue lacks.
+  It reads the name slot: up to five capitalised words (a number counts)
+  right before a known id on the same line, after any lead-in word, list
+  number, leading "The"/"A"/"An" or sentence break, never past another id.
+  It passes with fewer than two words, a catalogue name (that is `names`'
+  business), the cited product's own name, a whole-word tail of it ("Go
+  13"), a run ending in it (a capitalised lead-in such as "Recommend Auralis Home 1"), or a near spelling of it with the same numbers (similarity 0.85).
+  A word that does not end in a letter or digit ("GPS.", "Price:", a name
+  ending in `)`, `+`, `%` or `-`) ends the slot. Anything else fails, including a catalogue brand with a made-up model.
+  Names after the id, in table cells or with no id are not read, and a
+  one-word name is missed. A word put before the real name ("Norvik Auralis Home 1 (P-032)") passes, because the run then ends in the id's own name. Its reason reads "P-012 is the Tolvane Chrome 11,
+  cited as Aurelis Home 2".
 - **prices**: each cited product's price appears as a number (not which
   product it sits next to; the reason names each product); a cited
   out-of-stock product needs none when the answer says "out of stock".

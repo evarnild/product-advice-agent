@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -88,6 +89,80 @@ def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, 
     return out
 
 
+# The name slot (§35): the capitalised words right before a cited id are the
+# name the answer gives it. Names with no id beside them are not read.
+_SIMILARITY = 0.85
+_MAX_SLOT = 5
+_SLOT_TRAIL = " \t([*\"'“”‘’"
+_WORD_LEAD = "*([_\"'“‘"
+
+
+def _slot_run(segment: str) -> list[str]:
+    """The name words at the end of `segment` (text before an id, one line)."""
+    words = segment.rstrip(_SLOT_TRAIL).split()
+    taken: list[str] = []
+    for raw in reversed(words):
+        word = raw.rstrip("*\"'”’")
+        # A word not ending in a letter or digit ("GPS.", "Price:", "](") ends the run.
+        if not word or not word[-1].isalnum():
+            break
+        head = word.lstrip(_WORD_LEAD)
+        if not head or not (head[0].isupper() or head[0].isdigit()):
+            break
+        taken.append(word.lstrip(_WORD_LEAD))
+        if len(taken) == _MAX_SLOT:
+            break
+    taken.reverse()
+    if len(taken) > 1 and taken[0].lower() in {"the", "a", "an"}:
+        taken.pop(0)
+    if len(taken) > 1 and taken[0].isdigit():
+        taken.pop(0)
+    return taken
+
+
+def invented_names(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, str]]:
+    """Cited known ids written under a name the catalogue does not have (§35).
+
+    For each occurrence of a known id the name slot is the run of up to five
+    words, each starting with a capital letter or a digit, directly before it
+    on the same line (only spaces, `(`, bold marks and quotes between), after
+    any lead-in word, list number or sentence break, and never reaching back
+    past another id. A word that does not end in a letter or digit ("GPS.",
+    "Price:", a name ending in `)`, `+`, `%` or `-`) ends the run.
+    The occurrence is fine when the run is shorter than two words, is a whole
+    catalogue name, is the cited product's own name, a tail of it in whole
+    words, or ends in it in whole words (a capitalised lead-in such as
+    "Recommend Auralis Home 1"), or is a near spelling of the cited name with
+    the same numbers (similarity at least `_SIMILARITY`). Otherwise it is
+    invented. Returns `(id, own name, run as written)`, once per id, in order
+    of first occurrence. Pure: no question, no model.
+    """
+    names = {_norm(p.name) for p in by_id.values()}
+    ids = list(_ID_RE.finditer(answer))
+    out: list[tuple[str, str, str]] = []
+    seen: set[str] = set()
+    for k, m in enumerate(ids):
+        pid = m.group()
+        if pid not in by_id or pid in seen:
+            continue
+        lo = answer.rfind("\n", 0, m.start()) + 1
+        if k > 0:
+            lo = max(lo, ids[k - 1].end())
+        words = _slot_run(answer[lo : m.start()])
+        if len(words) < 2:
+            continue
+        run = " ".join(words)
+        shown, own = _norm(run), _norm(by_id[pid].name)
+        if shown in names or shown == own or own.endswith(" " + shown) or shown.endswith(" " + own):
+            continue
+        digits = re.findall(r"\d+", run) == re.findall(r"\d+", by_id[pid].name)
+        if digits and difflib.SequenceMatcher(None, shown, own).ratio() >= _SIMILARITY:
+            continue
+        seen.add(pid)
+        out.append((pid, by_id[pid].name, run))
+    return out
+
+
 def price_mentioned(answer: str, price: float) -> bool:
     """The price appears as a number: a whole price as "189", "189.00" or "189,00";
     a price with cents only with its two decimals. A price of 1000 or more also
@@ -169,6 +244,17 @@ def score(
             "; ".join(f"{i} is the {own}, cited as {', '.join(got)}" for i, own, got in wrong)
             if wrong
             else "every cited id sits with its own name or none",
+        )
+    )
+
+    made_up = invented_names(answer, by_id)
+    checks.append(
+        Check(
+            "invented",
+            not made_up,
+            "; ".join(f"{i} is the {own}, cited as {run}" for i, own, run in made_up)
+            if made_up
+            else "no invented product name next to a cited id",
         )
     )
 
