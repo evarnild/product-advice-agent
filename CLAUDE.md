@@ -64,7 +64,7 @@ rules below or with `intents/README.md` and `REVIEW-POLICY.md`, those win.
 - The coordinator drafts a spec or plan by spawning `product-advice-agent-spec`
   or `product-advice-agent-plan` (descriptions `§<id> spec` / `§<id> plan`), not by reading the codebase inline, and
   keeps every gate. Each agent writes one file and commits nothing; the
-  coordinator checks `git status --short` and `git diff --stat` after it.
+  coordinator compares `git status --short` before and after it (and `git diff --stat`).
 - `/auto <id>` (coordinator only) carries one accepted intent through the
   steps above: spec (a feature stops once, for the owner's `spec_accepted`),
   plan, spawn, implement, review, and rework, for at most three review

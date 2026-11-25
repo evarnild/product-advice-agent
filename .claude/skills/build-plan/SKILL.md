@@ -37,6 +37,10 @@ Confirm that only `plan.md` is new or changed and that `metadata.yml` is
 untouched; if anything else changed, discard it and report. Then read the draft as the steps
 below say.
 
+The check is a backstop, not a fence: the agent's `Bash` can write anywhere, and
+writes to gitignored paths (`.env`, `CLAUDE.local.md`) or outside the checkout
+do not show in `git status`.
+
 ## 1. Check the preconditions, and stop if one fails
 
 Read `intents/<id>-*/metadata.yml`. Stop and say which is missing if:

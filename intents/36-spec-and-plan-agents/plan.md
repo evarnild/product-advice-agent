@@ -426,3 +426,25 @@ this line is the implementer's to edit. -->
   Codex and confirm that `sandbox_mode = "workspace-write"` is accepted in an
   agent file and lets the agent write its one file; if rejected, use the
   plan's fallback (omit the line and drop the assertion).
+
+### 2026-11-25 — rework, review round 2
+
+- Commit: see `git log` (one commit after `8a472c6`).
+- Findings 1 to 4 done, text only (no behaviour change in the agent files):
+  skills pin `Before spawning, run`, the diff-and-compare sentence and
+  `discard it and report`; `/auto` counts `snapshot before`, `comparison after`
+  and `git diff --stat` comparison after (2 each), and pins the section 10 prefix
+  list; the forbidden-git phrase joins `PHRASES` (all four agent files);
+  `intents/README.md` pins both phrases; the backstop-not-a-fence sentence is in
+  `/spec` and `/build-plan`; `CLAUDE.md` and `AGENTS.md` say the coordinator
+  compares `git status --short` before and after (and `git diff --stat`). The AC3
+  regex is now `/\bEdit\b|MultiEdit|NotebookEdit/` (finding 5, optional).
+- Tests: `kit-texts` and `stats-lib` together 83 of 83 (19 and 64; assertions
+  added, no new test names). Control-byte scan of every changed file: clean.
+- Mutants hand-run, restored by copy: all killed: snapshot clause, compare
+  sentence, discard sentence in both skills; the `/auto` step 2 and 3 snapshot and
+  comparison clauses; the section 10 list (drop `plan`, drop `spec` and `plan`);
+  the git list in each of the four agent files; both README phrases;
+  `MultiEdit` in a tools line. Two rounds of survivors: the "`git diff --stat` and"
+  clause in both skills and the `/auto` diff comparisons survived the first pins
+  (the neighbouring words stayed) and were killed after pinning the whole clause.

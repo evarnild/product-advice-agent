@@ -108,7 +108,7 @@ describe('kit texts: spec and plan agents (§36)', () => {
   const kindOf = (f) => (f.includes('-spec.') ? 'spec' : 'plan');
   const SKILL_OF = { spec: '.claude/skills/spec/SKILL.md', plan: '.claude/skills/build-plan/SKILL.md' };
   const STAMP = { spec: 'product-advice-agent/spec@0.2.0', plan: 'product-advice-agent/build-plan@0.2.0' };
-  const PHRASES = ['Write exactly one file', 'private folder with a unique name', 'Never commit', 'Never edit metadata.yml', 'Never record a gate', 'INCOMPLETE:', '250 words', 'Never decide a design point', 'options and a recommendation', 'the coordinator records `blocked_by:`'];
+  const PHRASES = ['Write exactly one file', 'private folder with a unique name', 'Never commit', 'Never edit metadata.yml', 'Never record a gate', 'INCOMPLETE:', '250 words', 'Never decide a design point', 'options and a recommendation', 'the coordinator records `blocked_by:`', '`git switch`, `git merge` or `git push`'];
 
   it('AC1: each Claude file has name, description and tools in its frontmatter', () => {
     for (const f of CLAUDE_AGENTS) {
@@ -145,7 +145,7 @@ describe('kit texts: spec and plan agents (§36)', () => {
   it('AC3: Claude agents have Write and Bash, no Edit, and run on Sonnet', () => {
     for (const f of CLAUDE_AGENTS) {
       const tools = /^tools: (.*)$/m.exec(read(f))[1];
-      expect(/\bEdit\b/.test(tools), f).toBe(false);
+      expect(/\bEdit\b|MultiEdit|NotebookEdit/.test(tools), f).toBe(false);
       expect(tools, f).toContain('Write');
       expect(tools, f).toContain('Bash');
       expect(read(f), f).toMatch(/^model: sonnet\s*$/m);
@@ -157,9 +157,11 @@ describe('kit texts: spec and plan agents (§36)', () => {
   it('AC4: the skills and guides name the agents and the coordinator check', () => {
     for (const [skill, agent, tag] of [['.claude/skills/spec/SKILL.md', 'product-advice-agent-spec', '§<id> spec'], ['.claude/skills/build-plan/SKILL.md', 'product-advice-agent-plan', '§<id> plan']]) {
       const text = read(skill);
-      for (const phrase of [agent, tag, 'git status --short', 'git diff --stat', 'snapshot', 'Confirm that only', 'pass a `model`']) expect(text, `${skill}: ${phrase}`).toContain(phrase);
+      for (const phrase of [agent, tag, 'git status --short', 'git diff --stat', 'Before spawning, run `git status --short`', 'and `git diff --stat` and compare with the snapshot', 'discard it and report', 'snapshot', 'Confirm that only', 'pass a `model`']) expect(text, `${skill}: ${phrase}`).toContain(phrase);
     }
-    for (const phrase of ['§<id> spec', '§<id> plan', 'git status --short', 'git diff --stat', 'INCOMPLETE:', 'snapshot', 'including its single question round (description `§<id> spec`', '`§<id> plan`; take the', '(or replies `INCOMPLETE:`)', 'If the agent replies `INCOMPLETE:`']) expect(read(AUTO), `auto: ${phrase}`).toContain(phrase);
+    for (const phrase of ['§<id> spec', '§<id> plan', 'git status --short', 'git diff --stat', 'INCOMPLETE:', 'snapshot', 'including its single question round (description `§<id> spec`', '`§<id> plan`; take the', '(or replies `INCOMPLETE:`)', 'If the agent replies `INCOMPLETE:`', '`§<id> review`, `§<id> spec` or `§<id> plan`']) expect(read(AUTO), `auto: ${phrase}`).toContain(phrase);
+    for (const phrase of ['snapshot before', 'comparison after', '`git diff --stat` comparison after']) expect(read(AUTO).split(phrase).length - 1, `auto: ${phrase}`).toBe(2);
+    for (const phrase of ['except the spec and plan subagents', '**The spec and plan agents**']) expect(read('intents/README.md'), phrase).toContain(phrase);
     for (const f of [AUTO, 'CLAUDE.md']) for (const name of ['product-advice-agent-spec', 'product-advice-agent-plan']) expect(read(f), `${f}: ${name}`).toContain(name);
     for (const name of ['product_advice_agent_spec', 'product_advice_agent_plan']) expect(read('AGENTS.md'), name).toContain(name);
   });
