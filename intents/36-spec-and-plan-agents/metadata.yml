@@ -1,0 +1,19 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 36
+slug: spec-and-plan-agents
+type: feature
+status: draft
+title: Dedicated spec and plan agents on Sonnet
+review_tier: reviewed    # .claude/agents/**, .codex/agents/**, .claude/skills/** are Reviewed by path
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/19-intent-stats    stats attribute agent tokens by the description prefix
+blocked_by:
