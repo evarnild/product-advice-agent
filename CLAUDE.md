@@ -169,7 +169,8 @@ Langfuse stack in `infra/langfuse/`.
   `CORE_CODE`; its `main` reads and writes the file, so it is I/O); `python -m advisor.catalogue_build`
   rewrites the file, `--check` compares (a test pins the file to a rebuild).
 - `agent.py`: `run_agent` (the tool loop, at most 5 model turns, error tool
-  results for bad calls, fixed fallback answer) and `answer_question` (input
+  results for bad calls, fixed fallback answer; asks once to search when the
+  model answers in text before any `search_products` call, §31) and `answer_question` (input
   guardrail, agent, output guardrail, one trace). Pure orchestration over a
   `ModelClient` and tool functions.
 - `guardrails.py`: `check_input` / `check_output`, the seam (both allow in
