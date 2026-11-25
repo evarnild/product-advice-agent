@@ -244,3 +244,12 @@ written before the code in their subtask).
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 - subtasks 1 to 3 (implementer)
+
+- Commit: see `git log` on `fix/32-heartrate-joined-words` (one commit for code, tests and docs; the subtasks share it).
+- Shipped: `catalogue.fold`; `keyword_set` and `keywords_matched` on it (blank `""` dropped); `cases.fits` and `_expected_results` and `score._call_satisfies` on `fold`; `_norm` untouched and still used by `misnamed`. CLAUDE.md line updated. Tests T1 to T11 added.
+- Failing-first: before the code, 9 of the new tests failed (T1, T2, T4, T5, T6, T7, T8, T9, T10). T3 (no match lost) and T11 (`_norm` guard) pass on `main` by design: they are regression guards.
+- Tests: `npm run verify` green, 937 passed (926 before, plus 11).
+- Replay of `evals/runs/*.json` on the branch (old rule written out vs `search_products`): 978 recorded calls, 44 raise (mistyped argument), 2 differ, both empty to rows as planned: `["50MP"]` (`gen-budget-too-low-2`) and the five-word `heartrate` search (`heartrate-training-zones`, 0 to 5 at the recorded limit). Note: 44 not 43 raise by my replay harness; no effect on the result.
+- Divergence: none. Subtask 4 (eval run) is the coordinator's and is not done.

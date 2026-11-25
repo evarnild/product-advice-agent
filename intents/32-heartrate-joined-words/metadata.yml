@@ -2,7 +2,7 @@
 id: 32
 slug: heartrate-joined-words
 type: fix
-status: accepted
+status: in-review
 title: Product search treats "heartrate" and "heart-rate" as different words
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"

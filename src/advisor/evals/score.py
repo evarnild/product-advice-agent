@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from advisor.catalogue import Product, _norm
+from advisor.catalogue import Product, _norm, fold
 from advisor.evals.cases import Case, fits
 from advisor.guardrails import REFUSAL_TEXT
 
@@ -134,8 +134,8 @@ def _call_satisfies(call: Mapping[str, Any], want: Mapping[str, Any]) -> bool:
             if bool(got) != value:
                 return False
         elif name == "keywords_any":
-            words = [_norm(k) for k in got if isinstance(k, str)] if isinstance(got, list) else []
-            wanted = [_norm(w) for w in value]
+            words = [fold(k) for k in got if isinstance(k, str)] if isinstance(got, list) else []
+            wanted = [fold(w) for w in value]
             if not any(w in word for word in words for w in wanted):
                 return False
     return True

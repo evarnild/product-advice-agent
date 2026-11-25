@@ -8,6 +8,9 @@ from advisor.catalogue import (
     DEFAULT_CATALOGUE_PATH,
     CatalogueError,
     Product,
+    _norm,
+    keyword_set,
+    keywords_matched,
     load_catalogue,
     search_products,
 )
@@ -320,3 +323,54 @@ def test_repeated_keyword_is_not_a_bigger_match_than_distinct_ones():
         "P-001",
         "P-002",
     ]
+
+
+# --- §32: spaces and hyphens are ignored, in keywords and product text alike ---
+
+JOINED = [
+    _p("P-001", 10, description="optical heart-rate sensor"),
+    _p("P-002", 20, description="heart rate tracking"),
+    _p("P-003", 30, description="heartrate zones"),
+    _p("P-004", 5, description="nothing here"),
+]
+
+
+def test_joined_spaced_and_hyphenated_keywords_find_the_same_products():  # T1
+    for kw in ("heartrate", "heart rate", "heart-rate", "HEART  RATE"):
+        assert ids(search_products(JOINED, keywords=[kw])) == ["P-001", "P-002", "P-003"], kw
+
+
+def test_committed_catalogue_heartrate_equals_heart_rate():  # T2
+    cat = load_catalogue()
+    joined = search_products(cat, category="smartwatch", keywords=["heartrate"], limit=10)
+    spaced = search_products(cat, category="smartwatch", keywords=["heart rate"], limit=10)
+    assert joined and ids(joined) == ids(spaced)
+
+
+def test_no_keyword_match_is_lost_by_the_fold():  # T3
+    cat = load_catalogue()
+    texts = {p.id: _norm(f"{p.name} {p.brand} {p.description}") for p in cat}
+    probes: set[str] = set()
+    for p in cat:
+        words = p.description.split()
+        probes.update(words)
+        for a, b in zip(words, words[1:], strict=False):
+            probes.update((f"{a} {b}", f"{a}-{b}"))
+    for probe in sorted(probes):
+        old = {i for i, t in texts.items() if _norm(probe).strip() and _norm(probe) in t}
+        if not old:
+            continue
+        new = {p.id for p in cat if keywords_matched(p, keyword_set([probe])) > 0}
+        assert old <= new, probe
+
+
+def test_cross_word_match_is_accepted():  # T4
+    cat = [_p("P-001", 10, description="a 1.2-inch display")]
+    assert ids(search_products(cat, keywords=["hd"])) == ["P-001"]
+
+
+def test_fold_blank_and_variant_keywords():  # T5
+    cat = [_p("P-001", 50, description="alpha"), _p("P-002", 10)]
+    assert ids(search_products(cat, keywords=["-", " ", "  - "])) == ["P-002", "P-001"]
+    assert keyword_set(["  - "]) == []
+    assert len(keyword_set(["in ear", "in-ear", "inear"])) == 1

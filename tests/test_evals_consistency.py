@@ -241,3 +241,34 @@ def test_cites_a_match_with_one_fitting_product_is_fine():
 def test_cites_only_matches_alone_may_fit_nothing():
     c = case(expect_search={"max_price": 50}, expect_properties=("cites_only_matches",))
     assert catalogue_problems([c], [prod("P-001", 100)]) == []
+
+
+# --- §32: joined words ---
+
+
+def test_fits_folds_joined_words():  # T8
+    from advisor.evals.cases import fits
+
+    p = prod("P-001", 1, desc="with heart-rate tracking")
+    for w in ("heartrate", "heart rate", "HEART-RATE"):
+        assert fits(p, {"keywords_any": [w]}), w
+
+
+def test_expected_results_agree_with_search_on_joined_words():  # T9
+    cat = [
+        prod("P-001", 30, desc="heartrate and gps"),
+        prod("P-002", 20, desc="heart rate"),
+        prod("P-003", 10, desc="heart-rate"),
+        prod("P-004", 5, desc="gps"),
+    ]
+    assert _same_as_search(cat, ["heartrate"]) == ["P-003", "P-002", "P-001"]
+    mixed = ["heart rate", "heartrate", "gps"]
+    assert _same_as_search(cat, mixed) == ["P-001", "P-004", "P-003", "P-002"]
+
+
+def test_catalogue_problems_folds_joined_words():  # T10
+    cat = [prod("P-001", 1, desc="heart-rate tracking"), prod("P-002", 1)]
+    ok = case(expect_ids=("P-001",), expect_search={"keywords_any": ["heartrate"]})
+    assert catalogue_problems([ok], cat) == []
+    bad = case(expect_ids=("P-002",), expect_search={"keywords_any": ["heartrate"]})
+    assert catalogue_problems([bad], cat)
