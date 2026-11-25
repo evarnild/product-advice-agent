@@ -11,7 +11,7 @@ plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 36" (auto_authorized 
 live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "36 a, snapshot"
-auto_round: 2
+auto_round: 3
 auto_stopped:
 follows_up:
 links:
