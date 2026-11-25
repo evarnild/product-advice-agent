@@ -12,7 +12,7 @@ live_checked: 2026-11-25 by-agent    # owner: "28 live checked"
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "28 diff read /auto 28"
 auto_round: 2
-auto_stopped:
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/27-typed-anthropic-adapter    the intent renumbered from §23 after the clash
