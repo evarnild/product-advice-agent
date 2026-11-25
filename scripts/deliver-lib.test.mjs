@@ -7,7 +7,10 @@ import {
   markLiveChecked,
   markMerged,
   mergeMessage,
+  originClashMessage,
+  otherFolder,
   planSteps,
+  reservationNote,
   routeReasonStated,
 } from './deliver-lib.mjs';
 
@@ -220,5 +223,18 @@ describe('merge message', () => {
     );
     expect(mergeMessage(9, 'Thing')).toBe('Merge §9: Thing\n');
     expect(commitMessage('s', ['  ', ''])).toBe('s\n');
+  });
+});
+
+describe('otherFolder and the two origin messages', () => {
+  it('finds another folder with the number, and only with the full <id>- prefix', () => {
+    expect(otherFolder({ id: '61', ownDir: 'intents/61-t61', dirs: ['61-other', '6-x', '610-y'] })).toBe('61-other');
+    expect(otherFolder({ id: '61', ownDir: 'intents/61-t61', dirs: ['61-t61'] })).toBe(null);
+    expect(otherFolder({ id: '61', ownDir: 'intents/61-t61', dirs: ['610-y'] })).toBe(null);
+    expect(otherFolder({ id: '61', ownDir: 'intents/61-t61', dirs: [] })).toBe(null);
+  });
+  it('words the stop and the note as the spec says', () => {
+    expect(originClashMessage('61', '61-other')).toBe("§61 is also intents/61-other on origin/main (another machine's intent). Renumber this intent before shipping.");
+    expect(reservationNote('61', '61-other')).toBe("origin's reservation intent/61 holds intents/61-other");
   });
 });

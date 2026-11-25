@@ -18,7 +18,9 @@ which `npm run queue -- --next-id` prints.
 
 - Run `/intent` and describe the problem in your own words.
 - It creates `intents/<id>-<slug>/` with `intent.md` and `metadata.yml`, and
-  proposes a type. When in doubt, the type is feature.
+  reserves its number on `origin` (`npm run reserve-id`, a branch
+  `intent/<id>`), the one push Claude
+  makes without being asked, and proposes a type. When in doubt, the type is feature.
 - Read it. If it's right, record `intent_accepted: <date>`, or ask Claude to
   record it ("accept §N's intent"). This is gate 1, and it is your decision.
 
@@ -89,7 +91,8 @@ Merging goes in this order:
 5. `npm run spawn -- <id> --remove`, if you used a worktree.
 
 You can ask Claude to do the merge, the push or the removal, each only when
-you ask for it, for that change, in the current conversation. `/deliver <id>`
+you ask for it, for that change, in the current conversation (the number
+reservation of step 1 is the one exception). `/deliver <id>`
 does all of it in order and stops at the first step that fails
 (`/deliver <id> --dry-run`, or "can §N ship?", only reports). If you ran the
 live check, say so in the same message. Run it from the main checkout, on

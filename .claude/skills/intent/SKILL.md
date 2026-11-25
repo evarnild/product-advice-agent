@@ -3,7 +3,7 @@ name: intent
 description: Draft or sharpen a product-advice-agent intent (intents/<id>-<slug>/intent.md + metadata.yml) for a fix, feature, refactor, adjustment or experiment. Use when starting any new piece of product-advice-agent work, turning a defect or a review finding into work, or backfilling an intent for a plan that came first. Invoke as /intent --fix|--feature|--refactor|--adjust|--exp <what you have>.
 metadata:
   owner: eric.varnild
-  version: 0.2.0
+  version: 0.3.0
   scope: repository
   status: experimental
   review-tier: reviewed
@@ -17,8 +17,8 @@ user has into an intent good enough to accept. Follow `intents/README.md` →
 "Drafting an artefact" for what the drafting skills share; this file adds
 only what is the intent's own.
 
-Stamp: `<!-- generated-by: product-advice-agent/intent@0.2.0 -->` as line 1 of
-`intent.md`, and `# generated-by: product-advice-agent/intent@0.2.0` as line 1 of
+Stamp: `<!-- generated-by: product-advice-agent/intent@0.3.0 -->` as line 1 of
+`intent.md`, and `# generated-by: product-advice-agent/intent@0.3.0` as line 1 of
 `metadata.yml`.
 
 ## 1. Settle the type
@@ -66,9 +66,13 @@ draft it", fill the gaps with your best reading and list each one under
 
 1. **Id:** the next `§` number, from `npm run queue -- --next-id`: one more
    than the highest `§N` in `OVERVIEW.md` and the `intents/` folders on
-   `main`, on every local branch and on disk here, so an id taken on an
-   unmerged branch or in an uncommitted draft is not taken twice. Slug:
-   short kebab-case.
+   `main`, on every local branch and on disk here, and the `intents/`
+   folders and reservation branches `intent/<n>` on `origin` (the command
+   fetches `origin` first, bounded at 10 s; `--no-fetch` skips it, for
+   offline work), so an id taken on an unmerged branch, in an uncommitted
+   draft or on another machine is not taken twice. A "clash" line on stderr
+   means another machine holds that number under another name: tell the
+   user. Slug: short kebab-case.
 2. Create `intents/<id>-<slug>/intent.md` from the template, keeping only
    this type's question block.
 3. Create `metadata.yml` from `intents/_templates/metadata.yml` with:
@@ -92,7 +96,19 @@ draft it", fill the gaps with your best reading and list each one under
 4. There is no queue row to add: `npm run queue` is generated from the
    `metadata.yml` you just wrote, and lists the intent under Queued once it
    is committed.
-5. If the material came from an issue, offer to post the sharpened problem
+5. **Reserve the number** (a new intent only, not when sharpening one that
+   already exists). Run `npm run reserve-id -- <id>` at once, without asking
+   (`REVIEW-POLICY.md` → "Merging": the one standing exception), and report
+   the outcome:
+   - exit 0: "reserved on origin as `intent/<id>`" (or "already ...");
+   - exit 2: "no remote: the number is not reserved";
+   - exit 1 or 3: say why, push nothing by any other means (no `git push` by
+     hand), do not retry under another number and do not renumber on your
+     own. Ask the owner: retry later, renumber the draft, or leave it.
+
+   A subagent that drafts an intent never runs it; the session that
+   delegated the draft runs it after reading the draft.
+6. If the material came from an issue, offer to post the sharpened problem
    statement back to it. Don't post without a yes.
 
 ## 5. Validate against the template

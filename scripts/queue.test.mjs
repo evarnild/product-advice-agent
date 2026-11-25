@@ -83,6 +83,13 @@ describe('npm run queue', { timeout: 60_000 }, () => {
     expect(queue('--next-id').stdout.trim()).toBe('61');
   });
 
+  it('AC3: --next-id with no remote named origin prints the local answer and says so on stderr', () => {
+    const r = queue('--next-id');
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('61');
+    expect(r.stderr).toContain('no remote named origin: counted local intents only');
+  });
+
   it('--json has the same entries', () => {
     const data = JSON.parse(queue('--json').stdout);
     expect(data.inFlight.map((e) => [e.id, e.source])).toEqual([[1, 'main']]);

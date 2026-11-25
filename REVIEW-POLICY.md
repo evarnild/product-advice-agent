@@ -27,7 +27,7 @@ You may escalate by hand at any time without giving a reason.
 | --- | --- | --- | --- |
 | **Automated** | `npm run verify` and `npm run check:intent` are green, then merge | nothing beyond merging | `intents/**` artefacts only; `docs/**`; `README.md` wording |
 | **Attested** | `/review` runs every pass and writes `review.md` | read the report, not the diff; merge if you agree with its scope | `src/**` not listed below, tests-only changes, `scripts/**` not listed below, build config |
-| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/deliver-lib.mjs`, `scripts/deliver.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning:** model prompts and agent instructions the product ships (`src/advisor/prompts/**`), anything that sends text to a user or an external system without a human in between (`src/advisor/guardrails.py`, `src/advisor/cli.py`), credential handling (`src/advisor/config.py`, `.env.example` and `infra/langfuse/.env.example`), and storage or logging of users' personal data (`src/advisor/tracing.py`, which decides what is sent to Langfuse) |
+| **Reviewed** | the same report, and you read the diff | full read, then merge | this file; the kit's enforcement (`scripts/intent-check-lib.mjs`, `scripts/check-intent.mjs`, and the merge preconditions in `scripts/deliver-lib.mjs`, `scripts/deliver.mjs`, and the reservation push in `scripts/reserve-id.mjs`); lint guardrails once they exist (a config change that loosens a rule, a raised or removed warning cap, a new disable comment in `src/`); `.claude/agents/**`, `.codex/agents/**`, `.claude/skills/**`; `.claude/settings.json` and the hook script it runs, `scripts/session-event.mjs` (they run in every session); **and, by meaning:** model prompts and agent instructions the product ships (`src/advisor/prompts/**`), anything that sends text to a user or an external system without a human in between (`src/advisor/guardrails.py`, `src/advisor/cli.py`), credential handling (`src/advisor/config.py`, `.env.example` and `infra/langfuse/.env.example`), and storage or logging of users' personal data (`src/advisor/tracing.py`, which decides what is sent to Langfuse) |
 
 **Approving means:** "I read what the checker did, I accept its scope,
 including the Not-checked list, and I take responsibility for this change."
@@ -173,6 +173,18 @@ conversation**, never on its own initiative. A request covers the change it
 names and does not carry over to the next one. "Go ahead" in reply to a
 summary that proposed the merge counts. A standing instruction from an
 earlier session, a memory or a `CLAUDE.local.md` brief does not.
+
+**One standing exception: reserving a new intent's number.** Right after
+`/intent` writes a new intent, the session that ran it runs
+`npm run reserve-id -- <id>` without being asked. That pushes one parentless
+commit, holding only that intent's `intent.md` and `metadata.yml`, to a
+new branch `intent/<id>` on `origin`. It covers that push and nothing
+else: never `main`, never code or another intent's files, never a merge,
+a force push, a branch deletion or a push under another number, and
+never a subagent. If the script does not reserve the number (no remote,
+`origin` unreachable, the number taken there, the push rejected), the
+agent pushes nothing by any other means, says why and asks the owner.
+Every other push stays on request.
 
 Before the merge check runs, `review.md` and any `live_checked:` date must
 be **committed to the branch**. The check reads the branch from git, so an

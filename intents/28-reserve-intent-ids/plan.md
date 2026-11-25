@@ -23,6 +23,15 @@ on request", and the `/intent` skill runs the reservation for a new draft.
 The 2026-11-24 collision, replayed in a kit test, gives the second machine
 §24 or reports the clash at `--next-id` time (spec AC9).
 
+## Amendment after review round 1 (owner, 2026-11-24: "28 D1 b")
+
+Subtask 1 said a failed fetch's reason is "git's last stderr line". For
+common failures that line is boilerplate ("and the repository exists.").
+**The reason is git's first `fatal:` or `error:` stderr line; if there is
+none, the first non-empty line; if there is no output, "git exited <code>".**
+A timeout stays "timed out after <n> s". A test pins the AC4 reason, and
+the mutant that takes the last line must fail it.
+
 ## Risks
 
 - **Bug classes named in `REVIEW-POLICY.md` pass 9.** None yet: the list
@@ -520,3 +529,63 @@ contains `intent@0.3.0` and not `intent@0.2.0`.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-24: subtasks 1 to 6 (implementer)
+
+Commits: 21bc30e (bounded runner), 6a909a6 (`--next-id` reads origin), 4239ce6
+(`reserve-id`), 2891a1d (`/deliver` clash and note, spawn test), 3026f28 (policy
+texts and the intent skill), and this hand-over commit. Kit tests 485 pass,
+product 863 pass, `npm run check:intent` PASS.
+
+Shipped: `scripts/remote-io.mjs` (`runBounded` kills the process tree and resolves
+on `exit`, never `close`, after a timeout), `scripts/reserve-id.mjs` and
+`reserve-id-lib.mjs`, `--next-id` (fetch, reservations, clash lines,
+`--no-fetch`), `/deliver` stop and note, the policy texts and the intent skill
+(`0.3.0`). Tests: remote-io (4), queue-lib (+5), queue.test AC3, new
+queue-origin.test (AC1, 2, 4 to 8), reserve-id-lib (11), reserve-id.test (AC9 to
+AC16, 11 tests), deliver-lib (+2), deliver.test AC17 and AC18, spawn AC19,
+kit-texts AC20 (3). Not done here: the owner's post-merge step for §24 to §29.
+
+Divergences from the plan:
+- The tree-kill test's grandchild is spawned `detached` on Windows. Without it
+  libuv's job object kills a node grandchild with its parent, so removing
+  `/T` from `taskkill` did not fail the test (checked by mutation); with it,
+  it does. (git's real ssh grandchild is not in that job.)
+- AC1, 2, 4 to 8 live in a new `scripts/queue-origin.test.mjs` (AC3 is in
+  `queue.test.mjs`) and share `scripts/test-git-sandbox.mjs`, a non-test helper
+  with the update-branch environment, instead of a new `describe` in
+  `queue.test.mjs` (whose sandbox has no remote).
+- `reserve-id` also keeps its own `git update-ref refs/remotes/origin/intent/<id>`
+  (B3.8), although git's push already updates it; a mutation removing it
+  survives. Kept, since B3.8 asks for it and a different fetch refspec would
+  not.
+- `sdlc.md` step 1 also names `npm run reserve-id` (B23 gives no command there;
+  AC20 requires the phrase in `sdlc.md`). REVIEW-POLICY.md's paragraph is
+  re-wrapped so the phrase sits on one line; wording unchanged.
+- `deliver.test.mjs` keeps its existing `GIT_ENV` (no empty global config) for
+  the two new tests; the new reserve/queue tests use the isolated environment.
+
+### 2026-11-25: rework after review round 1 (implementer)
+
+Commit: see the log (subject "§28: rework round 1"). Kit tests 490 pass, product 880
+pass (main's merge added to the 863 reported above; correcting that figure).
+
+Shipped: failureReason now returns git's first `fatal:` or `error:` line, else
+the first non-empty line, else `git exited <code>` (the owner's D1 b); a timeout
+is unchanged. New tests: runGitBounded with an env lacking the two prompt
+variables (alias prints `0 never`), an orphan that survives the tree kill and
+holds stderr (return within the bound plus 1.5 s) and a harness process that
+must exit by itself while the orphan lives, failureReason unit tests and the
+AC4 reason pinned to `fatal:`, AC7 stderr exactly one clash line, AC14 and AC15
+messages. Mutants (each against `node --test scripts/*.test.mjs`): M7 killed by the
+runGitBounded test, M9 by the failureReason tests and AC4, M6 by the harness
+test, Q6 by AC7, S2 by AC15, S4 by AC14. M5 (no finish on `exit` after a
+timeout) alone is an equivalent mutant: destroying the streams makes `close`
+fire at once, so behaviour is identical; M5 together with M6 is killed by both
+orphan tests.
+
+Divergences:
+- Divergence 7 (missing above): a reservation branch that exists but holds no
+  intent folder counts as taken (exit 1); the spec does not cover it. The
+  `<id>-?` placeholder in that message is left as it is.
+- `check:intent` fails only on the owed live check, which is the owner's gate.

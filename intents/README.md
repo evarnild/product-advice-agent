@@ -26,7 +26,9 @@ intents/
 **The id is the next `§` number.** Commit messages use the same numbering,
 so `§2`, `intents/2-…/` and `feat/2-…` all name the same thing. Take the
 number `npm run queue -- --next-id` prints: one more than the highest used in
-`OVERVIEW.md` and the `intents/` folders on `main` and on every local branch.
+`OVERVIEW.md`, the `intents/` folders on `main`, on every local branch and on
+disk, and those on `origin` (fetched first; reservations `intent/<n>` included).
+`/intent` then reserves it on `origin` (`npm run reserve-id`).
 §1 is the stack decision.
 
 ## Types
@@ -120,6 +122,10 @@ needs were recorded.
 - **The decision stays yours.** For `live_checked:` you run the check; an
   agent records it only after you say you ran it. An agent's own run of the
   product, or a passing automated suite, is never the check.
+- **The number's reservation.** `/intent` reserves a new intent's
+  number on `origin` with `npm run reserve-id -- <id>` as soon as it
+  writes the draft, without asking: the one push that needs no request
+  (`REVIEW-POLICY.md` → "Merging"). A subagent never runs it.
 - **The marker.** An agent-recorded gate carries `by-agent` after the date,
   on the same line: `intent_accepted: 2026-11-03 by-agent`. Your own gate
   stays a bare date. The token is part of the value, not a comment; a free

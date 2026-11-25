@@ -26,7 +26,9 @@ context, but keep Claude-specific and Codex-specific files separate.
   with Claude Code.
 - Merge into `main`, push, delete a branch or remove a worktree only when the
   owner explicitly asks for that action in the current conversation, and
-  only after the preconditions in `REVIEW-POLICY.md` → "Merging".
+  only after the preconditions in `REVIEW-POLICY.md` → "Merging". The one
+  exception is `npm run reserve-id -- <id>` for the intent `/intent` just
+  wrote (`REVIEW-POLICY.md` → "Merging").
 - Record a gate in `metadata.yml` only as `intents/README.md` → "Recording a
   gate" allows. Never record `live_checked:`; that gate is the owner's.
 

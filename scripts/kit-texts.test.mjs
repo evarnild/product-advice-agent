@@ -54,6 +54,24 @@ describe('kit texts: the update flow is written down', () => {
   });
 });
 
+describe('kit texts: the number reservation (§28) is written down where each reader looks', () => {
+  it('AC20: npm run reserve-id is in the policy, the guides and the intent skill', () => {
+    for (const f of ['REVIEW-POLICY.md', 'CLAUDE.md', 'AGENTS.md', 'intents/README.md', 'sdlc.md', '.claude/skills/intent/SKILL.md']) {
+      expect(read(f), f).toContain('npm run reserve-id');
+    }
+  });
+  it('the policy keeps every other push on request and names the script in the Reviewed row', () => {
+    const policy = read('REVIEW-POLICY.md');
+    expect(policy).toContain('Every other push stays on request');
+    expect(policy).toContain('scripts/reserve-id.mjs');
+  });
+  it('the intent skill is at 0.3.0 with no 0.2.0 stamp left', () => {
+    const skill = read('.claude/skills/intent/SKILL.md');
+    expect(skill).toContain('intent@0.3.0');
+    expect(skill).not.toContain('intent@0.2.0');
+  });
+});
+
 describe('kit texts: the old rebase instructions are gone', () => {
   const files = [
     ...walk('.claude'),
