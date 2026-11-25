@@ -281,3 +281,10 @@ Mutants (agent.py backed up by copy, restored by copy):
 - `filters["min_price"]` -> `None`: killed by the min_price test (1 failed).
 - `if failed and p.id not in shown` -> `if p.id not in shown`: killed by the
   limit test (1 failed).
+
+### 2026-11-25 — merge main (§31, §32)
+
+`git merge main` conflicted only in the import block of `tests/test_agent.py`
+(§30 imported `keyword_set`, `keywords_matched`; §31 added `Message`). Kept
+both. `agent.py` merged cleanly: the §30 named-row append and §31's
+`searched`/`asked` loop are both intact. No test needed adapting. 965 passed.

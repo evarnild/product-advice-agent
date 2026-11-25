@@ -263,3 +263,18 @@ any socket connect.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 — subtasks 1 to 3 (implementer)
+
+- Commits: see `git log` on `fix/31-search-before-answering` ("ask the model once to search…" and "docs for the search-first request").
+- Failing-first (subtask 1), run against unchanged `run_agent` (constant added only): T1, T2, T5, T6, T7, T9 failed (first text returned, so 1 request/generation instead of 2 to 5); T8 and the wording pin passed, as planned. Not committed red.
+- Shipped: `SEARCH_FIRST_TEXT` and the `searched`/`asked` logic in `src/advisor/agent.py`; new tests T1, T2, T7, T8, T9 and the pin, T5/T6 replaced, T3 tightened; `HP_BAD`/`LAP_OK`/`OFF_OK`/`answer_only` doubled, request counts 3→5 and 2→4, `lap` script and expected Langfuse calls gain one generation in `tests/test_evals_run.py`; `repeat_last=True` in the two probes; `CLAUDE.md` and `README.md` lines.
+- Tests: 932 passed (was 925 before: +7 net). `npm run verify` green.
+- Divergences: none. Subtask 4 (eval run) is the coordinator's.
+
+### 2026-11-25 — rework round 1 (implementer)
+
+- Correction to the entry above: the test count was 926 on main before the branch; the branch adds 6 new test functions (T5/T6 rewritten in place), so +6 net, not "925 / +7".
+- Added `test_text_on_turn_four_is_asked_and_text_on_turn_five_is_returned` (turn 4 text with no search is asked; turn 5 text is returned) and `test_a_search_keeps_counting_after_later_tool_turns` (search, unknown tool, text: no request). Tests only; `agent.py` untouched.
+- Mutants, run on copies of `src/` outside the worktree (`agent.py` was in use by the eval run; pytest run with `-o pythonpath` pointing at the copy): `turn >= MAX_TURNS - 1` fails the turn-four test (1 failed); `searched = False or any(...)` fails the keeps-counting test (1 failed). Both survived before these tests. No file in the worktree was mutated.
+- Total: 934 passed (932 + 2 new tests).

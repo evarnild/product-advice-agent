@@ -29,7 +29,7 @@ cli.make_tracer = lambda env, tags=(): ExportFailingTracer()
 if "--root-handler" in sys.argv:
     sys.argv.remove("--root-handler")
     logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
-client = ScriptedModelClient([ModelTurn(text="Fine answer.")])
+client = ScriptedModelClient([ModelTurn(text="Fine answer.")], repeat_last=True)
 env = {"ADVISOR_MODEL_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "placeholder-key"}
 code = cli.main(sys.argv[1:], env=env,
                 client_factory=lambda provider, model, *, api_key=None, base_url=None: client)

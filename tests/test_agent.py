@@ -5,6 +5,7 @@ import pytest
 from advisor.agent import (
     FALLBACK_ANSWER,
     MAX_TURNS,
+    SEARCH_FIRST_TEXT,
     Tool,
     answer_question,
     load_system_prompt,
@@ -18,7 +19,7 @@ from advisor.catalogue import (
     load_catalogue,
     search_products,
 )
-from advisor.models.base import ModelError, ModelTurn, ToolCall, Usage
+from advisor.models.base import Message, ModelError, ModelTurn, ToolCall, Usage
 from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import NoopTracer
 from tests.helpers import RecordingTracer
@@ -51,6 +52,7 @@ def test_tool_call_then_final_text():
     assert not result.fallback
     assert len(fake.requests) == 2
     assert [r.schema for r in fake.requests] == [None, None]
+    assert all(m.text != SEARCH_FIRST_TEXT for m in fake.requests[1].messages)
     first = fake.requests[0]
     assert first.messages[0].text == "cheap phone?"
     assert [t.name for t in first.tools] == ["search_products"]
@@ -106,12 +108,17 @@ def test_final_text_on_fifth_turn_is_kept():
 
 
 def test_unknown_tool_gives_error_result_and_counts_as_a_turn():
-    fake = ScriptedModelClient([call({}, name="launch_rocket"), final("sorry")])
+    fake = ScriptedModelClient(
+        [call({}, name="launch_rocket"), final("sorry"), final("sorry again")]
+    )
     result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
-    assert result.answer == "sorry"
+    assert result.answer == "sorry again"
     (res,) = tool_results_sent(fake.requests[1])
     assert res.is_error
     assert "launch_rocket" in res.content
+    # another tool name is not a search: the model is still asked to search
+    assert len(fake.requests) == 3
+    assert fake.requests[2].messages[-1] == Message("user", SEARCH_FIRST_TEXT)
 
 
 def test_bad_arguments_give_error_result():
@@ -159,9 +166,96 @@ def test_tool_that_raises_unexpectedly_becomes_error_result():
 
 
 def test_empty_turn_counts_and_continues():
-    fake = ScriptedModelClient([ModelTurn(), final("then text")])
+    fake = ScriptedModelClient([ModelTurn(), final("then text"), final("after request")])
     result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
-    assert result.answer == "then text"
+    assert result.answer == "after request"
+    assert result.turns == 3
+    assert len(fake.requests) == 3
+
+
+def test_text_before_any_search_gets_one_request_to_search():
+    fake = ScriptedModelClient(
+        [
+            final("Let me check the catalogue."),
+            call({"category": "phone", "max_price": 80}),
+            final("Try P-002."),
+        ]
+    )
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "Try P-002."
+    assert result.turns == 3
+    assert not result.fallback
+    assert len(fake.requests) == 3
+    assert fake.requests[1].messages[-2:] == (
+        Message("assistant", "Let me check the catalogue."),
+        Message("user", SEARCH_FIRST_TEXT),
+    )
+
+
+def test_text_after_the_request_is_the_answer():
+    fake = ScriptedModelClient(
+        [final("I only help with electronics."), final("Sorry, I only help with electronics.")]
+    )
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "Sorry, I only help with electronics."
+    assert result.turns == 2
+    assert not result.fallback
+    assert len(fake.requests) == 2
+    asks = [m for m in fake.requests[1].messages if m.text == SEARCH_FIRST_TEXT]
+    assert len(asks) == 1
+
+
+def test_the_request_uses_one_of_the_five_turns():
+    fake = ScriptedModelClient([final("x")] + [call({"category": "phone"})] * 4)
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert len(fake.requests) == MAX_TURNS
+    assert result.answer == FALLBACK_ANSWER
+    assert result.fallback
+    assert result.turns == MAX_TURNS
+    assert fake.requests[1].messages[-1].text == SEARCH_FIRST_TEXT
+
+
+def test_text_on_the_last_turn_is_kept_without_a_search():
+    fake = ScriptedModelClient([call({}, name="nope")] * 4 + [final("late")])
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "late"
+    assert not result.fallback
+    assert len(fake.requests) == 5
+
+
+def test_text_on_turn_four_is_asked_and_text_on_turn_five_is_returned():
+    fake = ScriptedModelClient([call({}, name="nope")] * 3 + [final("x"), final("y")])
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "y"
+    assert result.turns == 5
+    assert not result.fallback
+    assert len(fake.requests) == 5
+    assert fake.requests[4].messages[-1] == Message("user", SEARCH_FIRST_TEXT)
+
+
+def test_a_search_keeps_counting_after_later_tool_turns():
+    fake = ScriptedModelClient([call({"category": "phone"}), call({}, name="nope"), final("done")])
+    result = run_agent("q", fake, [search_tool(CAT)], NoopTracer())
+    assert result.answer == "done"
+    assert len(fake.requests) == 3
+
+
+def test_the_request_shows_as_one_more_generation_in_the_trace():
+    tracer = RecordingTracer()
+    fake = ScriptedModelClient(
+        [final("Let me check the catalogue."), call({"category": "phone"}), final("ans")]
+    )
+    run_agent("q", fake, [search_tool(CAT)], tracer)
+    assert tracer.kinds == ["generation", "generation", "tool", "generation"]
+    assert tracer.events[0][3] == "Let me check the catalogue."
+
+
+def test_search_first_text_is_pinned():
+    assert SEARCH_FIRST_TEXT == (
+        "You answered without searching the catalogue. If my question is about "
+        "products, call search_products first and answer from what it returns. "
+        "If it is not about the shop's products, reply without searching."
+    )
 
 
 def test_tracer_sees_generations_and_tools_in_order():

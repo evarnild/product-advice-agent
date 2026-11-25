@@ -72,7 +72,8 @@ latency side by side. Nothing is committed.
 uv run advisor "I need noise-cancelling headphones under 200 euros"
 ```
 
-Prints the answer and exits 0. A blank question exits 2 with a usage line;
+Prints the answer and exits 0. If the model answers without searching the
+catalogue, the agent asks it once to search first. A blank question exits 2 with a usage line;
 another model or network failure prints "The advisor is unavailable right now."
 and exits 1 (`--debug` shows the traceback).
 
