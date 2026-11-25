@@ -1,0 +1,22 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 35
+slug: invented-product-names
+type: feature
+status: draft
+title: Catch an answer that names a product the catalogue does not have
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/25-cited-id-name-mismatch    the names check this one goes beyond
+  - intents/31-search-before-answering    both evidence answers ran no search
+  - intents/16-llm-judge    judge-no-fit does not score out-of-stock cases
+  - intents/17-evals-every-change    a score.py change owes an eval run
+blocked_by:
