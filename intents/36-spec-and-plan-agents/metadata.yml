@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "36 a, snapshot"
 auto_round: 3
-auto_stopped:
+auto_stopped: escalate, owner reads the diff
 follows_up:
 links:
   - intents/19-intent-stats    stats attribute agent tokens by the description prefix
