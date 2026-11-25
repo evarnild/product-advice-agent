@@ -614,6 +614,21 @@ def test_invented_replay_flagged_answers():  # T18
 
 def test_invented_replay_clean_answers():  # T19
     by_id = {p.id: p for p in CATALOGUE}
-    assert len(REPLAY["clean"]) == 50
+    assert len(REPLAY["clean"]) == 51
     for x in REPLAY["clean"]:
         assert invented_names(x["answer"], by_id) == [], (x["report"], x["case"])
+
+
+def test_invented_lead_in_before_the_own_name_passes():  # finding 1
+    assert inv("So: Recommend Auralis Home 1 (P-032)") == []
+    assert runs("So: Recommend Acme Home 1 (P-032)") == [("P-032", "Recommend Acme Home 1")]
+
+
+def test_invented_more_slot_edges():  # review round 1, findings 2 to 5
+    assert [i for i, _ in runs("Acme Foldable P-007 Zorp P-004")] == ["P-007"]
+    assert inv("1 Kestrel Air Plus (P-005)") == []
+    assert runs("1 Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]
+    assert runs("Ic Go 13 (P-009)") == [("P-009", "Ic Go 13")]
+    assert runs("Acme Foldable [P-004]") == [("P-004", "Acme Foldable")]
+    assert runs("Acme Foldable **P-004**") == [("P-004", "Acme Foldable")]
+    assert runs('Acme Foldable "P-004"') == [("P-004", "Acme Foldable")]

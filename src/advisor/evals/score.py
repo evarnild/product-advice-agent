@@ -89,7 +89,7 @@ def misnamed(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, 
     return out
 
 
-# The name slot (�35): the capitalised words right before a cited id are the
+# The name slot (§35): the capitalised words right before a cited id are the
 # name the answer gives it. Names with no id beside them are not read.
 _SIMILARITY = 0.85
 _MAX_SLOT = 5
@@ -121,15 +121,18 @@ def _slot_run(segment: str) -> list[str]:
 
 
 def invented_names(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str, str, str]]:
-    """Cited known ids written under a name the catalogue does not have (�35).
+    """Cited known ids written under a name the catalogue does not have (§35).
 
     For each occurrence of a known id the name slot is the run of up to five
     words, each starting with a capital letter or a digit, directly before it
     on the same line (only spaces, `(`, bold marks and quotes between), after
     any lead-in word, list number or sentence break, and never reaching back
-    past another id. The occurrence is fine when the run is shorter than two
-    words, is a whole catalogue name, is the cited product's own name or a
-    tail of it in whole words, or is a near spelling of the cited name with
+    past another id. A word that does not end in a letter or digit ("GPS.",
+    "Price:", a name ending in `)`, `+`, `%` or `-`) ends the run.
+    The occurrence is fine when the run is shorter than two words, is a whole
+    catalogue name, is the cited product's own name, a tail of it in whole
+    words, or ends in it in whole words (a capitalised lead-in such as
+    "Recommend Auralis Home 1"), or is a near spelling of the cited name with
     the same numbers (similarity at least `_SIMILARITY`). Otherwise it is
     invented. Returns `(id, own name, run as written)`, once per id, in order
     of first occurrence. Pure: no question, no model.
@@ -150,7 +153,7 @@ def invented_names(answer: str, by_id: Mapping[str, Product]) -> list[tuple[str,
             continue
         run = " ".join(words)
         shown, own = _norm(run), _norm(by_id[pid].name)
-        if shown in names or shown == own or own.endswith(" " + shown):
+        if shown in names or shown == own or own.endswith(" " + shown) or shown.endswith(" " + own):
             continue
         digits = re.findall(r"\d+", run) == re.findall(r"\d+", by_id[pid].name)
         if digits and difflib.SequenceMatcher(None, shown, own).ratio() >= _SIMILARITY:

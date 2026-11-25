@@ -278,3 +278,17 @@ Divergences:
 - `fold` from §32 exists, but `_norm` is unchanged and the helper uses `_norm` as the plan said. Line numbers shifted; no effect.
 - The word-stop set `. ! ? : ; ,` is subsumed by "a word must end in a letter or digit", which also handles `](`. The set was dropped (no behaviour change; the mutant that removed it survived for that reason).
 - Replay counts differ from the spec's 41 answers / 75 pairs. On the 35 reports now in the main checkout (4 are newer than the spec's) the helper flags 64 answers / 113 pairs in 16 reports. All 112 pairs but one are names no catalogue has (granite3.3 run `20261124T175356Z` gives 32 answers). The fixture holds 63 answers / 112 pairs. The one left out is a false positive: `20261124T165359Z-ollama.json`, `voice-speaker`, leaked reasoning text "So: Recommend Auralis Home 1 (P-032)" gives the run "Recommend Auralis Home 1" (a capitalised sentence-initial verb joins the own name). The spec's B1/B2 do not drop a capitalised lead-in verb; fixing it needs a decision. The fixture counts (63, 112, 50 clean) are asserted in T18-T19.
+
+### 2026-11-25 - rework, round 1
+
+Commit: see `git log` (the commit after 81e5689).
+
+Owner decision on review finding 1, option (a): in B2 a run that ends in the cited id's own name in whole words (`shown.endswith(" " + own)`) is not invented, so "Recommend Auralis Home 1 (P-032)" passes. Added to `invented_names`, its docstring and the README bullet. "So: Recommend Auralis Home 1 (P-032)" is in `clean` in the fixture (51 clean answers; flagged stay 63 / 112); the fixture note now says what `clean` holds (all of `20261124T192816Z-anthropic.json` plus that one answer, shortened). Literal tests: it passes; "So: Recommend Acme Home 1 (P-032)" is still invented.
+
+Mechanical items: findings 2 to 5 as tests (`test_invented_more_slot_edges`), the section sign restored in both places in `score.py` (no U+FFFD left in the diff), the "word must end in a letter or digit" rule stated in the docstring and the README (finding 7).
+
+Correction to the earlier entry: "all 112 pairs but one" should read: the helper flags 113 pairs on 35 reports, of which 112 are real inventions.
+
+Mutants (copy-backup, apply, full suite with `-x`, restore by copy; each fails a test): remove the new ends-with-own-name clause (fails); `prev_id_bound_off` (fails); `listnum_off` (fails); own-tail by character suffix (fails); `_SLOT_TRAIL` without `[` (fails); without `*` (fails); without the quotes (fails).
+
+Divergence: the review's `assert inv("1 Kestrel Air Plus (P-005)") == []` no longer kills `listnum_off` once the ends-with-own-name rule exists (the run passes either way). I kept it and added `runs("1 Acme Foldable (P-004)") == [("P-004", "Acme Foldable")]`, which does.
