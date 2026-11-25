@@ -7,7 +7,7 @@ title: Do not invent a price cap the customer never gave
 review_tier: reviewed    # src/advisor/prompts/** is Reviewed by meaning
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
 spec_accepted:
-plan_approved:
+plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 33" (auto_authorized 2026-11-25)
 live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 33"
