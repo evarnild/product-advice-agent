@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 32
+slug: heartrate-joined-words
+type: fix
+status: draft
+title: Product search treats "heartrate" and "heart-rate" as different words
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/7-search-hyphens    a hyphen counts as a space; this extends it to the joined form
+  - intents/22-search-that-scales    any-keyword matching, keywords_matched and the B11 fallback
+  - intents/30-out-of-stock-named-product    the other search defect found in the same eval analysis
+blocked_by:
