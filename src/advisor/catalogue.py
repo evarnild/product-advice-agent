@@ -110,9 +110,18 @@ def _norm(text: str) -> str:
     return text.lower().replace("-", " ")
 
 
+def fold(text: str) -> str:
+    """Lower case, spaces and hyphens dropped: "heart-rate", "heart rate", "heartrate" agree (§32).
+
+    `_norm` stays as it is: `score.misnamed` (§25) reads names through it character by
+    character and needs the spaces.
+    """
+    return "".join(_norm(text).split())
+
+
 def keyword_set(keywords: Sequence[str] | None) -> list[str]:
-    """The distinct, normalised, non-blank keywords: "in-ear" and "in ear" are one (§22 B3)."""
-    return list(dict.fromkeys(w for w in (_norm(k) for k in keywords or []) if w.strip()))
+    """The distinct, folded, non-blank keywords: "in-ear" and "inear" are one (§22 B3, §32)."""
+    return list(dict.fromkeys(w for w in (fold(k) for k in keywords or []) if w))
 
 
 def keywords_matched(product: Product, words: Sequence[str]) -> int:
@@ -120,7 +129,7 @@ def keywords_matched(product: Product, words: Sequence[str]) -> int:
 
     A keyword counts once however often it appears in the text (§22 B3, B11).
     """
-    haystack = _norm(f"{product.name} {product.brand} {product.description}")
+    haystack = fold(f"{product.name} {product.brand} {product.description}")
     return sum(1 for w in words if w in haystack)
 
 
@@ -138,8 +147,9 @@ def search_products(
     `limit` is clamped to 1..10. With keywords, a product needs at least one of them,
     case-insensitively, in its name, brand or description; products are ordered by how
     many distinct keywords they match (most first), then price (cheapest first), then
-    id. Without keywords the order is price, then id. A hyphen counts as a space, in
-    keywords and product text alike, so 'noise-cancelling' finds 'noise cancelling' (§7).
+    id. Without keywords the order is price, then id. Spaces and hyphens are
+    ignored, in keywords and product text alike, so 'noise-cancelling', 'noise cancelling'
+    and 'noisecancelling' find each other (§7, §32).
     """
     limit = max(MIN_LIMIT, min(MAX_LIMIT, limit))
     words = keyword_set(keywords)

@@ -2,7 +2,7 @@
 id: 32
 slug: heartrate-joined-words
 type: fix
-status: accepted
+status: in-review
 title: Product search treats "heartrate" and "heart-rate" as different words
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
@@ -11,8 +11,8 @@ plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 32" (auto_authorized 
 live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "32 A /auto 32"
-auto_round:
-auto_stopped:
+auto_round: 1
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/7-search-hyphens    a hyphen counts as a space; this extends it to the joined form

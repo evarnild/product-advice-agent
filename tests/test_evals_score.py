@@ -417,3 +417,20 @@ def test_names_fold_keeps_every_position():
 
 def test_names_fold_reads_a_hyphen_as_a_space():
     assert not names_check("auralis-home 1 (P-009)").ok
+
+
+def test_search_keywords_fold_joined_words():  # §32 T7
+    def ok(want, got):
+        case = Case("c", "q", expect_search={"keywords_any": want})
+        return verdicts(case, GOOD, [{"keywords": got}])["search"]
+
+    assert ok(["heart-rate"], ["heartrate"])
+    assert ok(["heartrate"], ["heart rate"])
+    assert ok(["heart-rate"], ["optical heartrate sensor"])
+    assert not ok(["wireless"], ["noise"])
+
+
+def test_names_do_not_fold_spaces():  # §32 T11
+    assert not names_check("Auralis Home 1 (P-009)").ok
+    # Joined, it is not the name "Auralis Home 1" (which `_norm` still keeps apart).
+    assert names_check("Auralis Home1 (P-009)").ok

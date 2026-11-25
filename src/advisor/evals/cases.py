@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from advisor.catalogue import CATEGORIES, MAX_LIMIT, Product, _norm
+from advisor.catalogue import CATEGORIES, MAX_LIMIT, Product, fold
 
 # The `search_products` argument names a case may constrain (spec B9).
 SEARCH_CONSTRAINTS = ("category", "max_price", "min_price", "in_stock_only", "keywords_any")
@@ -206,8 +206,8 @@ def fits(p: Product, search: dict[str, Any]) -> bool:
     if "keywords_any" in search:
         # Interpretation: any-of, as score._call_satisfies reads it and, since
         # §22, as search_products(keywords=...) matches too.
-        haystack = _norm(f"{p.name} {p.brand} {p.description}")
-        if not any(_norm(w) in haystack for w in search["keywords_any"]):
+        haystack = fold(f"{p.name} {p.brand} {p.description}")
+        if not any(fold(w) in haystack for w in search["keywords_any"]):
             return False
     return True
 
@@ -219,13 +219,11 @@ def _expected_results(search: dict[str, Any], catalogue: Sequence[Product]) -> l
     The non-keyword constraints are `fits` (§15); the keywords are ranked here.
     """
     # Distinct after normalising, blanks dropped, as in search_products (§22).
-    words = list(
-        dict.fromkeys(w for w in (_norm(k) for k in search.get("keywords_any", ())) if w.strip())
-    )
+    words = list(dict.fromkeys(w for w in (fold(k) for k in search.get("keywords_any", ())) if w))
     others = {k: v for k, v in search.items() if k != "keywords_any"}
 
     def matched(p: Product) -> int:
-        haystack = _norm(f"{p.name} {p.brand} {p.description}")
+        haystack = fold(f"{p.name} {p.brand} {p.description}")
         return sum(1 for w in words if w in haystack)
 
     def ok(p: Product) -> bool:

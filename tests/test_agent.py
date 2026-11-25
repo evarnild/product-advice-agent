@@ -456,3 +456,11 @@ def test_prompt_tells_the_model_a_zero_match_row_is_not_a_fit():
         "A row with `keywords_matched` 0 does not have the features asked for: say so, "
         "and do not present it as a fit."
     ) in text
+
+
+def test_joined_keyword_matches_hyphenated_text_and_counts_once():  # §32 T6
+    cat = [Product("P-020", "Watch", "Acme", "phone", 10.0, True, {}, "with heart-rate tracking")]
+    rows = _rows({"keywords": ["heartrate"]}, cat)
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-020", 1)]
+    rows = _rows({"keywords": ["heartrate", "heart rate", "heart-rate"]}, cat)
+    assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-020", 1)]
