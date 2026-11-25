@@ -1,0 +1,22 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 34
+slug: loosen-anc-train-rumble
+type: adjustment
+status: draft
+title: The train-rumble case fails a right answer on its search keyword
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/26-loosen-two-headphone-cases    the precedent: two headphone cases loosened the same way
+  - intents/32-heartrate-joined-words    drafted alongside from the same qwen3:8b analysis
+  - intents/15-fifty-cases    the case, its probe and the spelling-differs rule
+  - intents/17-evals-every-change    a cases.jsonl change owes an eval run
+blocked_by:
