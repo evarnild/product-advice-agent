@@ -3,12 +3,24 @@
 
 verdict: escalate
 tier: reviewed
-reviewed-commit: 5bf85d3
+reviewed-commit: e67319e
 main: bba777f
 round: 3
 sampled: no
 run: auto
 live-check: not-needed
+
+Round 3 was redone on a delta: the full review examined `5bf85d3`; after
+it the owner chose "36 a" (finding 1, option (a)) and the coordinator extended the backstop
+sentence in `/spec` and `/build-plan` (`c261367`). A narrow re-review of
+`git diff 5bf85d3 HEAD` found the sentence word for word the same in both
+skills, true (a file already dirty or untracked in the snapshot keeps the same
+`git status --short` line however much more it changes; `git diff --stat` after
+shows an already-modified tracked file only by counts that were never
+snapshotted and never shows an untracked file), consistent with spec B10,
+`CLAUDE.md` and `AGENTS.md`, with no control bytes, the 19 kit-texts tests,
+`verify` (994 pytest) and `check:intent` green: verdict `escalate` unchanged,
+reviewed-commit `e67319e`.
 
 Tier: Reviewed by path (`.claude/agents/**`, `.codex/agents/**`,
 `.claude/skills/**`, `CLAUDE.md`, `AGENTS.md`). All five round-2 findings are
