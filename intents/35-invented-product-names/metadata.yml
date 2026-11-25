@@ -10,9 +10,9 @@ spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized:
+auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35"
 auto_round:
-auto_stopped:
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
 links:
   - intents/25-cited-id-name-mismatch    the names check this one goes beyond
