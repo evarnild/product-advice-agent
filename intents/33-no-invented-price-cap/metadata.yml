@@ -1,0 +1,22 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 33
+slug: no-invented-price-cap
+type: fix
+status: accepted
+title: Do not invent a price cap the customer never gave
+review_tier: reviewed    # src/advisor/prompts/** is Reviewed by meaning
+intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/30-out-of-stock-named-product    out-of-stock answers, from the same qwen3:8b analysis
+  - intents/31-search-before-answering    answers given without a search, from the same analysis
+  - intents/22-search-that-scales    added the in_stock_only rule this copies
+  - intents/17-evals-every-change    a prompt change owes an eval run
+blocked_by:

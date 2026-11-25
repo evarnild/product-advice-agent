@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 30
+slug: out-of-stock-named-product
+type: fix
+status: draft
+title: A named out-of-stock product is answered as "not in our catalogue"
+review_tier:
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/22-search-that-scales    B11: the keyword fallback and keywords_matched, in the tool
+  - intents/31-search-before-answering    the agent answers without searching (mechanism 3 here)
+  - intents/33-no-invented-price-cap    related work, named by the coordinator
+blocked_by:
