@@ -3,6 +3,180 @@
 
 verdict: rework
 tier: reviewed
+reviewed-commit: 935a9a7
+main: cfef98f
+round: 2
+sampled: no
+run: auto
+live-check: not-needed
+
+Tier: Reviewed by path (`.claude/agents/**`, `.codex/agents/**`,
+`.claude/skills/**`, `CLAUDE.md`, `AGENTS.md`). All 12 round-1 findings are
+fixed; the verdict is `rework` because the owner's amended B10 (the
+before-snapshot) is pinned only by the bare word `snapshot`, and a few
+pins and two wording points remain. Every fix is mechanical; after it the
+change goes to the owner's diff read.
+
+## Passes
+
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: the sandbox line and the B10 amendment match the spec; the `intents/README.md` change is the owner-approved round 1 finding 6 |
+| 2 | Type check | pass |
+| 3 | Behaviour against the spec | findings 2 and 3: the skills and guides do not say what the B10 check cannot see, and `CLAUDE.md` / `AGENTS.md` lack the snapshot |
+| 4 | Tests prove the behaviour | findings 1 and 4 |
+| 5 | Conventions | pass: no product code, `main` untouched, nothing pushed |
+| 6 | Numbers in prose | pass: kit-texts 19 tests, stats-lib 64, kit 500, pytest 994 |
+| 7 | Documentation | finding 3 |
+| 8 | Guardrails and hygiene | pass: no control bytes in any of the 17 changed files, no secret, no dependency |
+| 9 | Repo-specific footguns | pass: the control-byte scan is clean |
+
+## Type check
+
+```
+type-check: PASS (intent 36, feature)
+  note:  12 file(s), 261 line(s) changed outside intents/.
+```
+
+## Round-1 findings: fixed
+
+1. AC3: `kit-texts.test.mjs:148` now reads `/\bEdit\b/.test(tools)` with a real
+   backslash; `git ls-files --eol` gives `i/lf w/lf`; the "add `Edit`"
+   mutant is killed in both Claude files (the coordinator re-ran it).
+2. Codex sandbox: both TOMLs carry `sandbox_mode = "workspace-write"`, parsed
+   by `tomllib` and asserted; read-only, danger-full-access and deleted-line
+   mutants are killed.
+3. `/auto` pins for `§<id> spec|plan`, both `INCOMPLETE:` phrases and the
+   question-round placement kill their mutants.
+4. Rules 6 to 8 and the `blocked_by` sentence are pinned in all four files.
+5. Stats tokens per phase are asserted; the regex and `AGENT_PHASE` mutants
+   are killed.
+6. `intents/README.md` carries the `blocked_by` exception (:146-147) and the
+   role bullet (:158-159); no other contradiction found.
+7. to 12. The snapshot wording is in `/spec:31-36`, `/build-plan:32-37` and
+   `/auto:116-118,140-141`; the /auto section 10 prefix list, the guide
+   pins, the escaped `[ \t]*`, the placement fix and "the shell" in the Codex
+   files are in.
+
+## Findings
+
+1. **MEDIUM, Needs rework** `scripts/kit-texts.test.mjs:156-160`: the amended
+   B10 snapshot is pinned only by the word `snapshot`, which appears more
+   than once per file, so these mutants survive: deleting
+   "Before spawning, run `git status --short` and keep the output (the
+   snapshot):" in `/spec` (:31) and `/build-plan` (:32); the "compare with
+   the snapshot" sentence (:34/:35); the "`git diff --stat` after" clause
+   (:34/:35); "discard it and report" (:36/:37); in `/auto` the step-2
+   snapshot clause (:116-117), the step-2 diff comparison (:118) and the
+   step-3 diff comparison (:141). Pin in both skills
+   `` Before spawning, run `git status --short` ``, `compare with the
+   snapshot` and `discard it and report`; in `/auto` assert
+   `read(AUTO).split('snapshot before').length - 1 === 2` and the same count
+   for `comparison after` (the two clauses are identical).
+2. **MEDIUM, Needs rework** `.claude/skills/spec/SKILL.md:31-37` and
+   `build-plan/SKILL.md:32-38`: nothing in the kit says what is not enforced:
+   the one-file rule is an instruction only (the agent's `Bash` and the Codex
+   shell can write anywhere in the workspace), and the B10 check cannot see
+   writes to gitignored paths (`.env`, `CLAUDE.local.md`) or outside the
+   checkout. Spec B10 and B2 say so. Add after the snapshot paragraph in both
+   skills: "The check is a backstop, not a fence: the agent's `Bash` can write
+   anywhere, and writes to gitignored paths (`.env`, `CLAUDE.local.md`) or
+   outside the checkout do not show in `git status`." No test needed.
+3. **LOW, Needs rework** `CLAUDE.md:66-67` and `AGENTS.md:19-20` still say the
+   coordinator "checks `git status --short` and `git diff --stat` after it",
+   the pre-amendment B10. Change both to "compares `git status --short`
+   before and after it (and `git diff --stat`)".
+4. **LOW, Needs rework**: surviving mutants: `/auto` section 10 prefix list
+   (:379, drop `spec`, `plan` or both); rule 5's git list in each of the four
+   agent files (line 14); `intents/README.md:146-147` (the `blocked_by`
+   exception) and `:158-159` (the role bullet). Pin
+   `` `§<id> review`, `§<id> spec` or `§<id> plan` `` in `/auto`; add
+   `` `git switch`, `git merge` or `git push` `` to `PHRASES`; pin
+   `except the spec and plan subagents` and `**The spec and plan agents**` in
+   `intents/README.md`.
+5. **LOW, worth a look, no rework**: surviving text mutants not required by
+   an AC: any one of the three reply bullets in the agent files (AC2 pins
+   only `250 words`), the intro line, rule 3's path, "and write no file" in
+   rule 8, the step-3 `INCOMPLETE:` line and step-6 parentheticals in the
+   skills, the "## Who drafts" heading, `CLAUDE.md`'s description tags;
+   and `\bEdit\b` does not match `MultiEdit` (AC3 says only "no `Edit`": a
+   `/\bEdit\b|MultiEdit|NotebookEdit/` check would be stricter).
+
+## Mutations
+
+188 mutants on a private `git archive HEAD` copy (reviewer, never the
+worktree) against `kit-texts.test.mjs` and `stats-lib.test.mjs`, the only
+kit tests that read these texts or `AGENT_PHASE` and `agentTag`. Killed: all
+10 pinned phrases in each of the 4 agent files; the Claude tools line with
+`Edit` added, `Write` or `Bash` dropped, `model: opus`; the Codex sandbox
+read-only, danger-full-access or deleted; both skills' tag, `pass a model`
+and `Confirm that only`; `/auto`'s spawn lines, descriptions and
+`INCOMPLETE:` phrases; the guides' pins; all 11 stats-lib mutants. Survived:
+those named in findings 1 and 4 (the rework must kill them) and finding 5.
+A confirmation run of 11 survivors on the full suite was stopped by Claude
+Code for low system memory; a survivor of this subset survives the full
+suite because no other kit test reads those files.
+
+## Not checked
+
+- Whether Claude Code lists `product-advice-agent-spec` and `-plan` as
+  `subagent_type`; whether Codex accepts `sandbox_mode = "workspace-write"`
+  in an agent file and lets the agent write its file; how a real Sonnet
+  agent behaves under the rules (AC8).
+
+## Live check
+
+not-needed: no rule-1 path is touched and `git diff --name-only main...HEAD`
+lists nothing under `src/`. AC8 is the owner's manual step.
+
+## Eval run
+
+not owed (no listed path): `uv run advisor-analysis owes-run --base main`
+prints "not owed (no listed path changed)".
+
+## Owner checklist for the diff read (after the rework)
+
+1. The four agent files: `tools: Read, Write, Grep, Glob, Bash` (no `Edit`),
+   `model: sonnet`, rules 3 and 5 to 8, the spec agent's rule 8 (a draft with
+   defaults plus questions) against the plan agent's (never), the Codex
+   `sandbox_mode = "workspace-write"`.
+2. `/spec` and `/build-plan` "Who drafts": the snapshot, the comparison, the
+   not-enforced sentence, the `model` override, the step-6 parenthetical.
+3. `/auto` steps 2 and 3 and section 10; `CLAUDE.md:64-67`, `AGENTS.md:15-20`;
+   `intents/README.md:146-147,158-159`.
+
+Owner steps after the merge (AC8): restart Claude Code (or open a new
+session) and confirm the two agents appear in the `Agent` tool listing; run a
+real `/spec` or `/build-plan` and compare `git status --short` before and
+after; run `npm run stats -- <id>` and see the agent's tokens in the `spec` or
+`plan` row; spawn the Codex agent once and confirm `workspace-write` is
+accepted and lets it write its file (if Codex rejects it, use the plan's
+fallback: omit the line and the assertion: a spec change, so a decision);
+then the coordinator updates the memory note `delegate-spec-plan-drafting` to
+a one-line pointer to `CLAUDE.md`.
+
+## Verified myself vs. taken on trust
+
+- Verified myself (Coordinator, re-run), in the worktree at 935a9a7: the
+  branch update (`update-branch` exit 0, `verify` green), `check:intent`
+  PASS, and five mutants (add `Edit` to each Claude tools line, sandbox
+  read-only, sandbox line removed, spec and plan tokens routed to
+  unattributed): each KILLED (run on `kit-texts.test.mjs` and
+  `stats-lib.test.mjs`, restored by copy, `git status --short` clean).
+- Verified by the reviewer: `verify` exit 0 (kit 500 of 500, ruff, mypy,
+  994 pytest), `check:intent` PASS, `test:kit` three times, the byte scan and
+  `git ls-files --eol` over the 17 changed files, `tomllib`, `owes-run`, and
+  the 188 mutants.
+- Taken on trust: the plan's claim that Codex documents `workspace-write`.
+
+---
+
+# Round 1 (history)
+
+# §36 review — Dedicated spec and plan agents on Sonnet
+
+verdict: rework
+tier: reviewed
 reviewed-commit: 44b7238
 main: cfef98f
 round: 1
