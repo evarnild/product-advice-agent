@@ -521,6 +521,9 @@ def test_search_naming_no_product_is_unchanged():
     expected = search_products(
         cat, category="tablet", max_price=200, keywords=["student"], limit=10
     )
+    if not expected:  # no tablet under 200 mentions "student": the B11 fallback rows
+        expected = search_products(cat, category="tablet", max_price=200, limit=10)
+    assert expected
     assert [r["id"] for r in rows] == [p.id for p in expected]
     assert [r["keywords_matched"] for r in rows] == [keywords_matched(p, words) for p in expected]
     assert all("filters_failed" not in r for r in rows)
