@@ -6,13 +6,13 @@ status: accepted
 title: Catch an answer that names a product the catalogue does not have
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
-spec_accepted:
-plan_approved:
+spec_accepted: 2026-11-25 by-agent    # owner: "accept 36, 35 defaults" (to the spec stop)
+plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 35" (auto_authorized 2026-11-25)
 live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35"
 auto_round:
-auto_stopped:
+auto_stopped: too many sessions
 follows_up:
 links:
   - intents/25-cited-id-name-mismatch    the names check this one goes beyond
