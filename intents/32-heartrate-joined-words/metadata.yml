@@ -12,7 +12,7 @@ live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "32 A /auto 32"
 auto_round: 1
-auto_stopped:
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/7-search-hyphens    a hyphen counts as a space; this extends it to the joined form
