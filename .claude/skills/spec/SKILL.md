@@ -18,6 +18,21 @@ drafting skills share. This file adds only what is the spec's own.
 Stamp: `<!-- generated-by: product-advice-agent/spec@0.2.0 -->` as the first line of
 `spec.md`.
 
+## Who drafts
+
+The coordinator does not read the codebase inline to draft spec.md. It spawns
+`product-advice-agent-spec` with the `Agent` tool and a description beginning `§<id> spec`
+(that prefix is what `npm run stats` books to the spec phase). The brief is
+the intent id, the `main` hash and what is already known (the owner's answers,
+prior decisions). The hand-off rules (one file, scratch folder, no commit, no
+gate, the reply) are in that agent's definition, `.claude/agents/product-advice-agent-spec.md`;
+this file says how to draft. The agent runs on Sonnet; pass a `model` for a spec with real trade-offs.
+
+After the agent returns, run `git status --short` and `git diff --stat`.
+Confirm that only `spec.md` changed and that `metadata.yml` is untouched; if
+anything else changed, discard it and report. Then read the draft as the steps
+below say.
+
 ## 1. Check the preconditions, and stop if one fails
 
 Read `intents/<id>-*/metadata.yml`. Stop and say which is missing if:
@@ -68,7 +83,8 @@ Assumptions.
 
 If the spec found a hard prerequisite (this intent cannot be built correctly
 until another is merged), add it to `blocked_by:` in `metadata.yml` as
-`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here.
+`<id>    <reason>` (not a gate; related work stays in `links:`) and say so here (the agent reports a prerequisite; the coordinator writes
+`blocked_by:`).
 Name the folder, the weak points, and the next step: "accept by setting
 `spec_accepted: <date>` in metadata.yml, or say yes". After that comes
 `/build-plan <id>`.

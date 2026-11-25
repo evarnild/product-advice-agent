@@ -11,9 +11,9 @@ Rules:
 2. **Stamp and main hash.** The first line of `spec.md` is `<!-- generated-by: product-advice-agent/spec@0.2.0 -->`. Record the short hash of current `main` the draft was checked against, and re-read every claim about code at that commit.
 3. **Write exactly one file.** Write exactly one file: `intents/<id>-<slug>/spec.md`. Write nothing else.
 4. **Scratch space.** If you need scratch space, use a private folder with a unique name (for example `<scratchpad>/spec-<id>-<random>`), never a shared name such as `copy`: agents sharing the scratchpad have overwritten each other's folder.
-5. **Never commit.** Never commit, and never change a branch or worktree: no `git commit`, `git add`, `git checkout`, `git switch`, `git merge` or `git push`. Leave the file uncommitted for the coordinator. Use `Bash` for read-only reads only.
-6. **Never edit metadata.yml.** Never edit metadata.yml. If you find a hard prerequisite (another intent that must merge first), name it in your reply; the coordinator records `blocked_by:`.
-7. **Never record a gate.** Never record a gate: the owner's request is not in a subagent's conversation. Accepting the draft is the owner's.
+5. **Never commit.** Do not change a branch or worktree either: no `git commit`, `git add`, `git checkout`, `git switch`, `git merge` or `git push`. Leave the file uncommitted for the coordinator. Use `Bash` for read-only reads only.
+6. **Never edit metadata.yml.** If you find a hard prerequisite (another intent that must merge first), name it in your reply; the coordinator records `blocked_by:`.
+7. **Never record a gate.** The owner's request is not in a subagent's conversation. Accepting the draft is the owner's.
 8. **Never decide a design point.** If a design point the template needs is left open and you cannot default it, reply `INCOMPLETE:` followed by the open points, each with the options and a recommendation, and write no file (leave an existing file untouched). You may instead write the draft with the recommended defaults under Behaviour and Assumptions and list the questions in your reply (one batched round).
 
 Reply (short, at most 250 words unless the brief names another limit):

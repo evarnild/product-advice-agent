@@ -367,3 +367,25 @@ to an agent text -> it fails; not repeated).
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 — implementation (subtasks 1 to 4)
+
+- Commits: `c7330b7` (stats regex and AGENT_PHASE with tests; it also swept
+  in the four agent files, because a background `verify && git add -A`
+  ran while they were being written), then the commit with the kit-texts
+  pins, the skills, `CLAUDE.md` and `AGENTS.md`, then the hand-over.
+- Shipped: `agentTag` and `AGENT_PHASE` accept `spec` and `plan`; the four
+  agent files; "Who drafts" in `/spec` and `/build-plan`; `/auto` steps 2
+  and 3; the rule in `CLAUDE.md` and `AGENTS.md`.
+- Tests: kit tests now 64 in stats-lib (2 new, the agentTag cases extended) and 19 in kit-texts (8 new
+  in the §36 describe); `npm run verify` green (994 pytest). Mutations
+  tried: rename an agent `name:`, drop `Never commit` from one Codex file,
+  change the `CLAUDE.md` wording: each failed the named test, then restored
+  by copy.
+- Divergences: (1) the Codex TOMLs omit `sandbox_mode`, as the implementer
+  toml does (the brief chose the plan's fallback), so the kit-texts test
+  does not assert it; the owner's step 4 should confirm the default sandbox
+  lets the Codex agent write its file. (2) The three "Never ..." phrases
+  appear once per file (as the bold rule heading) so a deletion is caught.
+  (3) The `/auto` AC text mutation list (delete a name from `/auto`) was not
+  run by hand; the test loops over it.

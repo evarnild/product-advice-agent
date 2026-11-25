@@ -2,7 +2,7 @@
 id: 36
 slug: spec-and-plan-agents
 type: feature
-status: accepted
+status: in-review
 title: Dedicated spec and plan agents on Sonnet
 review_tier: reviewed    # .claude/agents/**, .codex/agents/**, .claude/skills/** are Reviewed by path
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 36, 35 defaults"

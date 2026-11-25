@@ -112,8 +112,10 @@ gate or a finished step.
 A fix or refactor has no spec, and an adjustment or experiment has no plan:
 skip to step 3 (fix, refactor) or step 4 (adjustment, experiment).
 
-- If `spec.md` is missing, draft it as `/spec` does, including its single
-  question round. If it asks the owner questions, **stop** with
+- If `spec.md` is missing, spawn `product-advice-agent-spec` as `/spec` says
+  (description `§<id> spec`) and run its `git status --short` and
+  `git diff --stat` check, including its single question round. If the agent
+  asks the owner questions (or replies `INCOMPLETE:`), **stop** with
   `auto_stopped: spec questions` and wait.
 - With the spec drafted and `spec_accepted` not recorded, **stop once**:
   `auto_stopped: spec drafted, waiting for spec_accepted`. Report the
@@ -133,8 +135,10 @@ experiment.
    **stop** with `auto_stopped: plan exists unapproved, owner decides`
    and ask the owner to approve it themselves or to say to redraft. Record
    `plan_approved` only for a `plan.md` this run drafted.
-1. Draft the plan as `/build-plan` does. If `/build-plan` step 3 finds the
-   spec (or, for a fix or refactor, the intent) incomplete, **stop** with
+1. Spawn `product-advice-agent-plan` as `/build-plan` says (description
+   `§<id> plan`) and run its `git status --short` and `git diff --stat`
+   check. If the agent replies `INCOMPLETE:` (`/build-plan` step 3: the
+   spec, or for a fix or refactor the intent, is incomplete), **stop** with
    `auto_stopped: plan found the spec incomplete`. Never decide a design
    point.
 2. Otherwise record, in `metadata.yml`, only when step 1 recorded
