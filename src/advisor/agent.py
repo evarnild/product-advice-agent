@@ -29,6 +29,11 @@ MAX_TURNS = 5
 FALLBACK_ANSWER = (
     "I couldn't find a good answer to that. Try asking about a product category or a price range."
 )
+SEARCH_FIRST_TEXT = (
+    "You answered without searching the catalogue. If my question is about "
+    "products, call search_products first and answer from what it returns. "
+    "If it is not about the shop's products, reply without searching."
+)
 SYSTEM_PROMPT_PATH = Path(__file__).parent / "prompts" / "system.md"
 
 
@@ -170,19 +175,31 @@ def _execute(call: ToolCall, tools: dict[str, Tool], tracer: Tracer) -> ToolResu
 def run_agent(
     question: str, client: ModelClient, tools: Sequence[Tool], tracer: Tracer
 ) -> AgentResult:
-    """Ask the model, run the tools it calls, repeat until final text or MAX_TURNS."""
+    """Ask the model, run the tools it calls, repeat until final text or MAX_TURNS.
+
+    A text-only reply before any search_products call is not taken as the
+    answer the first time: the agent keeps it, adds SEARCH_FIRST_TEXT and asks
+    again (once per run, never on the last turn). Text after that is the answer.
+    """
     system = load_system_prompt()
     by_name = {t.spec.name: t for t in tools}
     specs = [t.spec for t in tools]
     messages: list[Message] = [Message("user", question)]
+    searched = False
+    asked = False
     for turn in range(1, MAX_TURNS + 1):
         reply = client.complete(system, list(messages), specs)
         tracer.generation(reply.model, reply.usage, reply.text, [c.name for c in reply.tool_calls])
         if not reply.tool_calls:
             if reply.text:
-                return AgentResult(reply.text, turn, False)
+                if searched or asked or turn == MAX_TURNS:
+                    return AgentResult(reply.text, turn, False)
+                asked = True
+                messages.append(Message("assistant", reply.text))
+                messages.append(Message("user", SEARCH_FIRST_TEXT))
             continue
         messages.append(Message("assistant", reply.text or "", reply.tool_calls))
+        searched = searched or any(c.name == "search_products" for c in reply.tool_calls)
         results = tuple(_execute(c, by_name, tracer) for c in reply.tool_calls)
         messages.append(Message("user", tool_results=results))
     return AgentResult(FALLBACK_ANSWER, MAX_TURNS, True)

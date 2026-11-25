@@ -39,9 +39,9 @@ HP_OK = [
     ),
     ModelTurn(text="Try the Auralis Calm 300 (P-001) at 189 euros."),
 ]
-HP_BAD = [ModelTurn(text="Try the Auralis Calm 300 (P-001) at 100 euros.")]
-LAP_OK = [ModelTurn(text="The Pelagic Go 13 (P-009) costs 649 euros.")]
-OFF_OK = [ModelTurn(text="Sorry, I only help with electronics.")]
+HP_BAD = [ModelTurn(text="Try the Auralis Calm 300 (P-001) at 100 euros.")] * 2
+LAP_OK = [ModelTurn(text="The Pelagic Go 13 (P-009) costs 649 euros.")] * 2
+OFF_OK = [ModelTurn(text="Sorry, I only help with electronics.")] * 2
 
 
 class Factory:
@@ -113,7 +113,7 @@ def test_a_model_error_on_the_first_case_does_not_abort(tmp_path):
     assert code == 1
     assert out.splitlines()[:3] == ["ERROR hp: boom", "PASS lap", "PASS off"]
     assert "2/3 passed" in out
-    assert len(factory.client.requests) == 3
+    assert len(factory.client.requests) == 5
     assert report_of(tmp_path)["cases"][0]["status"] == "ERROR"
 
 
@@ -202,7 +202,7 @@ def test_only_runs_just_the_named_cases(tmp_path):
     assert code == 0
     assert out.splitlines()[:2] == ["PASS lap", "PASS off"]
     assert "2/2 passed" in out
-    assert len(factory.client.requests) == 2
+    assert len(factory.client.requests) == 4
 
 
 def test_report_file_name_and_fields(tmp_path):
@@ -228,7 +228,7 @@ def test_report_file_name_and_fields(tmp_path):
 
 def test_expect_search_is_read_through_the_recording_tracer(tmp_path):
     # Right answer, but the model never searched: only the search check fails.
-    answer_only = [ModelTurn(text="Try the Auralis Calm 300 (P-001) at 189 euros.")]
+    answer_only = [ModelTurn(text="Try the Auralis Calm 300 (P-001) at 189 euros.")] * 2
     code, out, _, _ = run(tmp_path, answer_only + LAP_OK + OFF_OK)
     assert code == 1
     assert out.splitlines()[0].startswith("FAIL hp: no search_products call matches")
@@ -568,6 +568,7 @@ def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path)
     lap = [
         ModelTurn(tool_calls=(ToolCall("c2", "no_such_tool", {"x": 1}),), usage=u3, model="m-3"),
         ModelTurn(text="Sorry, I could not look that up.", usage=u3, model="m-3"),
+        ModelTurn(text="Sorry, I could not look that up.", usage=u3, model="m-3"),
     ]
     tf = TracerFactory()
     code, out, err, _ = run(
@@ -594,6 +595,7 @@ def test_the_langfuse_side_sees_the_same_calls_as_the_recording_tracer(tmp_path)
         ("check", "input", True, ""),
         ("generation", "m-3", u3, None, ["no_such_tool"]),
         ("tool", "no_such_tool", {"x": 1}, [], True),
+        ("generation", "m-3", u3, "Sorry, I could not look that up.", []),
         ("generation", "m-3", u3, "Sorry, I could not look that up.", []),
         ("check", "output", True, ""),
         ("finish", report[1]["answer"]),
