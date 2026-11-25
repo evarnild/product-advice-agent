@@ -152,3 +152,7 @@ the probe.
   stricter than its question.
 - **`review_tier` left empty.** Neither file is in the "by meaning" list.
 - Nothing blocks this.
+
+## Abandoned
+
+Abandoned 2026-11-25 (owner: "abandon 34"). The case stays as it is: it fails because the model does not rewrite "active noise cancellation" as the catalogue's "noise-cancelling", which is what a spelling-differs case is there to show.
