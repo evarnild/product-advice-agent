@@ -7,12 +7,12 @@ title: A named out-of-stock product is answered as "not in our catalogue"
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 30"
 spec_accepted:
-plan_approved:
+plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 30" (auto_authorized 2026-11-25)
 live_checked:
 merged:
-auto_authorized:
+auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35"
 auto_round:
-auto_stopped:
+auto_stopped: too many sessions
 follows_up:
 links:
   - intents/22-search-that-scales    B11: the keyword fallback and keywords_matched, in the tool
