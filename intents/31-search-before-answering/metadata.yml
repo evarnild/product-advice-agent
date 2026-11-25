@@ -12,7 +12,7 @@ live_checked: 2026-11-25 by-agent    # owner: "31 live checked"
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 31 diff read /deliver 32"
 auto_round: 2
-auto_stopped:
+auto_stopped: ready for /deliver
 follows_up:
 links:
   - intents/30-out-of-stock-named-product    out-of-stock answers; three of the five cases here are in its group
