@@ -2,15 +2,15 @@
 id: 37
 slug: chat-ui
 type: feature
-status: draft
+status: accepted
 title: A very simple chat UI with multi-turn conversation
 review_tier: reviewed    # a new user-facing surface and the core agent loop (by meaning)
-intent_accepted:
+intent_accepted: 2026-11-25 by-agent    # owner: "accept 37 /auto 37"
 spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized:
+auto_authorized: 2026-11-25 by-agent    # owner: "accept 37 /auto 37"
 auto_round:
 auto_stopped:
 follows_up:
