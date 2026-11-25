@@ -10,7 +10,7 @@ spec_accepted:
 plan_approved:
 live_checked:
 merged:
-auto_authorized: 2026-11-25 by-agent    # owner: "/auto 32"
+auto_authorized: 2026-11-25 by-agent    # owner: "32 A /auto 32"
 auto_round:
 auto_stopped: plan found the spec incomplete
 follows_up:

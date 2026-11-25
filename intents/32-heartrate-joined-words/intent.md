@@ -54,9 +54,14 @@ searched keyword. "heart rate" is not in "optical heartrate sensor", so
   `_expected_results`, `catalogue_problems`), fold separators the same way
   as the search does. A search for `["heartrate"]` satisfies
   `keywords_any: ["heart-rate"]`.
-- Every keyword search that matches today still returns the same products
-  in the same order. The existing tests in `tests/test_catalogue.py` and
-  `tests/test_agent.py` stay green, unchanged.
+- No match is lost: every product a keyword search returns today with a
+  keyword match is still returned. The existing tests in
+  `tests/test_catalogue.py` and `tests/test_agent.py` stay green,
+  unchanged. Folding may add matches across word boundaries (owner's
+  decision, 2026-11-25, "32 A": full fold, both sides; for example `hd`
+  also matches "1.2-inch display" folded). The plan reports how many
+  search results change on the committed catalogue and the recorded
+  eval searches.
 - An eval run is made on the change (`REVIEW-POLICY.md` → "Eval runs"),
   and the review says whether `heartrate-training-zones` flipped and why.
 
