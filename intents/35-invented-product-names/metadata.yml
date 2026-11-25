@@ -10,7 +10,7 @@ spec_accepted: 2026-11-25 by-agent    # owner: "accept 36, 35 defaults" (to the 
 plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 35" (auto_authorized 2026-11-25)
 live_checked:
 merged:
-auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35"
+auto_authorized: 2026-11-25 by-agent    # owner: "/auto 30 /auto 35" (resumed)
 auto_round:
 auto_stopped: too many sessions
 follows_up:
