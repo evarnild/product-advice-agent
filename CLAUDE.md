@@ -163,7 +163,7 @@ Langfuse stack in `infra/langfuse/`.
   matches; order by distinct keywords matched, then price, then id; limit
   clamped to 1..10; keywords case-insensitive, spaces and hyphens ignored via `fold`, the one fold the search, `keywords_matched`, the case checks and `_call_satisfies` share; `_norm` stays for `misnamed` (§32)). The agent's tool, not
   `search_products`, falls back to the filters alone when no row matches a keyword and adds
-  `keywords_matched` to each row of a keyword search (§22 B11). Data: `data/catalogue.json`, synthetic.
+  `keywords_matched` to each row of a keyword search (§22 B11). It also appends, after the filter rows and outside `limit`, a product whose whole name (folded) is a keyword but that the filters drop, with `filters_failed` listing the filters it fails (§30; `named_products`, `failed_filters`). Data: `data/catalogue.json`, synthetic.
   `catalogue_build.py` is the seeded generator behind the 500 products (the first 32
   are hand-written); `build_products` is pure and not imported at runtime (not in
   `CORE_CODE`; its `main` reads and writes the file, so it is I/O); `python -m advisor.catalogue_build`

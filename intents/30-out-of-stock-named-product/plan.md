@@ -236,3 +236,55 @@ No test calls a model or the network; the fake `ModelClient` only
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 — implementation (subtasks 1-5)
+
+Commits: the first commit of the branch (helpers, tool change, description,
+docs, tests) and a second that fixes one test and records this entry (hashes
+in `git log`). `npm run verify`: 955 passed (kit tests, ruff, mypy green).
+
+Shipped: `failed_filters` and `named_products` in `catalogue.py`
+(`search_products.passes` now calls `failed_filters`, one source of the four
+tests); `search_tool.run` appends each named product that fails a filter and
+is not already in the rows, with `keywords_matched` and `filters_failed`,
+outside `limit`; one tool-description sentence; `CLAUDE.md` and `README.md`
+lines. New tests: 5 in `tests/test_catalogue.py`, 12 in `tests/test_agent.py`.
+No prompt change, no new dependency. No eval run (the coordinator's).
+
+Divergences:
+- §32 is on main: `named_products` compares `fold(p.name)` with
+  `keyword_set(keywords)` (both folded), not `keyword_set([p.name])`; same
+  result. Under fold, "NorvikFold" also matches P-017; the Norvik-Fold test
+  covers "norvik fold", "Norvik-Fold", "NORVIK FOLD" and "NorvikFold". The
+  result shape, exact-name rule and `limit` handling are as planned.
+- The "unchanged search" test: `{"keywords": ["student"], "category":
+  "tablet", "max_price": 200}` matches no row, so the expected rows are the
+  B11 fallback rows (the plan's "compare to `search_products`" gives `[]` for
+  that search); the test compares to the filter-only search.
+
+### 2026-11-25 — rework, review round 1
+
+Owner decision (a): a named product that passes every filter but is cut by
+`limit` is not appended (the plan's behaviour). No behaviour change.
+
+Shipped: two tests in `tests/test_agent.py`,
+`test_named_product_failing_only_min_price_is_appended` and
+`test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended`
+(pins the decision: 10 rows, no P-017, no `filters_failed`); a one-line
+comment on the defensive `shown` guard in `agent.py`.
+
+Count correction: the earlier entry's "12" is wrong. The first round added 13
+tests to `tests/test_agent.py` and 5 to `tests/test_catalogue.py`; this rework
+adds 2 more to `tests/test_agent.py` (15 in all). Suite: 957 passed.
+
+Mutants (agent.py backed up by copy, restored by copy):
+- `filters["min_price"]` -> `None`: killed by the min_price test (1 failed).
+- `if failed and p.id not in shown` -> `if p.id not in shown`: killed by the
+  limit test (1 failed).
+
+### 2026-11-25 — merge main (§31, §32)
+
+`git merge main` conflicted only in the import block of `tests/test_agent.py`
+(§30 imported `keyword_set`, `keywords_matched`; §31 added `Message`). Kept
+both. `agent.py` merged cleanly: the §30 named-row append and §31's
+`searched`/`asked` loop are both intact. No test needed adapting. 965 passed.
