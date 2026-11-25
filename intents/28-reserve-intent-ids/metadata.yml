@@ -2,14 +2,14 @@
 id: 28
 slug: reserve-intent-ids
 type: feature
-status: in-review
+status: done
 title: Two machines can give two intents the same number
 review_tier: reviewed
 intent_accepted: 2026-11-24 by-agent
 spec_accepted: 2026-11-24 by-agent
 plan_approved: 2026-11-24 by-agent    # auto: owner "accept the §28 spec /auto 28" (auto_authorized 2026-11-24)
 live_checked: 2026-11-25 by-agent    # owner: "28 live checked"
-merged:
+merged: 1f78321    # 2026-11-25, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-25 by-agent    # owner: "28 diff read /auto 28"
 auto_round: 2
 auto_stopped: ready for /deliver
