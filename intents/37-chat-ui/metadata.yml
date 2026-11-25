@@ -12,10 +12,11 @@ live_checked:
 merged:
 auto_authorized: 2026-11-25 by-agent    # owner: "accept 37 /auto 37"
 auto_round:
-auto_stopped:
+auto_stopped: spec drafted, waiting for spec_accepted
 follows_up:
 links:
   - intents/1-stack-and-skeleton    listed "a UI" as a later intent; the constraints (local data, autonomy)
   - intents/33-no-invented-price-cap    amounts.py: a conversation feature must pass the earlier turns
   - intents/31-search-before-answering    the agent loop a conversation changes
 blocked_by:
+  - 33    amounts.py and the question passed to _execute exist only on the unmerged §33 branch; B8 and AC4 need them
