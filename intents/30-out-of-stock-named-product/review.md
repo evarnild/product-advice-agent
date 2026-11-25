@@ -1,6 +1,171 @@
 <!-- generated-by: product-advice-agent/review@0.2.0 -->
 # §30 review — a named out-of-stock product is answered as "not in our catalogue"
 
+verdict: escalate
+tier: reviewed
+reviewed-commit: 1017f32
+main: b370233
+round: 2
+sampled: no
+run: auto
+live-check: owed
+
+Tier: the path table alone makes this Attested (`src/**` core code). Round 1
+raised it to Reviewed under rule 3 and the reason still holds: Not-checked
+item N1, how a real model words an answer from a `filters_failed` row,
+decides what a user receives. A tier is never lowered.
+
+## Passes
+
+| # | Pass | Result |
+| --- | --- | --- |
+| 1 | Intent and plan match | pass: round 1 finding 2 is decided as (a) and pinned by a test; `git diff main...HEAD -- src` is only §30's change |
+| 2 | Type check | pass apart from the owed live check, which is the owner's to clear |
+| 3 | Behaviour against the intent's reproduction | pass; the §30 and §31 interaction was probed (below); eval run below |
+| 4 | Tests prove the behaviour | pass: 27 mutants, 26 killed, 1 equivalent |
+| 5 | Conventions | pass |
+| 6 | Numbers in prose | pass: 15 new tests in `tests/test_agent.py`, 5 in `tests/test_catalogue.py`; 965 in the suite |
+| 7 | Documentation | pass |
+| 8 | Guardrails and hygiene | pass: only model-facing description text changed |
+| 9 | Repo-specific footguns | pass |
+
+## Type check
+
+```
+type-check: FAIL (intent 30, fix)
+  error: A live check is owed and not recorded. ...
+  note:  6 file(s), 303 line(s) changed outside intents/.
+```
+
+The only error is the owed live check.
+
+## Round 1 findings, re-checked
+
+1. HIGH (`min_price` not proven): fixed.
+   `test_named_product_failing_only_min_price_is_appended` is what was asked
+   for; mutant A-min-none is killed by it alone.
+2. MEDIUM (limit-cut named product), decided by the owner as option (a):
+   pinned by `test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended`;
+   mutant A-append-all is killed by it alone.
+3. LOW (dead `shown` guard): a comment marks it defensive; A-no-dedupe stays
+   equivalent.
+4. LOW (Progress count): corrected (13 + 2 = 15 in `tests/test_agent.py`).
+5. LOW (description filter list): no rework asked.
+
+## The merge with main (§31, §32)
+
+The reviewer read the merged `run_agent` and `_execute`: §31 only touches
+text-only replies, §30 only what `search_tool.run` returns; they do not
+overlap. A scratch probe gave: a name search on the first turn makes 2
+requests and shows P-017 once, last, with `["category","max_price","in_stock_only"]`;
+a text-first reply, then the §31 request, then the same search shows the
+same single row; two searches in one turn show P-017 once in each result.
+No committed test combines the §31 re-ask with a named row (each half is
+tested alone, the paths do not interact): not a finding.
+
+## Findings
+
+1. **LOW** `src/advisor/agent.py:150,155`: `shown` and `p.id not in shown`
+   are still dead code (A-no-dedupe is equivalent). Kept on purpose, with a
+   comment. No rework.
+
+No finding needs rework or a decision.
+
+## Mutations
+
+27 mutants on a `git archive HEAD` copy (reviewer, never the worktree), each
+a full pytest run: the tool's filter arguments (min, max, category, stock),
+append-all, the limit exemption, prepend, the marker field, `keywords_matched`,
+the loop, both description sentences, each of the four filter checks, the
+boundaries, the order, the filter-name string, `fold` against `lower()`,
+substring match, the `MAX_LIMIT` cap and `passes`. Killed: 26. Survived: 1
+(A-no-dedupe, equivalent).
+
+## Not checked
+
+- N1: what a real model says when it gets a `filters_failed` row: does it
+  name the product with its real category, price and stock, and avoid
+  offering it as a fit? The eval scorer would pass "out of stock, but a cheap
+  option". The live check.
+- Round 1's mutant A-desc-filterlist (LOW, no rework) was not re-run.
+
+## Live check
+
+Owed under rule 3 (N1). Rule 1 does not apply (no `cli.py`, `models/`,
+`tracing.py`, `prompts/` or `infra/`). In the worktree
+`C:/Users/eric/src/product-advice-agent-wt/30-out-of-stock-named-product` at
+1017f32 or later, with Ollama running (the default), ideally with the local
+Langfuse up and the three `LANGFUSE_*` variables set:
+1. `uv run advisor "Is the Sonavo Quiet Pro available? I only want something in stock."`
+2. `uv run advisor "hey is the Norvik Fold still available? im a student so i cant really spend much, is it cheap?"`
+3. `uv run advisor "My son wants the Norvik Canvas 13 tablet for school, is it in stock?"`
+
+You should see:
+- each answer names the product with its id (P-004, P-017, P-024);
+- each says the product is out of stock, and for the Fold that it is a
+  1499 euro phone, not cheap;
+- no answer recommends the named product as a fit or says "not in our
+  catalogue";
+- in the trace, when the model set a filter that drops the product, the last
+  tool row is that product with `filters_failed` (the Fold searched with
+  category tablet, max 200 and stock: category, max_price, in_stock_only);
+- if the model first answered without searching, a second generation follows
+  the "You answered without searching..." request, and the named row appears
+  exactly once in the tool result.
+
+If an answer recommends the named product or says it is not in the
+catalogue, leave `live_checked:` empty and describe it.
+
+## Eval run
+
+- Report: `evals/runs/20261125T103024Z-ollama.json` (ollama, qwen3:8b), made
+  by the coordinator in the worktree at 1017f32, the reviewed content (it
+  contains `main`, with §31 and §32). `advisor-analysis hashes` exits 0:
+  cases, prompt and catalogue hashes match.
+- `compare` against `evals/baseline.json` (the §31 run, 40/50): 43/50.
+  Regressed (0). Fixed (3): `voice-speaker` and `monitor-curved-tuner-300`
+  (both fail at random on unchanged code) and `norvik-fold-brother-gift`.
+- What the run shows for this change: the six out-of-stock cases now search by
+  name where they searched at all, and the answers name the product, say it
+  is out of stock and give its real price (799 euros for the Canvas) where
+  the baseline said "not in our catalogue":
+  - `out-of-stock-quiet-pro` PASS and `norvik-fold-brother-gift` PASS (the
+    answers cite P-004 and P-017);
+  - `norvik-canvas-school` names P-024 at 799 euros but FAILs `prices` (it
+    suggests two other tablets without stating their prices);
+  - `norvik-fold-cheap-student` FAILs `expected` (no P-017 id; the model
+    searched category tablet, max 200 and stock, so the row the tool appends
+    is there but the answer does not cite it);
+  - `pelagic-studio-back-soon` names the laptop but does not cite P-010;
+  - `aurelis-home-gift-mum`: the model searched `["Aurelis"]` (the customer's
+    spelling), which is not the product's name, so the exact-name rule does
+    not reach P-032, as the intent's assumptions said.
+
+## Verified myself vs. taken on trust
+
+- Verified myself (Coordinator, re-run), in the worktree at 1017f32:
+  - mutant A-min-none (`filters["min_price"]` to `None`, `agent.py:148`): 1
+    failed, 964 passed; killed by
+    `test_named_product_failing_only_min_price_is_appended`;
+  - mutant A-append-all (`if failed and p.id not in shown:` to
+    `if p.id not in shown:`, `agent.py:150`): 1 failed, 964 passed; killed by
+    `test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended`;
+  - both restored by copy, `git status --short` clean;
+  - the branch update (`update-branch` exit 0, merged `main`, `verify` green
+    at the merge: 965 pytest, 490 kit tests); `npm run check:intent`: the one
+    error above;
+  - the full eval run, `hashes`, `compare` and the case table above.
+- Verified by the reviewer: `verify` exit 0 (965 passed); the 27 mutants; the
+  §30/§31 probe; the test counts; `git diff main...HEAD -- src`; the README
+  and CLAUDE.md lines.
+- Taken on trust: the model's wording beyond the eval run (the live check).
+
+---
+
+# Round 1 (history)
+
+# §30 review — a named out-of-stock product is answered as "not in our catalogue"
+
 verdict: rework
 tier: reviewed
 reviewed-commit: 3fa2a49
