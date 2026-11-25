@@ -10,9 +10,9 @@ spec_accepted: 2026-11-25 by-agent    # owner: "36 defaults, accept the spec"
 plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 36" (auto_authorized 2026-11-25)
 live_checked:
 merged:
-auto_authorized: 2026-11-25 by-agent    # owner: "/auto 36"
+auto_authorized: 2026-11-25 by-agent    # owner: "36 a, snapshot"
 auto_round: 1
-auto_stopped: decision needed
+auto_stopped:
 follows_up:
 links:
   - intents/19-intent-stats    stats attribute agent tokens by the description prefix
