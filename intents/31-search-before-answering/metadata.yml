@@ -2,14 +2,14 @@
 id: 31
 slug: search-before-answering
 type: fix
-status: in-review
+status: done
 title: Search the catalogue before answering about products
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
 spec_accepted:
 plan_approved: 2026-11-25 by-agent    # auto: owner "/auto 31" (auto_authorized 2026-11-25)
 live_checked: 2026-11-25 by-agent    # owner: "31 live checked"
-merged:
+merged: 4f0f4e8    # 2026-11-25, merged by Claude on the owner's explicit request in chat
 auto_authorized: 2026-11-25 by-agent    # owner: "/auto 31 diff read /deliver 32"
 auto_round: 2
 auto_stopped: ready for /deliver
