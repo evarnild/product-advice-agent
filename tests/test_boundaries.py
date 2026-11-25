@@ -90,7 +90,7 @@ def test_an_untraced_eval_run_loads_neither_tracing_nor_langfuse(tmp_path):
         "case = {'id': 'lap', 'question': 'a laptop?', 'expect_ids': ['P-009']}\n"
         "cases.write_text(json.dumps(case), encoding='utf-8')\n"
         "text = 'The Pelagic Go 13 (P-009) costs 649 euros.'\n"
-        "client = ScriptedModelClient([ModelTurn(text=text)])\n"
+        "client = ScriptedModelClient([ModelTurn(text=text)], repeat_last=True)\n"
         "out = io.StringIO()\n"
         "rc = main(['--cases', str(cases), '--report-dir', str(tmp / 'runs')],\n"
         "          env={'ADVISOR_MODEL_PROVIDER': 'ollama', 'ADVISOR_MODEL': 'm'},\n"
