@@ -2,7 +2,7 @@
 id: 31
 slug: search-before-answering
 type: fix
-status: accepted
+status: in-review
 title: Search the catalogue before answering about products
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"
