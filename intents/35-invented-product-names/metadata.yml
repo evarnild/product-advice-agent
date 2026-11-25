@@ -2,7 +2,7 @@
 id: 35
 slug: invented-product-names
 type: feature
-status: accepted
+status: in-review
 title: Catch an answer that names a product the catalogue does not have
 review_tier:
 intent_accepted: 2026-11-25 by-agent    # owner: "accept 31, 32, 33, 35"

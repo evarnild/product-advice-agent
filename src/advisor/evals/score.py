@@ -95,7 +95,6 @@ _SIMILARITY = 0.85
 _MAX_SLOT = 5
 _SLOT_TRAIL = " \t([*\"'“”‘’"
 _WORD_LEAD = "*([_\"'“‘"
-_WORD_STOP = ".!?:;,"
 
 
 def _slot_run(segment: str) -> list[str]:
@@ -104,7 +103,8 @@ def _slot_run(segment: str) -> list[str]:
     taken: list[str] = []
     for raw in reversed(words):
         word = raw.rstrip("*\"'”’")
-        if not word or word[-1] in _WORD_STOP or not word[-1].isalnum():
+        # A word not ending in a letter or digit ("GPS.", "Price:", "](") ends the run.
+        if not word or not word[-1].isalnum():
             break
         head = word.lstrip(_WORD_LEAD)
         if not head or not (head[0].isupper() or head[0].isdigit()):

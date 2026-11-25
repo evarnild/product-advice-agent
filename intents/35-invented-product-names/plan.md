@@ -266,3 +266,15 @@ and T18-T19.
 <!-- The implementer appends here, one entry per phase: date, commits, what
 shipped, test counts, anything that diverged from the plan. Nothing above
 this line is the implementer's to edit. -->
+
+### 2026-11-25 - build (subtasks 1-5)
+
+Commits: see `git log` (97b0076 helper, check, tests, fixture; then the README, simplification and hand-over commit).
+
+Shipped: `invented_names` and `_SIMILARITY`/`_MAX_SLOT` in `score.py`, the `invented` check right after `names`, the four name lists updated, T1-T20 in `tests/test_evals_score.py`, `tests/fixtures/invented_replay.json`, the README bullet. `npm run verify` green: 972 pytest, 490 kit tests. Mutants killed by the tests: similarity 0.90 and 0.80, cap 6, no digit rule, no own-name tail. No eval run (the coordinator's).
+
+Divergences:
+- Subtasks 1 and 2 were committed together (the check is wired in the same commit as the helper).
+- `fold` from §32 exists, but `_norm` is unchanged and the helper uses `_norm` as the plan said. Line numbers shifted; no effect.
+- The word-stop set `. ! ? : ; ,` is subsumed by "a word must end in a letter or digit", which also handles `](`. The set was dropped (no behaviour change; the mutant that removed it survived for that reason).
+- Replay counts differ from the spec's 41 answers / 75 pairs. On the 35 reports now in the main checkout (4 are newer than the spec's) the helper flags 64 answers / 113 pairs in 16 reports. All 112 pairs but one are names no catalogue has (granite3.3 run `20261124T175356Z` gives 32 answers). The fixture holds 63 answers / 112 pairs. The one left out is a false positive: `20261124T165359Z-ollama.json`, `voice-speaker`, leaked reasoning text "So: Recommend Auralis Home 1 (P-032)" gives the run "Recommend Auralis Home 1" (a capitalised sentence-initial verb joins the own name). The spec's B1/B2 do not drop a capitalised lead-in verb; fixing it needs a decision. The fixture counts (63, 112, 50 clean) are asserted in T18-T19.
