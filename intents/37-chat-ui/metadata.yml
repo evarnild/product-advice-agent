@@ -1,0 +1,21 @@
+# generated-by: product-advice-agent/intent@0.3.0
+id: 37
+slug: chat-ui
+type: feature
+status: draft
+title: A very simple chat UI with multi-turn conversation
+review_tier: reviewed    # a new user-facing surface and the core agent loop (by meaning)
+intent_accepted:
+spec_accepted:
+plan_approved:
+live_checked:
+merged:
+auto_authorized:
+auto_round:
+auto_stopped:
+follows_up:
+links:
+  - intents/1-stack-and-skeleton    listed "a UI" as a later intent; the constraints (local data, autonomy)
+  - intents/33-no-invented-price-cap    amounts.py: a conversation feature must pass the earlier turns
+  - intents/31-search-before-answering    the agent loop a conversation changes
+blocked_by:
