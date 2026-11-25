@@ -373,8 +373,11 @@ The agent's `search_products` tool matches a product when any keyword appears
 (name, brand or description) and ranks by distinct keywords matched, then
 price, then id; it returns 10 products by default. With keywords, each row carries
 `keywords_matched`; when no product matches any keyword the tool returns the rows for the
-other filters with `keywords_matched` 0 (§22 B11). The consistency check ranks
-the same way.
+other filters with `keywords_matched` 0 (§22 B11). When a keyword is a product's whole
+name (case, spaces and hyphens ignored) and the category, price or stock filter drops that
+product, the tool still appends it after the other rows, outside `limit`, with
+`filters_failed` naming the filters it fails (§30), so it is not reported as missing and not
+offered as a fit. The consistency check ranks the same way.
 
 The catalogue has 500 products (63 in laptop, phone, headphones and monitor,
 62 in the other four). P-001 to P-032 are hand-written; the rest come from a

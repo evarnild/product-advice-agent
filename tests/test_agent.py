@@ -12,7 +12,13 @@ from advisor.agent import (
     run_agent,
     search_tool,
 )
-from advisor.catalogue import Product, load_catalogue, search_products
+from advisor.catalogue import (
+    Product,
+    keyword_set,
+    keywords_matched,
+    load_catalogue,
+    search_products,
+)
 from advisor.models.base import Message, ModelError, ModelTurn, ToolCall, Usage
 from advisor.models.fake import ScriptedModelClient
 from advisor.tracing import NoopTracer
@@ -558,3 +564,162 @@ def test_joined_keyword_matches_hyphenated_text_and_counts_once():  # §32 T6
     assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-020", 1)]
     rows = _rows({"keywords": ["heartrate", "heart rate", "heart-rate"]}, cat)
     assert [(r["id"], r["keywords_matched"]) for r in rows] == [("P-020", 1)]
+
+
+# --- §30: a named product the filters drop is still shown, marked ---
+
+
+def _real(args):
+    return _rows(args, load_catalogue())
+
+
+def _last_named(rows, pid):
+    assert rows[-1]["id"] == pid
+    return rows[-1]
+
+
+def test_named_product_dropped_by_stock_filter_is_appended_with_its_real_fields():
+    rows = _real({"keywords": ["Sonavo Quiet Pro"], "in_stock_only": True})
+    p = _last_named(rows, "P-004")
+    assert (p["category"], p["price_eur"], p["in_stock"]) == ("headphones", 159, False)
+    assert p["filters_failed"] == ["in_stock_only"]
+    assert p["keywords_matched"] == 1
+    front = rows[:-1]
+    assert front and all(r["keywords_matched"] == 0 and r["in_stock"] for r in front)
+    assert all("filters_failed" not in r for r in front)
+
+
+def test_named_product_dropped_by_stock_with_matching_category():
+    rows = _real({"keywords": ["Norvik Canvas 13"], "category": "tablet", "in_stock_only": True})
+    p = _last_named(rows, "P-024")
+    assert (p["category"], p["price_eur"], p["in_stock"]) == ("tablet", 799, False)
+    assert p["filters_failed"] == ["in_stock_only"]
+
+
+def test_named_product_dropped_by_category_and_price():
+    base = {"keywords": ["Norvik Fold"], "category": "tablet", "in_stock_only": True}
+    rows = _real({**base, "max_price": 200})
+    p = _last_named(rows, "P-017")
+    assert (p["category"], p["price_eur"], p["in_stock"]) == ("phone", 1499, False)
+    assert p["filters_failed"] == ["category", "max_price", "in_stock_only"]
+    assert all("filters_failed" not in r for r in rows[:-1])
+    rows = _real({**base, "min_price": 100})
+    assert _last_named(rows, "P-017")["filters_failed"] == ["category", "in_stock_only"]
+
+
+def test_search_naming_no_product_is_unchanged():
+    cat = load_catalogue()
+    args = {"keywords": ["student"], "category": "tablet", "max_price": 200}
+    rows = _real(args)
+    words = keyword_set(["student"])
+    expected = search_products(
+        cat, category="tablet", max_price=200, keywords=["student"], limit=10
+    )
+    if not expected:  # no tablet under 200 mentions "student": the B11 fallback rows
+        expected = search_products(cat, category="tablet", max_price=200, limit=10)
+    assert expected
+    assert [r["id"] for r in rows] == [p.id for p in expected]
+    assert [r["keywords_matched"] for r in rows] == [keywords_matched(p, words) for p in expected]
+    assert all("filters_failed" not in r for r in rows)
+
+
+NAMED = [
+    Product("P-001", "Alpha Phone", "Acme", "phone", 100.0, True, {}, "d"),
+    Product("P-002", "Beta Phone", "Acme", "phone", 50.0, False, {}, "d"),
+    Product("P-003", "Gamma Laptop", "Acme", "laptop", 500.0, True, {}, "d"),
+    Product("P-004", "Quiet Pro", "Acme", "laptop", 700.0, True, {}, "d"),
+    Product("P-005", "Sonavo Quiet Pro", "Acme", "laptop", 800.0, False, {}, "d"),
+]
+
+
+def test_named_product_passing_every_filter_is_returned_once_unmarked():
+    rows = _rows({"keywords": ["Alpha Phone"], "category": "phone"}, NAMED)
+    assert [r["id"] for r in rows] == ["P-001"]
+    assert "filters_failed" not in rows[0]
+
+
+def test_brand_and_partial_name_add_no_row():
+    rows = _rows({"keywords": ["Acme"], "category": "laptop", "in_stock_only": True}, NAMED)
+    assert all("filters_failed" not in r for r in rows)
+    rows = _rows({"keywords": ["Pro"], "in_stock_only": True}, NAMED)
+    assert [r["id"] for r in rows] == ["P-004"]
+    # "Quiet Pro" is a whole name (P-004, passes) and a part of P-005's name
+    rows = _rows({"keywords": ["Quiet Pro"], "in_stock_only": True}, NAMED)
+    assert [r["id"] for r in rows] == ["P-004"]
+
+
+def test_name_variants_in_case_and_separators_add_the_row():
+    for kw in ("norvik fold", "Norvik-Fold", "NORVIK FOLD", "NorvikFold"):
+        rows = _real({"keywords": [kw], "in_stock_only": True})
+        assert rows[-1]["id"] == "P-017", kw
+        assert rows[-1]["filters_failed"] == ["in_stock_only"]
+
+
+def test_two_names_add_two_rows_and_a_repeated_name_one():
+    rows = _rows(
+        {"keywords": ["Beta Phone", "Sonavo Quiet Pro", "Beta Phone"], "in_stock_only": True}, NAMED
+    )
+    named = [r for r in rows if "filters_failed" in r]
+    assert [r["id"] for r in named] == ["P-002", "P-005"]
+    assert [r["id"] for r in rows[-2:]] == ["P-002", "P-005"]
+
+
+def test_no_or_blank_keywords_add_no_named_rows():
+    for kws in (None, [], [" "], ["", "-"]):
+        args = {"in_stock_only": True}
+        if kws is not None:
+            args["keywords"] = kws
+        rows = _rows(args, NAMED)
+        assert all("filters_failed" not in r for r in rows)
+        assert all(r["in_stock"] for r in rows)
+
+
+def test_limit_neither_cuts_nor_counts_named_rows():
+    rows = _rows({"keywords": ["Beta Phone"], "in_stock_only": True, "limit": 1}, NAMED)
+    # the fallback has rows (nothing in stock matches), cut to one; the named row follows
+    assert len(rows) == 2
+    assert rows[0]["keywords_matched"] == 0 and "filters_failed" not in rows[0]
+    assert rows[1]["id"] == "P-002"
+    rows = _rows(
+        {"keywords": ["Sonavo Quiet Pro", "Beta Phone"], "in_stock_only": True, "limit": 1}, NAMED
+    )
+    assert [r["id"] for r in rows if "filters_failed" in r] == ["P-002", "P-005"]
+
+
+def test_full_name_search_puts_the_product_first_under_limit_one():
+    for name, pid in (("Sonavo Quiet Pro", "P-004"), ("Norvik Fold", "P-017")):
+        rows = _real({"keywords": [name], "limit": 1})
+        assert [r["id"] for r in rows] == [pid]
+
+
+def test_tracer_gets_the_named_rows_too():
+    fake = ScriptedModelClient(
+        [call({"keywords": ["Beta Phone"], "in_stock_only": True}), final("ok")]
+    )
+    tracer = RecordingTracer()
+    run_agent("q", fake, [search_tool(NAMED)], tracer)
+    (event,) = _tool_events(tracer)
+    (res,) = tool_results_sent(fake.requests[1])
+    assert event[3] == json.loads(res.content)
+    assert event[3][-1]["filters_failed"] == ["in_stock_only"]
+
+
+def test_tool_description_explains_filters_failed():
+    desc = " ".join(search_tool(NAMED).spec.description.split())
+    assert "A row with filters_failed is a product the customer named" in desc
+    assert "do not offer it as a fit" in desc
+
+
+def test_named_product_failing_only_min_price_is_appended():
+    rows = _real({"keywords": ["Sonavo Quiet Pro"], "min_price": 200})
+    p = _last_named(rows, "P-004")
+    assert p["filters_failed"] == ["min_price"]
+    assert (p["category"], p["price_eur"], p["in_stock"]) == ("headphones", 159, False)
+
+
+def test_named_product_passing_every_filter_but_cut_by_limit_is_not_appended():
+    # Decision (a) of §30: only products the filters drop are added, not ones `limit` cuts.
+    rows = _real({"keywords": ["Norvik Fold", "phone", "camera"]})
+    assert len(rows) == 10
+    assert "P-017" not in [r["id"] for r in rows]
+    assert all("filters_failed" not in r for r in rows)
