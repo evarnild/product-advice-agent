@@ -108,13 +108,13 @@ describe('kit texts: spec and plan agents (§36)', () => {
   const kindOf = (f) => (f.includes('-spec.') ? 'spec' : 'plan');
   const SKILL_OF = { spec: '.claude/skills/spec/SKILL.md', plan: '.claude/skills/build-plan/SKILL.md' };
   const STAMP = { spec: 'product-advice-agent/spec@0.2.0', plan: 'product-advice-agent/build-plan@0.2.0' };
-  const PHRASES = ['Write exactly one file', 'private folder with a unique name', 'Never commit', 'Never edit metadata.yml', 'Never record a gate', 'INCOMPLETE:', '250 words'];
+  const PHRASES = ['Write exactly one file', 'private folder with a unique name', 'Never commit', 'Never edit metadata.yml', 'Never record a gate', 'INCOMPLETE:', '250 words', 'Never decide a design point', 'options and a recommendation', 'the coordinator records `blocked_by:`'];
 
   it('AC1: each Claude file has name, description and tools in its frontmatter', () => {
     for (const f of CLAUDE_AGENTS) {
       const text = read(f);
       expect(text.startsWith('---'), f).toBe(true);
-      expect(text, f).toMatch(new RegExp(`^name: product-advice-agent-${kindOf(f)}[ 	]*$`, 'm'));
+      expect(text, f).toMatch(new RegExp(`^name: product-advice-agent-${kindOf(f)}[ \t]*$`, 'm'));
       expect(/^description: \S/m.test(text), f).toBe(true);
       expect(/^tools: /m.test(text), f).toBe(true);
     }
@@ -124,6 +124,7 @@ describe('kit texts: spec and plan agents (§36)', () => {
       const text = read(f);
       expect(text, f).toContain(`name = "product_advice_agent_${kindOf(f)}"`);
       expect(text, f).toContain('description = "');
+      expect(text, f).toContain('sandbox_mode = "workspace-write"');
       expect(text, f).toContain('developer_instructions = """');
       expect(text.trimEnd().endsWith('"""'), f).toBe(true);
     }
@@ -144,7 +145,7 @@ describe('kit texts: spec and plan agents (§36)', () => {
   it('AC3: Claude agents have Write and Bash, no Edit, and run on Sonnet', () => {
     for (const f of CLAUDE_AGENTS) {
       const tools = /^tools: (.*)$/m.exec(read(f))[1];
-      expect(/Edit/.test(tools), f).toBe(false);
+      expect(/\bEdit\b/.test(tools), f).toBe(false);
       expect(tools, f).toContain('Write');
       expect(tools, f).toContain('Bash');
       expect(read(f), f).toMatch(/^model: sonnet\s*$/m);
@@ -156,12 +157,15 @@ describe('kit texts: spec and plan agents (§36)', () => {
   it('AC4: the skills and guides name the agents and the coordinator check', () => {
     for (const [skill, agent, tag] of [['.claude/skills/spec/SKILL.md', 'product-advice-agent-spec', '§<id> spec'], ['.claude/skills/build-plan/SKILL.md', 'product-advice-agent-plan', '§<id> plan']]) {
       const text = read(skill);
-      for (const phrase of [agent, tag, 'git status --short', 'git diff --stat', 'pass a `model`']) expect(text, `${skill}: ${phrase}`).toContain(phrase);
+      for (const phrase of [agent, tag, 'git status --short', 'git diff --stat', 'snapshot', 'Confirm that only', 'pass a `model`']) expect(text, `${skill}: ${phrase}`).toContain(phrase);
     }
+    for (const phrase of ['§<id> spec', '§<id> plan', 'git status --short', 'git diff --stat', 'INCOMPLETE:', 'snapshot', 'including its single question round (description `§<id> spec`', '`§<id> plan`; take the', '(or replies `INCOMPLETE:`)', 'If the agent replies `INCOMPLETE:`']) expect(read(AUTO), `auto: ${phrase}`).toContain(phrase);
     for (const f of [AUTO, 'CLAUDE.md']) for (const name of ['product-advice-agent-spec', 'product-advice-agent-plan']) expect(read(f), `${f}: ${name}`).toContain(name);
     for (const name of ['product_advice_agent_spec', 'product_advice_agent_plan']) expect(read('AGENTS.md'), name).toContain(name);
   });
-  it('B12: CLAUDE.md says the coordinator does not draft by reading the codebase inline', () => {
+  it('B12: the guides say the coordinator does not draft by reading the codebase inline, and keeps every gate', () => {
     expect(read('CLAUDE.md')).toContain('not by reading the codebase inline');
+    expect(read('AGENTS.md')).toContain('not by reading');
+    for (const f of ['CLAUDE.md', 'AGENTS.md']) expect(read(f), f).toContain('keeps every gate');
   });
 });

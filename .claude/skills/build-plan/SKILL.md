@@ -29,9 +29,12 @@ prior decisions). The hand-off rules (one file, scratch folder, no commit, no
 gate, the reply) are in that agent's definition, `.claude/agents/product-advice-agent-plan.md`;
 this file says how to draft. The agent runs on Sonnet; pass a `model` for a plan that must judge a self-contradicting intent.
 
-After the agent returns, run `git status --short` and `git diff --stat`.
-Confirm that only `plan.md` changed and that `metadata.yml` is untouched; if
-anything else changed, discard it and report. Then read the draft as the steps
+Before spawning, run `git status --short` and keep the output (the snapshot):
+the checkout may already hold unrelated untracked files, and a new file does
+not show in `git diff --stat`. After the agent returns, run
+`git status --short` and `git diff --stat` and compare with the snapshot.
+Confirm that only `plan.md` is new or changed and that `metadata.yml` is
+untouched; if anything else changed, discard it and report. Then read the draft as the steps
 below say.
 
 ## 1. Check the preconditions, and stop if one fails

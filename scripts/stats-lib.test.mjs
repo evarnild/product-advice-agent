@@ -560,15 +560,25 @@ describe('working time (B5a, B6, AC4a)', () => {
   });
 
   it('books spec and plan agents to their own phases, not to unattributed (B13)', () => {
-    const it = i7(run({ agents: [agentRun('§7 spec', 7, 8), agentRun('§7 plan', 8, 9.5), agentRun('Explore', 7, 9)] }));
+    const s = run({ agents: [agentRun('§7 spec', 7, 8), agentRun('§7 plan', 8, 9.5), agentRun('Explore', 7, 9)] });
+    const it = i7(s);
+    const agentInput = (b) => b.agents.get('opus')?.input ?? 0; // each run: two assistant turns of 1
     expect(ph(it, 'spec').agentWorkMs).toBe(1 * H);
     expect(ph(it, 'plan').agentWorkMs).toBe(1.5 * H);
     expect(it.totals.agentWorkMs).toBe(2.5 * H);
+    expect(agentInput(ph(it, 'spec').tokens)).toBe(2);
+    expect(agentInput(ph(it, 'plan').tokens)).toBe(2);
+    expect(agentInput(s.unattributed)).toBe(2); // the Explore run only
   });
 
   it('creates a spec and a plan row when git has no such phase, dropping nothing (AC6)', () => {
     const commits = log([2, '§7: intent drafted (owner: x)'], [3, '§7: intent accepted'], [9, '§7: in-review, progress entry']);
-    const it = i7(run({ commits, agents: [agentRun('§7 spec', 4, 5), agentRun('§7 plan', 5, 6)] }));
+    const s = run({ commits, agents: [agentRun('§7 spec', 4, 5), agentRun('§7 plan', 5, 6), agentRun('Explore', 4, 6)] });
+    const it = i7(s);
+    const agentInput = (b) => b.agents.get('opus')?.input ?? 0;
+    expect(agentInput(ph(it, 'spec').tokens)).toBe(2);
+    expect(agentInput(ph(it, 'plan').tokens)).toBe(2);
+    expect(agentInput(s.unattributed)).toBe(2); // the Explore run only
     expect(ph(it, 'spec').agentWorkMs).toBe(1 * H);
     expect(ph(it, 'plan').agentWorkMs).toBe(1 * H);
     expect(it.phases.reduce((n, p) => n + p.agentWorkMs, 0)).toBe(it.totals.agentWorkMs);

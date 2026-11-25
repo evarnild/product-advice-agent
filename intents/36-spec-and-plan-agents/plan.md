@@ -389,3 +389,40 @@ this line is the implementer's to edit. -->
   appear once per file (as the bold rule heading) so a deletion is caught.
   (3) The `/auto` AC text mutation list (delete a name from `/auto`) was not
   run by hand; the test loops over it.
+
+### 2026-11-25 — rework, review round 1
+
+- Commit: see `git log` (one rework commit after `4d7b716`).
+- Owner decisions applied: finding 2 (a), both Codex TOMLs now carry
+  `sandbox_mode = "workspace-write"` (reviewer's form), asserted in kit-texts;
+  finding 7, the before-snapshot (`git status --short` before spawning, compare
+  after) in `/spec`, `/build-plan` and `/auto`, pinned by the word `snapshot`.
+- Mechanical: (1) the AC3 regex now holds `\bEdit\b` with a real backslash (the
+  two 0x08 bytes came from an escaping layer in my shell tool; I wrote the
+  fix with `bytes([92])`); byte scan of every changed file: no control byte.
+  (3) `/auto` pins `§<id> spec`, `§<id> plan`, both git commands, `INCOMPLETE:`,
+  the snapshot and the two single-line step 2 and 3 phrases (the bare names also
+  occur in section 10 and elsewhere, so only line-specific phrases kill).
+  (4) PHRASES gained `Never decide a design point`, `options and a recommendation`
+  and the `blocked_by` sentence. (5) both stats tests assert the agents' tokens
+  per phase and that only the Explore run is unattributed. (6) `intents/README.md`
+  `blocked_by` bullet and a role bullet (not in the plan's file list: a
+  divergence, owner-approved in review finding 6). (8) `/auto` section 10 prefix
+  list. (9) `not by reading` (AGENTS.md), `keeps every gate` (both guides),
+  `Confirm that only` (both skills). (10) `[ \t]*` as escapes. (11) and (12) done.
+- Tests: kit suite 500 of 500 (kit-texts 19, stats-lib 64; assertions added, no
+  new test names); `npm run verify` green.
+- Mutants hand-run, each restored by copy: Edit added to the tools line in the
+  spec and the plan Claude file (both killed now); sandbox read-only and sandbox
+  line deleted; snapshot deleted in `/spec` and `/auto`; `Confirm that only`
+  changed; `§<id> spec`, `§<id> plan`, `(or replies INCOMPLETE:)` and `If the
+  agent replies INCOMPLETE:` in `/auto`; the git diff comparison deleted in
+  `/auto`; the `blocked_by` sentence, `options and a recommendation` and
+  `Never decide a design point` in agents; `not by reading` and `keeps every
+  gate` in the guides; spec and plan tokens routed to unattributed in
+  `stats-lib.mjs`: all killed. The first two `/auto` mutants survived with the
+  bare pins and were killed after the line-specific pins were added.
+- Note for the owner (AC8 step 4): once, spawn `product_advice_agent_spec` in
+  Codex and confirm that `sandbox_mode = "workspace-write"` is accepted in an
+  agent file and lets the agent write its one file; if rejected, use the
+  plan's fallback (omit the line and drop the assertion).

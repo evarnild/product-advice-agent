@@ -143,7 +143,8 @@ needs were recorded.
 - **`blocked_by`.** A list like `links:`, one hard prerequisite per line,
   `<id>    <reason>` (`- 13    its test checks the growth`). It is **not a
   gate**: any agent drafting or revising an intent, spec or plan writes it
-  without your yes, and it never changes or blocks recording a gate. Use it
+  without your yes (except the spec and plan subagents, which report it; the
+  coordinator writes it), and it never changes or blocks recording a gate. Use it
   only for "cannot be built correctly until that intent is merged"; related
   work stays in `links:`. A blocker is **cleared** when `main`'s
   `metadata.yml` for it has a non-empty `merged:`, whatever its branch says.
@@ -154,6 +155,8 @@ needs were recorded.
   `npm run queue` shows `blocked by §14 (§13)` (the direct open blockers,
   then those reached through them) and prints cycles and broken records
   under "Problems".
+- **The spec and plan agents** write their one `spec.md` or `plan.md`, nothing
+  else, and record no gate.
 - **The implementer agent** may only append to the `## Progress` section at
   the end of its item's `plan.md` and set `status: in-review` when done.
 - **A spawned session** (`npm run spawn`, `CLAUDE.md` → "Parallel
